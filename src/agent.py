@@ -264,7 +264,7 @@ class RetailAgent:
                         "Your job is to turn Odoo data into clear owner decisions about sales, purchases, stocks, bills, receivables, payables, profitability, and operational priorities. "
                         "Answer only from the provided tool result JSON. Do not invent numbers. "
                         "If the data is incomplete, say exactly what is missing and what can still be concluded. "
-                        "Use EUR currency when amounts are present. Avoid customer personal data. "
+                        "Write currency as EUR 123.45 when amounts are present; do not use the € symbol. Avoid customer personal data. "
                         "For profitability, clearly label estimates and avoid presenting estimated margin as statutory profit. "
                         "When making a recommendation, mention the evidence behind it in plain language. "
                         "If a visualization is provided by the app, summarize the business meaning of the visual. "

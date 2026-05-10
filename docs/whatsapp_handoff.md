@@ -41,9 +41,15 @@ If the request is Twilio form encoded, the backend returns TwiML. If it is JSON,
 
 ```env
 WHATSAPP_ALLOWED_NUMBERS=351900000000,351911111111
+WHATSAPP_RATE_LIMIT_PER_MINUTE=20
+PUBLIC_WHATSAPP_WEBHOOK_URL=https://your-public-url/webhooks/whatsapp
+TWILIO_AUTH_TOKEN=replace-with-twilio-auth-token
+WHATSAPP_APP_SECRET=replace-with-meta-app-secret
 ```
 
 If `WHATSAPP_ALLOWED_NUMBERS` is empty, all senders are allowed. For a real pilot, set this to the approved phone numbers only.
+
+For Twilio, set `TWILIO_AUTH_TOKEN` and keep `PUBLIC_WHATSAPP_WEBHOOK_URL` equal to the webhook URL configured in Twilio. For Meta WhatsApp Cloud API, set `WHATSAPP_APP_SECRET` to verify `X-Hub-Signature-256`. If these secrets are absent, local testing still works, but production signature checks are disabled.
 
 ## Rodrigo Tasks
 
@@ -67,10 +73,10 @@ What is low stock?
 ```
 
 5. Add production safeguards before a client rollout:
-   - Verify webhook signatures
+   - Set provider signature secret
    - Restrict phone numbers
-   - Log inbound and outbound messages
-   - Add rate limits
+   - Confirm inbound and outbound message logs
+   - Keep rate limits enabled
    - Avoid sending sensitive customer data over WhatsApp
 
 ## Local Test

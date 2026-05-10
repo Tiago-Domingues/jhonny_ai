@@ -32,7 +32,12 @@ ODOO_API_KEY=replace-with-api-key
 APP_HOST=127.0.0.1
 APP_PORT=8000
 APP_AUTH_TOKEN=replace-with-demo-token
+APP_CORS_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
 WHATSAPP_ALLOWED_NUMBERS=351900000000
+WHATSAPP_RATE_LIMIT_PER_MINUTE=20
+PUBLIC_WHATSAPP_WEBHOOK_URL=https://replace-with-public-url/webhooks/whatsapp
+TWILIO_AUTH_TOKEN=replace-with-twilio-auth-token
+WHATSAPP_APP_SECRET=replace-with-meta-app-secret
 OPENAI_API_KEY=replace-with-openai-api-key
 OPENAI_MODEL=gpt-4o-mini
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
@@ -56,6 +61,13 @@ For a broader business-data check:
 
 ```powershell
 py scripts/inspect_business_data.py
+```
+
+For local regression checks that do not require live OpenAI:
+
+```powershell
+py scripts/evaluate_agent.py
+py scripts/evaluate_api_security.py
 ```
 
 With the backend running, verify the local API:
@@ -116,6 +128,21 @@ py scripts/ask_agent.py "What is our stock value?"
 py scripts/ask_agent.py "What categories sold today?"
 ```
 
+To force the real OpenAI path and fail if the app falls back to deterministic routing:
+
+```powershell
+py scripts/smoke_openai_chat.py "How much did we sell today?"
+```
+
+Expected result includes:
+
+```json
+{
+  "status": "ok",
+  "provider": "openai"
+}
+```
+
 ## API Endpoints
 
 ```text
@@ -153,7 +180,7 @@ When OpenAI environment variables are configured, the agent uses OpenAI to:
 2. execute that tool against Odoo
 3. write a grounded answer from the tool result
 
-Set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` in `.env`. Without OpenAI credentials, the app falls back to deterministic routing so the demo remains usable locally. Databricks Model Serving remains an optional future fallback if those environment variables are configured.
+Set `OPENAI_API_KEY` and optionally `OPENAI_MODEL` in `.env`. Without OpenAI credentials, the app falls back to deterministic routing so the demo remains usable locally. Run `py scripts/smoke_openai_chat.py` before a client demo when you need proof that `/chat` is using OpenAI. Databricks Model Serving remains an optional future fallback if those environment variables are configured.
 
 ## Useful Odoo Models
 

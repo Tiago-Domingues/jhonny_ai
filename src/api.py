@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
 import json
 import os
 import time
@@ -31,11 +34,20 @@ class ToolRequest(BaseModel):
 app = FastAPI(title="Retail Agent POC API", version="0.2.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv(
+            "APP_CORS_ORIGINS",
+            "http://127.0.0.1:3000,http://localhost:3000",
+        ).split(",")
+        if origin.strip()
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+WHATSAPP_RATE_LIMIT_STATE: dict[str, list[float]] = {}
 
 
 def get_agent():
@@ -118,11 +130,18 @@ def call_tool(
 @app.post("/webhooks/whatsapp")
 async def whatsapp(request: Request) -> Response:
     payload = await parse_whatsapp_payload(request)
+    verify_whatsapp_signature(request, payload)
+
     sender = extract_sender(payload)
     if not is_allowed_sender(sender):
         return JSONResponse({"error": "sender is not authorized"}, status_code=403)
+    if is_rate_limited(sender):
+        return JSONResponse({"error": "rate limit exceeded"}, status_code=429)
 
     question = extract_message(payload)
+    if not question.strip():
+        return JSONResponse({"error": "message body is required"}, status_code=400)
+
     response = get_agent().answer(question, channel="whatsapp")
     log_event(
         {
@@ -145,6 +164,7 @@ async def whatsapp(request: Request) -> Response:
 
 async def parse_whatsapp_payload(request: Request) -> dict[str, Any]:
     body = await request.body()
+    request.state.raw_body = body
     content_type = request.headers.get("content-type", "")
     if "application/json" in content_type:
         return json.loads(body.decode("utf-8") or "{}")
@@ -177,6 +197,62 @@ def is_allowed_sender(sender: str) -> bool:
         if value.strip()
     }
     return not allowed or sender in allowed
+
+
+def is_rate_limited(sender: str) -> bool:
+    limit = int(os.getenv("WHATSAPP_RATE_LIMIT_PER_MINUTE", "20") or "20")
+    if limit <= 0:
+        return False
+
+    now = time.time()
+    window_start = now - 60
+    key = sender or "unknown"
+    recent = [timestamp for timestamp in WHATSAPP_RATE_LIMIT_STATE.get(key, []) if timestamp >= window_start]
+    if len(recent) >= limit:
+        WHATSAPP_RATE_LIMIT_STATE[key] = recent
+        return True
+
+    recent.append(now)
+    WHATSAPP_RATE_LIMIT_STATE[key] = recent
+    return False
+
+
+def verify_whatsapp_signature(request: Request, payload: dict[str, Any]) -> None:
+    content_type = request.headers.get("content-type", "")
+    if "application/x-www-form-urlencoded" in content_type:
+        verify_twilio_signature(request, payload)
+        return
+    if "application/json" in content_type:
+        verify_meta_signature(request)
+
+
+def verify_twilio_signature(request: Request, payload: dict[str, Any]) -> None:
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
+    if not auth_token:
+        return
+
+    provided = request.headers.get("x-twilio-signature", "")
+    public_url = os.getenv("PUBLIC_WHATSAPP_WEBHOOK_URL", "").strip() or str(request.url)
+    signed_data = public_url + "".join(f"{key}{payload[key]}" for key in sorted(payload))
+    digest = hmac.new(auth_token.encode("utf-8"), signed_data.encode("utf-8"), hashlib.sha1).digest()
+    expected = base64.b64encode(digest).decode("utf-8")
+    if not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=403, detail="Invalid Twilio signature")
+
+
+def verify_meta_signature(request: Request) -> None:
+    app_secret = os.getenv("WHATSAPP_APP_SECRET", "").strip()
+    if not app_secret:
+        return
+
+    provided = request.headers.get("x-hub-signature-256", "")
+    if not provided.startswith("sha256="):
+        raise HTTPException(status_code=403, detail="Missing Meta WhatsApp signature")
+
+    body = getattr(request.state, "raw_body", b"")
+    expected = "sha256=" + hmac.new(app_secret.encode("utf-8"), body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(provided, expected):
+        raise HTTPException(status_code=403, detail="Invalid Meta WhatsApp signature")
 
 
 def escape_xml(value: str) -> str:

@@ -38,7 +38,12 @@ ODOO_DB=jhonny-surf-master-26611951
 ODOO_USERNAME=loja@jhonnysurfstore.pt
 ODOO_API_KEY=<rotated-odoo-api-key>
 APP_AUTH_TOKEN=<demo-access-token>
+APP_CORS_ORIGINS=https://<frontend-app-url>
 WHATSAPP_ALLOWED_NUMBERS=351900000000
+WHATSAPP_RATE_LIMIT_PER_MINUTE=20
+PUBLIC_WHATSAPP_WEBHOOK_URL=https://<backend-api-url>/webhooks/whatsapp
+TWILIO_AUTH_TOKEN=<twilio-auth-token-if-using-twilio>
+WHATSAPP_APP_SECRET=<meta-app-secret-if-using-meta-cloud-api>
 OPENAI_API_KEY=<openai-api-key>
 OPENAI_MODEL=gpt-4o-mini
 ```
@@ -89,6 +94,16 @@ X-App-Token: <demo-access-token>
 
 The web app stores this token in browser local storage for the demo.
 
+## OpenAI Smoke Test
+
+Before a client demo, verify that the real LLM path is active:
+
+```powershell
+py scripts/smoke_openai_chat.py "How much did we sell today?"
+```
+
+The command fails if `OPENAI_API_KEY` is missing or if the agent does not return through the OpenAI provider path.
+
 ## Logging
 
 The FastAPI service writes structured JSON logs for:
@@ -110,3 +125,5 @@ https://<backend-api-url>/webhooks/whatsapp
 ```
 
 Use approved phone numbers only for the pilot.
+
+If using Twilio, set `TWILIO_AUTH_TOKEN` and `PUBLIC_WHATSAPP_WEBHOOK_URL` so inbound requests are signature-checked against the exact public URL. If using Meta WhatsApp Cloud API, set `WHATSAPP_APP_SECRET` so `X-Hub-Signature-256` is verified. Keep `WHATSAPP_RATE_LIMIT_PER_MINUTE` enabled for pilot traffic.
