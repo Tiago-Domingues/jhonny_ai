@@ -209,14 +209,15 @@ az webapp config appsettings set `
     --settings `
         "SCM_DO_BUILD_DURING_DEPLOYMENT=true" `
         "ENABLE_ORYX_BUILD=true" `
-        "WEBSITES_PORT=3000" `
+        "WEBSITES_PORT=8080" `
+        "PORT=8080" `
         "NEXT_PUBLIC_API_BASE_URL=$backendUrl" `
     --output none
 
 az webapp config set `
     --resource-group $ResourceGroup `
     --name $FrontendAppName `
-    --startup-file "npm run start" `
+    --startup-file "cd /home/site/wwwroot && npx next start -H 0.0.0.0 -p 8080" `
     --output none
 
 New-Item -ItemType Directory -Path $frontendPackage | Out-Null

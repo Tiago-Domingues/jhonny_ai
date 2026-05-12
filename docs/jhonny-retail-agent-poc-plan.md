@@ -20,15 +20,16 @@ The build remains local-first while the demo flow is stabilized. Cloud deploymen
 1. Product Goal
 2. Current Implementation
 3. Target Architecture
-4. App Experience
-5. Agent And Tooling
-6. WhatsApp Channel
-7. Deployment And Security
-8. Workstream Ownership
-9. Roadmap And Milestones
-10. Commercial Pilot Plan
-11. Risks And Controls
-12. Review Checklist And Next Actions
+4. Data Architecture
+5. App Experience
+6. Agent And Tooling
+7. WhatsApp Channel
+8. Deployment And Security
+9. Workstream Ownership
+10. Roadmap And Milestones
+11. Commercial Pilot Plan
+12. Risks And Controls
+13. Review Checklist And Next Actions
 
 ## 1. Product Goal
 
@@ -92,7 +93,99 @@ The target product should preserve three constraints:
 | Curated tools only | Prevents unsupported LLM claims and keeps answers explainable |
 | Local-first until reviewed | Avoids cloud work before the demo and commercial story are validated |
 
-## 4. App Experience
+## 4. Data Architecture
+
+The POC uses Odoo as the system of record. The backend reads live operational data through XML-RPC, transforms it into curated business views, and returns only the structured outputs needed by the app, agent, and WhatsApp channel. There is no separate warehouse, vector store, or committed business dataset in the current build.
+
+```mermaid
+flowchart TB
+  subgraph source [Source Systems]
+    Odoo["Odoo Cloud"]
+    PosModels["pos.order and pos.order.line"]
+    SalesModels["sale.order and sale.order.line"]
+    StockModels["stock.quant and product.product"]
+    PurchaseModels["purchase.order and purchase.order.line"]
+    AccountingModels["account.move and account.move.line"]
+  end
+
+  subgraph access [Access Layer]
+    Env[".env and Managed Secrets"]
+    OdooClient["Odoo XML-RPC Client"]
+    Retry["Retry and Authentication"]
+  end
+
+  subgraph transform [Business Transformation]
+    Tools["RetailBusinessTools"]
+    Registry["ToolRegistry Schemas"]
+    Metrics["Sales, Stock, Purchase, Margin, Cash Metrics"]
+    Caveats["Evidence and Caveats"]
+  end
+
+  subgraph serving [Serving Layer]
+    API["FastAPI Routes"]
+    Dashboard["GET /dashboard"]
+    Chat["POST /chat"]
+    WhatsAppWebhook["POST /webhooks/whatsapp"]
+    ToolEndpoint["POST /tools/{tool_name}"]
+  end
+
+  subgraph consumers [Consumers]
+    WebApp["Next.js App"]
+    Agent["RetailAgent"]
+    LLM["OpenAI or Databricks"]
+    WhatsApp["WhatsApp Provider"]
+    Logs["Structured Console Logs"]
+  end
+
+  Odoo --> PosModels
+  Odoo --> SalesModels
+  Odoo --> StockModels
+  Odoo --> PurchaseModels
+  Odoo --> AccountingModels
+  Env --> OdooClient
+  PosModels --> OdooClient
+  SalesModels --> OdooClient
+  StockModels --> OdooClient
+  PurchaseModels --> OdooClient
+  AccountingModels --> OdooClient
+  OdooClient --> Retry
+  Retry --> Tools
+  Tools --> Registry
+  Tools --> Metrics
+  Registry --> Agent
+  Metrics --> Dashboard
+  Metrics --> Chat
+  Caveats --> Chat
+  API --> Dashboard
+  API --> Chat
+  API --> WhatsAppWebhook
+  API --> ToolEndpoint
+  Dashboard --> WebApp
+  Chat --> Agent
+  Agent --> LLM
+  Agent --> WebApp
+  WhatsAppWebhook --> WhatsApp
+  API --> Logs
+```
+
+| Data Area | Source Models | Current Use |
+|---|---|---|
+| Sales | `pos.order`, `pos.order.line`, `sale.order`, `sale.order.line` | Today, month, YTD, daily trend, category, brand, product, weekday, and hour analysis |
+| Stock | `stock.quant`, `product.product`, `product.template` | Stock value, stock age, available units, brand/category exposure, low stock, cover, and overstock risk |
+| Purchases | `purchase.order`, `purchase.order.line` | Supplier spend, recent purchase orders, purchase-versus-sales signals, replenishment recommendations |
+| Accounting exposure | `account.move`, `account.move.line` | Supplier bills, receivables, payables, working capital, and bill-line preview |
+| Agent evidence | Tool results and trace summaries | User-facing answer grounding, request review, and demo explainability |
+| Logs | FastAPI structured console output | Chat and WhatsApp events, request ID, selected tool, provider, latency, and success or failure |
+
+Data handling principles:
+
+- Odoo remains the source of truth; the POC does not persist replicated business data.
+- The backend exposes curated aggregates and selected operational details, not open-ended raw model access.
+- LLM providers receive tool result JSON needed to answer the question, not direct Odoo credentials.
+- WhatsApp responses should stay short and avoid customer personal data.
+- Hosted pilots should move `.env` values into managed secrets and connect logs to the hosting provider.
+
+## 5. App Experience
 
 The app has three main surfaces: Home, Analytics, and Assisted Agent.
 
@@ -113,7 +206,7 @@ Current analytics dashboard coverage:
 
 The app should continue to be optimized for a shop-owner demo rather than an internal BI analyst workflow. The interface should stay simple, visual, and action-oriented.
 
-## 5. Agent And Tooling
+## 6. Agent And Tooling
 
 The agent is grounded in a registry of read-only Odoo tools. With `OPENAI_API_KEY` configured, the agent uses OpenAI for tool planning and answer writing. If OpenAI is not configured, it attempts Databricks Model Serving if those environment variables are present. If no LLM provider is configured, deterministic routing keeps the local demo usable.
 
@@ -163,7 +256,7 @@ The answer payload can include:
 | `llm_provider` | `openai`, `databricks`, `fallback`, or `not_configured` |
 | `request_id` | Traceability for logs and review |
 
-## 6. WhatsApp Channel
+## 7. WhatsApp Channel
 
 The WhatsApp route is implemented as:
 
@@ -191,7 +284,7 @@ Production safeguards already represented in the backend:
 
 WhatsApp should remain a secondary channel until the app demo is strong. It is valuable because it makes the owner experience immediate, but it should not drive scope creep before the core analytics and agent story are approved.
 
-## 7. Deployment And Security
+## 8. Deployment And Security
 
 The current recommendation is still local-first until the review confirms demo readiness. When hosted access is available, deploy two services:
 
@@ -225,7 +318,7 @@ Security review notes:
 - Do not expose customer personal data in WhatsApp responses.
 - Treat estimated profitability and margins as decision support, not statutory accounting output.
 
-## 8. Workstream Ownership
+## 9. Workstream Ownership
 
 | Owner | Primary Focus | Current Deliverables |
 |---|---|---|
@@ -234,7 +327,7 @@ Security review notes:
 | Shared | Backend, Odoo tools, LLM, deployment, validation | FastAPI API, tool registry, OpenAI/Databricks routing, Docker path, smoke tests |
 | Founding team | Commercial pilot readiness | Demo script, pricing, outreach, pilot qualification, client feedback loop |
 
-## 9. Roadmap And Milestones
+## 10. Roadmap And Milestones
 
 | Phase | Timing | Goal | Owner | Exit Criteria |
 |---|---:|---|---|---|
@@ -247,7 +340,7 @@ Security review notes:
 
 The next milestone should be a stable owner demo where the reviewer can see live data, ask a question, inspect the evidence, and understand the paid-pilot offer.
 
-## 10. Commercial Pilot Plan
+## 11. Commercial Pilot Plan
 
 The first paid offer should stay narrow and outcome-focused.
 
@@ -272,7 +365,7 @@ Pilot scope:
 | WhatsApp owner questions when provider access is available | Full multi-tenant SaaS admin |
 | Weekly review call and end-of-pilot recommendation | Custom data science project |
 
-## 11. Risks And Controls
+## 12. Risks And Controls
 
 | Risk | Impact | Control |
 |---|---|---|
@@ -285,7 +378,7 @@ Pilot scope:
 | Cloud work starts too early | Delivery risk | Host only after demo review and access are confirmed |
 | Odoo field quality varies by client | Onboarding risk | Document required models and add validation checks per new retailer |
 
-## 12. Review Checklist And Next Actions
+## 13. Review Checklist And Next Actions
 
 Review checklist:
 
