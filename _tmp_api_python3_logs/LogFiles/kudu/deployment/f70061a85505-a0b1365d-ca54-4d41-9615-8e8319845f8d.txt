@@ -1,0 +1,50 @@
+2026-05-10T17:37:48  Fetching changes.
+2026-05-10T17:37:48    Starting  LocalZipHandler
+2026-05-10T17:37:48    Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/1b752116-d053-4606-b4dc-f52ce4832117.zip (0.12 MB) to /tmp/zipdeploy/extracted
+2026-05-10T17:37:52  Updating submodules.
+2026-05-10T17:37:52  Preparing deployment for commit id 'cb772c35-d'.
+2026-05-10T17:37:53  PreDeployment: context.CleanOutputPath False
+2026-05-10T17:37:53  PreDeployment: context.OutputPath /home/site/wwwroot
+2026-05-10T17:37:54  Repository path is /tmp/zipdeploy/extracted
+2026-05-10T17:37:54  Running oryx build...
+2026-05-10T17:37:54    Command: oryx build /tmp/zipdeploy/extracted -o /home/site/wwwroot --platform python --platform-version 3.12 -p virtualenv_name=antenv --log-file /tmp/build-debug.log  -i /tmp/8deaebadcee4e85 --compress-destination-dir | tee /tmp/oryx-build.log
+2026-05-10T17:37:57    Operation performed by Microsoft Oryx, https://github.com/Microsoft/Oryx
+2026-05-10T17:37:57    You can report issues at https://github.com/Microsoft/Oryx/issues
+2026-05-10T17:37:57    
+2026-05-10T17:37:57    Oryx Version: 0.2.20260420.1+83c04e9ee1882dc90d279b63348824daedbd3c96, Commit: 83c04e9ee1882dc90d279b63348824daedbd3c96, ReleaseTagName: 20260420.1
+2026-05-10T17:37:57    
+2026-05-10T17:37:57    Build Operation ID: c6af92c484a5a14a
+2026-05-10T17:37:57    Repository Commit : cb772c35-db5e-49a4-99b3-b1d8873bc5fe
+2026-05-10T17:37:57    OS Type           : bullseye
+2026-05-10T17:37:57    Image Type        : githubactions
+2026-05-10T17:37:57    
+2026-05-10T17:37:58    Primary SDK Storage URL: https://oryx-cdn.microsoft.io
+2026-05-10T17:37:58    Backup SDK Storage URL: 
+2026-05-10T17:37:58    ACR SDK Registry URL: (not set)
+2026-05-10T17:37:58    SDK provider status:
+2026-05-10T17:37:58      External ACR SDK provider: Disabled
+2026-05-10T17:37:58      External SDK provider: Enabled
+2026-05-10T17:37:58      Direct ACR SDK provider: Disabled
+2026-05-10T17:37:58      Blob SDK provider: Enabled
+2026-05-10T17:37:58    Detecting platforms...
+2026-05-10T17:37:58    Requesting metadata for platform python from external SDK provider
+2026-05-10T17:37:59    Requesting metadata for platform python from external SDK provider
+2026-05-10T17:38:00    Version resolved using external SDK provider.
+2026-05-10T17:38:00    Detected following platforms:
+2026-05-10T17:38:00      python: 3.12.13
+2026-05-10T17:38:00    
+2026-05-10T17:38:00    Using intermediate directory '/tmp/8deaebadcee4e85'.
+2026-05-10T17:38:00    
+2026-05-10T17:38:00    Copying files to the intermediate directory...
+2026-05-10T17:38:01    Copying files to intermediate directory done in 0 sec(s).
+2026-05-10T17:38:01    
+2026-05-10T17:38:01    Source directory     : /tmp/8deaebadcee4e85
+2026-05-10T17:38:01    Destination directory: /home/site/wwwroot
+2026-05-10T17:38:01    
+2026-05-10T17:38:01    Running build script snippets...
+2026-05-10T17:38:01    Python Version: /tmp/oryx/platforms/python/3.12.13/bin/python3.12
+2026-05-10T17:38:02    Creating directory for command manifest file if it does not exist
+2026-05-10T17:38:02    Removing existing manifest file
+2026-05-10T17:38:02    Python Virtual Environment: antenv
+2026-05-10T17:38:02    Creating virtual environment...
+2026-05-10T17:38:02    Executing: /tmp/oryx/platforms/python/3.12.13/bin/python3.12 -m venv antenv --copies --system-site-packages

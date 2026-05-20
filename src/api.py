@@ -62,6 +62,24 @@ def require_app_token(x_app_token: str | None) -> None:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
+def is_odoo_auth_error(exc: Exception) -> bool:
+    return "Odoo authentication failed" in str(exc)
+
+
+def odoo_unavailable_response(exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        {
+            "error": "odoo_unavailable",
+            "message": (
+                "Odoo rejected the configured API credentials. "
+                "Please update ODOO_API_KEY in the API app settings, then restart the API."
+            ),
+            "detail": str(exc),
+        },
+        status_code=503,
+    )
+
+
 def log_event(event: dict[str, Any]) -> None:
     event["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     print(json.dumps(event, ensure_ascii=False))
@@ -73,13 +91,19 @@ def health() -> dict[str, str]:
 
 
 @app.get("/dashboard")
-def dashboard(x_app_token: str | None = Header(default=None)) -> dict[str, Any]:
+def dashboard(x_app_token: str | None = Header(default=None)) -> Any:
     require_app_token(x_app_token)
-    return get_agent().tools.dashboard()
+    try:
+        return get_agent().tools.dashboard()
+    except RuntimeError as exc:
+        if is_odoo_auth_error(exc):
+            log_event({"event": "dashboard", "success": False, "error": str(exc)})
+            return odoo_unavailable_response(exc)
+        raise
 
 
 @app.post("/chat")
-def chat(payload: ChatRequest, x_app_token: str | None = Header(default=None)) -> dict[str, Any]:
+def chat(payload: ChatRequest, x_app_token: str | None = Header(default=None)) -> Any:
     require_app_token(x_app_token)
     request_id = str(uuid.uuid4())
     started = time.perf_counter()
@@ -113,6 +137,8 @@ def chat(payload: ChatRequest, x_app_token: str | None = Header(default=None)) -
                 "latency_ms": round((time.perf_counter() - started) * 1000),
             }
         )
+        if is_odoo_auth_error(exc):
+            return odoo_unavailable_response(exc)
         raise
 
 
@@ -121,10 +147,15 @@ def call_tool(
     tool_name: str,
     payload: ToolRequest,
     x_app_token: str | None = Header(default=None),
-) -> dict[str, Any]:
+) -> Any:
     require_app_token(x_app_token)
-    result = get_agent().registry.call(tool_name, payload.arguments)
-    return {"tool": tool_name, "data": result}
+    try:
+        result = get_agent().registry.call(tool_name, payload.arguments)
+        return {"tool": tool_name, "data": result}
+    except RuntimeError as exc:
+        if is_odoo_auth_error(exc):
+            return odoo_unavailable_response(exc)
+        raise
 
 
 @app.post("/webhooks/whatsapp")

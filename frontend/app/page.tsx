@@ -251,6 +251,15 @@ const demoUser: AppUser = {
   officeLocation: "Parede, Cascais",
 };
 
+async function readApiError(response: Response, fallback: string) {
+  try {
+    const data = await response.json();
+    return data.message || data.detail || data.error || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function Home() {
   const [token, setToken] = useState(DEFAULT_DEMO_TOKEN);
   const [mode, setMode] = useState<AppMode>("home");
@@ -294,7 +303,10 @@ export default function Home() {
         setError("Enter the demo token, then refresh. Local demo token: retail-demo");
         return;
       }
-      if (!response.ok) throw new Error(`Dashboard failed: ${response.status}`);
+      if (!response.ok) {
+        setError(await readApiError(response, `Dashboard failed: ${response.status}`));
+        return;
+      }
       setDashboard(await response.json());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load dashboard.");
@@ -327,7 +339,7 @@ export default function Home() {
         setError("Enter the demo token, then ask again. Local demo token: retail-demo");
         return;
       }
-      if (!response.ok) throw new Error(`Chat failed: ${response.status}`);
+      if (!response.ok) throw new Error(await readApiError(response, `Chat failed: ${response.status}`));
       const data = await response.json();
       const formattedAnswer = data.answer || "No answer returned.";
       const metadata: AgentMeta = {

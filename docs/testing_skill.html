@@ -1,0 +1,702 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Use Case Tracker App</title>
+  <style>
+:root {
+  color-scheme: light;
+  --ey-black: #2e2e38;
+  --ey-yellow: #ffe600;
+  --ey-dark: #1f1f2b;
+  --ey-gray: #747480;
+  --ey-mid-gray: #c4c4cd;
+  --ey-light-gray: #f6f6fa;
+  --ey-border: #d7d7dc;
+  --ey-blue: #155cb4;
+  --page-side: 70px;
+  --page-top: 50px;
+  --page-bottom: 66px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  color: var(--ey-black);
+  background: #ffffff;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 12.3px;
+  line-height: 1.44;
+}
+
+.cover-page,
+.toc-page,
+.document-body {
+  padding: var(--page-top) var(--page-side) var(--page-bottom);
+}
+
+.cover-page {
+  position: relative;
+  min-height: 100vh;
+  page-break-after: always;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 72% 12%, rgba(166, 0, 255, 0.7), transparent 25%),
+    radial-gradient(circle at 30% 34%, rgba(0, 188, 255, 0.5), transparent 21%),
+    radial-gradient(circle at 68% 79%, rgba(0, 214, 210, 0.42), transparent 11%),
+    radial-gradient(circle at 87% 83%, rgba(170, 0, 210, 0.5), transparent 18%),
+    linear-gradient(135deg, #111520 0%, #1b2030 48%, #171a25 100%);
+}
+
+.cover-brand {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.brand-name {
+  position: relative;
+  padding-top: 22px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-name::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 7px;
+  background: var(--ey-yellow);
+  transform: skewY(-7deg);
+  transform-origin: left center;
+}
+
+.brand-name .brand-accent {
+  color: #2f88ff;
+}
+
+.brand-tagline {
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 700;
+}
+
+.cover-content {
+  position: relative;
+  z-index: 1;
+  max-width: 690px;
+  margin-top: 88px;
+}
+
+.cover-page h1 {
+  margin: 0;
+  max-width: 620px;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.cover-subtitle {
+  max-width: 620px;
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  line-height: 1.28;
+}
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 10px;
+  max-width: 540px;
+  margin-top: 28px;
+}
+
+.cover-meta-row {
+  position: relative;
+  min-height: 52px;
+  padding: 10px 12px 9px;
+  border: 2px solid rgba(196, 0, 255, 0.95);
+  background: rgba(15, 20, 34, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(0, 198, 255, 0.32);
+}
+
+.cover-meta-row::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 12px;
+  width: 28px;
+  height: 2px;
+  background: #00b7ff;
+}
+
+.cover-meta-row span {
+  display: block;
+  margin-bottom: 5px;
+  color: #00b7ff;
+  font-size: 7.2px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cover-meta-row strong {
+  display: block;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cover-summary {
+  max-width: 625px;
+  margin-top: 28px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.cover-summary h2 {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cover-summary p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 10.7px;
+  line-height: 1.45;
+}
+
+.cover-footer {
+  position: absolute;
+  right: var(--page-side);
+  bottom: 30px;
+  left: var(--page-side);
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 7.6px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.toc-page {
+  min-height: 100vh;
+  page-break-after: always;
+  background:
+    radial-gradient(circle at 72% 18%, rgba(207, 172, 255, 0.45), transparent 27%),
+    radial-gradient(circle at 12% 38%, rgba(194, 231, 255, 0.55), transparent 29%),
+    #ffffff;
+}
+
+.toc-card {
+  max-width: 585px;
+  margin: 18px auto 0;
+  padding: 16px 20px 18px;
+  border: 1px solid #cfd2dc;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 82% 38%, rgba(229, 201, 255, 0.5), transparent 38%),
+    linear-gradient(110deg, rgba(225, 243, 255, 0.9), rgba(251, 244, 255, 0.92));
+  box-shadow: 0 1px 2px rgba(31, 31, 43, 0.08);
+}
+
+.toc-card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding-top: 0;
+  border-top: 0;
+  color: var(--ey-black);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.toc-card ol,
+.toc-card ul {
+  max-width: 100%;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ey-black);
+  font-size: 8.2px;
+  line-height: 1.5;
+}
+
+.toc-card li {
+  margin: 3px 0;
+}
+
+.toc-card a {
+  color: inherit;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+h2 {
+  margin: 22px 0 8px;
+  padding-top: 0;
+  border-top: 0;
+  font-size: 17px;
+  line-height: 1.18;
+  page-break-after: avoid;
+}
+
+h3 {
+  margin: 15px 0 6px;
+  font-size: 13.5px;
+  line-height: 1.22;
+  page-break-after: avoid;
+}
+
+h4 {
+  margin: 12px 0 5px;
+  font-size: 12px;
+  page-break-after: avoid;
+}
+
+h2[id="7-source-notes"],
+h2[id="12-source-references"] {
+  break-before: page;
+  page-break-before: always;
+}
+
+hr {
+  height: 1px;
+  margin: 22px 0;
+  border: 0;
+  background: var(--ey-border);
+}
+
+p {
+  margin: 7px 0;
+}
+
+ul,
+ol {
+  margin: 5px 0 7px;
+  padding-left: 18px;
+}
+
+li {
+  margin: 4px 0;
+}
+
+code {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--ey-light-gray);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.92em;
+}
+
+pre {
+  overflow-x: auto;
+  padding: 9px 10px;
+  border: 1px solid var(--ey-border);
+  border-radius: 4px;
+  background: var(--ey-light-gray);
+  font-size: 10.5px;
+  line-height: 1.32;
+  page-break-inside: avoid;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+}
+
+blockquote {
+  margin: 14px 0;
+  padding: 10px 14px;
+  border-left: 4px solid var(--ey-yellow);
+  background: var(--ey-light-gray);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 10px;
+  font-size: 11.2px;
+  line-height: 1.36;
+  page-break-inside: avoid;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border: 1px solid var(--ey-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #ececf2;
+  font-weight: 700;
+}
+
+a {
+  color: var(--ey-blue);
+  text-decoration: none;
+}
+
+.diagram-block {
+  margin: 10px 0 14px;
+  padding: 9px 10px 10px;
+  min-height: 360px;
+  border: 1px solid var(--ey-border);
+  border-radius: 4px;
+  background: #ffffff;
+  page-break-inside: avoid;
+}
+
+.diagram-2 {
+  break-before: page;
+  page-break-before: always;
+}
+
+.diagram-block figcaption {
+  margin-bottom: 5px;
+  color: var(--ey-gray);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mermaid {
+  display: flex;
+  min-height: 325px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.document-footer {
+  display: none;
+}
+
+.document-source-note {
+  margin-top: 18px;
+  color: var(--ey-gray);
+  font-size: 10px;
+}
+
+@media print {
+  .cover-page,
+  .toc-page {
+    min-height: 260mm;
+    height: 260mm;
+  }
+
+  .document-body {
+    min-height: 260mm;
+  }
+}
+
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    window.addEventListener("load", async () => {
+      if (window.mermaid) {
+        mermaid.initialize({ startOnLoad: false, securityLevel: "loose", theme: "base" });
+        await mermaid.run({ querySelector: ".mermaid" });
+      }
+      document.body.classList.add("render-ready");
+    });
+  </script>
+</head>
+<body>
+<footer class="document-footer">
+  <span class="page-marker" data-file="testing_skill.pdf"></span>
+</footer>
+<section class="cover-page">
+  <div class="cover-brand">
+    <div>
+      <div class="brand-name"><span>EY</span> <span class="brand-accent">Parthenon</span></div>
+      <div class="brand-tagline">Shape the future with confidence</div>
+    </div>
+  </div>
+  <div class="cover-content">
+    <h1>Use Case Tracker App</h1>
+    <p class="cover-subtitle">Architecture, access model, and Rocketship integration</p>
+    <div class="cover-meta">
+      <div class="cover-meta-row"><span>Status</span><strong>Draft</strong></div>
+<div class="cover-meta-row"><span>Series</span><strong>Part 4 of 4 - Secure Databricks Apps + MCP documentation series</strong></div>
+<div class="cover-meta-row"><span>Audience</span><strong>Architecture, security, and platform stakeholders</strong></div>
+<div class="cover-meta-row"><span>Date</span><strong>April 2026</strong></div>
+    </div>
+    <section class="cover-summary"><h2>Executive Summary</h2><p>The Use Case Tracker App is the structured product interface for capturing, reviewing, and progressing AI and analytics use cases. It gives teams a governed way to manage use-case intake and status while keeping the underlying data and automation model consistent across apps and agents.</p></section>
+  </div>
+  <div class="cover-footer">
+    <span>Generated from Markdown</span>
+    <span>EW AI Hub</span>
+  </div>
+</section>
+<section class="toc-page">
+  <div class="toc-card">
+<h2 id="table-of-contents">Table of Contents</h2>
+
+<ol>
+<li value="1"><a href="#1-executive-summary">Executive Summary</a></li>
+<li value="2"><a href="#2-how-to-read-this-document">How to Read This Document</a></li>
+<li value="3"><a href="#3-ecosystem-architecture">Ecosystem Architecture</a></li>
+<li value="4"><a href="#4-product-purpose">Product Purpose</a></li>
+<li value="5"><a href="#5-access-and-permissions">Access and Permissions</a></li>
+<li value="6"><a href="#6-rocketship-integration">Rocketship Integration</a></li>
+<li value="7"><a href="#7-source-notes">Source Notes</a></li>
+</ol>
+
+
+  </div>
+</section>
+<main class="document-body">
+
+<h2 id="documentation-series">Documentation Series</h2>
+
+<p>This document is part of a four-document series:</p>
+
+<ol>
+<li value="1"><a href="ai-hub-01-mcp-concepts.md">MCP Concepts for Governed Apps and Agents</a> - reusable MCP concepts, terminology, and design principles.</li>
+<li value="2"><a href="ai-hub-02-mcp-reference-blueprint.md">Secure Databricks Apps + MCP Reference Blueprint</a> - a generic Databricks reference architecture for secure MCP-based systems.</li>
+<li value="3"><a href="ai-hub-03-tracker-mcp-architecture.md">Use Case Tracker MCP Architecture</a> - the concrete Use Case Tracker implementation of the blueprint.</li>
+<li value="4"><strong>Use Case Tracker App</strong> - product architecture, access model, and Rocketship integration for the tracker app.</li>
+</ol>
+
+<p>Together, the four documents tell one stream of work: the concept, the reusable Databricks pattern, the Use Case Tracker MCP implementation, and the product-facing app view. Executive readers can skim the executive summaries in order; implementation teams can use the later sections as operating references.</p>
+
+<hr>
+
+<h2 id="1-executive-summary">1. Executive Summary</h2>
+
+<p>The Use Case Tracker App is the structured product interface for capturing, reviewing, and progressing AI and analytics use cases. It gives teams a governed way to manage use-case intake and status while keeping the underlying data and automation model consistent across apps and agents.</p>
+
+<p>The app sits in a broader ecosystem:</p>
+
+<pre><code class="language-text">Teams launch the tracker and companion agents from Rocketship
+  -&gt; Databricks Apps host the product UI and agents
+  -&gt; the Use Case Tracker MCP provides a shared tool layer
+  -&gt; Lakebase remains the persistence anchor for tracker data</code></pre>
+
+<p>For executive readers, the main message is that the tracker is not a standalone form app. It is the product-facing part of a governed pattern: Rocketship provides discovery and access, Databricks provides the runtime, MCP provides reusable controlled actions, and Lakebase keeps the source-of-truth data consistent.</p>
+
+<hr>
+
+<h2 id="2-how-to-read-this-document">2. How to Read This Document</h2>
+
+<p>Use this document as the team-facing summary of the Use Case Tracker App. It explains what the app does, how it fits with companion agents, what access model stakeholders should understand, and how Rocketship turns the Databricks-hosted app into an enterprise launch point.</p>
+
+<p>For deeper technical detail, use the earlier documents in the series:</p>
+
+<ul>
+<li><a href="ai-hub-01-mcp-concepts.md">MCP Concepts for Governed Apps and Agents</a> explains the reusable MCP concepts.</li>
+<li><a href="ai-hub-02-mcp-reference-blueprint.md">Secure Databricks Apps + MCP Reference Blueprint</a> explains the generic Databricks architecture.</li>
+<li><a href="ai-hub-03-tracker-mcp-architecture.md">Use Case Tracker MCP Architecture</a> explains the concrete MCP implementation, tool catalog, permissions, and rollout decisions.</li>
+</ul>
+
+<hr>
+
+<h2 id="3-ecosystem-architecture">3. Ecosystem Architecture</h2>
+
+<p>The model follows a clear split: <strong>Rocketship</strong> is where users discover and open governed apps and agents; <strong>Databricks</strong> hosts the running applications. A shared <strong>Use Case Tracker MCP</strong> exposes structured tools so multiple experiences reuse the same tracking logic. <strong>Lakebase</strong> (and related governed stores) holds the persisted use-case data that the tracker and MCP are wired to.</p>
+
+<p>Two figures are included below: <strong>3.1</strong> is the <strong>full ecosystem</strong> (all consumers and extensions). <strong>3.2</strong> zooms in on the <strong>Use Case Tracker App</strong> and <strong>Grooming Agent</strong> only - how each runs as its own Databricks App, why both still call the same MCP, and where Lakebase sits as the system of record.</p>
+
+<h3 id="31-platform-ecosystem-view-all-consumers">3.1 Platform / ecosystem view (all consumers)</h3>
+
+<figure class="diagram-block diagram-1"><figcaption>DIAGRAM</figcaption><div class="mermaid">flowchart TB
+    subgraph RS[&quot;🚀 Rocketship — portal &#183; access &#183; governance&quot;]
+        direction LR
+        GA(&quot;🤖 Grooming Agent&quot;)
+        JA(&quot;🎭 Joking Agent&quot;)
+        UCT[&quot;📋 Use Case Tracker App&quot;]
+        EXT[&quot;✳️ More apps / agents&quot;]
+    end
+
+    MCP{{&quot;🔌 Use Case Tracker MCP — shared tools &amp; integration&quot;}}
+
+    DB[(&quot;🗄️ Lakebase — source of truth&quot;)]
+
+    GA --&gt; MCP
+    JA --&gt; MCP
+    UCT --&gt; MCP
+    EXT --&gt; MCP
+    MCP --&gt; DB
+
+    classDef portal fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef ai fill:#F3E5F5,stroke:#7B1FA2,stroke-width:1px,color:#4A148C
+    classDef biz fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20
+    classDef integration fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#E65100
+    classDef data fill:#ECEFF1,stroke:#455A64,stroke-width:2px,color:#263238
+
+    class RS portal
+    class GA,JA ai
+    class UCT biz
+    class MCP integration
+    class DB data</div></figure>
+
+<p><strong>How to read diagram 3.1.</strong> People open the <strong>Grooming Agent</strong>, <strong>Joking Agent</strong>, and <strong>Use Case Tracker App</strong> from <strong>Rocketship</strong> (discovery and access). Each consumer calls the <strong>Use Case Tracker MCP</strong> for the same named operations instead of duplicating tracker logic or hitting raw tables. The MCP connects to <strong>Lakebase</strong> (and the broader governed tracker footprint) so use cases, follow-ups, and metadata stay consistent across channels.</p>
+
+<h3 id="32-use-case-tracker-app-grooming-agent-paired-view">3.2 Use Case Tracker App + Grooming Agent (paired view)</h3>
+
+<p><strong>Use Case Tracker App</strong> is the structured product UI for intake, review, and updates. The <strong>Grooming Agent</strong> is a conversational assistant for triage, gap analysis, and grooming-style recommendations. Both are launched from <strong>Rocketship</strong>, run as separate <strong>Databricks Apps</strong>, and call the <strong>same Use Case Tracker MCP</strong> so tracker behaviour stays one place—not reimplemented in each agent. The Grooming path typically chains <strong>chat / reasoning</strong> (often with a <strong>foundation model</strong> or serving endpoint) to <strong>named MCP tools</strong> (read-focused where policy requires it); the Tracker path emphasises <strong>forms and workflows</strong> that may hold authoritative edits until MCP write tools are hardened.</p>
+
+<figure class="diagram-block diagram-2"><figcaption>DIAGRAM</figcaption><div class="mermaid">flowchart TB
+    RS[&quot;Rocketship — catalog, entitlements, launch&quot;]
+
+    subgraph TR_APP[&quot;Use Case Tracker App (Databricks App)&quot;]
+        TUI[&quot;Structured UI — intake, review, status&quot;]
+    end
+
+    subgraph GA_APP[&quot;Grooming Agent (Databricks App)&quot;]
+        GCHAT[&quot;Conversational UI&quot;]
+        GORCH[&quot;Orchestration — tool routing, policy&quot;]
+        GFM[&quot;Foundation model / serving (optional)&quot;]
+        GCHAT --&gt; GORCH --&gt; GFM
+    end
+
+    MCP{{&quot;Use Case Tracker MCP — shared named tools&quot;}}
+
+    LB[(&quot;Lakebase — tracker data + checkpoints (per design)&quot;)]
+
+    RS --&gt; TR_APP
+    RS --&gt; GA_APP
+    TUI --&gt; MCP
+    GORCH --&gt; MCP
+    MCP --&gt; LB
+
+    classDef portal fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1
+    classDef biz fill:#E8F5E9,stroke:#2E7D32,stroke-width:1px,color:#1B5E20
+    classDef ai fill:#F3E5F5,stroke:#7B1FA2,stroke-width:1px,color:#4A148C
+    classDef integration fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#E65100
+    classDef data fill:#ECEFF1,stroke:#455A64,stroke-width:2px,color:#263238
+
+    class RS portal
+    class TR_APP biz
+    class GA_APP ai
+    class MCP integration
+    class LB data</div></figure>
+
+<table>
+<thead><tr>
+<th>Icon</th>
+<th>Meaning</th>
+<th>Shape (Mermaid)</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>🚀</td>
+<td>Rocketship — enterprise catalog, entitlements, launch</td>
+<td>Subgraph (platform band)</td>
+</tr>
+<tr>
+<td>🤖 / 🎭</td>
+<td>AI agents — specialised assistants (grooming vs lighter / demo tone)</td>
+<td>Ellipse <code>(...)</code> — typical for autonomous / LLM components</td>
+</tr>
+<tr>
+<td>📋</td>
+<td><strong>Use Case Tracker App</strong> — structured use-case intake and updates</td>
+<td>Rectangle <code>[...]</code> — standard application</td>
+</tr>
+<tr>
+<td>✳️</td>
+<td>Extension slot — future agents or apps on the same pattern</td>
+<td>Rectangle</td>
+</tr>
+<tr>
+<td>🔌</td>
+<td>MCP — governed tool surface (no ad-hoc SQL from consumers)</td>
+<td>Hexagon <code>{{...}}</code> — common for “gateway / API boundary”</td>
+</tr>
+<tr>
+<td>🗄️</td>
+<td>Lakebase — persisted tracker data</td>
+<td>Cylinder <code>[(...)]</code> — conventional for databases</td>
+</tr>
+</tbody>
+</table>
+
+<p><strong>How to read diagram 3.2.</strong> <strong>Rocketship</strong> is still only discovery and access. The <strong>two boxes</strong> are separate deployed apps: the Tracker favours governed <strong>structured</strong> changes; the Grooming Agent favours <strong>conversation + automation</strong> with the same MCP contract underneath. <strong>Lakebase</strong> remains the persistence anchor; <strong>checkpoints</strong> (where used) are typically via the app <strong>service principal</strong>, separate from end-user OBO on UC business objects - align with your tenant runbook.</p>
+
+<p><strong>Runtime reminder (important for stakeholders).</strong> Rocketship is the <strong>access and governance layer</strong>. The apps and MCP <strong>run on Databricks</strong> (for example as Databricks Apps). “Integration with Rocketship” means registering and surfacing those deployed endpoints so the right audiences can launch them with the right entitlements—not moving compute off Databricks.</p>
+
+<hr>
+
+<h2 id="4-product-purpose">4. Product Purpose</h2>
+
+<p><strong>Use Case Tracker App</strong> is the hub’s primary product for capturing, reviewing, and progressing AI and analytics use cases in a structured way: it simplifies intake, review, and updates and shields most users from backend complexity.</p>
+
+<p>Specialised <strong>AI agents</strong> (such as the <strong>Grooming Agent</strong> for triage, gap analysis, and grooming-style recommendations, and the <strong>Joking Agent</strong> for lighter, demo-friendly interactions) sit alongside the app. They are designed to <strong>reuse</strong> the same tracking capability rather than duplicate it, which keeps behaviour consistent as requirements evolve.</p>
+
+<p>The <strong>Use Case Tracker MCP</strong> is the deliberate integration layer between those UIs and agents and the underlying data. It exposes <strong>tool-based</strong> access (no ad-hoc SQL from consumers), which improves reuse, makes automation safer to evolve, and keeps a clearer boundary between “presentation / reasoning” and “system of record.”</p>
+
+<p>Together, the stack supports a modular ecosystem: new agents or apps can be added under Rocketship while still connecting through the same MCP contract, scaling innovation without fragmenting how use cases are stored and interpreted.</p>
+
+<hr>
+
+<h2 id="5-access-and-permissions">5. Access and Permissions</h2>
+
+<p>Access is intentionally layered. <strong>Rocketship</strong> governs <strong>who can see and launch</strong> which registered app or agent, aligned with enterprise sharing and catalog conventions. On <strong>Databricks</strong>, each deployed app has its own <strong>service principal</strong> for platform operations (attachments, some background paths), while many user-driven flows rely on <strong>on-behalf-of-user (OBO)</strong> semantics: the signed-in user’s rights are enforced in addition to app configuration.</p>
+
+<p>Users need appropriate <strong>Databricks App</strong> permissions (<strong>CAN USE</strong> or equivalent) on each app they open (tracker UI, Grooming Agent, MCP app if ever exposed directly). Where the app uses a <strong>SQL warehouse</strong>, <strong>Unity Catalog</strong> objects, <strong>Genie</strong> spaces, or other data-plane resources, the same user cohorts need <strong>minimum</strong> warehouse and UC privileges consistent with the tenant design. The <strong>custom MCP</strong> app must be granted to the same groups that depend on it, because agents resolve tracker operations through that app.</p>
+
+<p><strong>Consumer apps (additional Databricks Apps):</strong> Callers of the Use Case Tracker MCP need <strong><code>CAN USE</code></strong> on the MCP app for the calling principal, and—when <strong>OBO</strong> headers are forwarded—end users need <strong>Lakebase</strong> and <strong><code>use_case_hub</code></strong> access as described in <strong><a href="../mcp-use-case-tracker/docs/MCP_LAKEBASE_PERMISSIONS.md"><code>mcp-use-case-tracker/docs/MCP_LAKEBASE_PERMISSIONS.md</code></a></strong>.</p>
+
+<p>For the current operating model emphasising safety on a <strong>shared</strong> MCP, the <strong>live MCP tool surface used by agents is kept read-only</strong> where policy requires it: inspection and recommendations flow through the MCP, while authoritative manual changes may remain in the <strong>Use Case Tracker App</strong> (classic flows) until write tools are explicitly enabled and hardened (identity-aware checks, deny-by-default, audit). <strong>Lakebase</strong> used for agent checkpoints (where applicable) is typically accessed by the <strong>app service principal</strong>, which is separate from end-user OBO grants on business data.</p>
+
+<hr>
+
+<h2 id="6-rocketship-integration">6. Rocketship Integration</h2>
+
+<p>Rocketship is integrated as the <strong>enterprise front door</strong>: <strong>Use Case Tracker App</strong> and agent deployments are <strong>registered</strong> (or planned for registration) so discovery, ownership, and access align with the wider AI Hub / EW portfolio. Internal audiences launch the product and connected agents from Rocketship instead of informal links, which reduces friction and makes permission changes auditable at the portal layer.</p>
+
+<p>Operationally, integration means mapping each Databricks-hosted URL to a <strong>Rocketship catalog entry</strong>, attaching the right <strong>metadata</strong> (purpose, support contact, environment), and ensuring <strong>workspace groups</strong> used for development and pilot users match Rocketship’s entitlements story. The <strong>MCP</strong> remains a <strong>supporting</strong> Databricks App: Rocketship may expose it only to operators, or keep it linked from technical documentation, depending on policy—while still treating it as a first-class dependency in deployment checklists.</p>
+
+<p>Longer term, Rocketship integration supports <strong>scale with control</strong>: the same architecture can add further agents or companion apps without changing how data is persisted, as long as new consumers honour the MCP tool contract and the organisation’s production security bar for OBO, UC, and MCP write policies.</p>
+
+<hr>
+
+<h2 id="7-source-notes">7. Source Notes</h2>
+
+<p>This brief reflects the <strong>Use Case Tracker App</strong> architecture as of April 2026. Update URLs, environment names, and permission group labels when promoting across dev / UAT / prod.</p>
+
+<p><strong>PDF:</strong> <code>docs/ai-hub-04-tracker-app.pdf</code> - regenerate from this Markdown source with the company document renderer. The PDF should preserve the executive summary, series framing, diagrams, and app access narrative for presentation use.</p>
+<p class="document-source-note">Generated from Markdown with the EY-Parthenon styled Company Documents Cursor skill.</p>
+</main>
+</body>
+</html>
