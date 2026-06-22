@@ -14,6 +14,14 @@ def format_euro(value: float | int) -> str:
     return f"EUR {float(value):,.2f}"
 
 
+def pluralize(count: float | int, singular: str, plural: str | None = None) -> str:
+    return singular if float(count) == 1 else (plural or f"{singular}s")
+
+
+def pluralize_pt(count: float | int, singular: str, plural: str | None = None) -> str:
+    return singular if float(count) == 1 else (plural or f"{singular}s")
+
+
 def sales_chart_payload(series: dict[str, Any]) -> dict[str, Any]:
     return {
         "type": "bar",
@@ -53,11 +61,15 @@ class RetailAgent:
                 return self._answer_with_llm(question, channel)
             except (LLMNotConfiguredError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
                 fallback = self._answer_with_rules(question)
+                if channel == "whatsapp":
+                    fallback = self._localize_for_whatsapp(fallback)
                 fallback["llm_error"] = str(exc)
                 fallback["llm_provider"] = "fallback"
                 return fallback
 
         result = self._answer_with_rules(question)
+        if channel == "whatsapp":
+            result = self._localize_for_whatsapp(result)
         result["llm_provider"] = "not_configured"
         return result
 
@@ -254,6 +266,11 @@ class RetailAgent:
     ) -> str:
         assert self.llm is not None
         max_length = "2 short sentences" if channel == "whatsapp" else "one concise paragraph"
+        language_instruction = (
+            "Write the answer in Portuguese from Portugal. "
+            if channel == "whatsapp"
+            else "Write the answer in English. "
+        )
         return self.llm.complete(
             [
                 ChatMessage(
@@ -268,6 +285,7 @@ class RetailAgent:
                         "For profitability, clearly label estimates and avoid presenting estimated margin as statutory profit. "
                         "When making a recommendation, mention the evidence behind it in plain language. "
                         "If a visualization is provided by the app, summarize the business meaning of the visual. "
+                        f"{language_instruction}"
                         f"Keep the answer to {max_length} and end with one practical recommendation when useful."
                     ),
                 ),
@@ -297,28 +315,45 @@ class RetailAgent:
 
         if has_greeting and has_wellbeing:
             return {
-                "answer": "Hi Jhonny, I’m ready to help with the shop. Ask me what sold today, what stock is risky, whether purchases are too high, or what you should focus on.",
+                "answer": (
+                    "Ola Jhonny, estou pronto para ajudar com a loja. Pergunta-me o que vendeu hoje, "
+                    "que stock esta em risco, se as compras estao altas, ou no que deves focar."
+                    if channel == "whatsapp"
+                    else "Hi Jhonny, I’m ready to help with the shop. Ask me what sold today, what stock is risky, whether purchases are too high, or what you should focus on."
+                ),
                 "tool": "conversation",
                 "intent": "small_talk",
                 "llm_provider": self.llm.provider if self.llm else "not_required",
             }
         if normalized in greetings or normalized_phrase in greetings:
             return {
-                "answer": "Hi Jhonny, I’m your Jhonny Surf AI assistant. I can help you check sales, stock, purchases, margins, financial risks, and what needs attention today.",
+                "answer": (
+                    "Ola Jhonny, sou o teu assistente AI da Jhonny Surf. Posso ajudar-te a ver vendas, stock, compras, margens, riscos financeiros e prioridades do dia."
+                    if channel == "whatsapp"
+                    else "Hi Jhonny, I’m your Jhonny Surf AI assistant. I can help you check sales, stock, purchases, margins, financial risks, and what needs attention today."
+                ),
                 "tool": "conversation",
                 "intent": "greeting",
                 "llm_provider": self.llm.provider if self.llm else "not_required",
             }
         if normalized in wellbeing or normalized_phrase in wellbeing:
             return {
-                "answer": "I’m ready to help with the shop. Ask me what sold today, what stock is risky, whether purchases are too high, or what you should focus on.",
+                "answer": (
+                    "Estou pronto para ajudar com a loja. Pergunta-me o que vendeu hoje, que stock esta em risco, se as compras estao altas, ou no que deves focar."
+                    if channel == "whatsapp"
+                    else "I’m ready to help with the shop. Ask me what sold today, what stock is risky, whether purchases are too high, or what you should focus on."
+                ),
                 "tool": "conversation",
                 "intent": "small_talk",
                 "llm_provider": self.llm.provider if self.llm else "not_required",
             }
         if any(phrase in normalized for phrase in identity_phrases):
             return {
-                "answer": "I’m Jhonny Surf’s AI business assistant, connected to curated Odoo tools so I can help with sales, stock, purchases, financials, margins, brands, categories, costs, and prices.",
+                "answer": (
+                    "Sou o assistente AI de negócio da Jhonny Surf, ligado a ferramentas Odoo para ajudar com vendas, stock, compras, finanças, margens, marcas, categorias, custos e preços."
+                    if channel == "whatsapp"
+                    else "I’m Jhonny Surf’s AI business assistant, connected to curated Odoo tools so I can help with sales, stock, purchases, financials, margins, brands, categories, costs, and prices."
+                ),
                 "tool": "conversation",
                 "intent": "identity",
                 "llm_provider": self.llm.provider if self.llm else "not_required",
@@ -332,10 +367,39 @@ class RetailAgent:
             }
         if len(normalized.split()) <= 2 and not any(
             term in normalized
-            for term in ["sale", "sales", "stock", "buy", "purchase", "margin", "profit", "cost", "price"]
+            for term in [
+                "sale",
+                "sales",
+                "sell",
+                "sold",
+                "venda",
+                "vendas",
+                "vendeu",
+                "vendemos",
+                "vender",
+                "stock",
+                "buy",
+                "purchase",
+                "compra",
+                "compras",
+                "comprar",
+                "margin",
+                "margem",
+                "profit",
+                "lucro",
+                "cost",
+                "custo",
+                "price",
+                "preco",
+                "preço",
+            ]
         ):
             return {
-                "answer": "Can you tell me which part of the business you want to check: sales, stock, purchases, margins, or financial risks?",
+                "answer": (
+                    "Diz-me que parte do negócio queres ver: vendas, stock, compras, margens ou riscos financeiros?"
+                    if channel == "whatsapp"
+                    else "Can you tell me which part of the business you want to check: sales, stock, purchases, margins, or financial risks?"
+                ),
                 "tool": "clarification",
                 "intent": "ambiguous",
                 "llm_provider": self.llm.provider if self.llm else "not_required",
@@ -344,10 +408,56 @@ class RetailAgent:
 
     def _help_answer(self, channel: str) -> str:
         if channel == "whatsapp":
-            return "I can help with Jhonny Surf sales, stock, purchases, margins, and daily priorities. Try: “what should I focus on today?”"
+            return "Posso ajudar com vendas, stock, compras, margens e prioridades diárias da Jhonny Surf. Experimenta: “no que devo focar hoje?”"
         return (
             "I’m Jhonny Surf’s AI business assistant. Ask me about sales performance, stock cover, what to buy, margin by brand/category, price-cost issues, purchases versus sales, receivables, payables, or what Jhonny should focus on today."
         )
+
+    def _localize_for_whatsapp(self, response: dict[str, Any]) -> dict[str, Any]:
+        localized = dict(response)
+        tool = localized.get("tool")
+        data = localized.get("data")
+        if tool == "today_sales" and isinstance(data, dict):
+            count = data["total_count"]
+            localized["answer"] = (
+                f"As vendas de hoje sao {format_euro(data['total_amount'])} "
+                f"em {count} {pluralize_pt(count, 'encomenda')}."
+            )
+        elif tool == "month_sales" and isinstance(data, dict):
+            count = data["total_count"]
+            localized["answer"] = (
+                f"As vendas deste mes sao {format_euro(data['total_amount'])} "
+                f"em {count} {pluralize_pt(count, 'encomenda')}."
+            )
+        elif tool in {"stock_value", "stock"} and isinstance(data, dict):
+            localized["answer"] = (
+                f"O valor atual do stock e {format_euro(data['value'])}, "
+                f"com {data.get('available', data.get('quantity', 0)):,.0f} unidades disponiveis."
+            )
+        elif tool == "purchase_summary" and isinstance(data, dict):
+            count = data["count"]
+            localized["answer"] = (
+                f"As compras em {data['period']} são {format_euro(data['amount'])} "
+                f"em {count} {pluralize_pt(count, 'ordem de compra', 'ordens de compra')}."
+            )
+        elif tool == "open_bills" and isinstance(data, dict):
+            count = data["count"]
+            localized["answer"] = (
+                f"As faturas em aberto a fornecedores somam {format_euro(data['total_open_payable'])} "
+                f"em {count} {pluralize_pt(count, 'fatura', 'faturas')}."
+            )
+        elif tool == "daily_owner_briefing" and isinstance(data, dict):
+            localized["answer"] = (
+                f"Hoje as vendas estao em {format_euro(data['today_sales']['total_amount'])}; "
+                f"este mes estao em {format_euro(data['month_sales']['total_amount'])}. "
+                "Recomendo rever primeiro stock critico, compras e recebimentos em aberto."
+            )
+        elif tool == "fallback":
+            localized["answer"] = (
+                "Posso responder a perguntas como: Quanto vendemos hoje? Qual e o valor do stock? "
+                "Que categorias venderam hoje? O que esta com pouco stock?"
+            )
+        return localized
 
     def _normalize_tool_arguments(self, tool_name: str, arguments: dict[str, Any], question: str) -> dict[str, Any]:
         if tool_name in {"get_product_replenishment_insight", "get_recommendation_for_question"} and not arguments.get("query"):
@@ -400,7 +510,7 @@ class RetailAgent:
             return {
                 "answer": (
                     f"Sales over the last {series['days']} days total {format_euro(series['total_amount'])} "
-                    f"from {series['total_orders']} orders. Average daily sales are "
+                    f"from {series['total_orders']} {pluralize(series['total_orders'], 'order')}. Average daily sales are "
                     f"{format_euro(series['average_daily_sales'])}; the strongest day was "
                     f"{best_day.get('label', 'n/a')} with {format_euro(best_day.get('amount') or 0)}."
                 ),
@@ -409,7 +519,7 @@ class RetailAgent:
                 "visualization": sales_chart_payload(series),
             }
 
-        if any(value in normalized for value in ["focus", "priority", "priorities", "briefing", "watch", "attention"]):
+        if any(value in normalized for value in ["focus", "foco", "focar", "priority", "priorities", "prioridade", "prioridades", "briefing", "watch", "attention", "atenção", "atencao"]):
             result = self.tools.daily_owner_briefing()
             return {
                 "answer": (
@@ -421,7 +531,7 @@ class RetailAgent:
                 "evidence": [{"tool": "daily_owner_briefing", "summary": self._summarize_tool_result(result)}],
             }
 
-        if any(value in normalized for value in ["how is", "business doing"]):
+        if any(value in normalized for value in ["how is", "business doing", "como esta", "como está", "negocio", "negócio"]):
             result = self.tools.business_snapshot()
             financials = result["financials"]
             return {
@@ -435,7 +545,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if any(value in normalized for value in ["buy more", "should jhonny buy", "should we buy", "replenish", "reorder"]):
+        if any(value in normalized for value in ["buy more", "should jhonny buy", "should we buy", "replenish", "reorder", "comprar mais", "devemos comprar", "devo comprar", "repor"]):
             result = self.tools.product_replenishment_insight(question)
             top = result["top_products"][:3]
             product_lines = (
@@ -459,7 +569,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if any(value in normalized for value in ["cost", "price data", "below cost", "missing cost", "bad price"]):
+        if any(value in normalized for value in ["cost", "custo", "price data", "below cost", "missing cost", "bad price", "preco", "preço", "abaixo do custo"]):
             result = self.tools.price_cost_exceptions()
             return {
                 "answer": (
@@ -470,8 +580,8 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "profit" in normalized or "margin" in normalized or "profitable" in normalized:
-            if "brand" in normalized or "category" in normalized or "where" in normalized or "losing" in normalized:
+        if "profit" in normalized or "lucro" in normalized or "margin" in normalized or "margem" in normalized or "profitable" in normalized:
+            if "brand" in normalized or "marca" in normalized or "category" in normalized or "categoria" in normalized or "where" in normalized or "onde" in normalized or "losing" in normalized or "perder" in normalized:
                 result = self.tools.margin_by_product_category_brand()
                 categories = result["by_category"][:3]
                 lines = "; ".join(
@@ -503,7 +613,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "purchase" in normalized and ("sale" in normalized or "higher" in normalized or "more" in normalized):
+        if ("purchase" in normalized or "compra" in normalized) and ("sale" in normalized or "venda" in normalized or "higher" in normalized or "more" in normalized or "mais" in normalized):
             result = self.tools.purchase_vs_sales_analysis()
             return {
                 "answer": (
@@ -515,18 +625,18 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "purchase" in normalized or "buying" in normalized or "bought" in normalized:
+        if "purchase" in normalized or "buying" in normalized or "bought" in normalized or "compra" in normalized or "compras" in normalized:
             result = self.tools.purchase_summary()
             return {
                 "answer": (
                     f"Purchases for {result['period']} are {format_euro(result['amount'])} "
-                    f"across {result['count']} purchase orders."
+                    f"across {result['count']} {pluralize(result['count'], 'purchase order')}."
                 ),
                 "tool": "purchase_summary",
                 "data": result,
             }
 
-        if "bill" in normalized or "supplier" in normalized or "payable" in normalized or "owe suppliers" in normalized:
+        if "bill" in normalized or "supplier" in normalized or "payable" in normalized or "owe suppliers" in normalized or "fatura" in normalized or "fornecedor" in normalized or "pagar" in normalized:
             result = self.tools.open_bills()
             return {
                 "answer": (
@@ -537,7 +647,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "receivable" in normalized or "customers owe" in normalized or "customer invoices" in normalized:
+        if "receivable" in normalized or "customers owe" in normalized or "customer invoices" in normalized or "receber" in normalized or "clientes devem" in normalized:
             result = self.tools.open_customer_invoices()
             return {
                 "answer": (
@@ -548,7 +658,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "recent order" in normalized or "latest order" in normalized:
+        if "recent order" in normalized or "latest order" in normalized or "encomenda recente" in normalized or "ultimas encomendas" in normalized or "últimas encomendas" in normalized:
             result = self.tools.recent_orders()
             orders = result["orders"][:5]
             lines = [f"{item['reference']}: {format_euro(item['amount'])} ({item['source']})" for item in orders]
@@ -558,7 +668,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if any(value in normalized for value in ["stock cover", "stockout", "overstock", "dead stock", "too much stock"]):
+        if any(value in normalized for value in ["stock cover", "stockout", "overstock", "dead stock", "too much stock", "cobertura de stock", "sem stock", "stock parado", "stock a mais"]):
             result = self.tools.stock_cover_and_velocity()
             risks = result["risk_counts"]
             return {
@@ -571,7 +681,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "low stock" in normalized or "reorder" in normalized:
+        if "low stock" in normalized or "reorder" in normalized or "pouco stock" in normalized or "stock baixo" in normalized:
             items = self.tools.low_stock(limit=8)
             if not items:
                 return {"answer": "No low-stock products found in the current threshold.", "tool": "low_stock"}
@@ -585,7 +695,7 @@ class RetailAgent:
                 "data": items,
             }
 
-        if "category" in normalized and "sale" in normalized:
+        if ("category" in normalized or "categoria" in normalized) and ("sale" in normalized or "venda" in normalized or "vendeu" in normalized):
             result = self.tools.sales_by_category()
             categories = result["categories"][:5]
             lines = [
@@ -598,7 +708,7 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "stock value" in normalized or ("stock" in normalized and "value" in normalized):
+        if "stock value" in normalized or "valor do stock" in normalized or ("stock" in normalized and ("value" in normalized or "valor" in normalized)):
             result = self.tools.stock_value()
             return {
                 "answer": (
@@ -620,19 +730,19 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "month" in normalized or "may" in normalized or "monthly" in normalized:
+        if "month" in normalized or "mes" in normalized or "mês" in normalized or "may" in normalized or "monthly" in normalized:
             now = datetime.now(LISBON_TZ)
             result = self.tools.month_sales(now.year, now.month)
             return {
                 "answer": (
                     f"Sales this month are {format_euro(result['total_amount'])} "
-                    f"from {result['total_count']} orders."
+                    f"from {result['total_count']} {pluralize(result['total_count'], 'order')}."
                 ),
                 "tool": "month_sales",
                 "data": result,
             }
 
-        if "financial" in normalized or "finance" in normalized or "business" in normalized:
+        if "financial" in normalized or "finance" in normalized or "business" in normalized or "financeiro" in normalized or "financas" in normalized or "finanças" in normalized:
             result = self.tools.key_financials()
             return {
                 "answer": (
@@ -644,12 +754,12 @@ class RetailAgent:
                 "data": result,
             }
 
-        if "today" in normalized or "sale" in normalized or "sell" in normalized:
+        if "today" in normalized or "hoje" in normalized or "sale" in normalized or "sales" in normalized or "sell" in normalized or "sold" in normalized or "venda" in normalized or "vendas" in normalized or "vendeu" in normalized or "vendemos" in normalized:
             result = self.tools.today_sales()
             return {
                 "answer": (
                     f"Today's sales are {format_euro(result['total_amount'])} "
-                    f"from {result['total_count']} orders."
+                    f"from {result['total_count']} {pluralize(result['total_count'], 'order')}."
                 ),
                 "tool": "today_sales",
                 "data": result,

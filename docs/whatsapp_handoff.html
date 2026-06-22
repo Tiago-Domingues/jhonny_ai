@@ -1,0 +1,788 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WhatsApp Handoff</title>
+  <style>
+:root {
+  color-scheme: light;
+  --ey-black: #2e2e38;
+  --ey-yellow: #ffe600;
+  --ey-dark: #1f1f2b;
+  --ey-gray: #747480;
+  --ey-mid-gray: #c4c4cd;
+  --ey-light-gray: #f6f6fa;
+  --ey-border: #d7d7dc;
+  --ey-blue: #155cb4;
+  --page-side: 70px;
+  --page-top: 50px;
+  --page-bottom: 66px;
+  --print-page-side: 18mm;
+  --print-page-top: 14mm;
+  --print-page-bottom: 19mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@page {
+  size: A4;
+  /* Body pages need real page margins because section padding is not repeated on every page fragment. */
+  margin: 14mm 18mm 19mm;
+}
+
+@page cover {
+  margin: 0;
+}
+
+@page toc {
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  color: var(--ey-black);
+  background: #ffffff;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 12.3px;
+  line-height: 1.44;
+  overflow-wrap: break-word;
+}
+
+.cover-page,
+.toc-page,
+.document-body {
+  padding: var(--page-top) var(--page-side) var(--page-bottom);
+}
+
+.cover-page {
+  page: cover;
+  position: relative;
+  min-height: 100vh;
+  page-break-after: always;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 72% 12%, rgba(166, 0, 255, 0.7), transparent 25%),
+    radial-gradient(circle at 30% 34%, rgba(0, 188, 255, 0.5), transparent 21%),
+    radial-gradient(circle at 68% 79%, rgba(0, 214, 210, 0.42), transparent 11%),
+    radial-gradient(circle at 87% 83%, rgba(170, 0, 210, 0.5), transparent 18%),
+    linear-gradient(135deg, #111520 0%, #1b2030 48%, #171a25 100%);
+}
+
+.cover-brand {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.brand-name {
+  position: relative;
+  padding-top: 22px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-name::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 64px;
+  height: 7px;
+  background: var(--ey-yellow);
+  transform: skewY(-7deg);
+  transform-origin: left center;
+}
+
+.brand-name .brand-accent {
+  color: #2f88ff;
+}
+
+.brand-tagline {
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 700;
+}
+
+.cover-content {
+  position: relative;
+  z-index: 1;
+  max-width: 690px;
+  margin-top: 88px;
+}
+
+.cover-page h1 {
+  margin: 0;
+  max-width: 620px;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.cover-subtitle {
+  max-width: 620px;
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  line-height: 1.28;
+}
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 10px;
+  max-width: 540px;
+  margin-top: 28px;
+}
+
+.cover-meta-row {
+  position: relative;
+  min-height: 52px;
+  padding: 10px 12px 9px;
+  border: 2px solid rgba(196, 0, 255, 0.95);
+  background: rgba(15, 20, 34, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(0, 198, 255, 0.32);
+}
+
+.cover-meta-row::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 12px;
+  width: 28px;
+  height: 2px;
+  background: #00b7ff;
+}
+
+.cover-meta-row span {
+  display: block;
+  margin-bottom: 5px;
+  color: #00b7ff;
+  font-size: 7.2px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cover-meta-row strong {
+  display: block;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.cover-summary {
+  max-width: 625px;
+  margin-top: 28px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.cover-summary h2 {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cover-summary p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 10.7px;
+  line-height: 1.45;
+}
+
+.cover-footer {
+  position: absolute;
+  right: var(--page-side);
+  bottom: 30px;
+  left: var(--page-side);
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 7.6px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.toc-page {
+  page: toc;
+  min-height: 100vh;
+  page-break-after: always;
+  background:
+    radial-gradient(circle at 72% 18%, rgba(207, 172, 255, 0.45), transparent 27%),
+    radial-gradient(circle at 12% 38%, rgba(194, 231, 255, 0.55), transparent 29%),
+    #ffffff;
+}
+
+.toc-card {
+  max-width: 585px;
+  margin: 18px auto 0;
+  padding: 16px 20px 18px;
+  border: 1px solid #cfd2dc;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 82% 38%, rgba(229, 201, 255, 0.5), transparent 38%),
+    linear-gradient(110deg, rgba(225, 243, 255, 0.9), rgba(251, 244, 255, 0.92));
+  box-shadow: 0 1px 2px rgba(31, 31, 43, 0.08);
+}
+
+.toc-card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  padding-top: 0;
+  border-top: 0;
+  color: var(--ey-black);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.toc-card ol,
+.toc-card ul {
+  max-width: 100%;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ey-black);
+  font-size: 8.2px;
+  line-height: 1.5;
+}
+
+.toc-card li {
+  margin: 3px 0;
+}
+
+.toc-card a {
+  color: inherit;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+h2 {
+  margin: 22px 0 8px;
+  padding-top: 0;
+  border-top: 0;
+  font-size: 17px;
+  line-height: 1.18;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+h3 {
+  margin: 15px 0 6px;
+  font-size: 13.5px;
+  line-height: 1.22;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+h4 {
+  margin: 12px 0 5px;
+  font-size: 12px;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+h2[id="7-source-notes"],
+h2[id="12-source-references"] {
+  break-before: page;
+  page-break-before: always;
+}
+
+hr {
+  height: 1px;
+  margin: 22px 0;
+  border: 0;
+  background: var(--ey-border);
+}
+
+p {
+  margin: 7px 0;
+  orphans: 3;
+  widows: 3;
+  overflow-wrap: break-word;
+}
+
+ul,
+ol {
+  margin: 5px 0 7px;
+  padding-left: 18px;
+}
+
+li {
+  margin: 4px 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  orphans: 2;
+  widows: 2;
+}
+
+code {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--ey-light-gray);
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+pre {
+  max-width: 100%;
+  overflow: visible;
+  padding: 9px 10px;
+  border: 1px solid var(--ey-border);
+  border-radius: 4px;
+  background: var(--ey-light-gray);
+  font-size: 10.5px;
+  line-height: 1.32;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  page-break-inside: avoid;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+}
+
+blockquote {
+  margin: 14px 0;
+  padding: 10px 14px;
+  border-left: 4px solid var(--ey-yellow);
+  background: var(--ey-light-gray);
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 8px 0 10px;
+  font-size: 11.2px;
+  line-height: 1.36;
+  break-inside: auto;
+  page-break-inside: auto;
+}
+
+thead {
+  display: table-header-group;
+}
+
+tfoot {
+  display: table-footer-group;
+}
+
+tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  border: 1px solid var(--ey-border);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+th {
+  background: #ececf2;
+  font-weight: 700;
+}
+
+a {
+  color: var(--ey-blue);
+  text-decoration: none;
+}
+
+.diagram-block {
+  margin: 10px 0 14px;
+  padding: 9px 10px 10px;
+  min-height: 360px;
+  border: 1px solid var(--ey-border);
+  border-radius: 4px;
+  background: #ffffff;
+  page-break-inside: avoid;
+}
+
+.diagram-2 {
+  break-before: page;
+  page-break-before: always;
+}
+
+.diagram-block figcaption {
+  margin-bottom: 5px;
+  color: var(--ey-gray);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mermaid {
+  display: flex;
+  min-height: 325px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.document-footer {
+  display: none;
+}
+
+.document-source-note {
+  margin-top: 18px;
+  color: var(--ey-gray);
+  font-size: 10px;
+}
+
+@media print {
+  body {
+    font-size: 12px;
+  }
+
+  .cover-page,
+  .toc-page {
+    min-height: 260mm;
+    height: 260mm;
+  }
+
+  .document-body {
+    min-height: auto;
+    padding: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  h2 + p,
+  h2 + ul,
+  h2 + ol,
+  h2 + table,
+  h3 + p,
+  h3 + ul,
+  h3 + ol,
+  h3 + table {
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+
+  p,
+  li,
+  blockquote {
+    orphans: 3;
+    widows: 3;
+  }
+}
+
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    window.addEventListener("load", async () => {
+      if (window.mermaid) {
+        mermaid.initialize({ startOnLoad: false, securityLevel: "loose", theme: "base" });
+        await mermaid.run({ querySelector: ".mermaid" });
+      }
+      document.body.classList.add("render-ready");
+    });
+  </script>
+</head>
+<body>
+<footer class="document-footer">
+  <span class="page-marker" data-file="whatsapp_handoff.pdf"></span>
+</footer>
+<section class="cover-page">
+  <div class="cover-brand">
+    <div>
+      <div class="brand-name"><span>EY</span> <span class="brand-accent">Parthenon</span></div>
+      <div class="brand-tagline">Shape the future with confidence</div>
+    </div>
+  </div>
+  <div class="cover-content">
+    <h1>WhatsApp Handoff</h1>
+    
+    <div class="cover-meta">
+      <div class="cover-meta-row"><span>Status</span><strong>Azure webhook is live. Twilio still needs a WhatsApp sender or Sandbox configuration in the Twilio console.</strong></div>
+    </div>
+    
+  </div>
+  <div class="cover-footer">
+    <span>Generated from Markdown</span>
+    <span>EW AI Hub</span>
+  </div>
+</section>
+<section class="toc-page">
+  <div class="toc-card">
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#goal">Goal</a></li>
+<li><a href="#current-backend-endpoint">Current Backend Endpoint</a></li>
+<li><a href="#environment">Environment</a></li>
+<li><a href="#request-handling">Request Handling</a></li>
+<li><a href="#provider-options">Provider Options</a></li>
+<li><a href="#current-twilio-root-cause">Current Twilio Root Cause</a></li>
+<li><a href="#rodrigo-tasks">Rodrigo Tasks</a></li>
+<li><a href="#local-test">Local Test</a></li>
+<li><a href="#security-tests">Security Tests</a></li>
+<li><a href="#demo-positioning">Demo Positioning</a></li>
+</ul>
+  </div>
+</section>
+<main class="document-body">
+
+<p>Owner: Rodrigo</p>
+
+<p><strong>Status:</strong> Azure webhook is live. Twilio still needs a WhatsApp sender or Sandbox configuration in the Twilio console.</p>
+
+<h2 id="goal">Goal</h2>
+
+<p>Let an approved business owner ask operational questions through WhatsApp and receive answers from the same backend tools used by the web app.</p>
+
+<h2 id="current-backend-endpoint">Current Backend Endpoint</h2>
+
+<pre><code class="language-text">POST /webhooks/whatsapp</code></pre>
+
+<p>Current hosted webhook URL:</p>
+
+<pre><code class="language-text">https://jhonny-retail-api-a92e4ffb.azurewebsites.net/webhooks/whatsapp</code></pre>
+
+<p>The FastAPI webhook uses the same agent path as the app chat endpoint:</p>
+
+<pre><code class="language-text">POST /chat</code></pre>
+
+<p>The endpoint accepts:</p>
+
+<ul>
+<li>Twilio-style form payloads with <code>From</code> and <code>Body</code></li>
+<li>WhatsApp Cloud API-style JSON webhook payloads</li>
+</ul>
+
+<p>If the request is Twilio form encoded, the backend returns TwiML. If it is JSON, the backend returns JSON with the answer and selected tool:</p>
+
+<pre><code class="language-json">{
+  &quot;answer&quot;: &quot;Today&#39;s sales are EUR 494.75 from 11 orders.&quot;,
+  &quot;tool&quot;: &quot;get_today_sales&quot;
+}</code></pre>
+
+<p>The agent keeps WhatsApp answers shorter than app answers and avoids customer personal data.</p>
+
+<h2 id="environment">Environment</h2>
+
+<pre><code class="language-env">WHATSAPP_ALLOWED_NUMBERS=351900000000,351911111111
+WHATSAPP_RATE_LIMIT_PER_MINUTE=20
+PUBLIC_WHATSAPP_WEBHOOK_URL=https://your-public-url/webhooks/whatsapp
+TWILIO_AUTH_TOKEN=replace-with-twilio-auth-token
+WHATSAPP_APP_SECRET=replace-with-meta-app-secret</code></pre>
+
+<p>If <code>WHATSAPP_ALLOWED_NUMBERS</code> is empty, all senders are allowed. For a real pilot, set this to the approved phone numbers only.</p>
+
+<p>For Twilio, set <code>TWILIO_AUTH_TOKEN</code> and keep <code>PUBLIC_WHATSAPP_WEBHOOK_URL</code> equal to the webhook URL configured in Twilio. For Meta WhatsApp Cloud API, set <code>WHATSAPP_APP_SECRET</code> to verify <code>X-Hub-Signature-256</code>. If these secrets are absent, local testing still works, but production signature checks are disabled.</p>
+
+<h2 id="request-handling">Request Handling</h2>
+
+<table>
+<thead><tr>
+<th>Step</th>
+<th>Behavior</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Parse payload</td>
+<td>Reads JSON bodies for Meta Cloud API or form-encoded bodies for Twilio</td>
+</tr>
+<tr>
+<td>Verify signature</td>
+<td>Uses Twilio SHA1 signature or Meta SHA256 signature when the relevant secret is configured</td>
+</tr>
+<tr>
+<td>Extract sender</td>
+<td>Normalizes Twilio <code>whatsapp:+...</code> or Meta <code>messages[0].from</code> into a phone number</td>
+</tr>
+<tr>
+<td>Check allowlist</td>
+<td>Rejects unauthorized senders with HTTP 403 when <code>WHATSAPP_ALLOWED_NUMBERS</code> is set</td>
+</tr>
+<tr>
+<td>Check rate limit</td>
+<td>Rejects excess messages with HTTP 429 based on <code>WHATSAPP_RATE_LIMIT_PER_MINUTE</code></td>
+</tr>
+<tr>
+<td>Extract message</td>
+<td>Uses Twilio <code>Body</code> or Meta <code>messages[0].text.body</code></td>
+</tr>
+<tr>
+<td>Answer question</td>
+<td>Calls the same <code>RetailAgent</code> path with <code>channel=\&quot;whatsapp\&quot;</code></td>
+</tr>
+<tr>
+<td>Return response</td>
+<td>Returns TwiML XML for Twilio or JSON for Meta/local tests</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="provider-options">Provider Options</h2>
+
+<table>
+<thead><tr>
+<th>Option</th>
+<th>When To Use</th>
+<th>Notes</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Twilio WhatsApp sandbox</td>
+<td>Fastest demo path</td>
+<td>Good for testing inbound/outbound behavior quickly</td>
+</tr>
+<tr>
+<td>Meta WhatsApp Cloud API</td>
+<td>Better production path</td>
+<td>Requires Meta setup, webhook URL, and app secret</td>
+</tr>
+<tr>
+<td>Local JSON test</td>
+<td>Backend development</td>
+<td>Does not require provider setup, but does not prove WhatsApp delivery</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="current-twilio-root-cause">Current Twilio Root Cause</h2>
+
+<p>The Twilio account currently shows no active phone numbers. That screen is not enough to make WhatsApp work.</p>
+
+<p>For a quick pilot, use the <strong>Twilio WhatsApp Sandbox</strong> instead of the Active Numbers screen:</p>
+
+<ol>
+<li value="1">In Twilio Console, go to <strong>Messaging &gt; Try it out &gt; Send a WhatsApp message</strong>.</li>
+<li value="2">Follow Twilio&#39;s join instruction from the target WhatsApp phone, usually a message like <code>join &lt;sandbox-code&gt;</code> to the Twilio sandbox WhatsApp number.</li>
+<li value="3">Set <strong>When a message comes in</strong> to:</li>
+</ol>
+
+<pre><code class="language-text">https://jhonny-retail-api-a92e4ffb.azurewebsites.net/webhooks/whatsapp</code></pre>
+
+<ol>
+<li value="4">Use method <strong>HTTP POST</strong>.</li>
+<li value="5">Send a WhatsApp message such as <code>How much did we sell today?</code>.</li>
+</ol>
+
+<p>If using a production WhatsApp sender instead of the Sandbox, the Twilio account must have an approved WhatsApp sender. A normal Twilio trial with no active number/sender will not deliver WhatsApp messages to this backend.</p>
+
+<h2 id="rodrigo-tasks">Rodrigo Tasks</h2>
+
+<ol>
+<li value="1">Choose provider:</li>
+</ol>
+<ul>
+<li>Fastest demo: Twilio WhatsApp sandbox</li>
+<li>Better production path: Meta WhatsApp Business Cloud API</li>
+</ul>
+<ol>
+<li value="2">Point inbound WhatsApp messages to:</li>
+</ol>
+
+<pre><code class="language-text">https://jhonny-retail-api-a92e4ffb.azurewebsites.net/webhooks/whatsapp</code></pre>
+
+<ol>
+<li value="3">For local testing, expose the local backend with a tunnel such as ngrok or Cloudflare Tunnel.</li>
+<li value="4">Test these prompts:</li>
+</ol>
+
+<pre><code class="language-text">How much did we sell today?
+What is the stock value?
+What categories sold today?
+What is low stock?
+What should Jhonny focus on today?
+Are purchases too high compared with sales?</code></pre>
+
+<ol>
+<li value="5">Add production safeguards before a client rollout:</li>
+</ol>
+<ul>
+<li>Set <code>TWILIO_AUTH_TOKEN</code> in Azure from the Twilio account auth token</li>
+<li>Keep <code>PUBLIC_WHATSAPP_WEBHOOK_URL</code> exactly equal to the Twilio webhook URL</li>
+<li>Restrict <code>WHATSAPP_ALLOWED_NUMBERS</code> to approved phone numbers after the sandbox sender phone is known</li>
+<li>Confirm inbound and outbound message logs</li>
+<li>Keep rate limits enabled</li>
+<li>Avoid sending sensitive customer data over WhatsApp</li>
+</ul>
+
+<h2 id="local-test">Local Test</h2>
+
+<p>With the backend running on <code>http://127.0.0.1:8000</code>:</p>
+
+<pre><code class="language-powershell">Invoke-RestMethod `
+  -Uri http://127.0.0.1:8000/webhooks/whatsapp `
+  -Method POST `
+  -ContentType &quot;application/json&quot; `
+  -Body &#39;{&quot;From&quot;:&quot;351900000000&quot;,&quot;Body&quot;:&quot;How much did we sell today?&quot;}&#39;</code></pre>
+
+<p>For Twilio-style form payloads:</p>
+
+<pre><code class="language-powershell">Invoke-RestMethod `
+  -Uri http://127.0.0.1:8000/webhooks/whatsapp `
+  -Method POST `
+  -ContentType &quot;application/x-www-form-urlencoded&quot; `
+  -Body &quot;From=whatsapp:%2B351900000000&amp;Body=How%20much%20did%20we%20sell%20today%3F&quot;</code></pre>
+
+<p>Cloud hosting is not required for app development. Only add a public URL when WhatsApp provider testing needs inbound internet access.</p>
+
+<h2 id="security-tests">Security Tests</h2>
+
+<p>Run the local API security regression before a live WhatsApp demo:</p>
+
+<pre><code class="language-powershell">py scripts/evaluate_api_security.py</code></pre>
+
+<p>This checks:</p>
+
+<ul>
+<li>allowed and blocked sender handling</li>
+<li>per-sender rate limiting</li>
+<li>Twilio signature verification</li>
+<li>Meta signature verification</li>
+</ul>
+
+<h2 id="demo-positioning">Demo Positioning</h2>
+
+<p>WhatsApp is the fast owner channel. The app remains the primary review surface for dashboards, evidence, and richer analytics; WhatsApp is for short answers while the owner is on the shop floor.</p>
+<p class="document-source-note">Generated from Markdown with the EY-Parthenon styled Company Documents Cursor skill.</p>
+</main>
+</body>
+</html>

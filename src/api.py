@@ -31,6 +31,11 @@ class ToolRequest(BaseModel):
     arguments: dict[str, Any] = {}
 
 
+LIVE_DATA_MODE = "live"
+DEMO_DATA_MODE = "demo"
+DEFAULT_SHARE_DEMO_TOKEN = "Jhonny-demo"
+
+
 app = FastAPI(title="Retail Agent POC API", version="0.2.0")
 app.add_middleware(
     CORSMiddleware,
@@ -50,16 +55,22 @@ app.add_middleware(
 WHATSAPP_RATE_LIMIT_STATE: dict[str, list[float]] = {}
 
 
-def get_agent():
-    if not hasattr(app.state, "agent"):
-        app.state.agent = create_agent(ROOT)
-    return app.state.agent
+def get_agent(data_mode: str = LIVE_DATA_MODE):
+    state_name = "demo_agent" if data_mode == DEMO_DATA_MODE else "live_agent"
+    if not hasattr(app.state, state_name):
+        setattr(app.state, state_name, create_agent(ROOT, anonymized=data_mode == DEMO_DATA_MODE))
+    return getattr(app.state, state_name)
 
 
-def require_app_token(x_app_token: str | None) -> None:
+def resolve_data_mode(x_app_token: str | None) -> str:
     expected = os.getenv("APP_AUTH_TOKEN", "").strip()
-    if expected and x_app_token != expected:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    demo_token = os.getenv("APP_DEMO_TOKEN", DEFAULT_SHARE_DEMO_TOKEN).strip()
+    supplied = (x_app_token or "").strip()
+    if expected and supplied == expected:
+        return LIVE_DATA_MODE
+    if demo_token and supplied == demo_token:
+        return DEMO_DATA_MODE
+    raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def is_odoo_auth_error(exc: Exception) -> bool:
@@ -92,9 +103,12 @@ def health() -> dict[str, str]:
 
 @app.get("/dashboard")
 def dashboard(x_app_token: str | None = Header(default=None)) -> Any:
-    require_app_token(x_app_token)
+    data_mode = resolve_data_mode(x_app_token)
     try:
-        return get_agent().tools.dashboard()
+        result = get_agent(data_mode).tools.dashboard()
+        if isinstance(result, dict):
+            result["data_mode"] = data_mode
+        return result
     except RuntimeError as exc:
         if is_odoo_auth_error(exc):
             log_event({"event": "dashboard", "success": False, "error": str(exc)})
@@ -104,12 +118,13 @@ def dashboard(x_app_token: str | None = Header(default=None)) -> Any:
 
 @app.post("/chat")
 def chat(payload: ChatRequest, x_app_token: str | None = Header(default=None)) -> Any:
-    require_app_token(x_app_token)
+    data_mode = resolve_data_mode(x_app_token)
     request_id = str(uuid.uuid4())
     started = time.perf_counter()
     try:
-        response = get_agent().answer(payload.question, channel=payload.channel)
+        response = get_agent(data_mode).answer(payload.question, channel=payload.channel)
         response["request_id"] = request_id
+        response["data_mode"] = data_mode
         log_event(
             {
                 "event": "chat",
@@ -119,6 +134,7 @@ def chat(payload: ChatRequest, x_app_token: str | None = Header(default=None)) -
                 "tool": response.get("tool"),
                 "intent": response.get("intent"),
                 "llm_provider": response.get("llm_provider"),
+                "data_mode": data_mode,
                 "tool_trace": response.get("tool_trace"),
                 "success": True,
                 "latency_ms": round((time.perf_counter() - started) * 1000),
@@ -148,10 +164,10 @@ def call_tool(
     payload: ToolRequest,
     x_app_token: str | None = Header(default=None),
 ) -> Any:
-    require_app_token(x_app_token)
+    data_mode = resolve_data_mode(x_app_token)
     try:
-        result = get_agent().registry.call(tool_name, payload.arguments)
-        return {"tool": tool_name, "data": result}
+        result = get_agent(data_mode).registry.call(tool_name, payload.arguments)
+        return {"tool": tool_name, "data": result, "data_mode": data_mode}
     except RuntimeError as exc:
         if is_odoo_auth_error(exc):
             return odoo_unavailable_response(exc)
@@ -173,7 +189,7 @@ async def whatsapp(request: Request) -> Response:
     if not question.strip():
         return JSONResponse({"error": "message body is required"}, status_code=400)
 
-    response = get_agent().answer(question, channel="whatsapp")
+    response = get_agent(LIVE_DATA_MODE).answer(question, channel="whatsapp")
     log_event(
         {
             "event": "whatsapp",

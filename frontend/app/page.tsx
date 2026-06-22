@@ -137,6 +137,8 @@ type OpenInvoices = {
 
 type Dashboard = {
   generated_at: string;
+  data_mode?: "live" | "demo" | "demo_anonymized";
+  data_notice?: string;
   financials: {
     today_sales: { total_amount: number; total_count: number };
     month_sales: { total_amount: number; total_count: number };
@@ -217,6 +219,7 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:800
 const euro = new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR" });
 const DEFAULT_PROFIT_MARGIN_RATE = 0.28;
 const DEFAULT_DEMO_TOKEN = "retail-demo";
+const SHARE_DEMO_TOKEN = "Jhonny-demo";
 
 const navItems: Array<AppNavItem<AppMode>> = [
   { id: "home", label: "Home", icon: HomeIcon },
@@ -300,7 +303,7 @@ export default function Home() {
       requestHeaders["X-App-Token"] = nextToken;
       const response = await fetch(`${apiBaseUrl}/dashboard`, { headers: requestHeaders });
       if (response.status === 401) {
-        setError("Enter the demo token, then refresh. Local demo token: retail-demo");
+        setError(`Enter ${DEFAULT_DEMO_TOKEN} for live owner data or ${SHARE_DEMO_TOKEN} for anonymized share data, then refresh.`);
         return;
       }
       if (!response.ok) {
@@ -336,7 +339,7 @@ export default function Home() {
         body: JSON.stringify({ question: prompt, channel: "app" }),
       });
       if (response.status === 401) {
-        setError("Enter the demo token, then ask again. Local demo token: retail-demo");
+        setError(`Enter ${DEFAULT_DEMO_TOKEN} for live owner data or ${SHARE_DEMO_TOKEN} for anonymized share data, then ask again.`);
         return;
       }
       if (!response.ok) throw new Error(await readApiError(response, `Chat failed: ${response.status}`));
@@ -379,6 +382,7 @@ export default function Home() {
 
   const maxMonthly = Math.max(...(dashboard?.monthly_sales.map((item) => item.amount) || [1]));
   const maxStock = Math.max(...(dashboard?.stock_categories.map((item) => item.value) || [1]));
+  const isShareDemoMode = token.trim() === SHARE_DEMO_TOKEN || dashboard?.data_mode === "demo";
 
   return (
     <AppShell
@@ -409,6 +413,12 @@ export default function Home() {
         {error ? (
           <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {error}
+          </div>
+        ) : null}
+
+        {isShareDemoMode ? (
+          <div className="rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 dark:border-amber-400/30 dark:bg-amber-950/30 dark:text-amber-100">
+            Public demo mode is active. The app uses the live Odoo structure, but business numbers and names are anonymized for sharing.
           </div>
         ) : null}
 
@@ -458,9 +468,9 @@ function HeaderTokenControl({
       <Input
         id="header-demo-token"
         value={token}
-        placeholder={DEFAULT_DEMO_TOKEN}
-        aria-label="Demo token"
-        className="h-7 w-32 border-transparent !bg-transparent px-2 text-xs font-semibold text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0 dark:text-white dark:placeholder:text-white/50"
+        placeholder={`${DEFAULT_DEMO_TOKEN} / ${SHARE_DEMO_TOKEN}`}
+        aria-label="Access token"
+        className="h-7 w-44 border-transparent !bg-transparent px-2 text-xs font-semibold text-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0 dark:text-white dark:placeholder:text-white/50"
         onChange={(event) => setToken(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
@@ -684,14 +694,17 @@ function AccessStrip({
     <div className={cn(compact ? compactFieldGroupClass : fieldGroupClass, "grid gap-3 sm:grid-cols-[1fr_auto]")}>
       <div className="space-y-1.5">
         <label htmlFor={compact ? "token-compact" : "token"} className={fieldLabelClass}>
-          Demo token
+          Access token
         </label>
         <Input
           id={compact ? "token-compact" : "token"}
           value={token}
-          placeholder="retail-demo"
+          placeholder={`${DEFAULT_DEMO_TOKEN} for live, ${SHARE_DEMO_TOKEN} for share demo`}
           onChange={(event) => setToken(event.target.value)}
         />
+        <p className="text-xs text-muted-foreground">
+          Use {DEFAULT_DEMO_TOKEN} for owner data or {SHARE_DEMO_TOKEN} for anonymized public sharing.
+        </p>
       </div>
       <Button
         type="button"

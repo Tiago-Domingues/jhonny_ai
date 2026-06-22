@@ -2,6 +2,8 @@
 
 Owner: Rodrigo
 
+**Status:** Azure webhook is live. Twilio still needs a WhatsApp sender or Sandbox configuration in the Twilio console.
+
 ## Goal
 
 Let an approved business owner ask operational questions through WhatsApp and receive answers from the same backend tools used by the web app.
@@ -12,10 +14,10 @@ Let an approved business owner ask operational questions through WhatsApp and re
 POST /webhooks/whatsapp
 ```
 
-Local backend URL:
+Current hosted webhook URL:
 
 ```text
-http://127.0.0.1:8000
+https://jhonny-retail-api-a92e4ffb.azurewebsites.net/webhooks/whatsapp
 ```
 
 The FastAPI webhook uses the same agent path as the app chat endpoint:
@@ -75,6 +77,25 @@ For Twilio, set `TWILIO_AUTH_TOKEN` and keep `PUBLIC_WHATSAPP_WEBHOOK_URL` equal
 | Meta WhatsApp Cloud API | Better production path | Requires Meta setup, webhook URL, and app secret |
 | Local JSON test | Backend development | Does not require provider setup, but does not prove WhatsApp delivery |
 
+## Current Twilio Root Cause
+
+The Twilio account currently shows no active phone numbers. That screen is not enough to make WhatsApp work.
+
+For a quick pilot, use the **Twilio WhatsApp Sandbox** instead of the Active Numbers screen:
+
+1. In Twilio Console, go to **Messaging > Try it out > Send a WhatsApp message**.
+2. Follow Twilio's join instruction from the target WhatsApp phone, usually a message like `join <sandbox-code>` to the Twilio sandbox WhatsApp number.
+3. Set **When a message comes in** to:
+
+```text
+https://jhonny-retail-api-a92e4ffb.azurewebsites.net/webhooks/whatsapp
+```
+
+4. Use method **HTTP POST**.
+5. Send a WhatsApp message such as `How much did we sell today?`.
+
+If using a production WhatsApp sender instead of the Sandbox, the Twilio account must have an approved WhatsApp sender. A normal Twilio trial with no active number/sender will not deliver WhatsApp messages to this backend.
+
 ## Rodrigo Tasks
 
 1. Choose provider:
@@ -83,7 +104,7 @@ For Twilio, set `TWILIO_AUTH_TOKEN` and keep `PUBLIC_WHATSAPP_WEBHOOK_URL` equal
 2. Point inbound WhatsApp messages to:
 
 ```text
-https://your-public-url/webhooks/whatsapp
+https://jhonny-retail-api-a92e4ffb.azurewebsites.net/webhooks/whatsapp
 ```
 
 3. For local testing, expose the local backend with a tunnel such as ngrok or Cloudflare Tunnel.
@@ -99,8 +120,9 @@ Are purchases too high compared with sales?
 ```
 
 5. Add production safeguards before a client rollout:
-   - Set provider signature secret
-   - Restrict phone numbers
+   - Set `TWILIO_AUTH_TOKEN` in Azure from the Twilio account auth token
+   - Keep `PUBLIC_WHATSAPP_WEBHOOK_URL` exactly equal to the Twilio webhook URL
+   - Restrict `WHATSAPP_ALLOWED_NUMBERS` to approved phone numbers after the sandbox sender phone is known
    - Confirm inbound and outbound message logs
    - Keep rate limits enabled
    - Avoid sending sensitive customer data over WhatsApp
