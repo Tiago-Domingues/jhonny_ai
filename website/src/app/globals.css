@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0d0d0d;
+  --color-ink-soft: #1a1a1a;
+  --color-paper: #ffffff;
+  --color-cream: #f5f3ee;
+  --color-cream-deep: #ece8df;
+  --color-muted: #6b6b6b;
+  --color-line: #e6e3dc;
+  --color-line-dark: #2a2a2a;
+
+  --font-display: var(--font-montserrat);
+  --font-sans: var(--font-geist-sans);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0d0d0d;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .logo-invert {
+    filter: brightness(0) invert(1);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Jhonny toy WhatsApp button: continuous bob + occasional wiggle */
+@keyframes toy-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-5px) rotate(0deg);
+  }
+  40% {
+    transform: translateY(0) rotate(0deg);
+  }
+  /* wiggle burst */
+  70% {
+    transform: translateY(-2px) rotate(-7deg);
+  }
+  80% {
+    transform: translateY(-2px) rotate(7deg);
+  }
+  90% {
+    transform: translateY(0) rotate(-3deg);
+  }
+}
+.animate-toy {
+  animation: toy-bob 4.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+/* Periodic speech bubble: appears, holds, hides on a loop */
+@keyframes bubble-cycle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+  6%,
+  26% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  32% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.9);
+  }
+}
+.animate-bubble {
+  animation: bubble-cycle 9s ease-in-out infinite;
+}
+
+/* Brands cloud: gentle, slightly different drift per chip */
+@keyframes brand-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(var(--rot, 0deg));
+  }
+  25% {
+    transform: translate(var(--dx, 8px), calc(var(--dy, -10px) * -1)) rotate(0deg);
+  }
+  50% {
+    transform: translate(calc(var(--dx, 8px) * -1), var(--dy, -10px)) rotate(var(--rot, 0deg));
+  }
+  75% {
+    transform: translate(var(--dy, -10px), var(--dx, 8px)) rotate(0deg);
+  }
+}
+.animate-brand {
+  animation: brand-drift var(--dur, 14s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-brand {
+    animation: none;
+  }
+}
