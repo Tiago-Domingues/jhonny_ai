@@ -1,18 +1,45 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Logo } from "@/components/Logo";
-import { NAV_LINKS } from "@/lib/i18n";
+import { MENU_CATEGORIES } from "@/lib/i18n";
 import { CartIcon, UserIcon, FlagPT, FlagEN } from "@/components/icons";
+import { categoryGroupHref, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 
 type Panel = "cart" | "account" | null;
+
+type HeaderUser = {
+  fullName?: string;
+  username?: string;
+  email?: string;
+} | null;
+
+function Chevron({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
 
 export function Header() {
   const { t, locale, toggle } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
+  const [openCat, setOpenCat] = useState<string | null>(null);
+  const [user, setUser] = useState<HeaderUser>(null);
+  const [cartCount, setCartCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +60,33 @@ export function Header() {
     return () => document.removeEventListener("click", onClick);
   }, [panel]);
 
+  useEffect(() => {
+    const refresh = () => {
+      fetch("/api/auth/me")
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setUser(data?.user || null))
+        .catch(() => undefined);
+      fetch("/api/cart")
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setCartCount(data?.cart?.itemCount || 0))
+        .catch(() => undefined);
+    };
+    refresh();
+    window.addEventListener("jss-cart-updated", refresh);
+    return () => window.removeEventListener("jss-cart-updated", refresh);
+  }, []);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    setPanel(null);
+  }
+
   const togglePanel = (p: Panel) => setPanel((cur) => (cur === p ? null : p));
+  const label = (item: string) => t.menuItems[item] ?? displayOdooCategoryName(item);
+  const categoryHref = (key: (typeof MENU_CATEGORIES)[number]["key"]) => categoryGroupHref(key);
+  const subcategoryHref = (key: (typeof MENU_CATEGORIES)[number]["key"], item: string) =>
+    categoryGroupHref(key, { subcategory: item });
 
   return (
     <header
@@ -44,19 +97,36 @@ export function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
-        <a href="#top" aria-label="Jhonny Surf Store" className="shrink-0">
+        <Link href="/" aria-label="Jhonny Surf Store" className="shrink-0">
           <Logo type="horizontal" variant="dark" priority className="h-9 sm:h-10" />
-        </a>
+        </Link>
 
-        <nav className="hidden items-center gap-7 xl:flex">
-          {NAV_LINKS.map((l) => (
-            <a
-              key={l.id}
-              href={`#${l.id}`}
-              className="text-[0.8rem] font-semibold uppercase tracking-[0.12em] text-white/85 transition hover:text-white"
-            >
-              {t.nav[l.key]}
-            </a>
+        <nav className="hidden items-center gap-6 xl:flex">
+          {MENU_CATEGORIES.map((cat) => (
+            <div key={cat.key} className="group relative">
+              <Link
+                href={categoryHref(cat.key)}
+                className="flex items-center gap-1 text-[0.8rem] font-semibold uppercase tracking-[0.12em] text-white/85 transition hover:text-white"
+              >
+                {t.nav[cat.key]}
+                <Chevron className="h-3 w-3 opacity-70 transition-transform duration-200 group-hover:rotate-180" />
+              </Link>
+
+              {/* Dropdown */}
+              <div className="invisible absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                <div className="rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">
+                  {cat.items.map((item) => (
+                    <Link
+                      key={item}
+                      href={subcategoryHref(cat.key, item)}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                    >
+                      {label(item)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
           ))}
         </nav>
 
@@ -91,16 +161,40 @@ export function Header() {
                 <p className="px-3 pb-2 pt-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
                   {t.account.title}
                 </p>
-                {[t.account.signIn, t.account.register, t.account.orders].map((label) => (
+                {user && (
+                  <p className="px-3 pb-2 text-sm font-semibold text-ink">
+                    {user.fullName || user.username || user.email}
+                  </p>
+                )}
+                <a
+                  href="/conta"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                >
+                  {user ? t.account.title : t.account.signIn}
+                </a>
+                <a
+                  href="/conta"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                >
+                  {t.account.register}
+                </a>
+                <a
+                  href="/checkout"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                >
+                  {t.account.orders}
+                </a>
+                {user && (
                   <button
-                    key={label}
+                    type="button"
+                    onClick={logout}
                     className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                   >
-                    {label}
+                    Sair
                   </button>
-                ))}
+                )}
                 <p className="px-3 pb-1 pt-2 text-[0.65rem] uppercase tracking-wide text-muted">
-                  {t.account.soon}
+                  Dados preparados para Odoo
                 </p>
               </div>
             )}
@@ -116,7 +210,7 @@ export function Header() {
             >
               <CartIcon className="h-5 w-5" />
               <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[0.6rem] font-bold text-ink">
-                0
+                {cartCount}
               </span>
             </button>
             {panel === "cart" && (
@@ -124,21 +218,21 @@ export function Header() {
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
                   {t.account.cartTitle}
                 </p>
-                <p className="mt-2 text-sm text-muted">{t.account.cartEmpty}</p>
-                <p className="mt-3 text-[0.65rem] uppercase tracking-wide text-muted">
-                  {t.account.soon}
+                <p className="mt-2 text-sm text-muted">
+                  {cartCount > 0 ? `${cartCount} item(s) no carrinho.` : t.account.cartEmpty}
                 </p>
+                <div className="mt-4 grid gap-2">
+                  <a href="/loja" className="rounded-full border border-line px-4 py-2 text-center text-xs font-bold uppercase tracking-wide">
+                    Continuar compras
+                  </a>
+                  <a href="/checkout" className="rounded-full bg-ink px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-white">
+                    Checkout
+                  </a>
+                </div>
               </div>
             )}
           </div>
           </div>
-
-          <a
-            href="#contact"
-            className="hidden rounded-full bg-white px-5 py-2 text-[0.8rem] font-semibold uppercase tracking-wide text-ink transition hover:bg-cream sm:inline-block"
-          >
-            {t.nav.contact}
-          </a>
 
           <button
             onClick={() => setOpen((v) => !v)}
@@ -168,25 +262,53 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-line-dark bg-ink xl:hidden">
-          <nav className="mx-auto flex max-w-7xl flex-col px-5 py-3 sm:px-8">
-            {NAV_LINKS.map((l) => (
-              <a
-                key={l.id}
-                href={`#${l.id}`}
-                onClick={() => setOpen(false)}
-                className="border-b border-white/10 px-1 py-3.5 text-sm font-semibold uppercase tracking-[0.12em] text-white/80 transition last:border-0 hover:text-white"
-              >
-                {t.nav[l.key]}
-              </a>
-            ))}
-            <a
-              href="#contact"
-              onClick={() => setOpen(false)}
-              className="mt-3 rounded-full bg-white px-5 py-3 text-center text-sm font-semibold uppercase tracking-wide text-ink"
-            >
-              {t.nav.contact}
-            </a>
+        <div className="max-h-[80vh] overflow-y-auto border-t border-line-dark bg-ink xl:hidden">
+          <nav className="mx-auto flex max-w-7xl flex-col px-5 py-2 sm:px-8">
+            {MENU_CATEGORIES.map((cat) => {
+              const expanded = openCat === cat.key;
+              return (
+                <div key={cat.key} className="border-b border-white/10 last:border-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <Link
+                      href={categoryHref(cat.key)}
+                      onClick={() => setOpen(false)}
+                      className="flex-1 px-1 py-3.5 text-sm font-semibold uppercase tracking-[0.12em] text-white/80 transition hover:text-white"
+                    >
+                      {t.nav[cat.key]}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setOpenCat((c) => (c === cat.key ? null : cat.key))
+                      }
+                      aria-expanded={expanded}
+                      className="px-3 py-3.5 text-white/80 transition hover:text-white"
+                    >
+                      <span className="sr-only">Abrir subcategorias</span>
+                    <Chevron
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        expanded ? "rotate-180" : ""
+                      }`}
+                    />
+                    </button>
+                  </div>
+                  {expanded && (
+                    <div className="pb-3 pl-2">
+                      {cat.items.map((item) => (
+                        <Link
+                          key={item}
+                          href={subcategoryHref(cat.key, item)}
+                          onClick={() => setOpen(false)}
+                          className="block w-full rounded-md px-2 py-2 text-left text-[0.8rem] tracking-wide text-white/65 transition hover:text-white"
+                        >
+                          {label(item)}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
       )}

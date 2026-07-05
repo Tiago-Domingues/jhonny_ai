@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { STORE } from "@/lib/i18n";
+import { STORE, whatsappHref } from "@/lib/i18n";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default function ComingSoon() {
       <div className="flex w-full max-w-md flex-col items-center">
         {/* Wordmark */}
         <Image
-          src="/brand/logo-stacked.png"
+          src="/brand/logo-stacked.svg"
           alt="Jhonny Surf Store"
           width={1024}
           height={720}
@@ -28,7 +28,7 @@ export default function ComingSoon() {
         <div className="relative mt-8 flex h-44 w-44 items-center justify-center">
           <span className="absolute bottom-3 h-4 w-28 rounded-full bg-black/10 blur-md" />
           <Image
-            src="/brand/jhonny-character-cut.png"
+            src="/brand/jhonny-character-cut.svg"
             alt="Jhonny"
             width={240}
             height={300}
@@ -50,7 +50,7 @@ export default function ComingSoon() {
         {/* Contact links */}
         <div className="mt-10 flex items-center gap-3">
           <a
-            href={`https://wa.me/${STORE.phoneRaw}`}
+            href={whatsappHref()}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp"

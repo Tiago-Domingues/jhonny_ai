@@ -17,21 +17,23 @@ type LanguageContextValue = {
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
+const LOCALE_STORAGE_KEY = "jss-locale-v2";
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>("pt");
+  const [locale, setLocale] = useState<Locale>("en");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("jss-locale") as Locale | null;
-    if (stored === "pt" || stored === "en") {
-      setLocale(stored);
-    } else if (navigator.language.toLowerCase().startsWith("en")) {
-      setLocale("en");
-    }
+    const id = window.setTimeout(() => {
+      const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY) as Locale | null;
+      if (stored === "pt" || stored === "en") {
+        setLocale(stored);
+      }
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("jss-locale", locale);
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     document.documentElement.lang = locale;
   }, [locale]);
 

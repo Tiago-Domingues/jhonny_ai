@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Montserrat } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +38,7 @@ export const metadata: Metadata = {
       "Community surf shop in Parede / Carcavelos. Surfboards, wetsuits, surfskate, repairs, buy-back and expert advice.",
     url: "https://www.jhonnysurfstore.pt",
     siteName: "Jhonny Surf Store",
-    locale: "pt_PT",
+    locale: "en_US",
     type: "website",
   },
 };
@@ -49,11 +50,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="pt"
+      lang="en"
       className={`${geistSans.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          {children}
+          <CookieConsent />
+        </LanguageProvider>
       </body>
     </html>
   );

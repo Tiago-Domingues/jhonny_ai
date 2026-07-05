@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Lifestyle">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#16232b"/>
+      <stop offset=".55" stop-color="#b65f45"/>
+      <stop offset="1" stop-color="#f7dca8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <circle cx="980" cy="145" r="96" fill="#f9d66a" opacity=".85"/>
+  <path d="M0 565c190-65 320 55 560-14 250-72 415-110 640 12v237H0z" fill="#fff1dc" opacity=".9"/>
+  <g transform="translate(360 220)">
+    <path d="M80 0h320l-45 380H125z" fill="#f5efe8"/>
+    <path d="M145 80c40 38 150 38 190 0" fill="none" stroke="#102f3c" stroke-width="22" stroke-linecap="round"/>
+    <path d="M150 215h180" stroke="#e36f43" stroke-width="28" stroke-linecap="round"/>
+  </g>
+  <path d="M710 510c70-95 150-95 220 0" fill="none" stroke="#102f3c" stroke-width="35" stroke-linecap="round"/>
+</svg>

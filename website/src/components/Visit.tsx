@@ -98,7 +98,7 @@ export function Visit() {
               loading="lazy"
               allow="fullscreen; xr-spatial-tracking"
               allowFullScreen
-              className="aspect-video w-full"
+              className="h-[220px] w-full sm:h-[280px]"
             />
           </div>
         </div>

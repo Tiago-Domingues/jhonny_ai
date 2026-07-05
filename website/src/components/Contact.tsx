@@ -1,10 +1,9 @@
 "use client";
 
 import { useLanguage } from "@/components/LanguageProvider";
-import { STORE } from "@/lib/i18n";
+import { STORE, whatsappHref } from "@/lib/i18n";
 import {
   WhatsappIcon,
-  PhoneIcon,
   MailIcon,
   InstagramIcon,
   FacebookIcon,
@@ -19,13 +18,7 @@ export function Contact() {
       icon: WhatsappIcon,
       label: t.contact.whatsapp,
       value: STORE.phoneDisplay,
-      href: `https://wa.me/${STORE.phoneRaw}`,
-    },
-    {
-      icon: PhoneIcon,
-      label: t.contact.call,
-      value: STORE.phoneDisplay,
-      href: `tel:+${STORE.phoneRaw}`,
+      href: whatsappHref(),
     },
     {
       icon: MailIcon,

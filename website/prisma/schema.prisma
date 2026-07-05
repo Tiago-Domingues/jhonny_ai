@@ -1,0 +1,469 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum CustomerType {
+  PROFESSIONAL
+  SURFER
+  BEGINNER
+  TOURIST
+  ERASMUS_STUDENT
+  SURF_PARENT
+  LOCAL_CUSTOMER
+  OTHER
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+  OTHER
+}
+
+enum SyncStatus {
+  NOT_SYNCED
+  PENDING_SYNC
+  SYNCED
+  SYNC_FAILED
+  MANUAL_REVIEW
+}
+
+enum CartStatus {
+  ACTIVE
+  ORDERED
+  ABANDONED
+  EXPIRED
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_PAYMENT
+  PAID
+  PREPARING
+  READY_FOR_PICKUP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum FulfillmentMethod {
+  PICKUP_IN_STORE
+  SHIP_TO_ADDRESS
+}
+
+enum PaymentProvider {
+  IFTHENPAY
+  PAYPAL
+  KLARNA
+  MANUAL
+}
+
+enum PaymentMethod {
+  MBWAY
+  MULTIBANCO
+  PAYPAL
+  KLARNA
+  CARD
+  MANUAL
+}
+
+enum PaymentStatus {
+  PENDING
+  REQUIRES_ACTION
+  PAID
+  FAILED
+  EXPIRED
+  CANCELLED
+  REFUNDED
+}
+
+enum ConsentCategory {
+  REQUIRED
+  ANALYTICS
+  PERSONALIZATION
+  MARKETING
+}
+
+enum ConsentDecision {
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum EmailEventType {
+  WELCOME_CUSTOMER
+  ORDER_RECEIVED_CUSTOMER
+  ORDER_RECEIVED_JHONNY
+  PAYMENT_PENDING
+  PAYMENT_CONFIRMED
+  PICKUP_READY
+  REVIEW_REQUEST
+  ABANDONED_CART
+  BROWSE_REMINDER
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum AvailabilityRequestStatus {
+  OPEN
+  NOTIFIED
+  CLOSED
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  username        String           @unique
+  passwordHash    String
+  emailVerifiedAt DateTime?
+  role            UserRole         @default(CUSTOMER)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  profile         CustomerProfile?
+  carts           Cart[]
+  orders          Order[]
+  consents        ConsentEvent[]
+  emailEvents     EmailEvent[]
+  couponUsages    CouponUsage[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model CustomerProfile {
+  id                 String       @id @default(cuid())
+  userId             String       @unique
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String
+  phoneCountryCode   String       @default("+351")
+  phone              String?
+  birthDate          DateTime?
+  gender             Gender?
+  customerType       CustomerType @default(SURFER)
+  preferredLanguage  String       @default("en")
+  addressLine1       String?
+  addressLine2       String?
+  postalCode         String?
+  city               String?
+  country            String       @default("PT")
+  billingSameAsShipping Boolean   @default(true)
+  billingAddressLine1 String?
+  billingAddressLine2 String?
+  billingPostalCode  String?
+  billingCity        String?
+  billingCountry     String       @default("PT")
+  marketingOptIn     Boolean      @default(false)
+  odooPartnerId      Int?
+  odooSyncStatus     SyncStatus   @default(NOT_SYNCED)
+  odooSyncError      String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@index([odooPartnerId])
+  @@index([odooSyncStatus])
+}
+
+model GuestCheckout {
+  id                String   @id @default(cuid())
+  email             String
+  phoneCountryCode  String   @default("+351")
+  phone             String?
+  fullName          String
+  addressLine1      String?
+  addressLine2      String?
+  postalCode        String?
+  city              String?
+  country           String   @default("PT")
+  billingSameAsShipping Boolean @default(true)
+  billingAddressJson Json?
+  marketingOptIn    Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  orders            Order[]
+}
+
+model Product {
+  id                    String     @id @default(cuid())
+  slug                  String     @unique
+  sku                   String?
+  barcode               String?
+  refId                 String?
+  name                  String
+  description           String?
+  category              String
+  brand                 String?
+  size                  String?
+  color                 String?
+  imageUrl              String?
+  imageUrlsJson         String?
+  marketingDescription  String?
+  videoUrl              String?
+  contentSourceName     String?
+  contentSourceUrl      String?
+  contentUpdatedAt      DateTime?
+  contentSyncStatus     String?
+  priceCents            Int
+  currency              String     @default("EUR")
+  stockQuantity         Int        @default(0)
+  forecastQuantity      Int        @default(0)
+  stockState            String     @default("out_of_stock")
+  saleable              Boolean    @default(true)
+  availableForSale      Boolean    @default(false)
+  active                Boolean    @default(true)
+  excludedFromCatalog   Boolean    @default(false)
+  exclusionReason       String?
+  isOpportunity         Boolean    @default(false)
+  opportunityOriginalPriceCents Int?
+  opportunityDiscountPercent Int?
+  opportunitySource     String?
+  odooProductId         Int?       @unique
+  odooProductTemplateId Int?
+  odooSyncStatus        SyncStatus @default(NOT_SYNCED)
+  odooSyncError         String?
+  lastOdooSyncAt        DateTime?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  cartItems             CartItem[]
+  orderItems            OrderItem[]
+  availabilityRequests  AvailabilityRequest[]
+
+  @@index([category])
+  @@index([brand])
+  @@index([size])
+  @@index([color])
+  @@index([sku])
+  @@index([refId])
+  @@index([odooProductId])
+  @@index([odooProductTemplateId])
+  @@index([odooSyncStatus])
+  @@index([isOpportunity])
+}
+
+model Cart {
+  id             String     @id @default(cuid())
+  userId         String?
+  user           User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestTokenHash String?
+  status         CartStatus @default(ACTIVE)
+  currency       String     @default("EUR")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  expiresAt      DateTime?
+  items          CartItem[]
+  order          Order?
+
+  @@index([userId, status])
+  @@index([guestTokenHash, status])
+}
+
+model CartItem {
+  id             String   @id @default(cuid())
+  cartId         String
+  cart           Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  quantity       Int
+  unitPriceCents Int
+  currency       String   @default("EUR")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id                  String            @id @default(cuid())
+  orderNumber         String            @unique
+  userId              String?
+  user                User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestCheckoutId     String?
+  guestCheckout       GuestCheckout?    @relation(fields: [guestCheckoutId], references: [id], onDelete: SetNull)
+  cartId              String?           @unique
+  cart                Cart?             @relation(fields: [cartId], references: [id], onDelete: SetNull)
+  status              OrderStatus       @default(PENDING_PAYMENT)
+  fulfillmentMethod   FulfillmentMethod @default(PICKUP_IN_STORE)
+  customerEmail       String
+  customerPhoneCountryCode String     @default("+351")
+  customerPhone       String?
+  customerName        String
+  shippingAddressJson Json?
+  billingAddressJson  Json?
+  subtotalCents       Int
+  shippingCents       Int               @default(0)
+  taxCents            Int               @default(0)
+  discountCents       Int               @default(0)
+  couponCode          String?
+  totalCents          Int
+  currency            String            @default("EUR")
+  notes               String?
+  odooSaleOrderId     Int?
+  odooInvoiceId       Int?
+  odooSyncStatus      SyncStatus        @default(NOT_SYNCED)
+  odooSyncError       String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  paidAt              DateTime?
+  completedAt         DateTime?
+  items               OrderItem[]
+  payments            Payment[]
+  emailEvents         EmailEvent[]
+  couponUsage         CouponUsage?
+
+  @@index([userId])
+  @@index([status])
+  @@index([odooSaleOrderId])
+  @@index([odooSyncStatus])
+}
+
+model Coupon {
+  id                 String        @id @default(cuid())
+  code               String        @unique
+  label              String
+  percentOff         Int           @default(10)
+  active             Boolean       @default(true)
+  maxUses            Int?
+  maxUsesPerCustomer Int?
+  startsAt           DateTime?
+  expiresAt          DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  usages             CouponUsage[]
+
+  @@index([active])
+  @@index([code])
+}
+
+model CouponUsage {
+  id            String   @id @default(cuid())
+  couponId      String
+  coupon        Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestEmail    String?
+  code          String
+  discountCents Int
+  subtotalCents Int
+  createdAt     DateTime @default(now())
+
+  @@index([couponId])
+  @@index([userId])
+  @@index([code])
+}
+
+model OrderItem {
+  id                    String   @id @default(cuid())
+  orderId               String
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId             String?
+  product               Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  sku                   String?
+  name                  String
+  quantity              Int
+  unitPriceCents        Int
+  totalCents            Int
+  currency              String   @default("EUR")
+  odooProductId         Int?
+  odooProductTemplateId Int?
+}
+
+model Payment {
+  id                   String          @id @default(cuid())
+  orderId              String
+  order                Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider             PaymentProvider
+  method               PaymentMethod
+  status               PaymentStatus   @default(PENDING)
+  amountCents          Int
+  currency             String          @default("EUR")
+  providerReference    String?
+  providerRequestId    String?
+  providerPaymentUrl   String?
+  multibancoEntity     String?
+  multibancoReference  String?
+  mbwayPhone           String?
+  rawProviderPayload   Json?
+  odooPaymentReference String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  paidAt               DateTime?
+  expiresAt            DateTime?
+
+  @@index([orderId])
+  @@index([provider, method, status])
+  @@index([providerReference])
+}
+
+model ConsentEvent {
+  id           String          @id @default(cuid())
+  userId       String?
+  user         User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestToken   String?
+  category     ConsentCategory
+  decision     ConsentDecision
+  policyVersion String
+  source       String
+  ipHash       String?
+  userAgent    String?
+  createdAt    DateTime        @default(now())
+
+  @@index([userId, category])
+  @@index([guestToken, category])
+}
+
+model EmailEvent {
+  id             String         @id @default(cuid())
+  userId         String?
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  orderId        String?
+  order          Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  type           EmailEventType
+  status         EmailStatus    @default(PENDING)
+  recipientEmail String
+  subject        String
+  provider       String?
+  providerId     String?
+  error          String?
+  scheduledFor   DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime       @default(now())
+
+  @@index([userId, type])
+  @@index([orderId, type])
+  @@index([status, scheduledFor])
+}
+
+model AvailabilityRequest {
+  id             String                    @id @default(cuid())
+  productId      String
+  product        Product                   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId         String?
+  email          String
+  name           String?
+  phone          String?
+  message        String?
+  status         AvailabilityRequestStatus @default(OPEN)
+  createdAt      DateTime                  @default(now())
+  notifiedAt     DateTime?
+
+  @@index([productId, status])
+  @@index([email])
+}

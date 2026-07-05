@@ -14,6 +14,12 @@ export const STORE = {
   mapsQuery: "Jhonny Surf Store, Rua de Gaza 16, 2775-597 Carcavelos",
 };
 
+export const WHATSAPP_DEFAULT_MESSAGE = "Hi Jhonny. Please help me becoming a legend.";
+
+export function whatsappHref(message = WHATSAPP_DEFAULT_MESSAGE) {
+  return `https://wa.me/${STORE.phoneRaw}?text=${encodeURIComponent(message)}`;
+}
+
 export type Brand = { name: string; slug: string; domain: string };
 
 export const BRANDS: Brand[] = [
@@ -33,25 +39,94 @@ export const BRANDS: Brand[] = [
   { name: "Lost", slug: "lost", domain: "lostsurfboards.com" },
 ];
 
+// Legal entity behind the Jhonny Surf Store brand (used in legal pages).
+export const LEGAL = {
+  company: "Maori Surf Camp Unipessoal, Lda.",
+  brand: "Jhonny Surf Store",
+  nif: "516569783",
+  address: "Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede",
+};
+
 export const NAV_LINKS = [
   { id: "surfboards", key: "surfboards" as const },
   { id: "wetsuits", key: "wetsuits" as const },
-  { id: "technical", key: "technical" as const },
-  { id: "apparel", key: "apparel" as const },
-  { id: "jss", key: "jss" as const },
-  { id: "travel", key: "travel" as const },
+  { id: "surfgear", key: "surfgear" as const },
+  { id: "essentials", key: "essentials" as const },
+  { id: "bodyboard", key: "bodyboard" as const },
+  { id: "lifestyle", key: "lifestyle" as const },
+];
+
+// Top-menu categories with their dropdown sub-items.
+// `anchor` keeps the existing scroll behaviour for the category itself.
+// Sub-item labels are resolved per-locale via `t.menuItems[<item>]`; brand
+// names and surf jargon fall back to the raw id when no translation exists.
+export type NavKey =
+  | "surfboards"
+  | "wetsuits"
+  | "surfgear"
+  | "essentials"
+  | "bodyboard"
+  | "lifestyle";
+
+export const MENU_CATEGORIES: {
+  key: NavKey;
+  anchor: string;
+  items: string[];
+}[] = [
+  {
+    key: "surfboards",
+    anchor: "surfboards",
+    items: [
+      "SURFBOARDS / PERFORMANCE",
+      "SURFBOARDS / HYBRID",
+      "SURFBOARDS / BEGINNER",
+      "SURFBOARDS / MID LENGHT",
+      "SURFBOARDS / SOFT TOP",
+      "SURFBOARDS / TWIN FIN",
+      "SURFBOARDS / LONGBOARD",
+    ],
+  },
+  {
+    key: "wetsuits",
+    anchor: "wetsuits",
+    items: [
+      "WETSUITS / MEN",
+      "WETSUITS / JUNIOR",
+    ],
+  },
+  {
+    key: "surfgear",
+    anchor: "technical",
+    items: ["SURFGEAR / FINS", "SURFGEAR / LEASHES", "SURFGEAR / DECKS", "SURFGEAR / BOARDBAGS", "SURFGEAR / RACK"],
+  },
+  {
+    key: "essentials",
+    anchor: "essentials",
+    items: ["SURF ESSENCIALS / BEACH GEAR", "SURF ESSENCIALS / WAX", "SURF ESSENCIALS / DING REPAIRS", "SURF ESSENCIALS / EARPLUGS", "SURF ESSENCIALS / SURF PONCHOS"],
+  },
+  {
+    key: "bodyboard",
+    anchor: "bodyboard",
+    items: ["BODYBOARD / BOARDS", "BODYBOARD / FINS", "BODYBOARD / LEASHES", "BODYBOARD / ACESSORIES"],
+  },
+  {
+    key: "lifestyle",
+    anchor: "lifestyle",
+    items: ["LIFESTYLE / YETI GEAR", "LIFESTYLE / DRINKWEAR", "LIFESTYLE / BOOKS"],
+  },
 ];
 
 type Dict = {
   nav: {
     surfboards: string;
     wetsuits: string;
-    technical: string;
-    apparel: string;
-    jss: string;
-    travel: string;
+    surfgear: string;
+    essentials: string;
+    bodyboard: string;
+    lifestyle: string;
     contact: string;
   };
+  menuItems: Record<string, string>;
   hero: {
     eyebrow: string;
     title1: string;
@@ -113,6 +188,17 @@ type Dict = {
     buybackMsg: string;
   };
   brands: { title: string };
+  athletes: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+  };
+  dudes: {
+    eyebrow: string;
+    title: string;
+    desc: string;
+    cta: string;
+  };
   visit: {
     eyebrow: string;
     title: string;
@@ -138,11 +224,22 @@ type Dict = {
     shopTitle: string;
     storeTitle: string;
     supportTitle: string;
+    infoTitle: string;
     visit: string;
     services: string;
     repairs: string;
     buyback: string;
     erasmus: string;
+    about: string;
+    terms: string;
+    privacy: string;
+    returns: string;
+    complaints: string;
+    disputes: string;
+    fraud: string;
+    faq: string;
+    warranty: string;
+    payments: string;
   };
   whatsapp: {
     bubble: string;
@@ -163,11 +260,49 @@ export const translations: Record<Locale, Dict> = {
     nav: {
       surfboards: "Pranchas",
       wetsuits: "Fatos",
-      technical: "Material Técnico",
-      apparel: "Vestuário",
-      jss: "JSS",
-      travel: "Viagens",
+      surfgear: "Material Técnico",
+      essentials: "Essenciais",
+      bodyboard: "Bodyboard",
+      lifestyle: "Lifestyle",
       contact: "Contacto",
+    },
+    menuItems: {
+      Beginners: "Iniciados",
+      "SURFBOARDS / PERFORMANCE": "Performance",
+      "SURFBOARDS / HYBRID": "Hybrid",
+      "SURFBOARDS / BEGINNER": "Iniciados",
+      "SURFBOARDS / MID LENGHT": "Mid length",
+      "SURFBOARDS / SOFT TOP": "Soft top",
+      "SURFBOARDS / TWIN FIN": "Twin fin",
+      "SURFBOARDS / LONGBOARD": "Longboard",
+      "WETSUITS / MEN": "Homem",
+      "WETSUITS / JUNIOR": "Júnior",
+      "SURFGEAR / FINS": "Quilhas",
+      "SURFGEAR / LEASHES": "Leashes",
+      "SURFGEAR / DECKS": "Decks",
+      "SURFGEAR / BOARDBAGS": "Capas",
+      "SURFGEAR / RACK": "Racks",
+      "SURF ESSENCIALS / BEACH GEAR": "Praia",
+      "SURF ESSENCIALS / WAX": "Parafina",
+      "SURF ESSENCIALS / DING REPAIRS": "Reparação",
+      "SURF ESSENCIALS / EARPLUGS": "Earplugs",
+      "SURF ESSENCIALS / SURF PONCHOS": "Ponchos",
+      "BODYBOARD / BOARDS": "Pranchas",
+      "BODYBOARD / FINS": "Pés de pato",
+      "BODYBOARD / LEASHES": "Leashes",
+      "BODYBOARD / ACESSORIES": "Acessórios",
+      "LIFESTYLE / YETI GEAR": "YETI",
+      "LIFESTYLE / DRINKWEAR": "Drinkware",
+      "LIFESTYLE / BOOKS": "Livros",
+      Man: "Homem",
+      Woman: "Mulher",
+      Kids: "Criança",
+      Clothing: "Roupa",
+      "Beach Accessories": "Acessórios de Praia",
+      Backpacks: "Mochilas",
+      Boardbags: "Capas",
+      Essentials: "Essenciais",
+      Fins: "Quilhas",
     },
     hero: {
       eyebrow: "O teu spot para surf, surfskate e estilo",
@@ -197,10 +332,10 @@ export const translations: Record<Locale, Dict> = {
       items: [
         { id: "surfboards", title: "Pranchas de Surf", desc: "Performance, hybrid, twin fin e longboard das melhores shapers." },
         { id: "wetsuits", title: "Fatos de Neoprene", desc: "Fatos técnicos para todas as estações e condições do mar." },
-        { id: "technical", title: "Material Técnico", desc: "Quilhas, leashes, decks, sacos, parafina e acessórios essenciais." },
-        { id: "apparel", title: "Vestuário", desc: "Marcas de topo e a linha própria Jhonny Surf Store." },
-        { id: "travel", title: "Viagens", desc: "Sacos, proteção e dicas para a tua próxima surf trip." },
-        { id: "jss", title: "JSS", desc: "A linha própria da Jhonny Surf Store — feita por surfistas." },
+        { id: "surfgear", title: "Material Técnico", desc: "Quilhas, leashes, decks, capas e acessórios técnicos do Odoo." },
+        { id: "essentials", title: "Essenciais", desc: "Parafina, ponchos, praia, earplugs e reparações." },
+        { id: "bodyboard", title: "Bodyboard", desc: "Pranchas, pés de pato, leashes e acessórios de bodyboard." },
+        { id: "lifestyle", title: "Lifestyle", desc: "YETI gear, drinkware, livros e lifestyle da loja." },
       ],
     },
     jss: {
@@ -254,6 +389,18 @@ export const translations: Record<Locale, Dict> = {
       buybackMsg: "Olá Jhonny! Quero vender a minha prancha. Envio já fotos e contactos.",
     },
     brands: { title: "Marcas que trabalhamos" },
+    athletes: {
+      eyebrow: "A nossa equipa",
+      title: "Local Hero's",
+      subtitle:
+        "O grupo de surfistas que representa a Jhonny Surf Store dentro e fora de água.",
+    },
+    dudes: {
+      eyebrow: "Dentro da loja",
+      title: "The Dudes — Surf Café",
+      desc: "O nosso quiosque de café, snacks e bebidas mesmo dentro da loja. Passa por cá antes ou depois da sessão, recupera energia e fica a conviver com a comunidade.",
+      cta: "Seguir no Instagram",
+    },
     visit: {
       eyebrow: "Passa por cá",
       title: "Visita a loja",
@@ -283,14 +430,25 @@ export const translations: Record<Locale, Dict> = {
       shopTitle: "Loja",
       storeTitle: "A Loja",
       supportTitle: "Apoio",
+      infoTitle: "Informações",
       visit: "Visitar a loja",
       services: "Serviços",
       repairs: "Reparações",
       buyback: "Recompra de pranchas",
       erasmus: "Vantagens Erasmus",
+      about: "Sobre nós",
+      terms: "Termos e Condições",
+      privacy: "Política de Privacidade",
+      returns: "Trocas e Devoluções",
+      complaints: "Livro de Reclamações",
+      disputes: "Resolução de Conflitos",
+      fraud: "Denunciar Fraude",
+      faq: "FAQ",
+      warranty: "Garantias e Reparações",
+      payments: "Pagamentos seguros",
     },
     whatsapp: {
-      bubble: "Fala comigo!",
+      bubble: "Hi Legend. How can I help you?",
     },
     account: {
       title: "A minha conta",
@@ -306,11 +464,39 @@ export const translations: Record<Locale, Dict> = {
     nav: {
       surfboards: "Surfboards",
       wetsuits: "Wetsuits",
-      technical: "Technical Gear",
-      apparel: "Apparel",
-      jss: "JSS",
-      travel: "Travel",
+      surfgear: "Surf Gear",
+      essentials: "Essentials",
+      bodyboard: "Bodyboard",
+      lifestyle: "Lifestyle",
       contact: "Contact",
+    },
+    menuItems: {
+      "SURFBOARDS / PERFORMANCE": "Performance",
+      "SURFBOARDS / HYBRID": "Hybrid",
+      "SURFBOARDS / BEGINNER": "Beginner",
+      "SURFBOARDS / MID LENGHT": "Mid length",
+      "SURFBOARDS / SOFT TOP": "Soft top",
+      "SURFBOARDS / TWIN FIN": "Twin fin",
+      "SURFBOARDS / LONGBOARD": "Longboard",
+      "WETSUITS / MEN": "Men",
+      "WETSUITS / JUNIOR": "Junior",
+      "SURFGEAR / FINS": "Fins",
+      "SURFGEAR / LEASHES": "Leashes",
+      "SURFGEAR / DECKS": "Decks",
+      "SURFGEAR / BOARDBAGS": "Boardbags",
+      "SURFGEAR / RACK": "Racks",
+      "SURF ESSENCIALS / BEACH GEAR": "Beach gear",
+      "SURF ESSENCIALS / WAX": "Wax",
+      "SURF ESSENCIALS / DING REPAIRS": "Ding repairs",
+      "SURF ESSENCIALS / EARPLUGS": "Earplugs",
+      "SURF ESSENCIALS / SURF PONCHOS": "Ponchos",
+      "BODYBOARD / BOARDS": "Boards",
+      "BODYBOARD / FINS": "Fins",
+      "BODYBOARD / LEASHES": "Leashes",
+      "BODYBOARD / ACESSORIES": "Accessories",
+      "LIFESTYLE / YETI GEAR": "YETI",
+      "LIFESTYLE / DRINKWEAR": "Drinkware",
+      "LIFESTYLE / BOOKS": "Books",
     },
     hero: {
       eyebrow: "Your spot for surf, surfskate and style",
@@ -340,10 +526,10 @@ export const translations: Record<Locale, Dict> = {
       items: [
         { id: "surfboards", title: "Surfboards", desc: "Performance, hybrid, twin fin and longboard from the best shapers." },
         { id: "wetsuits", title: "Wetsuits", desc: "Technical wetsuits for every season and sea condition." },
-        { id: "technical", title: "Technical Gear", desc: "Fins, leashes, decks, bags, wax and the essentials." },
-        { id: "apparel", title: "Apparel", desc: "Top brands and the in-house Jhonny Surf Store line." },
-        { id: "travel", title: "Travel", desc: "Bags, protection and tips for your next surf trip." },
-        { id: "jss", title: "JSS", desc: "The in-house Jhonny Surf Store line — made by surfers." },
+        { id: "surfgear", title: "Surf Gear", desc: "Fins, leashes, decks, boardbags and technical Odoo categories." },
+        { id: "essentials", title: "Essentials", desc: "Wax, ponchos, beach gear, earplugs and repairs." },
+        { id: "bodyboard", title: "Bodyboard", desc: "Boards, swim fins, leashes and bodyboard accessories." },
+        { id: "lifestyle", title: "Lifestyle", desc: "YETI gear, drinkware, books and store lifestyle products." },
       ],
     },
     jss: {
@@ -397,6 +583,18 @@ export const translations: Record<Locale, Dict> = {
       buybackMsg: "Hi Jhonny! I'd like to sell my board. I'll send photos and contacts now.",
     },
     brands: { title: "Brands we carry" },
+    athletes: {
+      eyebrow: "Our team",
+      title: "Local Hero's",
+      subtitle:
+        "The crew of surfers representing Jhonny Surf Store in and out of the water.",
+    },
+    dudes: {
+      eyebrow: "Inside the store",
+      title: "The Dudes — Surf Café",
+      desc: "Our coffee, snacks and drinks kiosk right inside the store. Drop by before or after your session, refuel and hang out with the community.",
+      cta: "Follow on Instagram",
+    },
     visit: {
       eyebrow: "Come by",
       title: "Visit the store",
@@ -426,14 +624,25 @@ export const translations: Record<Locale, Dict> = {
       shopTitle: "Shop",
       storeTitle: "The Store",
       supportTitle: "Support",
+      infoTitle: "Information",
       visit: "Visit the store",
       services: "Services",
       repairs: "Repairs",
       buyback: "Board buy-back",
       erasmus: "Erasmus perks",
+      about: "About us",
+      terms: "Terms & Conditions",
+      privacy: "Privacy Policy",
+      returns: "Returns & Exchanges",
+      complaints: "Complaints Book",
+      disputes: "Dispute Resolution",
+      fraud: "Report Fraud",
+      faq: "FAQ",
+      warranty: "Warranty & Repairs",
+      payments: "Secure payments",
     },
     whatsapp: {
-      bubble: "Chat with us!",
+      bubble: "Hi Legend. How can I help you?",
     },
     account: {
       title: "My account",

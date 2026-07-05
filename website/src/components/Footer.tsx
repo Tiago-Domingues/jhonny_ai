@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/components/LanguageProvider";
-import { STORE, NAV_LINKS } from "@/lib/i18n";
+import { STORE, whatsappHref } from "@/lib/i18n";
 import { Logo } from "@/components/Logo";
 import {
   InstagramIcon,
@@ -9,29 +9,69 @@ import {
   FacebookIcon,
   MailIcon,
 } from "@/components/icons";
+import { PaymentBadges } from "@/components/PaymentIcons";
+
+type FLink = { label: string; href: string; ext?: boolean };
+
+function FooterColumn({ title, links }: { title: string; links: FLink[] }) {
+  return (
+    <div>
+      <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/40">
+        {title}
+      </p>
+      <ul className="space-y-2.5">
+        {links.map((l) => (
+          <li key={l.label}>
+            <a
+              href={l.href}
+              target={l.ext ? "_blank" : undefined}
+              rel={l.ext ? "noopener noreferrer" : undefined}
+              className="text-sm text-white/70 transition hover:text-white"
+            >
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function Footer() {
   const { t } = useLanguage();
   const year = new Date().getFullYear();
 
   const socials = [
-    { icon: WhatsappIcon, href: `https://wa.me/${STORE.phoneRaw}`, label: "WhatsApp" },
+    { icon: WhatsappIcon, href: whatsappHref(), label: "WhatsApp" },
     { icon: InstagramIcon, href: STORE.instagram, label: "Instagram" },
     { icon: FacebookIcon, href: STORE.facebook, label: "Facebook" },
     { icon: MailIcon, href: `mailto:${STORE.email}`, label: "Email" },
   ];
 
-  const storeLinks = [
-    { label: t.nav.jss, href: "#jss" },
-    { label: t.footer.services, href: "#services" },
-    { label: t.footer.visit, href: "#visit" },
-    { label: t.nav.contact, href: "#contact" },
+  const info: FLink[] = [
+    { label: t.footer.terms, href: "/termos" },
+    { label: t.footer.privacy, href: "/privacidade" },
+    { label: t.footer.returns, href: "/trocas-e-devolucoes" },
+    { label: t.footer.complaints, href: "https://www.livroreclamacoes.pt/inicio", ext: true },
+    { label: t.footer.disputes, href: "https://www.consumidor.gov.pt/", ext: true },
+    { label: t.footer.fraud, href: "/reportar-fraude" },
   ];
 
-  const supportLinks = [
+  const store: FLink[] = [
+    { label: t.footer.shopTitle, href: "/loja" },
+    { label: t.footer.about, href: "/#jss" },
+    { label: t.footer.services, href: "/#services" },
+    { label: t.footer.visit, href: "/#visit" },
+    { label: t.nav.contact, href: "/#contact" },
+    { label: t.footer.erasmus, href: "/erasmus" },
+  ];
+
+  const support: FLink[] = [
+    { label: t.footer.faq, href: "/faq" },
     { label: t.footer.repairs, href: "https://www.instagram.com/fibercrw/", ext: true },
-    { label: t.footer.buyback, href: "#services" },
-    { label: t.footer.erasmus, href: "https://www.erasmuslifelisboa.com/", ext: true },
+    { label: t.footer.warranty, href: "/garantia" },
+    { label: t.footer.buyback, href: "/#services" },
+    { label: t.footer.payments, href: "/pagamentos-e-envios" },
   ];
 
   return (
@@ -61,63 +101,11 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Shop */}
-          <div>
-            <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/40">
-              {t.footer.shopTitle}
-            </p>
-            <ul className="space-y-2.5">
-              {NAV_LINKS.map((l) => (
-                <li key={l.id}>
-                  <a
-                    href={`#${l.id}`}
-                    className="text-sm text-white/70 transition hover:text-white"
-                  >
-                    {t.nav[l.key]}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FooterColumn title={t.footer.infoTitle} links={info} />
+          <FooterColumn title={t.footer.storeTitle} links={store} />
 
-          {/* The Store */}
           <div>
-            <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/40">
-              {t.footer.storeTitle}
-            </p>
-            <ul className="space-y-2.5">
-              {storeLinks.map((l) => (
-                <li key={l.label}>
-                  <a
-                    href={l.href}
-                    className="text-sm text-white/70 transition hover:text-white"
-                  >
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Support + contact */}
-          <div>
-            <p className="mb-4 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/40">
-              {t.footer.supportTitle}
-            </p>
-            <ul className="space-y-2.5">
-              {supportLinks.map((l) => (
-                <li key={l.label}>
-                  <a
-                    href={l.href}
-                    target={l.ext ? "_blank" : undefined}
-                    rel={l.ext ? "noopener noreferrer" : undefined}
-                    className="text-sm text-white/70 transition hover:text-white"
-                  >
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            <FooterColumn title={t.footer.supportTitle} links={support} />
             <div className="mt-5 space-y-1 text-sm text-white/55">
               <p>{STORE.address}</p>
               <a href={`tel:+${STORE.phoneRaw}`} className="block transition hover:text-white">
@@ -128,6 +116,14 @@ export function Footer() {
               </a>
             </div>
           </div>
+        </div>
+
+        {/* Payments */}
+        <div className="flex flex-col items-center justify-between gap-4 border-b border-line-dark py-6 sm:flex-row">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/40">
+            {t.footer.payments}
+          </p>
+          <PaymentBadges />
         </div>
 
         <div className="flex flex-col items-center justify-between gap-2 pt-6 text-center text-xs text-white/40 sm:flex-row sm:text-left">

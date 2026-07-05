@@ -18,7 +18,7 @@ export function Hero() {
         playsInline
         poster="/brand/surf-hero-poster.jpg"
       >
-        <source src="/brand/surf-hero.mp4" type="video/mp4" />
+        <source src="/brand/surf-hero.mp4?v=clean-2" type="video/mp4" />
       </video>
 
       {/* Readability overlays (kept light so the surf video stays colorful) */}

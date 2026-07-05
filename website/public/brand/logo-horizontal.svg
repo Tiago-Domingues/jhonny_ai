@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 384" role="img" aria-label="Jhonny Surf Store">
+  <rect width="1024" height="384" rx="44" fill="#f7efe2"/>
+  <circle cx="180" cy="190" r="92" fill="#11313d"/>
+  <path d="M85 215c70-38 124 38 210-2" fill="none" stroke="#2b8796" stroke-width="22" stroke-linecap="round"/>
+  <text x="350" y="178" font-family="Arial Black,Arial,sans-serif" font-size="90" fill="#102f3c">JHONNY</text>
+  <text x="356" y="252" font-family="Arial,sans-serif" font-size="42" letter-spacing="8" fill="#e36f43">SURF STORE</text>
+</svg>

@@ -62,7 +62,10 @@ function Newsletter() {
 
   // Hydration-safe: only enable the form after mount.
   const [ready, setReady] = useState(false);
-  useEffect(() => setReady(true), []);
+  useEffect(() => {
+    const id = window.setTimeout(() => setReady(true), 0);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (MAILCHIMP_ACTION) return; // let the browser post to Mailchimp

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Surf gear">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#12343f"/>
+      <stop offset=".55" stop-color="#1f8c9c"/>
+      <stop offset="1" stop-color="#eecf8d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)"/>
+  <path d="M0 545c200-80 335 55 560-18 195-64 365-110 640 15v258H0z" fill="#fff4df" opacity=".86"/>
+  <g transform="translate(270 220)">
+    <path d="M0 280l110-250h115l110 250H210l-38-92-38 92z" fill="#111820"/>
+    <path d="M122 160h100" stroke="#f5d06f" stroke-width="22" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(655 210) rotate(9)">
+    <path d="M0 150c65-130 195-130 260 0-65 120-195 120-260 0z" fill="#f7f1e8"/>
+    <path d="M70 150c30-55 90-55 120 0-30 50-90 50-120 0z" fill="#163b48"/>
+  </g>
+</svg>

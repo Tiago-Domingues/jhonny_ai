@@ -11,15 +11,15 @@ export function About() {
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
+    // Don't autoplay (browsers block autoplay with sound). Just pause the
+    // video with audio when it scrolls out of view.
     const obs = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          el.play().catch(() => {});
-        } else {
+        if (!entry.isIntersecting && !el.paused) {
           el.pause();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.4 }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -32,12 +32,11 @@ export function About() {
           <div className="mx-auto w-full max-w-[400px] overflow-hidden rounded-2xl border border-line-dark bg-black">
             <video
               ref={videoRef}
-              className="aspect-[9/16] w-full object-cover"
-              muted
-              loop
+              className="aspect-[9/16] w-full bg-black object-contain"
               playsInline
               preload="metadata"
               controls
+              muted={false}
               poster="/brand/jss-jhonny-poster.jpg"
             >
               <source src="/brand/jss-jhonny.mp4" type="video/mp4" />

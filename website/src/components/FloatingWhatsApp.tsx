@@ -1,16 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { STORE } from "@/lib/i18n";
+import { useState } from "react";
+import { whatsappHref } from "@/lib/i18n";
 import { useLanguage } from "@/components/LanguageProvider";
 import { WhatsappIcon } from "@/components/icons";
 
 export function FloatingWhatsApp() {
   const { t } = useLanguage();
+  const [toySrc, setToySrc] = useState("/brand/jhonny-character-cut.png");
 
   return (
     <a
-      href={`https://wa.me/${STORE.phoneRaw}`}
+      href={whatsappHref()}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp"
@@ -25,10 +27,11 @@ export function FloatingWhatsApp() {
       {/* Toy button */}
       <span className="relative flex h-16 w-16 items-center justify-center rounded-full border border-line bg-white shadow-xl shadow-black/20 transition group-hover:scale-105">
         <Image
-          src="/brand/jhonny-character-cut.png"
+          src={toySrc}
           alt="Jhonny"
           width={120}
           height={150}
+          onError={() => setToySrc("/brand/jhonny-character-cut.svg")}
           className="animate-toy h-14 w-auto object-contain"
         />
         <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white shadow-md ring-2 ring-white">
