@@ -1,3 +1,5 @@
+import { fetchPublicInstagramMedia } from "@/lib/instagramPublic";
+
 type InstagramMedia = {
   id: string;
   mediaUrl: string;
@@ -10,12 +12,30 @@ function envKey(handle: string, suffix: string) {
   return `INSTAGRAM_${handle.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_${suffix}`;
 }
 
+const staticDudesMedia: InstagramMedia[] = [
+  {
+    id: "3766550636138336821",
+    mediaUrl: "/brand/partners/dudes-post-1.jpg",
+    permalink: "https://www.instagram.com/p/DRFedj3jBI1/",
+  },
+  {
+    id: "3741106343957286859",
+    mediaUrl: "/brand/partners/dudes-post-2.jpg",
+    permalink: "https://www.instagram.com/p/DPrFGYKiM_L/",
+  },
+  {
+    id: "3738826267194586160",
+    mediaUrl: "/brand/partners/dudes-post-3.jpg",
+    permalink: "https://www.instagram.com/p/DPi-q5NCHQw/",
+  },
+];
+
 function mediaFromJson(handle: string): InstagramMedia[] {
   const raw = process.env[envKey(handle, "MEDIA_JSON")];
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(0, 6) : [];
+    return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
   } catch {
     return [];
   }
@@ -34,6 +54,14 @@ export async function GET(
   const accountId = process.env[envKey(handle, "ACCOUNT_ID")];
   const accessToken = process.env.INSTAGRAM_GRAPH_ACCESS_TOKEN;
   if (!accountId || !accessToken) {
+    const publicMedia = await fetchPublicInstagramMedia(handle, 3);
+    if (publicMedia.length) {
+      return Response.json({ configured: true, source: "instagram_public", media: publicMedia });
+    }
+    if (handle === "dudes_surfcafe") {
+      return Response.json({ configured: true, source: "static_shortcode", media: staticDudesMedia });
+    }
+
     return Response.json({
       configured: false,
       source: "fallback",
@@ -44,7 +72,7 @@ export async function GET(
 
   const url = new URL(`https://graph.facebook.com/v20.0/${accountId}/media`);
   url.searchParams.set("fields", "id,caption,media_type,media_url,permalink,thumbnail_url");
-  url.searchParams.set("limit", "6");
+  url.searchParams.set("limit", "3");
   url.searchParams.set("access_token", accessToken);
 
   const response = await fetch(url, { next: { revalidate: 900 } });

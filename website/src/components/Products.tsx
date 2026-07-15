@@ -80,13 +80,12 @@ export function Products() {
                 className="group relative flex min-h-[280px] scroll-mt-24 flex-col justify-end overflow-hidden rounded-2xl border border-white/0 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:border-sand/60 hover:shadow-[0_24px_70px_rgba(8,37,55,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sand"
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                  className="absolute inset-0 bg-cover bg-center filter grayscale transition-transform duration-700 group-hover:scale-110 group-hover:filter-none"
                   style={{
                     backgroundImage: `url('${localImage}'), url('${photoFallback}'), url('${svgFallback}')`,
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/10 transition duration-500 group-hover:from-ink group-hover:via-ink/55" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(250,204,21,0.34),transparent_28%),linear-gradient(135deg,rgba(34,197,94,0.14),rgba(14,165,233,0.22)_52%,rgba(249,115,22,0.2))] opacity-0 mix-blend-screen transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/10 transition duration-500 group-hover:via-ink/25 group-hover:to-transparent" />
                 <div className="absolute inset-x-6 top-6 h-px origin-left scale-x-0 bg-gradient-to-r from-sand via-white/80 to-transparent transition-transform duration-500 group-hover:scale-x-100" />
 
                 <div className="relative p-7 text-white">

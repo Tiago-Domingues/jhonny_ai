@@ -1,3 +1,11 @@
+import { fetchPublicInstagramAvatarUrl, fetchPublicInstagramImage } from "@/lib/instagramPublic";
+
+export const runtime = "nodejs";
+
+function responseBody(body: ArrayBuffer | Buffer) {
+  return body instanceof ArrayBuffer ? body : new Uint8Array(body);
+}
+
 function envKey(handle: string, suffix: string) {
   return `INSTAGRAM_${handle.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_${suffix}`;
 }
@@ -13,15 +21,45 @@ function initials(handle: string) {
     .toUpperCase() || "JSS";
 }
 
-function fallbackSvg(handle: string) {
+function colorPair(handle: string) {
+  const palettes = [
+    ["#0f766e", "#67e8f9"],
+    ["#0d3b66", "#f4d35e"],
+    ["#164e63", "#fb923c"],
+    ["#365314", "#bef264"],
+    ["#3b0764", "#f0abfc"],
+    ["#7f1d1d", "#fca5a5"],
+  ];
+  const index = [...handle].reduce((sum, char) => sum + char.charCodeAt(0), 0) % palettes.length;
+  return palettes[index];
+}
+
+function fallbackSvg(handle: string, variant = "card") {
   const label = initials(handle);
+  const [from, to] = colorPair(handle);
+  if (variant === "chip") {
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="${handle}">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="${from}"/>
+      <stop offset="1" stop-color="${to}"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="48" fill="url(#g)"/>
+  <circle cx="64" cy="28" r="18" fill="#ffffff" opacity="0.22"/>
+  <path d="M16 74c8-19 20-29 32-29s24 10 32 29" fill="#071316" opacity="0.55"/>
+  <text x="48" y="58" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="28" fill="#fff">${label}</text>
+</svg>`;
+  }
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 680" role="img" aria-label="${handle}">
   <defs>
     <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0" stop-color="#102f3c"/>
+      <stop offset="0" stop-color="${from}"/>
       <stop offset="0.55" stop-color="#1f8c9c"/>
-      <stop offset="1" stop-color="#e36f43"/>
+      <stop offset="1" stop-color="${to}"/>
     </linearGradient>
   </defs>
   <rect width="512" height="680" fill="url(#g)"/>
@@ -67,20 +105,30 @@ async function fetchBusinessDiscoveryAvatar(handle: string) {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ handle: string }> }
 ) {
   const { handle } = await context.params;
   const avatarUrl =
     process.env[envKey(handle, "AVATAR_URL")] ||
     (await fetchGraphAvatar(handle)) ||
-    (await fetchBusinessDiscoveryAvatar(handle));
+    (await fetchBusinessDiscoveryAvatar(handle)) ||
+    (await fetchPublicInstagramAvatarUrl(handle));
 
   if (avatarUrl) {
-    return Response.redirect(avatarUrl, 302);
+    const image = await fetchPublicInstagramImage(avatarUrl);
+    if (image) {
+      return new Response(responseBody(image.body), {
+        headers: {
+          "Content-Type": image.contentType,
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    }
   }
 
-  return new Response(fallbackSvg(handle), {
+  const variant = new URL(request.url).searchParams.get("variant") || "card";
+  return new Response(fallbackSvg(handle, variant), {
     headers: {
       "Content-Type": "image/svg+xml",
       "Cache-Control": "public, max-age=3600",

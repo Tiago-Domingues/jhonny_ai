@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "postinstall": "prisma generate",
     "exclude:food": "node scripts/exclude-food-beverages.mjs",
     "enrich:surfboards": "node scripts/enrich-surfboards.mjs",
     "seed:athlete-coupons": "node scripts/seed-athlete-coupons.mjs",

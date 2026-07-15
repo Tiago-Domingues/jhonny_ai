@@ -305,11 +305,11 @@ export const translations: Record<Locale, Dict> = {
       Fins: "Quilhas",
     },
     hero: {
-      eyebrow: "O teu spot para surf, surfskate e estilo",
+      eyebrow: "Surf, mar e estilo",
       title1: "Onde os surfistas",
       title2: "se tornam lendas",
       subtitle:
-        "Loja de surf em Carcavelos · Cascais. Pranchas, fatos, material técnico e vestuário — com o aconselhamento honesto do Jhonny para todos os níveis.",
+        "Equipamento escolhido para a água, a praia e a vida depois da sessão — com o aconselhamento honesto do Jhonny.",
       ctaVisit: "Visitar a loja",
       ctaWhatsapp: "WhatsApp",
     },
@@ -499,11 +499,11 @@ export const translations: Record<Locale, Dict> = {
       "LIFESTYLE / BOOKS": "Books",
     },
     hero: {
-      eyebrow: "Your spot for surf, surfskate and style",
+      eyebrow: "Surf, sea and style",
       title1: "Where surfers",
       title2: "become legends",
       subtitle:
-        "Surf store in Carcavelos · Cascais. Boards, wetsuits, technical gear and apparel — with Jhonny's honest advice for every level.",
+        "Gear for the water, the beach and life after the session — with Jhonny's honest advice.",
       ctaVisit: "Visit the store",
       ctaWhatsapp: "WhatsApp",
     },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
 
 type ConsentState = {
   required: true;
@@ -16,7 +17,51 @@ const defaultConsent: ConsentState = {
   marketing: false,
 };
 
+const policyVersion = "2026-07-ecommerce-foundation";
+const maxAge = 60 * 60 * 24 * 180;
+
+const copy = {
+  pt: {
+    eyebrow: "Cookies e privacidade",
+    title: "Surf limpo, dados protegidos",
+    body:
+      "Usamos cookies essenciais para carrinho, checkout e login. Analytics, personalização e lembretes de compra só ficam ativos com o teu consentimento.",
+    required: "Essenciais sempre ativos",
+    privacy: "Política de Privacidade",
+    terms: "Termos",
+    reject: "Só essenciais",
+    customize: "Personalizar",
+    save: "Guardar escolhas",
+    accept: "Aceitar tudo",
+    labels: {
+      analytics: "Analytics",
+      personalization: "Personalização",
+      marketing: "Marketing",
+    },
+  },
+  en: {
+    eyebrow: "Cookies and privacy",
+    title: "Clean surf, protected data",
+    body:
+      "We use essential cookies for cart, checkout and login. Analytics, personalization and purchase reminders only activate with your consent.",
+    required: "Essential cookies always active",
+    privacy: "Privacy Policy",
+    terms: "Terms",
+    reject: "Essentials only",
+    customize: "Customize",
+    save: "Save choices",
+    accept: "Accept all",
+    labels: {
+      analytics: "Analytics",
+      personalization: "Personalization",
+      marketing: "Marketing",
+    },
+  },
+} as const;
+
 export function CookieConsent() {
+  const { locale } = useLanguage();
+  const text = copy[locale];
   const [visible, setVisible] = useState(false);
   const [customizing, setCustomizing] = useState(false);
   const [consent, setConsent] = useState<ConsentState>(defaultConsent);
@@ -30,6 +75,10 @@ export function CookieConsent() {
 
   async function save(next: ConsentState) {
     setConsent(next);
+    document.cookie = `jss_consent=${encodeURIComponent(JSON.stringify({
+      decisions: next,
+      policyVersion,
+    }))}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
     setVisible(false);
     await fetch("/api/consent", {
       method: "POST",
@@ -45,13 +94,23 @@ export function CookieConsent() {
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-muted">
-            Cookies e privacidade
+            {text.eyebrow}
           </p>
           <h2 className="font-display mt-2 text-2xl font-extrabold uppercase tracking-tight">
-            Surf limpo, dados protegidos
+            {text.title}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            Usamos cookies essenciais para carrinho e login. Analytics, personalização e lembretes de compra só ficam ativos com o teu consentimento.
+            {text.body}
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-muted">
+            {text.required}.{" "}
+            <a href="/privacidade" className="font-semibold text-ink underline underline-offset-4">
+              {text.privacy}
+            </a>{" "}
+            ·{" "}
+            <a href="/termos" className="font-semibold text-ink underline underline-offset-4">
+              {text.terms}
+            </a>
           </p>
 
           {customizing && (
@@ -63,7 +122,7 @@ export function CookieConsent() {
                     checked={consent[key]}
                     onChange={(event) => setConsent((cur) => ({ ...cur, [key]: event.target.checked }))}
                   />
-                  <span className="capitalize">{key}</span>
+                  <span>{text.labels[key]}</span>
                 </label>
               ))}
             </div>
@@ -76,15 +135,24 @@ export function CookieConsent() {
             onClick={() => save(defaultConsent)}
             className="rounded-full border border-line px-4 py-2 text-sm font-semibold text-muted transition hover:text-ink"
           >
-            Rejeitar
+            {text.reject}
           </button>
           <button
             type="button"
             onClick={() => setCustomizing((value) => !value)}
             className="rounded-full border border-ink px-4 py-2 text-sm font-semibold transition hover:bg-cream"
           >
-            Personalizar
+            {text.customize}
           </button>
+          {customizing && (
+            <button
+              type="button"
+              onClick={() => save(consent)}
+              className="rounded-full border border-ink bg-cream px-4 py-2 text-sm font-bold text-ink transition hover:bg-cream-deep"
+            >
+              {text.save}
+            </button>
+          )}
           <button
             type="button"
             onClick={() =>
@@ -92,7 +160,7 @@ export function CookieConsent() {
             }
             className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-white transition hover:bg-ink-soft"
           >
-            Aceitar tudo
+            {text.accept}
           </button>
         </div>
       </div>

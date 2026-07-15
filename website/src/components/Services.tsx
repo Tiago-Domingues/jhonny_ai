@@ -27,24 +27,42 @@ const icons = [
 ];
 
 type Link = { label: string; href: string; logo?: string; wa?: boolean };
+type ServiceCard = {
+  title: string;
+  desc: string;
+  Icon: (props: React.SVGProps<SVGSVGElement>) => React.ReactElement;
+  actions: Link[];
+  wide?: boolean;
+};
 
 const wa = (msg: string) =>
   whatsappHref(msg);
 
 const surfSchoolLinks: Link[] = [
-  { label: "@tainha_surfproject", href: "https://www.instagram.com/tainha_surfproject/" },
-  { label: "@linhasurfschool", href: "https://www.instagram.com/linhasurfschool/" },
-  { label: "@positivewavesurfschool", href: "https://www.instagram.com/positivewavesurfschool/" },
-  { label: "@saltysoulsportugal", href: "https://www.instagram.com/saltysoulsportugal/" },
-  { label: "@surflisbon1", href: "https://www.instagram.com/surflisbon1/" },
-  { label: "@surfingclubedeportugal", href: "https://www.instagram.com/surfingclubedeportugal/" },
-  { label: "@salsurfingschool", href: "https://www.instagram.com/salsurfingschool/" },
-  { label: "@fours_surfschool", href: "https://www.instagram.com/fours_surfschool/" },
-  { label: "@triple_tide", href: "https://www.instagram.com/triple_tide/" },
+  { label: "@tainha.surfproject", href: "https://www.instagram.com/tainha.surfproject/", logo: "/brand/partners/instagram/tainha-surfproject.jpg" },
+  { label: "@linhasurfschool", href: "https://www.instagram.com/linhasurfschool/", logo: "/brand/partners/instagram/linhasurfschool.jpg" },
+  { label: "@positivewavesurfschool", href: "https://www.instagram.com/positivewavesurfschool/", logo: "/brand/partners/instagram/positivewavesurfschool.jpg" },
+  { label: "@saltysoulsportugal", href: "https://www.instagram.com/saltysoulsportugal/", logo: "/brand/partners/instagram/saltysoulsportugal.jpg" },
+  { label: "@surflisbon1", href: "https://www.instagram.com/surflisbon1/", logo: "/brand/partners/instagram/surflisbon1.jpg" },
+  { label: "@surfingclubeportugal", href: "https://www.instagram.com/surfingclubeportugal/", logo: "/brand/partners/instagram/surfingclubeportugal.jpg" },
+  { label: "@salsurfingschool", href: "https://www.instagram.com/salsurfingschool/", logo: "/brand/partners/instagram/salsurfingschool.jpg" },
+  { label: "@fours_surfschool", href: "https://www.instagram.com/fours_surfschool/", logo: "/brand/partners/instagram/fours-surfschool.jpg" },
+  { label: "@triple_tide", href: "https://www.instagram.com/triple_tide/", logo: "/brand/partners/instagram/triple-tide.jpg" },
 ];
 
+function instagramHandleFromHref(href: string) {
+  try {
+    const url = new URL(href);
+    if (!url.hostname.includes("instagram.com")) return null;
+    const handle = url.pathname.split("/").filter(Boolean)[0];
+    return handle && /^[a-zA-Z0-9._]+$/.test(handle) ? handle : null;
+  } catch {
+    return null;
+  }
+}
+
 function DudesAvatar() {
-  const instagramAvatarUrl = "/api/instagram/dudes_surfcafe/avatar";
+  const instagramAvatarUrl = "/brand/partners/instagram/dudes-surfcafe.jpg";
   const [photoSrc, setPhotoSrc] = useState(instagramAvatarUrl);
   return (
     <a
@@ -83,7 +101,16 @@ function DudesAvatar() {
 }
 
 function PartnerChip({ link }: { link: Link }) {
-  const [hasLogo, setHasLogo] = useState(Boolean(link.logo));
+  const instagramHandle = instagramHandleFromHref(link.href);
+  const staticLogoSrc = link.logo
+    ? link.logo.startsWith("/")
+      ? link.logo
+      : `/brand/partners/${link.logo}.png`
+    : "";
+  const primaryLogoSrc = staticLogoSrc || (instagramHandle
+    ? `/api/instagram/${encodeURIComponent(instagramHandle)}/avatar?variant=chip`
+    : "");
+  const [logoSrc, setLogoSrc] = useState(primaryLogoSrc);
 
   return (
     <a
@@ -92,15 +119,20 @@ function PartnerChip({ link }: { link: Link }) {
       rel="noopener noreferrer"
       className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/30 py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
     >
-      <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full bg-ink/5">
-        {hasLogo && link.logo ? (
+      <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-ink/5">
+        {logoSrc ? (
           <Image
-            src={`/brand/partners/${link.logo}.png`}
+            src={logoSrc}
             alt={link.label}
-            width={24}
-            height={24}
-            onError={() => setHasLogo(false)}
-            className="h-6 w-6 object-cover"
+            width={28}
+            height={28}
+            unoptimized={logoSrc.startsWith("/api/")}
+            onError={() =>
+              setLogoSrc((current) =>
+                current !== staticLogoSrc && staticLogoSrc ? staticLogoSrc : ""
+              )
+            }
+            className="h-7 w-7 object-cover"
           />
         ) : link.wa ? (
           <WhatsappIcon className="h-3.5 w-3.5" />
@@ -121,11 +153,11 @@ export function Services() {
   const links: Link[][] = [
     [{ label: t.services.ask, href: wa(t.services.askMsg), wa: true }],
     [
-      { label: "@fibercrw", href: "https://www.instagram.com/fibercrw/", logo: "fibercrw" },
+      { label: "@fibercrw", href: "https://www.instagram.com/fibercrw/", logo: "/brand/partners/instagram/fibercrw.jpg" },
       {
         label: "@a.s.b.repairs.surfboards",
         href: "https://www.instagram.com/a.s.b.repairs.surfboards/",
-        logo: "asbrepairs",
+        logo: "/brand/partners/instagram/asbrepairs.jpg",
       },
     ],
     [{ label: t.services.buyback, href: wa(t.services.buybackMsg), wa: true }],
@@ -134,20 +166,21 @@ export function Services() {
       {
         label: "@underdogz",
         href: "https://www.instagram.com/underdogz/",
-        logo: "underdogz",
+        logo: "/brand/partners/instagram/underdogz.jpg",
       },
       {
         label: "@seasoulscommunity",
         href: "https://www.instagram.com/seasoulscommunity/",
+        logo: "/brand/partners/instagram/seasoulscommunity.jpg",
       },
     ],
     [
-      { label: "Nova Surf Club", href: "https://www.instagram.com/novasurfclub/", logo: "novasurfclub" },
-      { label: "MadSurf Club", href: "https://www.instagram.com/madsurfclub/", logo: "madsurfclub" },
-      { label: "Erasmus Life Lisboa", href: "https://www.erasmuslifelisboa.com/", logo: "erasmuslifelisboa" },
+      { label: "Nova Surf Club", href: "https://www.instagram.com/novasurfclub/", logo: "/brand/partners/instagram/novasurfclub.jpg" },
+      { label: "MadSurf Club", href: "https://www.instagram.com/madsurfclub/", logo: "/brand/partners/instagram/madsurfclub.jpg" },
+      { label: "Erasmus Life Lisboa", href: "https://www.erasmuslifelisboa.com/", logo: "/brand/partners/instagram/erasmuslifelisboa.png" },
     ],
   ];
-  const serviceCards = [
+  const serviceCards: ServiceCard[] = [
     ...t.services.items.map((item, i) => ({
       title: item.title,
       desc: item.desc,
@@ -159,6 +192,7 @@ export function Services() {
       desc: "Trusted school partners around Carcavelos and Lisbon that help new surfers get safely into the water.",
       Icon: StudentIcon,
       actions: surfSchoolLinks,
+      wide: true,
     },
   ];
 
@@ -178,27 +212,34 @@ export function Services() {
         </div>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {serviceCards.map(({ title, desc, Icon, actions }) => {
+          {serviceCards.map(({ title, desc, Icon, actions, wide }) => {
             return (
               <div
                 key={title}
-                className="group rounded-2xl border border-line bg-white/70 px-4 pb-5 pt-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:bg-cream hover:shadow-md"
+                className={[
+                  "group min-h-[220px] rounded-2xl border border-line bg-white/70 px-4 pb-5 pt-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:bg-cream hover:shadow-md",
+                  wide ? "sm:col-span-2 lg:col-span-3" : "",
+                ].join(" ")}
               >
-                <Icon className="h-8 w-8 text-ink transition-transform duration-200 group-hover:scale-110" />
-                <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-ink transition-all group-hover:font-extrabold group-hover:tracking-wider">
-                  {title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
-                  {desc}
-                </p>
-
-                {actions.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {actions.map((a) => (
-                      <PartnerChip key={a.label} link={a} />
-                    ))}
+                <div className={wide ? "flex h-full flex-col gap-4 lg:flex-row lg:items-start lg:justify-between" : ""}>
+                  <div className={wide ? "max-w-md" : ""}>
+                    <Icon className="h-8 w-8 text-ink transition-transform duration-200 group-hover:scale-110" />
+                    <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-ink transition-all group-hover:font-extrabold group-hover:tracking-wider">
+                      {title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted">
+                      {desc}
+                    </p>
                   </div>
-                )}
+
+                  {actions.length > 0 && (
+                    <div className={wide ? "flex flex-1 flex-wrap gap-2 lg:mt-1 lg:justify-end" : "mt-4 flex flex-wrap gap-2"}>
+                      {actions.map((a) => (
+                        <PartnerChip key={a.label} link={a} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -228,7 +269,7 @@ export function Services() {
                 @dudes_surfcafe
               </a>
               <p className="mt-2 text-xs text-muted">
-                Live post images appear here after Instagram Graph credentials are added.
+                Profile image loads from Instagram; post tiles open the café profile.
               </p>
             </div>
           </div>

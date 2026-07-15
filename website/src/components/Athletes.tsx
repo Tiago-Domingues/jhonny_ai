@@ -7,7 +7,7 @@ import { ATHLETES, type Athlete } from "@/lib/athletes";
 import { InstagramIcon } from "@/components/icons";
 
 function AthleteCard({ a }: { a: Athlete }) {
-  const [photoSrc, setPhotoSrc] = useState(a.instagramAvatarUrl);
+  const [photoSrc, setPhotoSrc] = useState(a.photo);
 
   return (
     <a
@@ -24,9 +24,7 @@ function AthleteCard({ a }: { a: Athlete }) {
         unoptimized={photoSrc.startsWith("/api/") || photoSrc.endsWith(".svg")}
         onError={() => {
           setPhotoSrc((current) =>
-            current === a.instagramAvatarUrl
-              ? a.photo
-              : current
+            current === a.photo ? a.instagramAvatarUrl : current
           );
         }}
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"

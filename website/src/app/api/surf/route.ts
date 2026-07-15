@@ -3,6 +3,8 @@ import type { SurfResponse } from "@/lib/beaches";
 import { MARINE_URL, WIND_URL, mapSurf } from "@/lib/surf";
 
 export const revalidate = 1800; // seconds (~30 min)
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 type Current = { current?: Record<string, number | string> };
 

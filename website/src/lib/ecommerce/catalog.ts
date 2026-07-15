@@ -3,9 +3,11 @@ import "server-only";
 import { Product } from "@prisma/client";
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { eurosToCents } from "@/lib/ecommerce/money";
-import { syncOdooProducts } from "@/lib/ecommerce/odooCatalog";
+import { fetchOdooProducts, syncOdooProducts } from "@/lib/ecommerce/odooCatalog";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { productMatchesCategoryGroup, productMatchesSubcategory } from "@/lib/ecommerce/categoryGroups";
+
+type OdooProduct = Awaited<ReturnType<typeof fetchOdooProducts>>["products"][number];
 
 export type StoreProduct = {
   id: string;
@@ -152,6 +154,26 @@ function toStoreProduct(product: Product): StoreProduct {
   };
 }
 
+function toStoreProductFromOdoo(product: OdooProduct): StoreProduct {
+  const mapped = toStoreProduct(product as unknown as Product);
+  mapped.id = `odoo-${product.odooProductId}`;
+  mapped.imageUrls = undefined;
+  return mapped;
+}
+
+async function listLiveOdooProducts(filters: ProductFilters = {}) {
+  if (process.env.ODOO_LIVE_CATALOG !== "true" || !hasOdooConfig()) return null;
+
+  const result = await fetchOdooProducts();
+  if (!result.configured) return null;
+
+  const products = result.products
+    .filter((product) => !product.excludedFromCatalog)
+    .map(toStoreProductFromOdoo);
+
+  return dedupeStoreProducts(products.filter((product) => matchesFilters(product, filters)));
+}
+
 function matchesFilters(product: StoreProduct, filters: ProductFilters = {}) {
   const query = filters.query?.trim().toLowerCase();
   if (query) {
@@ -245,7 +267,15 @@ function dedupeStoreProducts(products: StoreProduct[]) {
 }
 
 export async function listProducts(filters: ProductFilters = {}): Promise<StoreProduct[]> {
-  if (!hasDatabaseUrl()) return mockProducts;
+  if (!hasDatabaseUrl()) {
+    try {
+      const liveProducts = await listLiveOdooProducts(filters);
+      if (liveProducts?.length) return liveProducts;
+    } catch {
+      // Fall through to mock products if Odoo is temporarily unavailable.
+    }
+    return mockProducts;
+  }
 
   try {
     if (process.env.ODOO_LIVE_CATALOG === "true" && hasOdooConfig()) {
@@ -265,12 +295,27 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
     const mapped = products.length ? products.map(toStoreProduct) : mockProducts;
     return dedupeStoreProducts(mapped.filter((product) => matchesFilters(product, filters)));
   } catch {
+    try {
+      const liveProducts = await listLiveOdooProducts(filters);
+      if (liveProducts?.length) return liveProducts;
+    } catch {
+      // Fall through to mock products if both DB and Odoo fail.
+    }
     return dedupeStoreProducts(mockProducts.filter((product) => matchesFilters(product, filters)));
   }
 }
 
 export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[]> {
-  if (!hasDatabaseUrl()) return [];
+  if (!hasDatabaseUrl()) {
+    try {
+      const liveProducts = await listLiveOdooProducts();
+      return (liveProducts || [])
+        .filter((product) => product.isOpportunity)
+        .slice(0, limit);
+    } catch {
+      return [];
+    }
+  }
 
   try {
     const products = await prisma.product.findMany({
@@ -290,7 +335,15 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
 
 export async function getProduct(productId: string): Promise<StoreProduct | null> {
   const mock = mockProducts.find((product) => product.id === productId || product.slug === productId);
-  if (!hasDatabaseUrl()) return mock || null;
+  if (!hasDatabaseUrl()) {
+    try {
+      const liveProducts = await listLiveOdooProducts();
+      const liveProduct = liveProducts?.find((product) => product.id === productId || product.slug === productId);
+      return liveProduct || mock || null;
+    } catch {
+      return mock || null;
+    }
+  }
 
   try {
     const product = await prisma.product.findFirst({
