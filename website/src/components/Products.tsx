@@ -22,21 +22,21 @@ const icons = [
 ];
 
 const categoryImages: Record<string, string> = {
-  surfboards: "/brand/categories/cat-surfboards-user.jpeg",
-  wetsuits: "/brand/categories/cat-wetsuits.jpg",
-  surfgear: "/brand/categories/cat-surfgear-user.jpeg",
-  essentials: "/brand/categories/cat-apparel.jpg",
-  bodyboard: "/brand/categories/cat-bodyboard.jpg",
-  lifestyle: "/brand/categories/cat-jss.jpg",
+  surfboards: "/brand/categories/hero-surfboards.jpg",
+  wetsuits: "/brand/categories/hero-wetsuits.jpg",
+  surfgear: "/brand/categories/hero-surfgear.jpg",
+  essentials: "/brand/categories/hero-essentials.jpg",
+  bodyboard: "/brand/categories/hero-bodyboard.jpg",
+  lifestyle: "/brand/categories/hero-lifestyle.png",
 };
 
 const categoryPhotoFallbacks: Record<string, string> = {
-  surfboards: "https://source.unsplash.com/1200x800/?surfboard,surf",
-  wetsuits: "https://source.unsplash.com/1200x800/?wetsuit,surf",
-  surfgear: "https://source.unsplash.com/1200x800/?surf,gear",
-  essentials: "https://source.unsplash.com/1200x800/?beach,surf",
-  bodyboard: "https://source.unsplash.com/1200x800/?bodyboard,waves",
-  lifestyle: "https://source.unsplash.com/1200x800/?surf,lifestyle",
+  surfboards: "/brand/categories/cat-surfboards.jpg",
+  wetsuits: "/brand/categories/cat-wetsuits.jpg",
+  surfgear: "/brand/categories/cat-technical.jpg",
+  essentials: "/brand/categories/cat-apparel.jpg",
+  bodyboard: "/brand/categories/cat-bodyboard.jpg",
+  lifestyle: "/brand/categories/cat-jss.jpg",
 };
 
 const categorySvgFallbacks: Record<string, string> = {

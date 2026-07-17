@@ -11,27 +11,27 @@ export const metadata: Metadata = {
     "Loja online Jhonny Surf Store com catálogo, stock, filtros e checkout preparados para Odoo.",
 };
 
+function ShopFallback() {
+  return (
+    <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
+      <div className="flex flex-col items-center gap-4 py-20">
+        <div className="shop-loader-wave" aria-hidden />
+        <p className="font-display text-sm font-bold uppercase tracking-[0.25em] text-muted">
+          A carregar catálogo...
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function ShopPage() {
   return (
     <>
       <SiteHeader />
-      <main className="bg-cream pb-20 pt-36">
-        <section className="mx-auto max-w-7xl px-5 sm:px-8">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-muted">
-            Loja online
-          </p>
-          <h1 className="font-display mt-3 text-5xl font-extrabold uppercase tracking-tight text-ink sm:text-6xl">
-            Compra como local
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">
-            Catálogo preparado para Odoo com categorias, stock, filtros por marca/tamanho/cor e checkout online com recolha em loja.
-          </p>
-          <div className="mt-12">
-            <Suspense fallback={<p className="text-sm font-semibold text-muted">A carregar catálogo Odoo...</p>}>
-              <ShopClient />
-            </Suspense>
-          </div>
-        </section>
+      <main className="bg-cream pb-20">
+        <Suspense fallback={<ShopFallback />}>
+          <ShopClient />
+        </Suspense>
       </main>
       <Footer />
       <FloatingWhatsApp />
