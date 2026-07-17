@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { JssCommunity } from "@/components/JssCommunity";
+import { BorderSurfer } from "@/components/BorderSurfer";
 
 export function About() {
   const { t } = useLanguage();
@@ -27,7 +28,7 @@ export function About() {
 
   return (
     <section id="jss" className="relative scroll-mt-20 overflow-hidden bg-ink py-20 text-white sm:py-28">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-20 overflow-hidden">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 overflow-hidden">
         <div className="animate-ocean-border absolute -top-9 left-0 h-16 w-[220%] text-paper">
           <svg viewBox="0 0 1200 80" preserveAspectRatio="none" className="h-full w-full">
             <path
@@ -36,16 +37,24 @@ export function About() {
             />
           </svg>
         </div>
-        <div className="animate-surf-border absolute top-1 left-0">
-          <div className="drop-shadow-[0_4px_10px_rgba(0,0,0,0.65)]">
-            <svg viewBox="0 0 72 48" className="h-10 w-16" aria-hidden="true">
-              <path d="M10 39c13 4 37 4 52-3" fill="none" stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
-              <circle cx="34" cy="8" r="4" fill="#d9b46f" />
-              <path d="M34 13l-5 13 10 1-1-13Z" fill="#d9b46f" />
-              <path d="M30 25 20 35M38 26l12 7" fill="none" stroke="#d9b46f" strokeWidth="4" strokeLinecap="round" />
-              <path d="M29 17 18 13M38 17l10-6" fill="none" stroke="#d9b46f" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-          </div>
+        {/* Soft ocean tint under the paper wave lip */}
+        <div className="animate-ocean-border absolute top-6 left-0 h-10 w-[220%] opacity-80">
+          <svg viewBox="0 0 1200 48" preserveAspectRatio="none" className="h-full w-full">
+            <path
+              d="M0 18C90 4 150 4 240 18S390 40 480 18S630 4 720 18S870 40 960 18S1110 4 1200 18V48H0Z"
+              fill="#1a6f88"
+            />
+            <path
+              d="M0 22C90 10 150 10 240 22S390 38 480 22S630 10 720 22S870 38 960 22S1110 10 1200 22"
+              fill="none"
+              stroke="#d7f1ff"
+              strokeWidth="2"
+              opacity="0.55"
+            />
+          </svg>
+        </div>
+        <div className="animate-surf-border absolute top-2 left-0">
+          <BorderSurfer />
         </div>
       </div>
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-16">
