@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Logo } from "@/components/Logo";
-import { MENU_CATEGORIES } from "@/lib/i18n";
+import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
 import { CartIcon, UserIcon, FlagPT, FlagEN } from "@/components/icons";
 import { categoryGroupHref, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 
@@ -15,6 +15,12 @@ type HeaderUser = {
   username?: string;
   email?: string;
 } | null;
+
+type MenuCategory = {
+  key: NavKey;
+  anchor: string;
+  items: string[];
+};
 
 function Chevron({ className = "" }: { className?: string }) {
   return (
@@ -32,7 +38,7 @@ function Chevron({ className = "" }: { className?: string }) {
   );
 }
 
-export function Header() {
+export function Header({ categories }: { categories?: MenuCategory[] }) {
   const { t, locale, toggle } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -40,7 +46,25 @@ export function Header() {
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [user, setUser] = useState<HeaderUser>(null);
   const [cartCount, setCartCount] = useState(0);
+  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(
+    categories?.length ? categories : MENU_CATEGORIES
+  );
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (categories?.length) {
+      setMenuCategories(categories);
+      return;
+    }
+    fetch("/api/menu-categories")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.categories) && data.categories.length) {
+          setMenuCategories(data.categories);
+        }
+      })
+      .catch(() => undefined);
+  }, [categories]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -84,8 +108,8 @@ export function Header() {
 
   const togglePanel = (p: Panel) => setPanel((cur) => (cur === p ? null : p));
   const label = (item: string) => t.menuItems[item] ?? displayOdooCategoryName(item);
-  const categoryHref = (key: (typeof MENU_CATEGORIES)[number]["key"]) => categoryGroupHref(key);
-  const subcategoryHref = (key: (typeof MENU_CATEGORIES)[number]["key"], item: string) =>
+  const categoryHref = (key: NavKey) => categoryGroupHref(key);
+  const subcategoryHref = (key: NavKey, item: string) =>
     categoryGroupHref(key, { subcategory: item });
 
   return (
@@ -102,7 +126,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-6 xl:flex">
-          {MENU_CATEGORIES.map((cat) => (
+          {menuCategories.map((cat) => (
             <div key={cat.key} className="group relative">
               <Link
                 href={categoryHref(cat.key)}
@@ -264,7 +288,7 @@ export function Header() {
       {open && (
         <div className="max-h-[80vh] overflow-y-auto border-t border-line-dark bg-ink xl:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col px-5 py-2 sm:px-8">
-            {MENU_CATEGORIES.map((cat) => {
+            {menuCategories.map((cat) => {
               const expanded = openCat === cat.key;
               return (
                 <div key={cat.key} className="border-b border-white/10 last:border-0">

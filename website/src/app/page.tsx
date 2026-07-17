@@ -1,4 +1,4 @@
-import { Header } from "@/components/Header";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Hero } from "@/components/Hero";
 import { SurfConditions } from "@/components/SurfConditions";
 import { NewArrivals } from "@/components/NewArrivals";
@@ -16,7 +16,7 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 export default function Home() {
   return (
     <>
-      <Header />
+      <SiteHeader />
       <main>
         <Hero />
         <SurfConditions />

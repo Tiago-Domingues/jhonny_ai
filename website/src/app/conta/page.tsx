@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/Header";
+import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { AccountClient } from "@/components/AccountClient";
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function AccountPage() {
   return (
     <>
-      <Header />
+      <SiteHeader />
       <main className="bg-cream pb-20 pt-32">
         <section className="mx-auto max-w-5xl px-5 sm:px-8">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-muted">
