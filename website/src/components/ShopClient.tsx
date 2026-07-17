@@ -274,7 +274,13 @@ function countActiveFilters(filters: ShopFacetFilters) {
   );
 }
 
-export function ShopClient({ products: initialProducts = [] }: { products?: StoreProduct[] }) {
+export function ShopClient({
+  products: initialProducts = [],
+  catalogKey: initialCatalogKey = "||",
+}: {
+  products?: StoreProduct[];
+  catalogKey?: string;
+}) {
   const { locale } = useLanguage();
   const t = copy[locale];
   const router = useRouter();
@@ -326,12 +332,16 @@ export function ShopClient({ products: initialProducts = [] }: { products?: Stor
   ].join("|");
 
   useEffect(() => {
-    if (initialProducts.length > 0) return;
     let cancelled = false;
     const [group, sub, q] = catalogKey.split("|");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 25000);
 
     async function loadProducts() {
-      setLoadingProducts(true);
+      // Keep SSR products visible while the full lean catalog downloads.
+      if (initialProducts.length === 0 || catalogKey !== initialCatalogKey) {
+        setLoadingProducts(true);
+      }
       try {
         // Fetch the category-scoped catalog; facet filters/sort apply client-side (Pukas-style facets).
         const requestParams = new URLSearchParams();
@@ -340,16 +350,25 @@ export function ShopClient({ products: initialProducts = [] }: { products?: Stor
         if (q) requestParams.set("q", q);
 
         const response = await fetch(
-          `/api/products${requestParams.toString() ? `?${requestParams.toString()}` : ""}`
+          `/api/products${requestParams.toString() ? `?${requestParams.toString()}` : ""}`,
+          { signal: controller.signal, cache: "no-store" }
         );
         if (!response.ok) throw new Error("Product request failed.");
         const data = await response.json();
         if (!cancelled) {
-          setProducts(data.products || []);
+          setProducts(Array.isArray(data.products) ? data.products : []);
           setVisibleCount(60);
+          setMessage(null);
         }
       } catch {
-        if (!cancelled) setMessage("Não foi possível carregar o catálogo Odoo.");
+        if (!cancelled) {
+          // Keep any previously shown products instead of wiping the grid.
+          setMessage(
+            locale === "pt"
+              ? "Não foi possível atualizar o catálogo. A mostrar os produtos já carregados."
+              : "Could not refresh the catalog. Showing previously loaded products."
+          );
+        }
       } finally {
         if (!cancelled) setLoadingProducts(false);
       }
@@ -358,8 +377,10 @@ export function ShopClient({ products: initialProducts = [] }: { products?: Stor
     void loadProducts();
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeout);
     };
-  }, [catalogKey, initialProducts.length]);
+  }, [catalogKey, initialCatalogKey, initialProducts.length, locale]);
 
   function pushFilters(
     next: ShopFacetFilters,
