@@ -55,10 +55,10 @@ export async function NewArrivals() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
-              Odoo new arrivals
+              Just landed
             </p>
             <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
-              New Arrivals
+              New In
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
               Fresh products from the Odoo `New Arrivals` category. Until that category is created,
