@@ -40,6 +40,7 @@ export type StoreProduct = {
   opportunitySource?: string | null;
   odooProductId?: number | null;
   odooProductTemplateId?: number | null;
+  createdAt?: string | null;
 };
 
 export type ProductFilters = {
@@ -150,6 +151,7 @@ const productListSelect = {
   opportunitySource: true,
   odooProductId: true,
   odooProductTemplateId: true,
+  createdAt: true,
 } as const;
 
 type ListedProduct = {
@@ -182,9 +184,17 @@ type ListedProduct = {
   opportunitySource: string | null;
   odooProductId: number | null;
   odooProductTemplateId: number | null;
+  createdAt?: Date | string | null;
 };
 
 function toStoreProduct(product: ListedProduct | Product): StoreProduct {
+  const createdAt =
+    "createdAt" in product && product.createdAt
+      ? product.createdAt instanceof Date
+        ? product.createdAt.toISOString()
+        : String(product.createdAt)
+      : null;
+
   return {
     id: product.id,
     slug: product.slug,
@@ -217,6 +227,7 @@ function toStoreProduct(product: ListedProduct | Product): StoreProduct {
     opportunitySource: product.opportunitySource,
     odooProductId: product.odooProductId,
     odooProductTemplateId: product.odooProductTemplateId,
+    createdAt,
   };
 }
 
