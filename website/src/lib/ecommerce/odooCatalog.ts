@@ -42,9 +42,26 @@ const productFields = [
   "active",
   "description_sale",
   "description",
-  "image_512",
   "product_template_attribute_value_ids",
 ];
+
+const imagePresenceFieldCandidates = ["image_128", "image_256", "image_512"];
+
+const fieldsGetCache = new Map<string, { at: number; fields: Record<string, unknown> }>();
+const FIELDS_GET_TTL_MS = 30 * 60 * 1000;
+
+async function getModelFields(client: OdooClient, model: string) {
+  const cached = fieldsGetCache.get(model);
+  if (cached && Date.now() - cached.at < FIELDS_GET_TTL_MS) {
+    return cached.fields;
+  }
+
+  const fields = (await client.executeKw(model, "fields_get", [], {
+    attributes: ["string", "type"],
+  })) as Record<string, unknown>;
+  fieldsGetCache.set(model, { at: Date.now(), fields });
+  return fields;
+}
 
 type OdooRow = Record<string, unknown>;
 
@@ -144,9 +161,7 @@ function foodBeverageExclusion(product: { name: string; category: string; brand:
 
 async function availableField(client: OdooClient, model: string, candidates: string[]) {
   try {
-    const fields = (await client.executeKw(model, "fields_get", [], {
-      attributes: ["string", "type"],
-    })) as Record<string, unknown>;
+    const fields = await getModelFields(client, model);
     return candidates.find((candidate) => candidate in fields) || null;
   } catch {
     return null;
@@ -155,9 +170,7 @@ async function availableField(client: OdooClient, model: string, candidates: str
 
 async function availableFields(client: OdooClient, model: string, candidates: string[]) {
   try {
-    const fields = (await client.executeKw(model, "fields_get", [], {
-      attributes: ["string", "type"],
-    })) as Record<string, unknown>;
+    const fields = await getModelFields(client, model);
     return candidates.filter((candidate) => candidate in fields);
   } catch {
     return [];
@@ -231,9 +244,8 @@ function parseDiscountPercent(value: string | null) {
   return Math.round(percent);
 }
 
-function imageDataUrl(base64: unknown) {
-  if (!base64 || typeof base64 !== "string") return null;
-  return `data:image/jpeg;base64,${base64}`;
+function hasOdooImage(value: unknown) {
+  return typeof value === "string" && value.length > 0;
 }
 
 function numberField(product: OdooRow, fields: string[]) {
@@ -248,12 +260,19 @@ function numberField(product: OdooRow, fields: string[]) {
 export async function fetchOdooProducts(limit = 2000) {
   if (!hasOdooConfig()) return { configured: false, products: [] as SyncedOdooProduct[] };
   const client = new OdooClient();
-  const brandField = await availableField(client, "product.product", brandFieldCandidates);
-  const originalPriceFields = await availableFields(client, "product.product", originalPriceFieldCandidates);
-  const discountPercentFields = await availableFields(client, "product.product", discountPercentFieldCandidates);
+  // One cached fields_get covers brand + price + image field discovery (was 3+ sequential RPC calls).
+  await getModelFields(client, "product.product").catch(() => ({}));
+  const [brandField, originalPriceFields, discountPercentFields, imagePresenceField] =
+    await Promise.all([
+      availableField(client, "product.product", brandFieldCandidates),
+      availableFields(client, "product.product", originalPriceFieldCandidates),
+      availableFields(client, "product.product", discountPercentFieldCandidates),
+      availableField(client, "product.product", imagePresenceFieldCandidates),
+    ]);
   const fields = Array.from(new Set([
     ...productFields,
     ...(brandField ? [brandField] : []),
+    ...(imagePresenceField ? [imagePresenceField] : []),
     ...originalPriceFields,
     ...discountPercentFields,
   ]));
@@ -297,8 +316,9 @@ export async function fetchOdooProducts(limit = 2000) {
     const brand = brandField ? many2oneName(product[brandField], "") || String(product[brandField] || "") : "";
     const sku = product.default_code ? String(product.default_code) : null;
     const templateId = Array.isArray(product.product_tmpl_id) ? Number(product.product_tmpl_id[0]) : null;
-    const imageData = imageDataUrl(product.image_512);
-    const imageUrl = imageData ? `/api/products/images/${product.id}` : "/brand/logo-stacked.svg";
+    const imageUrl = hasOdooImage(imagePresenceField ? product[imagePresenceField] : null)
+      ? `/api/products/images/${product.id}`
+      : "/brand/logo-stacked.svg";
     const name = String(product.name || "Unnamed product");
     const brandLabel = brand || "Jhonny Surf Store";
     const excludedFromCatalog = foodBeverageExclusion({ name, category, brand: brandLabel });
@@ -341,7 +361,8 @@ export async function fetchOdooProducts(limit = 2000) {
       size: findAttribute(attributeValueIds, attributes, ["size", "tamanho"]) || null,
       color: findAttribute(attributeValueIds, attributes, ["color", "colour", "cor"]) || null,
       imageUrl,
-      imageUrlsJson: JSON.stringify(imageData ? [imageData] : [imageUrl]),
+      // Store URL pointers only — avoid megabyte base64 payloads in Postgres/API responses.
+      imageUrlsJson: JSON.stringify([imageUrl]),
       marketingDescription: enrichment?.marketingDescription || null,
       videoUrl: enrichment?.videoUrl || null,
       contentSourceName: enrichment?.contentSourceName || null,

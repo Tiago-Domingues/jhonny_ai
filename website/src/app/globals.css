@@ -63,6 +63,15 @@ body {
   }
 }
 
+@keyframes marquee-reverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 /* Jhonny toy WhatsApp button: continuous bob + occasional wiggle */
 @keyframes toy-bob {
   0%,

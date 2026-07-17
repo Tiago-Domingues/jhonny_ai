@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist, Montserrat } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
@@ -44,11 +45,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const showCookieBanner = !cookieStore.get("jss_consent")?.value;
+
   return (
     <html
       lang="en"
@@ -57,7 +61,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <LanguageProvider>
           {children}
-          <CookieConsent />
+          <CookieConsent initialVisible={showCookieBanner} />
           <FirstPurchaseOffer />
         </LanguageProvider>
       </body>
