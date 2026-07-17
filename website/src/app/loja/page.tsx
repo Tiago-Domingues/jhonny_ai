@@ -15,7 +15,7 @@ export default function ShopPage() {
   return (
     <>
       <SiteHeader />
-      <main className="bg-cream pb-20 pt-32">
+      <main className="bg-cream pb-20 pt-36">
         <section className="mx-auto max-w-7xl px-5 sm:px-8">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-muted">
             Loja online

@@ -26,7 +26,7 @@ export function Hero() {
       <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-ink/25" />
       <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-ink/55 to-transparent sm:w-2/3" />
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-24 pt-32 sm:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-24 pt-36 sm:px-8">
         <p className="mb-6 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-white/70 sm:text-xs">
           {t.hero.eyebrow}
         </p>
