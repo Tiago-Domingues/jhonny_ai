@@ -15,8 +15,18 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL is required to initialize the ecommerce database client.");
   }
 
+  // Prisma Postgres requires TLS. Prefer explicit ssl config so adapter-pg
+  // does not reject connection-string query params like sslmode.
+  const needsSsl =
+    connectionString.includes("sslmode=") ||
+    connectionString.includes("db.prisma.io") ||
+    connectionString.includes("prisma.io");
+
   return new PrismaClient({
-    adapter: new PrismaPg(connectionString),
+    adapter: new PrismaPg({
+      connectionString,
+      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+    }),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 }
