@@ -90,12 +90,6 @@ export function Products() {
             );
           })}
         </div>
-
-        <div className="mt-10">
-          <span className="inline-flex items-center gap-2 rounded-full border border-dashed border-ink/30 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-muted">
-            Loja online em base técnica: carrinho, checkout e pagamentos preparados para Odoo
-          </span>
-        </div>
       </div>
     </section>
   );
