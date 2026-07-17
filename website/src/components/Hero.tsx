@@ -31,7 +31,7 @@ export function Hero() {
           {t.hero.eyebrow}
         </p>
 
-        <h1 className="font-display text-5xl font-extrabold uppercase leading-[0.92] tracking-tight text-pink-400 text-balance sm:text-7xl lg:text-[6.5rem]">
+        <h1 className="font-display text-5xl font-extrabold uppercase leading-[0.92] tracking-tight text-white text-balance sm:text-7xl lg:text-[6.5rem]">
           {t.hero.title1}
           <br />
           {t.hero.title2}
