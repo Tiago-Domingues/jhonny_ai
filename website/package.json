@@ -10,6 +10,7 @@
     "exclude:food": "node scripts/exclude-food-beverages.mjs",
     "enrich:surfboards": "node scripts/enrich-surfboards.mjs",
     "seed:athlete-coupons": "node scripts/seed-athlete-coupons.mjs",
+    "seed:welcome-coupon": "node scripts/seed-welcome-coupon.mjs",
     "lint": "eslint"
   },
   "dependencies": {
