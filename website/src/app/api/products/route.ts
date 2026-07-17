@@ -26,10 +26,17 @@ export async function GET(request: Request) {
   const sizes = Array.from(new Set(products.map((product) => product.size).filter(Boolean))).sort();
   const colors = Array.from(new Set(products.map((product) => product.color).filter(Boolean))).sort();
 
-  return Response.json({
-    products,
-    filters: { categories, brands, sizes, colors },
-    source: hasOdooConfig() ? "local_odoo_cache" : "local_or_mock",
-    odooConfigured: hasOdooConfig(),
-  });
+  return Response.json(
+    {
+      products,
+      filters: { categories, brands, sizes, colors },
+      source: hasOdooConfig() ? "local_odoo_cache" : "local_or_mock",
+      odooConfigured: hasOdooConfig(),
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+      },
+    }
+  );
 }

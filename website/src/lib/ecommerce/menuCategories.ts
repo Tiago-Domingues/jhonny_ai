@@ -1,7 +1,7 @@
 import "server-only";
 
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
-import { listProducts } from "@/lib/ecommerce/catalog";
+import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { ODOO_CATEGORY_GROUPS, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
 import { hasOdooConfig, OdooClient } from "@/lib/ecommerce/odooClient";
 
@@ -14,7 +14,7 @@ export type MenuCategory = {
 /** Strip emoji / decorative prefixes so "👔 WETSUITS / MEN" → "WETSUITS / MEN". */
 export function normalizeCategoryPath(category: string) {
   return category
-    .replace(/�/g, "")
+    .replace(/\uFE0F/g, "")
     .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
     .replace(/\s*\/\s*/g, " / ")
     .replace(/\s+/g, " ")
@@ -91,17 +91,31 @@ async function listOdooCategoryPaths(): Promise<string[]> {
   }
 }
 
+/** Distinct category paths only — avoids loading the full product catalog for the header menu. */
+async function listProductCategoryPaths(): Promise<string[]> {
+  if (!hasDatabaseUrl()) return [];
+  try {
+    const rows = await prisma.product.findMany({
+      where: { active: true, excludedFromCatalog: false },
+      select: { category: true },
+      distinct: ["category"],
+    });
+    return rows.map((row) => row.category).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Build top-nav categories from real Odoo `product.category` plus categories
  * present on synced/live products (so newly used paths are never missing).
  */
 export async function listMenuCategories(): Promise<MenuCategory[]> {
-  const [odooPaths, products] = await Promise.all([
+  const [odooPaths, productPaths] = await Promise.all([
     listOdooCategoryPaths(),
-    listProducts({}).catch(() => []),
+    listProductCategoryPaths(),
   ]);
 
-  const productPaths = products.map((product) => product.category).filter(Boolean);
   const merged = Array.from(new Set([...odooPaths, ...productPaths]));
   const built = buildMenuFromCategoryPaths(merged);
 

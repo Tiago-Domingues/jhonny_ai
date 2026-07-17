@@ -54,6 +54,8 @@ export function FirstPurchaseOffer() {
     const show = () => {
       if (shownRef.current) return;
       if (window.localStorage.getItem(STORAGE_KEY)) return;
+      // Never cover the cookie banner — wait until consent exists.
+      if (!document.cookie.includes("jss_consent=")) return;
       shownRef.current = true;
       markSeen();
       setOpen(true);
@@ -68,12 +70,13 @@ export function FirstPurchaseOffer() {
     const armIdle = () => {
       clearIdle();
       if (shownRef.current) return;
+      if (!document.cookie.includes("jss_consent=")) return;
       idleTimer.current = setTimeout(show, IDLE_MS);
     };
 
     const onInteract = () => armIdle();
+    const onConsent = () => armIdle();
 
-    armIdle();
     const events: Array<keyof WindowEventMap> = [
       "mousemove",
       "mousedown",
@@ -82,12 +85,19 @@ export function FirstPurchaseOffer() {
       "touchstart",
       "wheel",
     ];
+
+    // Start the welcome offer only after cookie consent so the banner shows first.
+    if (document.cookie.includes("jss_consent=")) {
+      armIdle();
+    }
+    window.addEventListener("jss-consent-saved", onConsent);
     for (const event of events) {
       window.addEventListener(event, onInteract, { passive: true });
     }
 
     return () => {
       clearIdle();
+      window.removeEventListener("jss-consent-saved", onConsent);
       for (const event of events) {
         window.removeEventListener(event, onInteract);
       }

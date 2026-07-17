@@ -216,6 +216,11 @@ type Dict = {
     title: string;
     subtitle: string;
   };
+  localHeroGroom: {
+    eyebrow: string;
+    title: string;
+    subtitle: string;
+  };
   dudes: {
     eyebrow: string;
     title: string;
@@ -422,6 +427,12 @@ export const translations: Record<Locale, Dict> = {
       subtitle:
         "O grupo de surfistas que representa a Jhonny Surf Store dentro e fora de água.",
     },
+    localHeroGroom: {
+      eyebrow: "Próxima geração",
+      title: "Local Hero Groom",
+      subtitle:
+        "Jovens talentos locais em crescimento com a Jhonny Surf Store — placeholders até confirmarmos o roster oficial.",
+    },
     dudes: {
       eyebrow: "Dentro da loja",
       title: "The Dudes — Surf Café",
@@ -619,6 +630,12 @@ export const translations: Record<Locale, Dict> = {
       title: "Local Hero's",
       subtitle:
         "The crew of surfers representing Jhonny Surf Store in and out of the water.",
+    },
+    localHeroGroom: {
+      eyebrow: "Next generation",
+      title: "Local Hero Groom",
+      subtitle:
+        "Local young talent growing with Jhonny Surf Store — placeholder profiles until the official roster is confirmed.",
     },
     dudes: {
       eyebrow: "Inside the store",

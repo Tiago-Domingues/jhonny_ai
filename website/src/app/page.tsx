@@ -10,6 +10,7 @@ import { Opportunities } from "@/components/Opportunities";
 import { Visit } from "@/components/Visit";
 import { Contact } from "@/components/Contact";
 import { Athletes } from "@/components/Athletes";
+import { LocalHeroGroom } from "@/components/LocalHeroGroom";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 
@@ -29,6 +30,7 @@ export default function Home() {
         <Visit />
         <Contact />
         <Athletes />
+        <LocalHeroGroom />
       </main>
       <Footer />
       <FloatingWhatsApp />

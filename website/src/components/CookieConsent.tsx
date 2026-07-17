@@ -59,16 +59,22 @@ const copy = {
   },
 } as const;
 
-export function CookieConsent() {
+function hasConsentCookie() {
+  return typeof document !== "undefined" && document.cookie.includes("jss_consent=");
+}
+
+export function CookieConsent({ initialVisible = true }: { initialVisible?: boolean }) {
   const { locale } = useLanguage();
   const text = copy[locale];
-  const [visible, setVisible] = useState(false);
+  // Show immediately on first paint when the server says there is no consent cookie.
+  const [visible, setVisible] = useState(initialVisible);
   const [customizing, setCustomizing] = useState(false);
   const [consent, setConsent] = useState<ConsentState>(defaultConsent);
 
   useEffect(() => {
+    // Sync with the live browser cookie after paint (covers SSR / client mismatch).
     const id = window.setTimeout(() => {
-      setVisible(!document.cookie.includes("jss_consent="));
+      if (hasConsentCookie()) setVisible(false);
     }, 0);
     return () => window.clearTimeout(id);
   }, []);
@@ -80,6 +86,7 @@ export function CookieConsent() {
       policyVersion,
     }))}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
     setVisible(false);
+    window.dispatchEvent(new Event("jss-consent-saved"));
     await fetch("/api/consent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -90,7 +97,7 @@ export function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-[70] mx-auto max-w-4xl rounded-3xl border border-line bg-white p-5 text-ink shadow-2xl shadow-black/20">
+    <div className="fixed inset-x-4 bottom-4 z-[90] mx-auto max-w-4xl rounded-3xl border border-line bg-white p-5 text-ink shadow-2xl shadow-black/20">
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-muted">

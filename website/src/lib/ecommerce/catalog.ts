@@ -119,7 +119,72 @@ export const mockProducts: StoreProduct[] = [
   },
 ];
 
-function toStoreProduct(product: Product): StoreProduct {
+/** List/detail payloads never need base64 blobs from imageUrlsJson — images are served via /api/products/images. */
+const productListSelect = {
+  id: true,
+  slug: true,
+  sku: true,
+  barcode: true,
+  refId: true,
+  name: true,
+  description: true,
+  category: true,
+  brand: true,
+  size: true,
+  color: true,
+  imageUrl: true,
+  marketingDescription: true,
+  videoUrl: true,
+  contentSourceName: true,
+  contentSourceUrl: true,
+  priceCents: true,
+  currency: true,
+  stockQuantity: true,
+  forecastQuantity: true,
+  stockState: true,
+  saleable: true,
+  availableForSale: true,
+  isOpportunity: true,
+  opportunityOriginalPriceCents: true,
+  opportunityDiscountPercent: true,
+  opportunitySource: true,
+  odooProductId: true,
+  odooProductTemplateId: true,
+} as const;
+
+type ListedProduct = {
+  id: string;
+  slug: string;
+  sku: string | null;
+  barcode: string | null;
+  refId: string | null;
+  name: string;
+  description: string | null;
+  category: string;
+  brand: string | null;
+  size: string | null;
+  color: string | null;
+  imageUrl: string | null;
+  marketingDescription: string | null;
+  videoUrl: string | null;
+  contentSourceName: string | null;
+  contentSourceUrl: string | null;
+  priceCents: number;
+  currency: string;
+  stockQuantity: number;
+  forecastQuantity: number | null;
+  stockState: string | null;
+  saleable: boolean;
+  availableForSale: boolean;
+  isOpportunity: boolean;
+  opportunityOriginalPriceCents: number | null;
+  opportunityDiscountPercent: number | null;
+  opportunitySource: string | null;
+  odooProductId: number | null;
+  odooProductTemplateId: number | null;
+};
+
+function toStoreProduct(product: ListedProduct | Product): StoreProduct {
   return {
     id: product.id,
     slug: product.slug,
@@ -133,7 +198,8 @@ function toStoreProduct(product: Product): StoreProduct {
     size: product.size,
     color: product.color,
     imageUrl: product.imageUrl || "/brand/logo-stacked.svg",
-    imageUrls: product.imageUrlsJson ? JSON.parse(product.imageUrlsJson) : undefined,
+    // Keep list responses lean; detail pages can still hydrate media separately.
+    imageUrls: undefined,
     marketingDescription: product.marketingDescription,
     videoUrl: product.videoUrl,
     contentSourceName: product.contentSourceName,
@@ -141,8 +207,8 @@ function toStoreProduct(product: Product): StoreProduct {
     priceCents: product.priceCents,
     currency: product.currency,
     stockQuantity: product.stockQuantity,
-    forecastQuantity: product.forecastQuantity,
-    stockState: product.stockState,
+    forecastQuantity: product.forecastQuantity ?? undefined,
+    stockState: product.stockState ?? undefined,
     saleable: product.saleable,
     availableForSale: product.availableForSale,
     isOpportunity: product.isOpportunity,
@@ -152,6 +218,17 @@ function toStoreProduct(product: Product): StoreProduct {
     odooProductId: product.odooProductId,
     odooProductTemplateId: product.odooProductTemplateId,
   };
+}
+
+let odooSyncInFlight: Promise<unknown> | null = null;
+
+function kickBackgroundOdooSync() {
+  if (odooSyncInFlight) return;
+  odooSyncInFlight = syncOdooProducts()
+    .catch(() => undefined)
+    .finally(() => {
+      odooSyncInFlight = null;
+    });
 }
 
 function toStoreProductFromOdoo(product: OdooProduct): StoreProduct {
@@ -282,15 +359,18 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
       const newest = await prisma.product.findFirst({
         where: { odooSyncStatus: "SYNCED" },
         orderBy: { lastOdooSyncAt: "desc" },
+        select: { lastOdooSyncAt: true },
       });
       const stale =
         !newest?.lastOdooSyncAt || Date.now() - newest.lastOdooSyncAt.getTime() > 15 * 60 * 1000;
-      if (stale) await syncOdooProducts();
+      // Never block product listing on a full Odoo sync — refresh in the background.
+      if (stale) kickBackgroundOdooSync();
     }
 
     const products = await prisma.product.findMany({
       where: { active: true, excludedFromCatalog: false },
       orderBy: [{ category: "asc" }, { name: "asc" }],
+      select: productListSelect,
     });
     const mapped = products.length ? products.map(toStoreProduct) : mockProducts;
     return dedupeStoreProducts(mapped.filter((product) => matchesFilters(product, filters)));
@@ -326,6 +406,7 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
       },
       orderBy: [{ opportunityDiscountPercent: "desc" }, { name: "asc" }],
       take: limit * 3,
+      select: productListSelect,
     });
     return dedupeStoreProducts(products.map(toStoreProduct)).slice(0, limit);
   } catch {
@@ -368,6 +449,7 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
       },
       orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
       take: 400,
+      select: productListSelect,
     });
     return dedupeStoreProducts(
       products.map(toStoreProduct).filter((product) => isNewArrivalsCategory(product.category))
