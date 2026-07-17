@@ -8,8 +8,7 @@ import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/Curr
 import { useLanguage } from "@/components/LanguageProvider";
 import type { StoreProduct } from "@/lib/ecommerce/catalog";
 import { ODOO_CATEGORY_GROUPS, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
-import { getCategoryHero } from "@/lib/ecommerce/categoryHeroes";
-import { MENU_CATEGORIES, STORE } from "@/lib/i18n";
+import { MENU_CATEGORIES } from "@/lib/i18n";
 
 function ProductSkeletonGrid() {
   return (
@@ -57,9 +56,6 @@ export function ShopClient({ products: initialProducts = [] }: { products?: Stor
 
   const activeCategoryGroup = searchParams.get("categoryGroup") || categoryGroup;
   const activeSubcategory = searchParams.get("subcategory") || subcategory;
-  const categoryHero = getCategoryHero(activeCategoryGroup);
-  const heroTitle = locale === "pt" ? categoryHero.labelPt : categoryHero.labelEn;
-  const heroSubtitle = locale === "pt" ? categoryHero.subtitlePt : categoryHero.subtitleEn;
 
   const facets = useMemo(
     () => ({
@@ -229,39 +225,6 @@ export function ShopClient({ products: initialProducts = [] }: { products?: Stor
 
   return (
     <>
-      <section className="relative isolate overflow-hidden bg-ink pt-28 text-white sm:pt-32">
-        <div className="absolute inset-0">
-          <Image
-            key={categoryHero.image}
-            src={categoryHero.image}
-            alt={heroTitle}
-            fill
-            priority
-            sizes="100vw"
-            className="shop-hero-media object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.12),transparent_45%)]" />
-        </div>
-
-        <div className="relative mx-auto flex min-h-[42vw] max-w-7xl flex-col justify-end px-5 pb-12 pt-16 sm:min-h-[320px] sm:px-8 sm:pb-14">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-white/75">
-            {STORE.name}
-          </p>
-          <h1 className="font-display mt-3 max-w-3xl text-5xl font-extrabold uppercase tracking-tight sm:text-6xl">
-            {heroTitle}
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85">
-            {heroSubtitle}
-          </p>
-          {selectedSubcategoryLabel && (
-            <p className="mt-5 inline-flex w-fit rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] backdrop-blur-sm">
-              {selectedSubcategoryLabel}
-            </p>
-          )}
-        </div>
-      </section>
-
       <section className="mx-auto max-w-7xl px-5 pt-10 sm:px-8">
         <div className="mb-8 rounded-3xl border border-line bg-white p-5 shadow-sm">
           <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-7">
