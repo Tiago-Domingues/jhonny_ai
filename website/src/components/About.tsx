@@ -28,8 +28,9 @@ export function About() {
 
   return (
     <section id="jss" className="relative scroll-mt-20 overflow-hidden bg-ink py-20 text-white sm:py-28">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 overflow-hidden">
-        <div className="animate-ocean-border absolute -top-9 left-0 h-16 w-[220%] text-paper">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-28 overflow-hidden">
+        {/* White sky / previous-section lip */}
+        <div className="animate-ocean-border absolute -top-10 left-0 h-[4.5rem] w-[220%] text-paper">
           <svg viewBox="0 0 1200 80" preserveAspectRatio="none" className="h-full w-full">
             <path
               d="M0 0H1200V42C1110 18 1050 18 960 42S810 66 720 42S570 18 480 42S330 66 240 42S90 18 0 42V0Z"
@@ -37,23 +38,24 @@ export function About() {
             />
           </svg>
         </div>
-        {/* Soft ocean tint under the paper wave lip */}
-        <div className="animate-ocean-border absolute top-6 left-0 h-10 w-[220%] opacity-80">
-          <svg viewBox="0 0 1200 48" preserveAspectRatio="none" className="h-full w-full">
+        {/* Black wave edge against the white lip — no blue */}
+        <div className="animate-ocean-border absolute top-5 left-0 h-14 w-[220%]">
+          <svg viewBox="0 0 1200 56" preserveAspectRatio="none" className="h-full w-full">
             <path
-              d="M0 18C90 4 150 4 240 18S390 40 480 18S630 4 720 18S870 40 960 18S1110 4 1200 18V48H0Z"
-              fill="#1a6f88"
+              d="M0 20C90 4 150 4 240 20S390 44 480 20S630 4 720 20S870 44 960 20S1110 4 1200 20V56H0Z"
+              fill="#0d0d0d"
             />
             <path
-              d="M0 22C90 10 150 10 240 22S390 38 480 22S630 10 720 22S870 38 960 22S1110 10 1200 22"
+              d="M0 24C90 10 150 10 240 24S390 42 480 24S630 10 720 24S870 42 960 24S1110 10 1200 24"
               fill="none"
-              stroke="#d7f1ff"
-              strokeWidth="2"
-              opacity="0.55"
+              stroke="#0d0d0d"
+              strokeWidth="3"
+              opacity="0.9"
             />
           </svg>
         </div>
-        <div className="animate-surf-border absolute top-2 left-0">
+        {/* Jhonny rides the white / black edge */}
+        <div className="animate-surf-border absolute top-[0.85rem] left-0">
           <BorderSurfer />
         </div>
       </div>
