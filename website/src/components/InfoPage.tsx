@@ -28,7 +28,7 @@ export function InfoPage({ pt, en }: { pt: InfoContent; en: InfoContent }) {
   return (
     <>
       <Header />
-      <main className="flex-1 bg-paper pb-20 pt-28 sm:pt-32">
+      <main className="flex-1 bg-paper pb-20 pt-28 sm:pt-36">
         <article className="mx-auto max-w-3xl px-5 sm:px-8">
           <Link
             href="/"

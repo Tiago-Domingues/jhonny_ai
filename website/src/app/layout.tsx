@@ -3,6 +3,7 @@ import { Geist, Montserrat } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { CookieConsent } from "@/components/CookieConsent";
+import { FirstPurchaseOffer } from "@/components/FirstPurchaseOffer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({
         <LanguageProvider>
           {children}
           <CookieConsent />
+          <FirstPurchaseOffer />
         </LanguageProvider>
       </body>
     </html>

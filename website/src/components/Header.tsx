@@ -7,6 +7,7 @@ import { Logo } from "@/components/Logo";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
 import { CartIcon, UserIcon, FlagPT, FlagEN } from "@/components/icons";
 import { categoryGroupHref, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
+import { DispatchBanner } from "@/components/DispatchBanner";
 
 type Panel = "cart" | "account" | null;
 
@@ -284,6 +285,8 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
           </button>
         </div>
       </div>
+
+      <DispatchBanner />
 
       {open && (
         <div className="max-h-[80vh] overflow-y-auto border-t border-line-dark bg-ink xl:hidden">

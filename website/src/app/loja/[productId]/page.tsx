@@ -46,7 +46,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <>
       <SiteHeader />
-      <main className="bg-cream pb-20 pt-32">
+      <main className="bg-cream pb-20 pt-36">
         <section className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_0.95fr]">
           <div>
             <Link href="/loja" className="text-xs font-bold uppercase tracking-[0.2em] text-muted underline">
