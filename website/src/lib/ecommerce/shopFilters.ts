@@ -89,7 +89,10 @@ export function parseAvailabilityParam(value: string | null): ShopAvailability[]
 }
 
 function eurosToCents(value: string) {
-  const parsed = Number(value);
+  // Empty inputs must not become 0 — Number("") === 0 and would clamp max price to €0.
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
   if (!Number.isFinite(parsed) || parsed < 0) return null;
   return Math.round(parsed * 100);
 }
