@@ -2,21 +2,22 @@ import Image from "next/image";
 
 type LogoType = "horizontal" | "stacked" | "wordmark" | "mark";
 
-/** Colored brand logos (SVG). Never invert to black/white. */
+/** Official JSS brand marks (PNG with transparent background). */
 const SOURCES: Record<LogoType, { src: string; w: number; h: number }> = {
-  horizontal: { src: "/brand/logo-horizontal.svg", w: 1024, h: 384 },
-  stacked: { src: "/brand/logo-stacked.svg", w: 1024, h: 720 },
-  wordmark: { src: "/brand/logo-wordmark.svg", w: 1024, h: 300 },
-  mark: { src: "/brand/logo-mark.svg", w: 1024, h: 950 },
+  horizontal: { src: "/brand/logo-horizontal.png", w: 1024, h: 384 },
+  stacked: { src: "/brand/logo-stacked.png", w: 1024, h: 720 },
+  wordmark: { src: "/brand/logo-wordmark.png", w: 1024, h: 300 },
+  mark: { src: "/brand/logo-mark.png", w: 1024, h: 950 },
 };
 
 export function Logo({
   type = "horizontal",
+  variant = "light",
   className = "",
   priority = false,
 }: {
   type?: LogoType;
-  /** @deprecated Kept for call-site compatibility — logos always render in color. */
+  /** Use `dark` on black/ink backgrounds to render the mark in white. */
   variant?: "light" | "dark";
   className?: string;
   priority?: boolean;
@@ -29,7 +30,7 @@ export function Logo({
       width={w}
       height={h}
       priority={priority}
-      className={`w-auto ${className}`}
+      className={`${variant === "dark" ? "logo-invert" : ""} w-auto ${className}`}
     />
   );
 }

@@ -134,12 +134,11 @@ export function FirstPurchaseOffer() {
           <div className="relative flex min-h-[190px] items-center justify-center bg-cream px-5 py-8 sm:min-h-full">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(227,111,67,0.12),transparent_55%)]" />
             <Image
-              src="/brand/logo-stacked.svg"
+              src="/brand/logo-stacked.png"
               alt="Jhonny Surf Store"
               width={220}
               height={155}
               priority
-              unoptimized
               className="relative z-10 h-auto w-36 object-contain drop-shadow-sm sm:w-40"
             />
           </div>
