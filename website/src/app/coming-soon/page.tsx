@@ -16,7 +16,7 @@ export default function ComingSoon() {
       <div className="flex w-full max-w-md flex-col items-center">
         {/* Wordmark */}
         <Image
-          src="/brand/logo-stacked.svg"
+          src="/brand/logo-stacked.png"
           alt="Jhonny Surf Store"
           width={1024}
           height={720}
