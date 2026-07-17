@@ -10,7 +10,11 @@ export function integrationStatus() {
   return {
     database: {
       configured: hasValue(process.env.DATABASE_URL),
-      provider: process.env.DATABASE_URL?.startsWith("file:") ? "sqlite/libsql" : "external",
+      provider: process.env.DATABASE_URL?.startsWith("postgres")
+        ? "postgresql"
+        : process.env.DATABASE_URL?.startsWith("file:")
+          ? "sqlite/libsql"
+          : "external",
     },
     odoo: {
       configured:
