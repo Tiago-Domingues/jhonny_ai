@@ -36,9 +36,6 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  .logo-invert {
-    filter: brightness(0) invert(1);
-  }
 }
 
 @keyframes float-slow {

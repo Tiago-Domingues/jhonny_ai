@@ -80,7 +80,7 @@ export function Footer() {
         <div className="grid gap-10 border-b border-line-dark pb-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand + socials */}
           <div className="flex flex-col items-start gap-4">
-            <Logo type="stacked" variant="dark" className="h-16" />
+            <Logo type="stacked" className="h-16 rounded-xl" />
             <p className="text-sm text-white/60">{t.footer.tagline}</p>
             <div className="mt-1 flex items-center gap-3">
               {socials.map((s) => {

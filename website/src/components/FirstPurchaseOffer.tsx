@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 
 const STORAGE_KEY = "jss_welcome_coupon_seen_v1";
 const COUPON_CODE = "JHONNY10";
-const IDLE_MS = 5000;
+const IDLE_MS = 3000;
 
 const copy = {
   pt: {
@@ -131,15 +131,16 @@ export function FirstPurchaseOffer() {
         </button>
 
         <div className="grid gap-0 sm:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative flex min-h-[190px] items-end justify-center bg-ink px-4 pb-4 pt-10 sm:min-h-full">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12),transparent_55%)]" />
+          <div className="relative flex min-h-[190px] items-center justify-center bg-cream px-5 py-8 sm:min-h-full">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(227,111,67,0.12),transparent_55%)]" />
             <Image
-              src="/brand/jhonny-character-cut.png"
-              alt="Jhonny"
-              width={160}
-              height={210}
+              src="/brand/logo-stacked.svg"
+              alt="Jhonny Surf Store"
+              width={220}
+              height={155}
+              priority
               unoptimized
-              className="relative z-10 h-40 w-auto object-contain drop-shadow-lg sm:h-48"
+              className="relative z-10 h-auto w-36 object-contain drop-shadow-sm sm:w-40"
             />
           </div>
 

@@ -123,7 +123,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
         <Link href="/" aria-label="Jhonny Surf Store" className="shrink-0">
-          <Logo type="horizontal" variant="dark" priority className="h-9 sm:h-10" />
+          <Logo type="horizontal" priority className="h-9 rounded-md sm:h-10" />
         </Link>
 
         <nav className="hidden items-center gap-6 xl:flex">
