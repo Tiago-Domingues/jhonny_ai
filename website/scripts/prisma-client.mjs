@@ -7,7 +7,15 @@ export function createScriptPrismaClient() {
     throw new Error("DATABASE_URL is required.");
   }
 
+  const needsSsl =
+    connectionString.includes("sslmode=") ||
+    connectionString.includes("db.prisma.io") ||
+    connectionString.includes("prisma.io");
+
   return new PrismaClient({
-    adapter: new PrismaPg(connectionString),
+    adapter: new PrismaPg({
+      connectionString,
+      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+    }),
   });
 }
