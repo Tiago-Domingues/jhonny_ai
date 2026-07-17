@@ -57,19 +57,28 @@ export function categoryGroupHref(group: CategoryGroupKey, extra?: Record<string
   return `/loja?${params.toString()}`;
 }
 
+function normalizeCategoryText(value: string) {
+  return value
+    .replace(/�/g, "")
+    .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
+    .replace(/\s*\/\s*/g, " / ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
 export function productMatchesCategoryGroup(category: string, groupKey?: string | null) {
   if (!groupKey) return true;
   const group = ODOO_CATEGORY_GROUPS.find((entry) => entry.key === groupKey);
   if (!group) return true;
-  const normalized = category.toUpperCase();
+  const normalized = normalizeCategoryText(category);
   return group.includes.some((token) => normalized.includes(token));
 }
 
 export function productMatchesSubcategory(category: string, subcategory?: string | null) {
   if (!subcategory) return true;
-  const normalizedCategory = category.toUpperCase();
-  const tokens = subcategory
-    .toUpperCase()
+  const normalizedCategory = normalizeCategoryText(category);
+  const tokens = normalizeCategoryText(subcategory)
     .split("/")
     .map((part) => part.trim())
     .filter(Boolean);
