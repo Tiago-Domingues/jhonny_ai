@@ -1,12 +1,7 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { createScriptPrismaClient } from "./prisma-client.mjs";
 
-const prisma = new PrismaClient({
-  adapter: new PrismaLibSql({
-    url: process.env.DATABASE_URL || "file:./prisma/dev.db",
-  }),
-});
+const prisma = createScriptPrismaClient();
 
 const surfboardTerms = ["surfboard", "surfboards", "prancha", "shortboard", "longboard", "softboard", "bodyboard"];
 

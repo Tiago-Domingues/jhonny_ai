@@ -1,25 +1,50 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL || "file:./prisma/dev.db",
-});
+export function hasDatabaseUrl() {
+  return Boolean(process.env.DATABASE_URL?.trim());
+}
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL?.trim();
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is required to initialize the ecommerce database client.");
+  }
+
+  // Prisma Postgres requires TLS. Prefer explicit ssl config so adapter-pg
+  // does not reject connection-string query params like sslmode.
+  const needsSsl =
+    connectionString.includes("sslmode=") ||
+    connectionString.includes("db.prisma.io") ||
+    connectionString.includes("prisma.io");
+
+  return new PrismaClient({
+    adapter: new PrismaPg({
+      connectionString,
+      ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
+    }),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
 }
 
-export function hasDatabaseUrl() {
-  return Boolean(process.env.DATABASE_URL);
+function getPrismaClient() {
+  if (!hasDatabaseUrl()) {
+    return new Proxy({} as PrismaClient, {
+      get() {
+        throw new Error("DATABASE_URL is not configured.");
+      },
+    }) as PrismaClient;
+  }
+
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+
+  return globalForPrisma.prisma;
 }
+
+export const prisma = getPrismaClient();
