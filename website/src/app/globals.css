@@ -408,6 +408,71 @@ body {
   animation-delay: calc(var(--i) * 45ms);
 }
 
+/* Shop catalog loading */
+@keyframes shop-wave {
+  0%,
+  100% {
+    transform: translateY(0) scaleX(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(-6px) scaleX(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes shop-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes shop-hero-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.shop-loader-wave {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  border: 2px solid rgba(13, 13, 13, 0.12);
+  background:
+    radial-gradient(circle at 50% 60%, rgba(13, 13, 13, 0.08), transparent 55%),
+    linear-gradient(135deg, #f5f3ee, #ece8df);
+  box-shadow: inset 0 -10px 0 rgba(13, 13, 13, 0.04);
+  position: relative;
+  animation: shop-wave 1.4s ease-in-out infinite;
+}
+
+.shop-loader-wave::after {
+  content: "";
+  position: absolute;
+  inset: 18px 14px 28px;
+  border-radius: 9999px 9999px 40% 40%;
+  background: #0d0d0d;
+  opacity: 0.75;
+}
+
+.shop-skeleton {
+  background: linear-gradient(110deg, #ece8df 25%, #f8f6f1 45%, #ece8df 65%);
+  background-size: 200% 100%;
+  animation: shop-shimmer 1.4s linear infinite;
+}
+
+.shop-hero-media {
+  animation: shop-hero-in 0.7s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-brand {
     animation: none;
@@ -437,5 +502,10 @@ body {
   .surfer-toy__splash,
   .border-surfer__splash {
     display: none;
+  }
+  .shop-loader-wave,
+  .shop-skeleton,
+  .shop-hero-media {
+    animation: none;
   }
 }
