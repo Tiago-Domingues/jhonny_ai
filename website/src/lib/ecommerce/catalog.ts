@@ -120,24 +120,21 @@ export const mockProducts: StoreProduct[] = [
   },
 ];
 
-/** List/detail payloads never need base64 blobs from imageUrlsJson — images are served via /api/products/images. */
+/**
+ * Lean shop/list select — omits long marketing copy and video URLs so /api/products
+ * stays small enough for browsers on mobile. Detail pages use the full select.
+ */
 const productListSelect = {
   id: true,
   slug: true,
   sku: true,
-  barcode: true,
   refId: true,
   name: true,
-  description: true,
   category: true,
   brand: true,
   size: true,
   color: true,
   imageUrl: true,
-  marketingDescription: true,
-  videoUrl: true,
-  contentSourceName: true,
-  contentSourceUrl: true,
   priceCents: true,
   currency: true,
   stockQuantity: true,
@@ -148,29 +145,39 @@ const productListSelect = {
   isOpportunity: true,
   opportunityOriginalPriceCents: true,
   opportunityDiscountPercent: true,
-  opportunitySource: true,
   odooProductId: true,
   odooProductTemplateId: true,
   createdAt: true,
+} as const;
+
+const productDetailSelect = {
+  ...productListSelect,
+  barcode: true,
+  description: true,
+  marketingDescription: true,
+  videoUrl: true,
+  contentSourceName: true,
+  contentSourceUrl: true,
+  opportunitySource: true,
 } as const;
 
 type ListedProduct = {
   id: string;
   slug: string;
   sku: string | null;
-  barcode: string | null;
+  barcode?: string | null;
   refId: string | null;
   name: string;
-  description: string | null;
+  description?: string | null;
   category: string;
   brand: string | null;
   size: string | null;
   color: string | null;
   imageUrl: string | null;
-  marketingDescription: string | null;
-  videoUrl: string | null;
-  contentSourceName: string | null;
-  contentSourceUrl: string | null;
+  marketingDescription?: string | null;
+  videoUrl?: string | null;
+  contentSourceName?: string | null;
+  contentSourceUrl?: string | null;
   priceCents: number;
   currency: string;
   stockQuantity: number;
@@ -181,13 +188,14 @@ type ListedProduct = {
   isOpportunity: boolean;
   opportunityOriginalPriceCents: number | null;
   opportunityDiscountPercent: number | null;
-  opportunitySource: string | null;
+  opportunitySource?: string | null;
   odooProductId: number | null;
   odooProductTemplateId: number | null;
   createdAt?: Date | string | null;
 };
 
-function toStoreProduct(product: ListedProduct | Product): StoreProduct {
+function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boolean }): StoreProduct {
+  const lean = options?.lean ?? false;
   const createdAt =
     "createdAt" in product && product.createdAt
       ? product.createdAt instanceof Date
@@ -199,10 +207,10 @@ function toStoreProduct(product: ListedProduct | Product): StoreProduct {
     id: product.id,
     slug: product.slug,
     sku: product.sku,
-    barcode: product.barcode,
+    barcode: lean ? undefined : product.barcode,
     refId: product.refId,
     name: product.name,
-    description: product.description || "",
+    description: lean ? "" : product.description || "",
     category: product.category,
     brand: product.brand || "",
     size: product.size,
@@ -210,10 +218,10 @@ function toStoreProduct(product: ListedProduct | Product): StoreProduct {
     imageUrl: product.imageUrl || "/brand/logo-stacked.svg",
     // Keep list responses lean; detail pages can still hydrate media separately.
     imageUrls: undefined,
-    marketingDescription: product.marketingDescription,
-    videoUrl: product.videoUrl,
-    contentSourceName: product.contentSourceName,
-    contentSourceUrl: product.contentSourceUrl,
+    marketingDescription: lean ? undefined : product.marketingDescription,
+    videoUrl: lean ? undefined : product.videoUrl,
+    contentSourceName: lean ? undefined : product.contentSourceName,
+    contentSourceUrl: lean ? undefined : product.contentSourceUrl,
     priceCents: product.priceCents,
     currency: product.currency,
     stockQuantity: product.stockQuantity,
@@ -224,10 +232,43 @@ function toStoreProduct(product: ListedProduct | Product): StoreProduct {
     isOpportunity: product.isOpportunity,
     opportunityOriginalPriceCents: product.opportunityOriginalPriceCents,
     opportunityDiscountPercent: product.opportunityDiscountPercent,
-    opportunitySource: product.opportunitySource,
+    opportunitySource: lean ? undefined : product.opportunitySource,
     odooProductId: product.odooProductId,
     odooProductTemplateId: product.odooProductTemplateId,
     createdAt,
+  };
+}
+
+/**
+ * Explicit list projection for shop grid / `/api/products`.
+ * Avoid spreading full products so enrichment blobs can never leak into JSON.
+ */
+export function toLeanStoreProduct(product: StoreProduct): StoreProduct {
+  return {
+    id: product.id,
+    slug: product.slug,
+    sku: product.sku ?? null,
+    refId: product.refId ?? null,
+    name: product.name,
+    description: "",
+    category: product.category,
+    brand: product.brand || "",
+    size: product.size ?? null,
+    color: product.color ?? null,
+    imageUrl: product.imageUrl || "/brand/logo-stacked.svg",
+    priceCents: product.priceCents,
+    currency: product.currency,
+    stockQuantity: product.stockQuantity,
+    forecastQuantity: product.forecastQuantity,
+    stockState: product.stockState,
+    saleable: product.saleable,
+    availableForSale: product.availableForSale,
+    isOpportunity: product.isOpportunity,
+    opportunityOriginalPriceCents: product.opportunityOriginalPriceCents ?? null,
+    opportunityDiscountPercent: product.opportunityDiscountPercent ?? null,
+    odooProductId: product.odooProductId ?? null,
+    odooProductTemplateId: product.odooProductTemplateId ?? null,
+    createdAt: product.createdAt ?? null,
   };
 }
 
@@ -358,11 +399,11 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
   if (!hasDatabaseUrl()) {
     try {
       const liveProducts = await listLiveOdooProducts(filters);
-      if (liveProducts?.length) return liveProducts;
+      if (liveProducts?.length) return liveProducts.map(toLeanStoreProduct);
     } catch {
       // Fall through to mock products if Odoo is temporarily unavailable.
     }
-    return mockProducts;
+    return mockProducts.map(toLeanStoreProduct);
   }
 
   try {
@@ -383,16 +424,20 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
       orderBy: [{ category: "asc" }, { name: "asc" }],
       select: productListSelect,
     });
-    const mapped = products.length ? products.map(toStoreProduct) : mockProducts;
+    const mapped = products.length
+      ? products.map((product) => toStoreProduct(product, { lean: true }))
+      : mockProducts.map(toLeanStoreProduct);
     return dedupeStoreProducts(mapped.filter((product) => matchesFilters(product, filters)));
   } catch {
     try {
       const liveProducts = await listLiveOdooProducts(filters);
-      if (liveProducts?.length) return liveProducts;
+      if (liveProducts?.length) return liveProducts.map(toLeanStoreProduct);
     } catch {
       // Fall through to mock products if both DB and Odoo fail.
     }
-    return dedupeStoreProducts(mockProducts.filter((product) => matchesFilters(product, filters)));
+    return dedupeStoreProducts(
+      mockProducts.map(toLeanStoreProduct).filter((product) => matchesFilters(product, filters))
+    );
   }
 }
 
@@ -419,7 +464,10 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
       take: limit * 3,
       select: productListSelect,
     });
-    return dedupeStoreProducts(products.map(toStoreProduct)).slice(0, limit);
+    return dedupeStoreProducts(products.map((product) => toStoreProduct(product, { lean: true }))).slice(
+      0,
+      limit
+    );
   } catch {
     return [];
   }
@@ -463,7 +511,9 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
       select: productListSelect,
     });
     return dedupeStoreProducts(
-      products.map(toStoreProduct).filter((product) => isNewArrivalsCategory(product.category))
+      products
+        .map((product) => toStoreProduct(product, { lean: true }))
+        .filter((product) => isNewArrivalsCategory(product.category))
     ).slice(0, limit);
   };
 
@@ -497,8 +547,9 @@ export async function getProduct(productId: string): Promise<StoreProduct | null
         active: true,
         excludedFromCatalog: false,
       },
+      select: productDetailSelect,
     });
-    return product ? toStoreProduct(product) : mock || null;
+    return product ? toStoreProduct(product, { lean: false }) : mock || null;
   } catch {
     return mock || null;
   }
