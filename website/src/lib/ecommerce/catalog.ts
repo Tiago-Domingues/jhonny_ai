@@ -333,6 +333,58 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
   }
 }
 
+/** Match Odoo category paths like "New Arrivals", "Novidades", etc. */
+export function isNewArrivalsCategory(category: string) {
+  const normalized = category
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase();
+  return (
+    normalized.includes("NEW ARRIVAL") ||
+    normalized.includes("NEWARRIVAL") ||
+    normalized.includes("NOVIDADE") ||
+    normalized.includes("NOVOS PRODUTOS") ||
+    normalized.includes("NEW IN")
+  );
+}
+
+/**
+ * Products from the Odoo "New Arrivals" category.
+ * Until that category exists / is synced, falls back to opportunity products as placeholders.
+ */
+export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]> {
+  const fromLiveOrDb = async (): Promise<StoreProduct[]> => {
+    if (!hasDatabaseUrl()) {
+      const liveProducts = await listLiveOdooProducts();
+      return (liveProducts || [])
+        .filter((product) => isNewArrivalsCategory(product.category))
+        .slice(0, limit);
+    }
+
+    const products = await prisma.product.findMany({
+      where: {
+        active: true,
+        excludedFromCatalog: false,
+      },
+      orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
+      take: 400,
+    });
+    return dedupeStoreProducts(
+      products.map(toStoreProduct).filter((product) => isNewArrivalsCategory(product.category))
+    ).slice(0, limit);
+  };
+
+  try {
+    const arrivals = await fromLiveOrDb();
+    if (arrivals.length) return arrivals;
+  } catch {
+    // Fall through to opportunity placeholders.
+  }
+
+  // Placeholder until the Odoo "New Arrivals" category is created and synced.
+  return listOpportunityProducts(limit);
+}
+
 export async function getProduct(productId: string): Promise<StoreProduct | null> {
   const mock = mockProducts.find((product) => product.id === productId || product.slug === productId);
   if (!hasDatabaseUrl()) {
