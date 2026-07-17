@@ -1,14 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
 import { whatsappHref } from "@/lib/i18n";
 import { useLanguage } from "@/components/LanguageProvider";
 import { WhatsappIcon } from "@/components/icons";
+import { SurferToy } from "@/components/SurferToy";
 
 export function FloatingWhatsApp() {
   const { t } = useLanguage();
-  const [toySrc, setToySrc] = useState("/brand/jhonny-character-cut.png");
 
   return (
     <a
@@ -24,16 +22,9 @@ export function FloatingWhatsApp() {
         <span className="absolute -bottom-1.5 right-3 h-3 w-3 rotate-45 bg-white" />
       </span>
 
-      {/* Toy button */}
-      <span className="relative flex h-16 w-16 items-center justify-center rounded-full border border-line bg-white shadow-xl shadow-black/20 transition group-hover:scale-105">
-        <Image
-          src={toySrc}
-          alt="Jhonny"
-          width={120}
-          height={150}
-          onError={() => setToySrc("/brand/jhonny-character-cut.svg")}
-          className="animate-toy h-14 w-auto object-contain"
-        />
+      {/* Surfing toy button */}
+      <span className="relative transition group-hover:scale-105">
+        <SurferToy />
         <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white shadow-md ring-2 ring-white">
           <WhatsappIcon className="h-4 w-4" />
         </span>
