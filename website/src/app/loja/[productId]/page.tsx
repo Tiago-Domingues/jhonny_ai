@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
 import { ProductDetailActions } from "@/components/ProductDetailActions";
+import { ProductVideoPreview } from "@/components/ProductVideoPreview";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { getProduct } from "@/lib/ecommerce/catalog";
 
@@ -90,23 +91,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             )}
             {product.marketingDescription && product.marketingDescription !== product.description && (
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">
-                {product.marketingDescription}
-              </p>
+              <div className="mt-4 max-w-2xl space-y-3 text-base leading-relaxed text-muted">
+                {product.marketingDescription
+                  .split(/(?<=\.)\s+/)
+                  .filter(Boolean)
+                  .map((paragraph, index) => (
+                    <p key={`desc-${index}`}>{paragraph}</p>
+                  ))}
+              </div>
             )}
-            {product.videoUrl && (
-              <a
-                href={product.videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex rounded-full border border-line bg-white px-5 py-3 text-sm font-bold uppercase tracking-wide text-ink transition hover:bg-cream"
-              >
-                Watch product video
-              </a>
-            )}
+            <ProductVideoPreview videoUrl={product.videoUrl} title={product.name} />
             {product.contentSourceUrl && (
               <p className="mt-3 text-xs text-muted">
-                Product notes source:{" "}
+                Model notes & video source:{" "}
                 <a href={product.contentSourceUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline">
                   {product.contentSourceName || "specialist surf source"}
                 </a>
