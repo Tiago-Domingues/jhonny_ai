@@ -2,24 +2,7 @@
 
 import { useLanguage } from "@/components/LanguageProvider";
 import { categoryGroupHref, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
-import {
-  SurfboardIcon,
-  WetsuitIcon,
-  AccessoryIcon,
-  ShirtIcon,
-  TravelIcon,
-  WaveIcon,
-  ArrowIcon,
-} from "@/components/icons";
-
-const icons = [
-  SurfboardIcon,
-  WetsuitIcon,
-  AccessoryIcon,
-  ShirtIcon,
-  TravelIcon,
-  WaveIcon,
-];
+import { ArrowIcon } from "@/components/icons";
 
 const categoryImages: Record<string, string> = {
   surfboards: "/brand/categories/hero-surfboards.jpg",
@@ -39,13 +22,14 @@ const categoryPhotoFallbacks: Record<string, string> = {
   lifestyle: "/brand/categories/cat-jss.jpg",
 };
 
-const categorySvgFallbacks: Record<string, string> = {
-  surfboards: "/brand/categories/cat-surfboards.svg",
-  wetsuits: "/brand/categories/cat-wetsuits.svg",
-  surfgear: "/brand/categories/cat-surfgear.svg",
-  essentials: "/brand/categories/cat-essentials.svg",
-  bodyboard: "/brand/categories/cat-bodyboard.svg",
-  lifestyle: "/brand/categories/cat-lifestyle.svg",
+/** Solid accent colors for each of the 6 shop categories. */
+const categoryColors: Record<string, string> = {
+  surfboards: "#0B4F6C",
+  wetsuits: "#1F6F5B",
+  surfgear: "#C45C26",
+  essentials: "#2F5D8C",
+  bodyboard: "#B84A3A",
+  lifestyle: "#3D3A36",
 };
 
 export function Products() {
@@ -66,36 +50,35 @@ export function Products() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {t.shop.items.map((item, i) => {
-            const Icon = icons[i] ?? SurfboardIcon;
+        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {t.shop.items.map((item) => {
             const localImage = categoryImages[item.id] || categoryImages.surfboards;
             const photoFallback = categoryPhotoFallbacks[item.id] || categoryPhotoFallbacks.surfboards;
-            const svgFallback = categorySvgFallbacks[item.id] || categorySvgFallbacks.surfboards;
+            const accent = categoryColors[item.id] || categoryColors.surfboards;
+
             return (
               <a
                 key={item.id}
                 id={item.id}
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
-                className="group relative flex min-h-[280px] scroll-mt-24 flex-col justify-end overflow-hidden rounded-2xl border border-white/0 shadow-sm transition-all duration-500 hover:-translate-y-1 hover:border-sand/60 hover:shadow-[0_24px_70px_rgba(8,37,55,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sand"
+                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
               >
+                {/* Full-color photo — no overlays, filters, or hover effects on top */}
                 <div
-                  className="absolute inset-0 bg-cover bg-center filter grayscale transition-transform duration-700 group-hover:scale-110 group-hover:filter-none"
+                  className="aspect-[4/3] w-full bg-cover bg-center"
                   style={{
-                    backgroundImage: `url('${localImage}'), url('${photoFallback}'), url('${svgFallback}')`,
+                    backgroundColor: accent,
+                    backgroundImage: `url('${localImage}'), url('${photoFallback}')`,
                   }}
+                  role="img"
+                  aria-label={item.title}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/45 to-ink/10 transition duration-500 group-hover:via-ink/25 group-hover:to-transparent" />
-                <div className="absolute inset-x-6 top-6 h-px origin-left scale-x-0 bg-gradient-to-r from-sand via-white/80 to-transparent transition-transform duration-500 group-hover:scale-x-100" />
 
-                <div className="relative p-7 text-white">
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-white/10 text-white backdrop-blur-sm transition duration-500 group-hover:rotate-[-6deg] group-hover:scale-110 group-hover:border-sand/80 group-hover:bg-sand/20">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <h3 className="font-display text-xl font-bold uppercase tracking-wide drop-shadow">
+                <div className="flex flex-1 flex-col px-5 py-5 text-white" style={{ backgroundColor: accent }}>
+                  <h3 className="font-display text-xl font-bold uppercase tracking-wide">
                     {item.title}
                   </h3>
-                  <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/85">
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/85">
                     {item.desc}
                   </p>
                   <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white">
