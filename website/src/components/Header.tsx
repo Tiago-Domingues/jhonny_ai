@@ -115,10 +115,8 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "border-b border-line-dark bg-ink/95 backdrop-blur-md"
-          : "bg-gradient-to-b from-black/60 to-transparent"
+      className={`fixed inset-x-0 top-0 z-50 bg-ink transition-all duration-300 ${
+        scrolled ? "border-b border-line-dark shadow-lg shadow-black/20" : ""
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
