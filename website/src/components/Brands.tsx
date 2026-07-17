@@ -11,7 +11,7 @@ function BrandItem({ brand }: { brand: Brand }) {
   return (
     <div className="group relative mx-8 flex h-12 w-36 shrink-0 items-center justify-center sm:mx-10">
       <span
-        className={`absolute whitespace-nowrap font-display text-lg font-bold uppercase tracking-wide text-ink/45 transition-opacity duration-300 ${
+        className={`absolute whitespace-nowrap font-display text-lg font-bold uppercase tracking-wide text-white/70 transition-opacity duration-300 ${
           hasIcon ? "group-hover:opacity-0" : ""
         }`}
       >
@@ -24,7 +24,7 @@ function BrandItem({ brand }: { brand: Brand }) {
           width={140}
           height={48}
           onError={() => setHasIcon(false)}
-          className="max-h-10 w-auto max-w-[140px] object-contain opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className="max-h-10 w-auto max-w-[140px] object-contain opacity-0 brightness-0 invert transition-opacity duration-300 group-hover:opacity-100"
         />
       )}
     </div>
@@ -36,15 +36,15 @@ export function Brands() {
   const loop = [...BRANDS, ...BRANDS];
 
   return (
-    <section className="overflow-hidden bg-cream py-14">
-      <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-muted">
+    <section className="overflow-hidden bg-ink py-14">
+      <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
         {t.brands.title}
       </p>
 
       <div className="group relative mt-8 flex overflow-hidden">
         {/* edge fades */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-cream to-transparent sm:w-28" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-cream to-transparent sm:w-28" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-ink to-transparent sm:w-28" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-ink to-transparent sm:w-28" />
 
         <div className="flex w-max animate-[marquee_40s_linear_infinite] items-center group-hover:[animation-play-state:paused]">
           {loop.map((brand, i) => (
