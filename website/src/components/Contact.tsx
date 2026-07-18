@@ -41,15 +41,15 @@ export function Contact() {
   ];
 
   return (
-    <section id="contact" className="scroll-mt-20 bg-ink py-20 text-white sm:py-28">
+    <section id="contact" className="scroll-mt-20 bg-paper py-20 text-ink sm:py-28">
       <div className="mx-auto max-w-5xl px-5 text-center sm:px-8">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
           {t.contact.eyebrow}
         </p>
         <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-balance sm:text-6xl">
           {t.contact.title}
         </h2>
-        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/70">
+        <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted">
           {t.contact.subtitle}
         </p>
 
@@ -62,20 +62,20 @@ export function Contact() {
                 href={c.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-4 rounded-2xl border border-line-dark bg-ink-soft p-6 text-left transition hover:-translate-y-0.5 hover:border-white/40"
+                className="group flex items-center gap-4 rounded-2xl border border-line bg-white p-6 text-left transition hover:-translate-y-0.5 hover:border-ink/40"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/30 text-white transition group-hover:bg-white group-hover:text-ink">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink transition group-hover:bg-ink group-hover:text-white">
                   <Icon className="h-6 w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/50">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-muted">
                     {c.label}
                   </p>
-                  <p className="mt-0.5 truncate text-base font-medium text-white">
+                  <p className="mt-0.5 truncate text-base font-medium text-ink">
                     {c.value}
                   </p>
                 </div>
-                <ArrowIcon className="h-4 w-4 shrink-0 text-white/40 transition group-hover:translate-x-1 group-hover:text-white" />
+                <ArrowIcon className="h-4 w-4 shrink-0 text-muted transition group-hover:translate-x-1 group-hover:text-ink" />
               </a>
             );
           })}
