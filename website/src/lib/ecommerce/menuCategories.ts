@@ -21,6 +21,11 @@ export function normalizeCategoryPath(category: string) {
     .trim();
 }
 
+/** Odoo `complete_name` often starts with the root "All / …" — drop that for menu grouping. */
+export function stripAllCategoryRoot(normalizedPath: string) {
+  return normalizedPath.replace(/^ALL\s*\/\s*/i, "").trim();
+}
+
 function topLevelToken(normalizedPath: string) {
   return normalizedPath.split(" / ")[0]?.trim().toUpperCase() || "";
 }
@@ -49,8 +54,8 @@ export function buildMenuFromCategoryPaths(paths: string[]): MenuCategory[] {
   const itemsByGroup = new Map<CategoryGroupKey, Set<string>>();
 
   for (const path of paths) {
-    const normalized = normalizeCategoryPath(path).toUpperCase();
-    if (!normalized || normalized === "ALL" || normalized.startsWith("ALL /")) continue;
+    const normalized = stripAllCategoryRoot(normalizeCategoryPath(path).toUpperCase());
+    if (!normalized || normalized === "ALL") continue;
     const groupKey = groupKeyForPath(normalized);
     if (!groupKey) continue;
     const item = secondLevelItem(normalized);

@@ -22,7 +22,13 @@ import {
   type ShopFacetFilters,
   type ShopSortOption,
 } from "@/lib/ecommerce/shopFilters";
-import { MENU_CATEGORIES } from "@/lib/i18n";
+import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
+
+type MenuCategory = {
+  key: NavKey;
+  anchor: string;
+  items: string[];
+};
 
 const copy = {
   pt: {
@@ -318,15 +324,40 @@ function countActiveFilters(filters: ShopFacetFilters) {
 export function ShopClient({
   products: initialProducts = [],
   catalogKey: initialCatalogKey = "||",
+  menuCategories: initialMenuCategories,
 }: {
   products?: StoreProduct[];
   catalogKey?: string;
+  menuCategories?: MenuCategory[];
 }) {
-  const { locale } = useLanguage();
+  const { locale, t: i18n } = useLanguage();
   const t = copy[locale];
   const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<StoreProduct[]>(initialProducts);
+  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(
+    initialMenuCategories?.length ? initialMenuCategories : MENU_CATEGORIES
+  );
+
+  useEffect(() => {
+    if (initialMenuCategories?.length) {
+      setMenuCategories(initialMenuCategories);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/menu-categories")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        if (Array.isArray(data?.categories) && data.categories.length) {
+          setMenuCategories(data.categories);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [initialMenuCategories]);
   const [loadingProducts, setLoadingProducts] = useState(initialProducts.length === 0);
   const [adding, setAdding] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -349,7 +380,7 @@ export function ShopClient({
         : selectedCategoryGroup.labelEn
     : null;
   const selectedSubcategoryLabel = activeSubcategory ? displayOdooCategoryName(activeSubcategory) : null;
-  const selectedMenuCategory = MENU_CATEGORIES.find((entry) => entry.key === activeCategoryGroup);
+  const selectedMenuCategory = menuCategories.find((entry) => entry.key === activeCategoryGroup);
 
   const facets = useMemo(() => buildShopFacets(products), [products]);
   const filteredProducts = useMemo(() => {
@@ -549,7 +580,7 @@ export function ShopClient({
           <option value="">{t.subcategory}</option>
           {selectedMenuCategory?.items.map((item) => (
             <option key={item} value={item}>
-              {displayOdooCategoryName(item)}
+              {i18n.menuItems[item] || displayOdooCategoryName(item)}
             </option>
           ))}
         </select>

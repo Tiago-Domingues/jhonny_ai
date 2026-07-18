@@ -6,6 +6,7 @@ import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { ShopClient } from "@/components/ShopClient";
 import { ShopHero } from "@/components/ShopHero";
 import { listProducts } from "@/lib/ecommerce/catalog";
+import { listMenuCategories } from "@/lib/ecommerce/menuCategories";
 
 export const metadata: Metadata = {
   title: "Loja Online",
@@ -60,18 +61,22 @@ async function ShopCatalog({
 }) {
   // Server-render a lean first page so the shop never boots empty if the client fetch is slow.
   // Cap SSR props to keep the HTML/RSC payload small; ShopClient still fetches the full lean catalog.
-  const products = await listProducts({
-    categoryGroup: categoryGroup || null,
-    subcategory: subcategory || null,
-    query: q || null,
-  })
-    .then((items) => items.slice(0, 60))
-    .catch(() => []);
+  const [products, menuCategories] = await Promise.all([
+    listProducts({
+      categoryGroup: categoryGroup || null,
+      subcategory: subcategory || null,
+      query: q || null,
+    })
+      .then((items) => items.slice(0, 60))
+      .catch(() => []),
+    listMenuCategories().catch(() => []),
+  ]);
 
   return (
     <ShopClient
       products={products}
       catalogKey={[categoryGroup || "", subcategory || "", q || ""].join("|")}
+      menuCategories={menuCategories}
     />
   );
 }

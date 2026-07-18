@@ -84,12 +84,19 @@ export function productMatchesCategoryGroup(category: string, groupKey?: string 
 
 export function productMatchesSubcategory(category: string, subcategory?: string | null) {
   if (!subcategory) return true;
-  const normalizedCategory = normalizeCategoryText(category);
-  const tokens = normalizeCategoryText(subcategory)
-    .split("/")
+  // Match path segments exactly so "MEN" does not also match "WOMEN".
+  const categoryParts = normalizeCategoryText(category)
+    .replace(/^ALL\s*\/\s*/, "")
+    .split(" / ")
     .map((part) => part.trim())
     .filter(Boolean);
-  return tokens.every((token) => normalizedCategory.includes(token));
+  const subcategoryParts = normalizeCategoryText(subcategory)
+    .replace(/^ALL\s*\/\s*/, "")
+    .split(" / ")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!subcategoryParts.length || categoryParts.length < subcategoryParts.length) return false;
+  return subcategoryParts.every((part, index) => categoryParts[index] === part);
 }
 
 function titleCase(value: string) {
