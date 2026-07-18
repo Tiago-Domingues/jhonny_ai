@@ -60,7 +60,7 @@ export function LocalHeroGroom() {
   return (
     <section
       id="local-hero-groom"
-      className="scroll-mt-20 overflow-hidden bg-[linear-gradient(160deg,#e8eef2_0%,#d9e4ea_45%,#f2f5f7_100%)] py-20 text-ink sm:py-28"
+      className="scroll-mt-20 overflow-hidden bg-paper py-20 text-ink sm:py-28"
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="max-w-2xl">
@@ -77,8 +77,8 @@ export function LocalHeroGroom() {
       </div>
 
       <div className="group relative mt-12 flex overflow-hidden">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[#e8eef2] to-transparent sm:w-24" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[#f2f5f7] to-transparent sm:w-24" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-paper to-transparent sm:w-24" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-paper to-transparent sm:w-24" />
         <div className="flex w-max animate-[marquee-reverse_55s_linear_infinite] items-stretch group-hover:[animation-play-state:paused]">
           {loop.map((a, i) => (
             <GroomCard key={`groom-${a.handle}-${i}`} a={a} />

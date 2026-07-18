@@ -39,7 +39,14 @@ export async function createCheckout(identity: CheckoutIdentity, input: unknown)
     email: data.email,
   });
   const discountCents = coupon?.discountCents || 0;
-  const shippingCents = data.fulfillmentMethod === "PICKUP_IN_STORE" ? 0 : 690;
+  const FREE_SHIPPING_THRESHOLD_CENTS = 5000; // €50
+  const STANDARD_SHIPPING_CENTS = 690;
+  const amountForShippingCents = Math.max(0, summary.subtotalCents - discountCents);
+  const shippingCents =
+    data.fulfillmentMethod === "PICKUP_IN_STORE" ||
+    amountForShippingCents >= FREE_SHIPPING_THRESHOLD_CENTS
+      ? 0
+      : STANDARD_SHIPPING_CENTS;
   const totalCents = Math.max(0, summary.subtotalCents + shippingCents - discountCents);
   const guestCheckoutId = identity.userId
     ? null

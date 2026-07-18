@@ -200,7 +200,9 @@ export function CheckoutClient() {
             <CurrencySelector compact />
             <CurrencyNote />
           </div>
-          <p className="mt-2 text-xs text-muted">Envios calculados depois. Levantamento em loja é gratuito.</p>
+          <p className="mt-2 text-xs text-muted">
+            Portes grátis em encomendas acima de €50. Levantamento em loja é gratuito.
+          </p>
         </div>
       </aside>
     </div>

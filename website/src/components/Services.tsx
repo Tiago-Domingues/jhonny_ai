@@ -117,9 +117,9 @@ function PartnerChip({ link }: { link: Link }) {
       href={link.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/30 py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/30 py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white hover:text-ink"
     >
-      <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-ink/5">
+      <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white/10">
         {logoSrc ? (
           <Image
             src={logoSrc}
@@ -197,16 +197,16 @@ export function Services() {
   ];
 
   return (
-    <section id="services" className="scroll-mt-20 bg-paper py-20 sm:py-28">
+    <section id="services" className="scroll-mt-20 bg-ink py-20 text-white sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="max-w-2xl">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">
             {t.services.eyebrow}
           </p>
-          <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-ink text-balance sm:text-5xl">
+          <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-balance sm:text-5xl">
             {t.services.title}
           </h2>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/70">
             {t.services.subtitle}
           </p>
         </div>
@@ -217,17 +217,17 @@ export function Services() {
               <div
                 key={title}
                 className={[
-                  "group min-h-[220px] rounded-2xl border border-line bg-white/70 px-4 pb-5 pt-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-ink hover:bg-cream hover:shadow-md",
+                  "group min-h-[220px] rounded-2xl border border-white/15 bg-ink-soft px-4 pb-5 pt-5 transition-all duration-300 hover:-translate-y-1 hover:border-white/40",
                   wide ? "sm:col-span-2 lg:col-span-3" : "",
                 ].join(" ")}
               >
                 <div className={wide ? "flex h-full flex-col gap-4 lg:flex-row lg:items-start lg:justify-between" : ""}>
                   <div className={wide ? "max-w-md" : ""}>
-                    <Icon className="h-8 w-8 text-ink transition-transform duration-200 group-hover:scale-110" />
-                    <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-ink transition-all group-hover:font-extrabold group-hover:tracking-wider">
+                    <Icon className="h-8 w-8 text-white transition-transform duration-200 group-hover:scale-110" />
+                    <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-white transition-all group-hover:font-extrabold group-hover:tracking-wider">
                       {title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-muted">
+                    <p className="mt-2 text-sm leading-relaxed text-white/70">
                       {desc}
                     </p>
                   </div>
@@ -246,29 +246,29 @@ export function Services() {
         </div>
 
         {/* The Dudes — Surf Café highlight */}
-        <div className="mt-12 grid gap-6 rounded-2xl border border-line bg-cream p-6 sm:p-8 lg:grid-cols-[1fr_0.9fr]">
+        <div className="mt-12 grid gap-6 rounded-2xl border border-white/15 bg-ink-soft p-6 sm:p-8 lg:grid-cols-[1fr_0.9fr]">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
             <DudesAvatar />
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">
                 {t.dudes.eyebrow}
               </p>
-              <h3 className="font-display text-2xl font-extrabold uppercase tracking-tight text-ink sm:text-3xl">
+              <h3 className="font-display text-2xl font-extrabold uppercase tracking-tight text-white sm:text-3xl">
                 {t.dudes.title}
               </h3>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
                 {t.dudes.desc}
               </p>
               <a
                 href="https://www.instagram.com/dudes_surfcafe/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-ink/30 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/30 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white hover:text-ink"
               >
                 <InstagramIcon className="h-4 w-4" />
                 @dudes_surfcafe
               </a>
-              <p className="mt-2 text-xs text-muted">
+              <p className="mt-2 text-xs text-white/45">
                 Profile image loads from Instagram; post tiles open the café profile.
               </p>
             </div>
