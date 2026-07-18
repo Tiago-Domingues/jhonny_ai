@@ -28,7 +28,7 @@ export const registerSchema = z.object({
   phone: z.string().max(40).optional().or(z.literal("")),
   customerType: z.enum(customerTypes).default("SURFER"),
   marketingOptIn: z.boolean().default(false),
-  preferredLanguage: z.enum(["pt", "en"]).default("en"),
+  preferredLanguage: z.enum(["pt", "en", "zh"]).default("en"),
 });
 
 export const loginSchema = z.object({
@@ -43,7 +43,7 @@ export const profileSchema = z.object({
   birthDate: z.string().date().optional().or(z.literal("")),
   gender: z.enum(genders).optional().or(z.literal("")),
   customerType: z.enum(customerTypes),
-  preferredLanguage: z.enum(["pt", "en"]).default("en"),
+  preferredLanguage: z.enum(["pt", "en", "zh"]).default("en"),
   addressLine1: z.string().max(160).optional().or(z.literal("")),
   addressLine2: z.string().max(160).optional().or(z.literal("")),
   postalCode: z.string().max(20).optional().or(z.literal("")),

@@ -57,6 +57,24 @@ const copy = {
       marketing: "Marketing",
     },
   },
+  zh: {
+    eyebrow: "Cookie 与隐私",
+    title: "干净冲浪，数据受保护",
+    body:
+      "我们使用必要 Cookie 以支持购物车、结账与登录。分析、个性化与购物提醒仅在你同意后启用。",
+    required: "必要 Cookie 始终启用",
+    privacy: "隐私政策",
+    terms: "条款",
+    reject: "仅必要项",
+    customize: "自定义",
+    save: "保存选择",
+    accept: "全部接受",
+    labels: {
+      analytics: "分析",
+      personalization: "个性化",
+      marketing: "营销",
+    },
+  },
 } as const;
 
 function hasConsentCookie() {

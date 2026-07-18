@@ -32,6 +32,17 @@ const copy = {
     dismiss: "Not now",
     fineprint: "Valid for the first purchase with a registered account. Not combinable with other offers.",
   },
+  zh: {
+    eyebrow: "欢迎优惠",
+    title: "首次购物立减 10%",
+    body: "创建你的 Jhonny Surf Store 账户，并在首次线上订单中使用优惠码。",
+    codeLabel: "你的优惠码",
+    copied: "已复制代码",
+    copyCode: "复制代码",
+    cta: "注册并立省 10%",
+    dismiss: "稍后再说",
+    fineprint: "仅限注册账户首次购买使用，不可与其他活动叠加。",
+  },
 } as const;
 
 export function FirstPurchaseOffer() {

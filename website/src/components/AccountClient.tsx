@@ -156,6 +156,7 @@ export function AccountClient() {
             <select name="preferredLanguage" defaultValue={String(profile?.preferredLanguage || "en")} className="rounded-2xl border border-line px-4 py-3">
               <option value="en">English</option>
               <option value="pt">Português</option>
+              <option value="zh">中文</option>
             </select>
 
             <div className="md:col-span-2">

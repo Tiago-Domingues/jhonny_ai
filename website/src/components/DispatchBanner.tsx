@@ -5,6 +5,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 const copy = {
   pt: "Pronto para envio em 24–48 horas!",
   en: "Ready for dispatch in 24–48 hours!",
+  zh: "24–48 小时内可发货！",
 } as const;
 
 export function DispatchBanner() {

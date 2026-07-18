@@ -1,18 +1,27 @@
+"use client";
+
 import Image from "next/image";
 import { getCategoryHero } from "@/lib/ecommerce/categoryHeroes";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { STORE } from "@/lib/i18n";
+import { useLanguage } from "@/components/LanguageProvider";
 
 type ShopHeroProps = {
   categoryGroup?: string;
   subcategory?: string;
-  locale?: "pt" | "en";
 };
 
-export function ShopHero({ categoryGroup, subcategory, locale = "en" }: ShopHeroProps) {
+export function ShopHero({ categoryGroup, subcategory }: ShopHeroProps) {
+  const { locale } = useLanguage();
   const hero = getCategoryHero(categoryGroup);
-  const title = locale === "pt" ? hero.labelPt : hero.labelEn;
-  const subtitle = locale === "pt" ? hero.subtitlePt : hero.subtitleEn;
+  const title =
+    locale === "pt" ? hero.labelPt : locale === "zh" ? hero.labelZh : hero.labelEn;
+  const subtitle =
+    locale === "pt"
+      ? hero.subtitlePt
+      : locale === "zh"
+        ? hero.subtitleZh
+        : hero.subtitleEn;
   const subcategoryLabel = subcategory ? displayOdooCategoryName(subcategory) : null;
 
   return (

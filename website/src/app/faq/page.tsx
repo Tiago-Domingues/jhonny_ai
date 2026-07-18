@@ -93,6 +93,49 @@ const en: InfoContent = {
   ],
 };
 
+const zh: InfoContent = {
+  title: "常见问题",
+  intro: "最常见问题的快速解答。找不到你需要的？请联系我们。",
+  sections: [
+    {
+      heading: "店在哪里？",
+      paragraphs: [
+        "我们位于 Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede——距 Carcavelos 仅几分钟路程。",
+      ],
+    },
+    {
+      heading: "现在可以在线上购买吗？",
+      paragraphs: [
+        "网上商店正在筹备中。目前你可以到实体店购买，或通过 WhatsApp、电话或 Instagram 下单。",
+      ],
+    },
+    {
+      heading: "你们会帮我选择合适的冲浪板吗？",
+      paragraphs: [
+        "会。专业建议是我们的核心。告诉我们你的水平、体重和常冲的浪点，我们会帮你找到理想装备。",
+      ],
+    },
+    {
+      heading: "你们维修冲浪板吗？",
+      paragraphs: [
+        "会，通过值得信赖的合作伙伴。把板带到店里，我们一起评估维修方案。",
+      ],
+    },
+    {
+      heading: "你们收购二手冲浪板吗？",
+      paragraphs: [
+        "会，我们提供回购服务。请发送冲浪板照片和详情，我们会进行评估。",
+      ],
+    },
+    {
+      heading: "Erasmus 学生有优惠吗？",
+      paragraphs: [
+        "有。请查看 Erasmus 优惠页面，或直接到店咨询。",
+      ],
+    },
+  ],
+};
+
 export default function Page() {
-  return <InfoPage pt={pt} en={en} />;
+  return <InfoPage pt={pt} en={en} zh={zh} />;
 }

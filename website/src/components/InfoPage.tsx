@@ -19,11 +19,25 @@ export type InfoContent = {
   updated?: string;
 };
 
-export function InfoPage({ pt, en }: { pt: InfoContent; en: InfoContent }) {
+export function InfoPage({
+  pt,
+  en,
+  zh,
+}: {
+  pt: InfoContent;
+  en: InfoContent;
+  zh?: InfoContent;
+}) {
   const { locale } = useLanguage();
-  const c = locale === "pt" ? pt : en;
-  const back = locale === "pt" ? "Voltar ao site" : "Back to site";
-  const legalTitle = locale === "pt" ? "Entidade responsável" : "Legal entity";
+  const c = locale === "pt" ? pt : locale === "zh" ? zh || en : en;
+  const back =
+    locale === "pt" ? "Voltar ao site" : locale === "zh" ? "返回网站" : "Back to site";
+  const legalTitle =
+    locale === "pt"
+      ? "Entidade responsável"
+      : locale === "zh"
+        ? "责任主体"
+        : "Legal entity";
 
   return (
     <>
