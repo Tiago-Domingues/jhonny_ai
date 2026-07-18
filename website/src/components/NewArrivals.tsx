@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CurrencyPrice } from "@/components/CurrencyDisplay";
+import { NewArrivalsHeader } from "@/components/NewArrivalsHeader";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { listNewArrivalProducts, type StoreProduct } from "@/lib/ecommerce/catalog";
 
@@ -34,7 +35,7 @@ function NewArrivalCard({ product }: { product: StoreProduct }) {
             <p className="font-display text-2xl font-extrabold text-ink">
               <CurrencyPrice cents={product.priceCents} />
             </p>
-            <p className="text-xs text-muted">New arrival from Odoo</p>
+            <p className="text-xs text-muted">Picked by Jhonny</p>
           </div>
           <span className="rounded-full border border-line px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-muted">
             View
@@ -52,26 +53,7 @@ export async function NewArrivals() {
   return (
     <section className="overflow-hidden bg-paper py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
-              Just landed
-            </p>
-            <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
-              New In
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-              Fresh products from the Odoo `New Arrivals` category. Until that category is created,
-              we show opportunity products as placeholders.
-            </p>
-          </div>
-          <Link
-            href="/loja?stock=in"
-            className="rounded-full border border-line bg-white px-5 py-3 text-xs font-bold uppercase tracking-wide text-ink transition hover:bg-cream"
-          >
-            Shop all
-          </Link>
-        </div>
+        <NewArrivalsHeader />
       </div>
 
       {products.length ? (
@@ -87,10 +69,10 @@ export async function NewArrivals() {
       ) : (
         <div className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
           <div className="rounded-3xl border border-dashed border-line bg-white p-6 text-sm text-muted sm:p-8">
-            <p className="font-bold uppercase tracking-wide text-ink">Waiting for Odoo new arrivals</p>
+            <p className="font-bold uppercase tracking-wide text-ink">New picks landing soon</p>
             <p className="mt-2 max-w-2xl">
-              Create a `New Arrivals` (or `Novidades`) product category in Odoo and sync the catalog.
-              Products in that category will appear here automatically.
+              Jhonny is lining up the next drop. Swing by the shop or check back shortly for the
+              latest gear he wants you on.
             </p>
           </div>
         </div>
