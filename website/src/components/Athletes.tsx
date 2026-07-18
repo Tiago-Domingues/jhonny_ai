@@ -31,10 +31,10 @@ function AthleteCard({ a }: { a: Athlete }) {
       />
 
       {/* gradient for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
 
       {/* Instagram badge */}
-      <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-white group-hover:text-ink">
+      <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-white group-hover:text-ink">
         <InstagramIcon className="h-4 w-4" />
       </span>
 

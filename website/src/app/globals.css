@@ -3,11 +3,12 @@
 @theme {
   --color-ink: #0d0d0d;
   --color-ink-soft: #1a1a1a;
-  --color-paper: #ffffff;
-  --color-cream: #f5f3ee;
-  --color-cream-deep: #ece8df;
-  --color-muted: #6b6b6b;
-  --color-line: #e6e3dc;
+  /* Warmer page surfaces — less washed-out white */
+  --color-paper: #f3f0e8;
+  --color-cream: #ebe4d6;
+  --color-cream-deep: #ddd4c2;
+  --color-muted: #5c5c5c;
+  --color-line: #ddd6c8;
   --color-line-dark: #2a2a2a;
 
   --font-display: var(--font-montserrat);
@@ -15,8 +16,13 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #f3f0e8;
   --foreground: #0d0d0d;
+}
+
+/* Boost photo/video color without changing layout */
+.media-vivid {
+  filter: saturate(1.18) contrast(1.04) brightness(1.03);
 }
 
 html {

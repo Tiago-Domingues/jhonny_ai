@@ -30,9 +30,9 @@ function GroomCard({ a }: { a: Athlete }) {
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink/65 via-ink/15 to-transparent" />
 
-      <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-ink backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-ink group-hover:text-white">
+      <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/75 text-ink backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-ink group-hover:text-white">
         <InstagramIcon className="h-4 w-4" />
       </span>
 

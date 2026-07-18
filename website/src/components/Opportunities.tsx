@@ -20,7 +20,7 @@ function OpportunityCard({ product }: { product: StoreProduct }) {
           alt={product.name}
           fill
           sizes="320px"
-          className="object-contain p-4 transition duration-500 group-hover:scale-105"
+          className="media-vivid object-contain p-4 transition duration-500 group-hover:scale-105"
         />
         {product.opportunityDiscountPercent && (
           <span className="absolute right-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-white shadow-sm">
