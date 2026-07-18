@@ -588,7 +588,7 @@ export const translations: Record<Locale, Dict> = {
     },
     jss: {
       eyebrow: "JSS — the family",
-      title: "More than a surf shop",
+      title: "More than a surf store",
       p1: "Jhonny Surf Store is a meeting point for the surf community in Parede and Carcavelos. You'll find everything for the water — and a team that treats you like family, whatever your level.",
       p2: "Jhonny is known for his honesty and above-average technical knowledge. He'll advise you on the local waves, help you pick the right board and get you ready for your next session.",
       stats: [
