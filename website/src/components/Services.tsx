@@ -117,9 +117,9 @@ function PartnerChip({ link }: { link: Link }) {
       href={link.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/30 py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white hover:text-ink"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/25 py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
     >
-      <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white/10">
+      <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-ink/5">
         {logoSrc ? (
           <Image
             src={logoSrc}
@@ -217,17 +217,17 @@ export function Services() {
               <div
                 key={title}
                 className={[
-                  "group min-h-[220px] rounded-2xl border border-white/15 bg-ink-soft px-4 pb-5 pt-5 transition-all duration-300 hover:-translate-y-1 hover:border-white/40",
+                  "group min-h-[220px] rounded-2xl border border-line bg-white px-5 pb-5 pt-5 text-ink transition-all duration-300 hover:-translate-y-1 hover:border-ink/40",
                   wide ? "sm:col-span-2 lg:col-span-3" : "",
                 ].join(" ")}
               >
                 <div className={wide ? "flex h-full flex-col gap-4 lg:flex-row lg:items-start lg:justify-between" : ""}>
                   <div className={wide ? "max-w-md" : ""}>
-                    <Icon className="h-8 w-8 text-white transition-transform duration-200 group-hover:scale-110" />
-                    <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-white transition-all group-hover:font-extrabold group-hover:tracking-wider">
+                    <Icon className="h-8 w-8 text-ink transition-transform duration-200 group-hover:scale-110" />
+                    <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-ink transition-all group-hover:font-extrabold group-hover:tracking-wider">
                       {title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/70">
+                    <p className="mt-2 text-sm leading-relaxed text-muted">
                       {desc}
                     </p>
                   </div>
@@ -246,29 +246,29 @@ export function Services() {
         </div>
 
         {/* The Dudes — Surf Café highlight */}
-        <div className="mt-12 grid gap-6 rounded-2xl border border-white/15 bg-ink-soft p-6 sm:p-8 lg:grid-cols-[1fr_0.9fr]">
+        <div className="mt-12 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1fr_0.9fr]">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
             <DudesAvatar />
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
                 {t.dudes.eyebrow}
               </p>
-              <h3 className="font-display text-2xl font-extrabold uppercase tracking-tight text-white sm:text-3xl">
+              <h3 className="font-display text-2xl font-extrabold uppercase tracking-tight text-ink sm:text-3xl">
                 {t.dudes.title}
               </h3>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
                 {t.dudes.desc}
               </p>
               <a
                 href="https://www.instagram.com/dudes_surfcafe/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/30 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white hover:text-ink"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-ink/30 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
               >
                 <InstagramIcon className="h-4 w-4" />
                 @dudes_surfcafe
               </a>
-              <p className="mt-2 text-xs text-white/45">
+              <p className="mt-2 text-xs text-muted">
                 Profile image loads from Instagram; post tiles open the café profile.
               </p>
             </div>
