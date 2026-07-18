@@ -51,13 +51,13 @@ export async function NewArrivals() {
   const loop = [...products, ...products];
 
   return (
-    <section className="overflow-hidden bg-paper py-16 sm:py-20">
+    <section className="overflow-hidden bg-paper py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <NewArrivalsHeader />
       </div>
 
       {products.length ? (
-        <div className="group relative mt-10 flex overflow-hidden">
+        <div className="group relative mt-8 flex overflow-hidden">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-paper to-transparent sm:w-24" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-paper to-transparent sm:w-24" />
           <div className="flex w-max animate-[marquee_45s_linear_infinite] items-stretch group-hover:[animation-play-state:paused]">

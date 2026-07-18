@@ -54,28 +54,30 @@ export function NewArrivalsHeader() {
   const t = copy[locale];
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
-          {t.eyebrow}
-        </p>
-        <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
+    <div>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
+        {t.eyebrow}
+      </p>
+
+      <div className="flex items-end justify-between gap-4 sm:gap-6">
+        <h2 className="font-display min-w-0 text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
           {t.title}
         </h2>
-        <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-          {t.subtitle}
-        </p>
+
+        <div className="newin-shop-cta shrink-0">
+          <Link
+            href="/loja?stock=in"
+            className="newin-shop-cta__btn group relative inline-flex items-center justify-center rounded-full border border-ink bg-ink px-5 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-ink-soft"
+          >
+            <JhonnyOnButton />
+            {t.shopAll}
+          </Link>
+        </div>
       </div>
 
-      <div className="newin-shop-cta self-start sm:self-end">
-        <Link
-          href="/loja?stock=in"
-          className="newin-shop-cta__btn group relative inline-flex items-center justify-center rounded-full border border-ink bg-ink px-5 py-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-ink-soft"
-        >
-          <JhonnyOnButton />
-          {t.shopAll}
-        </Link>
-      </div>
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted sm:mt-4 sm:text-base">
+        {t.subtitle}
+      </p>
     </div>
   );
 }
