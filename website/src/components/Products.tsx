@@ -50,7 +50,7 @@ export function Products() {
                 key={item.id}
                 id={item.id}
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
-                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-malva/25 bg-malva focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-malva"
+                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-line-dark bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
               >
                 <div
                   className="media-vivid aspect-[4/3] w-full bg-cream bg-cover bg-center"
@@ -61,7 +61,7 @@ export function Products() {
                   aria-label={item.title}
                 />
 
-                <div className="flex flex-1 flex-col bg-malva px-5 py-5 text-white transition group-hover:bg-malva-deep">
+                <div className="flex flex-1 flex-col bg-ink px-5 py-5 text-white transition group-hover:bg-ink-soft">
                   <h3 className="font-display text-xl font-bold uppercase tracking-wide text-white">
                     {item.title}
                   </h3>
