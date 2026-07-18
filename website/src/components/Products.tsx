@@ -3,7 +3,6 @@
 import { useLanguage } from "@/components/LanguageProvider";
 import { categoryGroupHref, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
 import { ArrowIcon } from "@/components/icons";
-import { BorderSurfer } from "@/components/BorderSurfer";
 
 const categoryImages: Record<string, string> = {
   surfboards: "/brand/categories/hero-surfboards.jpg",
@@ -27,38 +26,8 @@ export function Products() {
   const { t } = useLanguage();
 
   return (
-    <section id="shop" className="relative scroll-mt-20 overflow-hidden bg-paper py-20 text-ink sm:py-28">
-      {/* Black → white wave from More than a surf shop */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-28 overflow-hidden">
-        <div className="animate-ocean-border absolute -top-10 left-0 h-[4.5rem] w-[220%] text-ink">
-          <svg viewBox="0 0 1200 80" preserveAspectRatio="none" className="h-full w-full">
-            <path
-              d="M0 0H1200V42C1110 18 1050 18 960 42S810 66 720 42S570 18 480 42S330 66 240 42S90 18 0 42V0Z"
-              fill="currentColor"
-            />
-          </svg>
-        </div>
-        <div className="animate-ocean-border absolute top-5 left-0 h-14 w-[220%] text-paper">
-          <svg viewBox="0 0 1200 56" preserveAspectRatio="none" className="h-full w-full">
-            <path
-              d="M0 20C90 4 150 4 240 20S390 44 480 20S630 4 720 20S870 44 960 20S1110 4 1200 20V56H0Z"
-              fill="currentColor"
-            />
-            <path
-              d="M0 24C90 10 150 10 240 24S390 42 480 24S630 10 720 24S870 42 960 24S1110 10 1200 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              opacity="0.9"
-            />
-          </svg>
-        </div>
-        <div className="animate-surf-border absolute top-[0.85rem] left-0">
-          <BorderSurfer />
-        </div>
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-5 pt-8 sm:px-8 sm:pt-10">
+    <section id="shop" className="scroll-mt-20 bg-paper py-20 text-ink sm:py-28">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="max-w-2xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
             {t.shop.eyebrow}
