@@ -22,16 +22,6 @@ const categoryPhotoFallbacks: Record<string, string> = {
   lifestyle: "/brand/categories/cat-jss.jpg",
 };
 
-/** Solid accent colors for each of the 6 shop categories. */
-const categoryColors: Record<string, string> = {
-  surfboards: "#0B4F6C",
-  wetsuits: "#1F6F5B",
-  surfgear: "#C45C26",
-  essentials: "#2F5D8C",
-  bodyboard: "#B84A3A",
-  lifestyle: "#3D3A36",
-};
-
 export function Products() {
   const { t } = useLanguage();
 
@@ -54,31 +44,29 @@ export function Products() {
           {t.shop.items.map((item) => {
             const localImage = categoryImages[item.id] || categoryImages.surfboards;
             const photoFallback = categoryPhotoFallbacks[item.id] || categoryPhotoFallbacks.surfboards;
-            const accent = categoryColors[item.id] || categoryColors.surfboards;
 
             return (
               <a
                 key={item.id}
                 id={item.id}
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
-                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-line focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-ink/15 bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
               >
                 {/* Full-color photo — no overlays, filters, or hover effects on top */}
                 <div
-                  className="aspect-[4/3] w-full bg-cover bg-center"
+                  className="aspect-[4/3] w-full bg-ink bg-cover bg-center"
                   style={{
-                    backgroundColor: accent,
                     backgroundImage: `url('${localImage}'), url('${photoFallback}')`,
                   }}
                   role="img"
                   aria-label={item.title}
                 />
 
-                <div className="flex flex-1 flex-col px-5 py-5 text-white" style={{ backgroundColor: accent }}>
+                <div className="flex flex-1 flex-col bg-ink px-5 py-5 text-white">
                   <h3 className="font-display text-xl font-bold uppercase tracking-wide">
                     {item.title}
                   </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/85">
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/80">
                     {item.desc}
                   </p>
                   <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white">
