@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
 import { ProductDetailActions } from "@/components/ProductDetailActions";
+import { ProductStarRating } from "@/components/ProductStarRating";
 import { ProductVideoPreview } from "@/components/ProductVideoPreview";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { getProduct } from "@/lib/ecommerce/catalog";
@@ -84,6 +85,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             }`}>
               {availableForSale ? `${product.stockQuantity} em stock` : "Esgotado"}
             </p>
+
+            <ProductStarRating productId={product.id} />
 
             {product.description && (
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
