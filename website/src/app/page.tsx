@@ -22,8 +22,8 @@ export default function Home() {
         <Hero />
         <SurfConditions />
         <NewArrivals />
-        <Products />
         <About />
+        <Products />
         <Services />
         <Brands />
         <Opportunities />
