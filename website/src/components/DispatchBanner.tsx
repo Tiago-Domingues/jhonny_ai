@@ -7,17 +7,17 @@ const messages = {
   pt: [
     "Pronto para envio em 24–48 horas!",
     "Portes grátis em encomendas acima de €50",
-    "Usa os cupões Local Hero para descontos nas tuas encomendas",
+    "Usa os cupões Local Hero para descontos",
   ],
   en: [
     "Ready for dispatch in 24–48 hours!",
     "Free shipping on orders over €50",
-    "Use our Local Hero coupons for discounts on your orders",
+    "Use our Local Hero coupons for discounts",
   ],
   zh: [
     "24–48 小时内可发货！",
     "订单满 €50 免运费",
-    "使用 Local Hero 优惠码享受订单折扣",
+    "使用 Local Hero 优惠码享受折扣",
   ],
 } as const;
 
