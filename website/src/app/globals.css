@@ -427,38 +427,100 @@ html[lang="zh"] .font-display {
   animation-delay: calc(var(--i) * 45ms);
 }
 
-/* Dispatch banner — plane crosses the white bar L→R */
+/* Dispatch banner — cargo plane lands, van picks up (shared 14s loop) */
 .dispatch-banner {
   isolation: isolate;
 }
 
-@keyframes dispatch-plane-fly {
+/* Land near the end of the centered text (~mid-right of the bar) */
+@keyframes dispatch-plane-sequence {
   0% {
-    transform: translateX(-15vw) translateY(0);
+    transform: translateX(-18vw) translateY(-5px) scale(0.96);
+    opacity: 0;
   }
-  45% {
-    transform: translateX(42vw) translateY(-1px);
+  6% {
+    opacity: 1;
   }
+  38% {
+    transform: translateX(50vw) translateY(-3px) scale(1);
+    opacity: 1;
+  }
+  46% {
+    transform: translateX(56vw) translateY(5px) scale(0.94);
+    opacity: 1;
+  }
+  54% {
+    transform: translateX(56vw) translateY(6px) scale(0.92);
+    opacity: 0.85;
+  }
+  60%,
   100% {
-    transform: translateX(112vw) translateY(0);
+    transform: translateX(56vw) translateY(6px) scale(0.9);
+    opacity: 0;
   }
 }
 
-@keyframes dispatch-plane-bob {
+@keyframes dispatch-package-sequence {
   0%,
+  42% {
+    transform: translateX(58vw) translateY(-4px) scale(0.7);
+    opacity: 0;
+  }
+  48% {
+    transform: translateX(58vw) translateY(0) scale(1);
+    opacity: 1;
+  }
+  58% {
+    transform: translateX(58vw) translateY(0) scale(1);
+    opacity: 1;
+  }
+  64% {
+    transform: translateX(62vw) translateY(-1px) scale(0.85);
+    opacity: 0;
+  }
   100% {
-    margin-top: 0;
+    transform: translateX(110vw) translateY(0) scale(0.8);
+    opacity: 0;
   }
-  50% {
-    margin-top: -1px;
+}
+
+@keyframes dispatch-van-sequence {
+  0%,
+  52% {
+    transform: translateX(112vw);
+    opacity: 0;
   }
+  56% {
+    opacity: 1;
+    transform: translateX(112vw);
+  }
+  64% {
+    transform: translateX(52vw);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120vw);
+    opacity: 1;
+  }
+}
+
+.dispatch-plane,
+.dispatch-package,
+.dispatch-van {
+  mix-blend-mode: difference;
+  will-change: transform, opacity;
 }
 
 .dispatch-plane {
-  mix-blend-mode: difference;
-  animation:
-    dispatch-plane-fly 8s linear infinite,
-    dispatch-plane-bob 1.4s ease-in-out infinite;
+  animation: dispatch-plane-sequence 14s linear infinite;
+}
+
+.dispatch-package {
+  animation: dispatch-package-sequence 14s linear infinite;
+}
+
+.dispatch-van {
+  animation: dispatch-van-sequence 14s linear infinite;
 }
 
 @keyframes shop-wave {
@@ -560,9 +622,27 @@ html[lang="zh"] .font-display {
   .shop-hero-media {
     animation: none;
   }
-  .dispatch-plane {
+  .dispatch-plane,
+  .dispatch-package,
+  .dispatch-van {
     animation: none;
-    left: 72%;
-    transform: translateX(-50%);
+  }
+  .dispatch-plane {
+    left: 52%;
+    top: 4px;
+    opacity: 0.9;
+    transform: none;
+  }
+  .dispatch-package {
+    left: calc(52% + 1.5rem);
+    bottom: 6px;
+    opacity: 0.9;
+    transform: none;
+  }
+  .dispatch-van {
+    left: 68%;
+    bottom: 3px;
+    opacity: 0.9;
+    transform: none;
   }
 }
