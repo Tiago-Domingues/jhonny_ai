@@ -10,9 +10,6 @@
   --color-muted: #5c5c5c;
   --color-line: #ddd6c8;
   --color-line-dark: #2a2a2a;
-  /* Mauve / malva — category card banners */
-  --color-malva: #8b6b8f;
-  --color-malva-deep: #735778;
 
   --font-display: var(--font-montserrat);
   --font-sans: var(--font-geist-sans);
