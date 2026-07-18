@@ -177,7 +177,8 @@ html[lang="zh"] .font-display {
 }
 
 .newin-shop-cta {
-  padding-top: 3.25rem;
+  /* Room for the jumping toy above the button, aligned with the title row */
+  padding-top: 2.75rem;
 }
 
 .newin-shop-cta__btn {
