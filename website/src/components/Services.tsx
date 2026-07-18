@@ -197,16 +197,16 @@ export function Services() {
   ];
 
   return (
-    <section id="services" className="scroll-mt-20 bg-ink py-20 text-white sm:py-28">
+    <section id="services" className="scroll-mt-20 bg-paper py-20 text-ink sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="max-w-2xl">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
             {t.services.eyebrow}
           </p>
           <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-balance sm:text-5xl">
             {t.services.title}
           </h2>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/70">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted">
             {t.services.subtitle}
           </p>
         </div>
@@ -217,7 +217,7 @@ export function Services() {
               <div
                 key={title}
                 className={[
-                  "group min-h-[220px] rounded-2xl border border-white/15 bg-ink-soft px-4 pb-5 pt-5 transition-all duration-300 hover:-translate-y-1 hover:border-white/40",
+                  "group min-h-[220px] rounded-2xl border border-ink bg-ink px-5 pb-5 pt-5 text-white transition-all duration-300 hover:-translate-y-1 hover:border-ink-soft",
                   wide ? "sm:col-span-2 lg:col-span-3" : "",
                 ].join(" ")}
               >
@@ -227,7 +227,7 @@ export function Services() {
                     <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-white transition-all group-hover:font-extrabold group-hover:tracking-wider">
                       {title}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/70">
+                    <p className="mt-2 text-sm leading-relaxed text-white/75">
                       {desc}
                     </p>
                   </div>
@@ -246,7 +246,7 @@ export function Services() {
         </div>
 
         {/* The Dudes — Surf Café highlight */}
-        <div className="mt-12 grid gap-6 rounded-2xl border border-white/15 bg-ink-soft p-6 sm:p-8 lg:grid-cols-[1fr_0.9fr]">
+        <div className="mt-12 grid gap-6 rounded-2xl border border-ink bg-ink p-6 text-white sm:p-8 lg:grid-cols-[1fr_0.9fr]">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
             <DudesAvatar />
             <div>
@@ -256,7 +256,7 @@ export function Services() {
               <h3 className="font-display text-2xl font-extrabold uppercase tracking-tight text-white sm:text-3xl">
                 {t.dudes.title}
               </h3>
-              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/75">
                 {t.dudes.desc}
               </p>
               <a
