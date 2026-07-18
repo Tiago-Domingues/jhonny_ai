@@ -84,10 +84,10 @@ export function Products() {
                 key={item.id}
                 id={item.id}
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
-                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-white/15 bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-white/20 bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
               >
                 <div
-                  className="aspect-[4/3] w-full bg-ink bg-cover bg-center"
+                  className="aspect-[4/3] w-full bg-cream bg-cover bg-center"
                   style={{
                     backgroundImage: `url('${localImage}'), url('${photoFallback}')`,
                   }}
@@ -95,14 +95,14 @@ export function Products() {
                   aria-label={item.title}
                 />
 
-                <div className="flex flex-1 flex-col bg-ink px-5 py-5 text-white">
+                <div className="flex flex-1 flex-col bg-white px-5 py-5 text-ink">
                   <h3 className="font-display text-xl font-bold uppercase tracking-wide">
                     {item.title}
                   </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/75">
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">
                     {item.desc}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink">
                     {t.shop.explore}
                     <ArrowIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                   </span>
