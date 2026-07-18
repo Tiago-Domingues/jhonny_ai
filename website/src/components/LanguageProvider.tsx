@@ -25,21 +25,21 @@ function isLocale(value: string | null): value is Locale {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>("en");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const id = window.setTimeout(() => {
-      const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-      if (isLocale(stored)) {
-        setLocale(stored);
-      }
-    }, 0);
-    return () => window.clearTimeout(id);
+    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (isLocale(stored)) {
+      setLocale(stored);
+    }
+    setReady(true);
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     document.documentElement.lang = LOCALE_META[locale].htmlLang;
-  }, [locale]);
+  }, [locale, ready]);
 
   const value: LanguageContextValue = {
     locale,
