@@ -219,6 +219,7 @@ type Dict = {
     askMsg: string;
     buyback: string;
     buybackMsg: string;
+    wavePool: { title: string; desc: string; ask: string; askMsg: string };
   };
   brands: { title: string };
   athletes: {
@@ -430,6 +431,12 @@ export const translations: Record<Locale, Dict> = {
       askMsg: "Olá Jhonny! Preciso de aconselhamento sobre equipamento de surf.",
       buyback: "Vender a minha prancha",
       buybackMsg: "Olá Jhonny! Quero vender a minha prancha. Envio já fotos e contactos.",
+      wavePool: {
+        title: "Viagens a wave pools",
+        desc: "Viagens da comunidade a wave pools lendários pelo mundo — junta-te ao crew e apanha ondas perfeitas em qualquer altura.",
+        ask: "Quero ir a um wave pool",
+        askMsg: "Olá Jhonny! Quero saber das próximas viagens da comunidade a wave pools.",
+      },
     },
     brands: { title: "Marcas que trabalhamos" },
     athletes: {
@@ -635,6 +642,12 @@ export const translations: Record<Locale, Dict> = {
       askMsg: "Hi Jhonny! I'd like some advice on surf gear.",
       buyback: "Sell my board",
       buybackMsg: "Hi Jhonny! I'd like to sell my board. I'll send photos and contacts now.",
+      wavePool: {
+        title: "Wave pool trips",
+        desc: "Community trips to legendary wave pools around the world — join the crew and score perfect waves on tap.",
+        ask: "Ask about trips",
+        askMsg: "Hi Jhonny! I'd like to know about upcoming community wave pool trips.",
+      },
     },
     brands: { title: "Brands we carry" },
     athletes: {
@@ -848,6 +861,12 @@ export const translations: Record<Locale, Dict> = {
       askMsg: "你好 Jhonny！我想咨询冲浪装备建议。",
       buyback: "出售我的冲浪板",
       buybackMsg: "你好 Jhonny！我想出售冲浪板，稍后发送照片和联系方式。",
+      wavePool: {
+        title: "造浪池旅行",
+        desc: "社区结伴前往世界各地知名造浪池——加入队伍，随时冲上完美浪。",
+        ask: "咨询造浪池行程",
+        askMsg: "你好 Jhonny！想了解社区即将出发的造浪池旅行。",
+      },
     },
     brands: { title: "我们经营的品牌" },
     athletes: {
