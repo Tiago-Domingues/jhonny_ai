@@ -50,7 +50,7 @@ export function Products() {
                 key={item.id}
                 id={item.id}
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
-                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-line bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
+                className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-malva/25 bg-malva focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-malva"
               >
                 <div
                   className="media-vivid aspect-[4/3] w-full bg-cream bg-cover bg-center"
@@ -61,14 +61,14 @@ export function Products() {
                   aria-label={item.title}
                 />
 
-                <div className="flex flex-1 flex-col bg-white px-5 py-5 text-ink">
-                  <h3 className="font-display text-xl font-bold uppercase tracking-wide">
+                <div className="flex flex-1 flex-col bg-malva px-5 py-5 text-white transition group-hover:bg-malva-deep">
+                  <h3 className="font-display text-xl font-bold uppercase tracking-wide text-white">
                     {item.title}
                   </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/80">
                     {item.desc}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink">
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white">
                     {t.shop.explore}
                     <ArrowIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                   </span>
