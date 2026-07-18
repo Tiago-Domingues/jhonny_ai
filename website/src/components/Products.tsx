@@ -87,7 +87,7 @@ export function Products() {
                 className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-white/15 bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
               >
                 <div
-                  className="aspect-[4/3] w-full bg-ink bg-cover bg-center"
+                  className="media-vivid aspect-[4/3] w-full bg-ink bg-cover bg-center"
                   style={{
                     backgroundImage: `url('${localImage}'), url('${photoFallback}')`,
                   }}
