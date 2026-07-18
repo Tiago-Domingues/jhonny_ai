@@ -116,26 +116,29 @@ html[lang="zh"] .font-display {
   transform-origin: bottom center;
 }
 
-/* New In — Jhonny dancing on the Shop all CTA */
+/* New In — Jhonny toy jumping on the Shop all button */
 @keyframes newin-jhonny-jump {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    transform: translateY(6px) scaleY(1) rotate(0deg);
   }
-  18% {
-    transform: translateY(-10px) rotate(-4deg);
+  10% {
+    transform: translateY(8px) scaleY(0.92) rotate(-2deg);
   }
-  32% {
-    transform: translateY(0) rotate(0deg);
+  28% {
+    transform: translateY(-18px) scaleY(1.05) rotate(-6deg);
   }
-  48% {
-    transform: translateY(-14px) rotate(5deg);
+  42% {
+    transform: translateY(6px) scaleY(0.94) rotate(0deg);
   }
-  62% {
-    transform: translateY(0) rotate(-2deg);
+  55% {
+    transform: translateY(8px) scaleY(0.9) rotate(2deg);
   }
-  78% {
-    transform: translateY(-7px) rotate(3deg);
+  72% {
+    transform: translateY(-12px) scaleY(1.04) rotate(5deg);
+  }
+  86% {
+    transform: translateY(6px) scaleY(0.96) rotate(0deg);
   }
 }
 
@@ -144,38 +147,11 @@ html[lang="zh"] .font-display {
   100% {
     transform: rotate(0deg);
   }
-  25% {
-    transform: rotate(-8deg);
+  30% {
+    transform: rotate(-7deg);
   }
-  50% {
-    transform: rotate(8deg);
-  }
-  75% {
-    transform: rotate(-4deg);
-  }
-}
-
-@keyframes newin-logo-float {
-  0%,
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 0.9;
-  }
-  50% {
-    transform: translateY(-4px) scale(1.06);
-    opacity: 1;
-  }
-}
-
-@keyframes newin-invite-pulse {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.85;
-  }
-  50% {
-    transform: translateY(-2px);
-    opacity: 1;
+  60% {
+    transform: rotate(7deg);
   }
 }
 
@@ -183,46 +159,63 @@ html[lang="zh"] .font-display {
   0%,
   100% {
     transform: translateX(-50%) scaleX(1);
-    opacity: 0.2;
+    opacity: 0.28;
   }
-  50% {
-    transform: translateX(-50%) scaleX(0.7);
-    opacity: 0.1;
+  10%,
+  55% {
+    transform: translateX(-50%) scaleX(1.05);
+    opacity: 0.35;
+  }
+  28%,
+  72% {
+    transform: translateX(-50%) scaleX(0.45);
+    opacity: 0.08;
   }
 }
 
 .newin-shop-cta {
-  padding-top: 4.75rem;
+  padding-top: 3.25rem;
+}
+
+.newin-shop-cta__btn {
+  isolation: isolate;
+}
+
+.newin-jhonny {
+  z-index: 2;
+  /* Sit the toy’s feet on the top edge of the button */
+  margin-bottom: -0.35rem;
 }
 
 .newin-jhonny__rider {
-  animation: newin-jhonny-jump 2.4s ease-in-out infinite;
+  animation: newin-jhonny-jump 1.8s cubic-bezier(0.33, 0.9, 0.45, 1) infinite;
   transform-origin: bottom center;
+  will-change: transform;
 }
 
 .newin-jhonny__toy {
-  animation: newin-jhonny-wiggle 1.2s ease-in-out infinite;
+  animation: newin-jhonny-wiggle 0.9s ease-in-out infinite;
   transform-origin: bottom center;
-}
-
-.newin-jhonny__logo {
-  animation: newin-logo-float 2s ease-in-out infinite;
-}
-
-.newin-jhonny__invite {
-  animation: newin-invite-pulse 2.4s ease-in-out infinite;
+  will-change: transform;
 }
 
 .newin-jhonny__shadow {
-  animation: newin-shadow-pulse 2.4s ease-in-out infinite;
+  animation: newin-shadow-pulse 1.8s cubic-bezier(0.33, 0.9, 0.45, 1) infinite;
 }
 
-.newin-shop-cta:hover .newin-jhonny__rider {
-  animation-duration: 1.4s;
+.newin-shop-cta__btn:hover .newin-jhonny__rider,
+.newin-shop-cta__btn:focus-visible .newin-jhonny__rider {
+  animation-duration: 1.05s;
 }
 
-.newin-shop-cta:hover .newin-jhonny__toy {
-  animation-duration: 0.7s;
+.newin-shop-cta__btn:hover .newin-jhonny__toy,
+.newin-shop-cta__btn:focus-visible .newin-jhonny__toy {
+  animation-duration: 0.55s;
+}
+
+.newin-shop-cta__btn:hover .newin-jhonny__shadow,
+.newin-shop-cta__btn:focus-visible .newin-jhonny__shadow {
+  animation-duration: 1.05s;
 }
 
 /* Floating WhatsApp surfer toy: wave ride + spray + board tricks */
