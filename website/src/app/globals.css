@@ -29,6 +29,16 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+html[lang="zh-CN"] body,
+html[lang="zh"] body {
+  font-family: var(--font-chinese), var(--font-sans), system-ui, sans-serif;
+}
+
+html[lang="zh-CN"] .font-display,
+html[lang="zh"] .font-display {
+  font-family: var(--font-chinese), var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
+}
+
 @layer utilities {
   .font-display {
     font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;

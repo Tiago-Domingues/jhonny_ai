@@ -220,6 +220,22 @@ export function FlagEN(props: IconProps) {
   );
 }
 
+export function FlagZH(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 16" {...props}>
+      <rect width="24" height="16" rx="2" fill="#de2910" />
+      <path
+        fill="#ffde00"
+        d="M5.2 3.2 5.9 5.3H8l-1.7 1.2.7 2.1-1.8-1.3-1.8 1.3.7-2.1L2.4 5.3h2.1Z"
+      />
+      <circle cx="9.2" cy="3.6" r="0.55" fill="#ffde00" />
+      <circle cx="10.6" cy="5" r="0.55" fill="#ffde00" />
+      <circle cx="10.6" cy="7" r="0.55" fill="#ffde00" />
+      <circle cx="9.2" cy="8.4" r="0.55" fill="#ffde00" />
+    </svg>
+  );
+}
+
 export function FacebookIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>

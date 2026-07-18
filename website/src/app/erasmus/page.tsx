@@ -65,6 +65,35 @@ const en: InfoContent = {
   ],
 };
 
+const zh: InfoContent = {
+  title: "Erasmus 优惠",
+  intro:
+    "在里斯本短期停留并想冲浪？Jhonny Surf Store 是你在 Carcavelos 的基地。我们为短期旅居、却想认真体验冲浪的人准备了特别优惠。",
+  sections: [
+    {
+      heading: "我们提供什么",
+      bullets: [
+        "针对你停留期间的必备装备特别条件。",
+        "免费专业建议，帮你选对装备。",
+        "租赁与灵活方案，不必样样都买。",
+        "学期结束时可回购冲浪板。",
+      ],
+    },
+    {
+      heading: "如何参与",
+      paragraphs: [
+        "带上学生证 / Erasmus 证明到店，我们会根据你在葡萄牙的时间给出最佳方案。",
+      ],
+    },
+    {
+      heading: "加入社区",
+      paragraphs: [
+        "我们不只是一家店，更是聚会点。关注 Instagram 了解浪讯、活动与新品，并在下水前来 The Dudes — 冲浪咖啡馆喝杯咖啡。",
+      ],
+    },
+  ],
+};
+
 export default function Page() {
-  return <InfoPage pt={pt} en={en} />;
+  return <InfoPage pt={pt} en={en} zh={zh} />;
 }

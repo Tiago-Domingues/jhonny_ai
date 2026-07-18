@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Geist, Montserrat } from "next/font/google";
+import { Geist, Montserrat, Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { CookieConsent } from "@/components/CookieConsent";
@@ -15,6 +15,13 @@ const montserrat = Montserrat({
   variable: "--font-montserrat",
   weight: ["500", "600", "700", "800"],
   subsets: ["latin"],
+});
+
+const notoSansSC = Noto_Sans_SC({
+  variable: "--font-chinese",
+  weight: ["400", "500", "700", "900"],
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -56,7 +63,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${montserrat.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${montserrat.variable} ${notoSansSC.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <LanguageProvider>

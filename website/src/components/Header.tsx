@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Logo } from "@/components/Logo";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
-import { CartIcon, UserIcon, FlagPT, FlagEN } from "@/components/icons";
+import { CartIcon, UserIcon, FlagPT, FlagEN, FlagZH } from "@/components/icons";
+import { LOCALE_META, LOCALES, type Locale } from "@/lib/i18n";
 import { categoryGroupHref, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { DispatchBanner } from "@/components/DispatchBanner";
 
@@ -40,10 +41,11 @@ function Chevron({ className = "" }: { className?: string }) {
 }
 
 export function Header({ categories }: { categories?: MenuCategory[] }) {
-  const { t, locale, toggle } = useLanguage();
+  const { t, locale, setLocale } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
+  const [langOpen, setLangOpen] = useState(false);
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [user, setUser] = useState<HeaderUser>(null);
   const [cartCount, setCartCount] = useState(0);
@@ -154,19 +156,48 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Language toggle with flags */}
-          <button
-            onClick={toggle}
-            aria-label="Toggle language"
-            className="flex items-center gap-1.5 rounded-full border border-white/30 px-2.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:border-white"
-          >
-            {locale === "pt" ? (
-              <FlagPT className="h-3.5 w-5 rounded-[2px]" />
-            ) : (
-              <FlagEN className="h-3.5 w-5 rounded-[2px]" />
+          {/* Language selector: EN / PT / 中文 */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setLangOpen((value) => !value)}
+              aria-label="Change language"
+              aria-expanded={langOpen}
+              className="flex items-center gap-1.5 rounded-full border border-white/30 px-2.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:border-white"
+            >
+              {locale === "pt" ? (
+                <FlagPT className="h-3.5 w-5 rounded-[2px]" />
+              ) : locale === "zh" ? (
+                <FlagZH className="h-3.5 w-5 rounded-[2px]" />
+              ) : (
+                <FlagEN className="h-3.5 w-5 rounded-[2px]" />
+              )}
+              <span>{LOCALE_META[locale].short}</span>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border border-line bg-paper py-1 text-ink shadow-xl">
+                {LOCALES.map((code) => {
+                  const Flag = code === "pt" ? FlagPT : code === "zh" ? FlagZH : FlagEN;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => {
+                        setLocale(code as Locale);
+                        setLangOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-wide transition hover:bg-cream ${
+                        locale === code ? "bg-cream text-ink" : "text-muted"
+                      }`}
+                    >
+                      <Flag className="h-3.5 w-5 rounded-[2px]" />
+                      <span>{LOCALE_META[code].label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
-            <span>{locale === "pt" ? "PT" : "EN"}</span>
-          </button>
+          </div>
 
           <div ref={menuRef} className="flex items-center gap-2 sm:gap-3">
           {/* Account (placeholder) */}

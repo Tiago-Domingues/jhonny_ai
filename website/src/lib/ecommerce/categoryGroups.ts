@@ -10,6 +10,7 @@ type CategoryGroup = {
   key: CategoryGroupKey;
   labelPt: string;
   labelEn: string;
+  labelZh: string;
   includes: string[];
 };
 
@@ -18,36 +19,42 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     key: "surfboards",
     labelPt: "Pranchas",
     labelEn: "Surfboards",
+    labelZh: "冲浪板",
     includes: ["SURFBOARDS"],
   },
   {
     key: "wetsuits",
     labelPt: "Fatos",
     labelEn: "Wetsuits",
+    labelZh: "潜水衣",
     includes: ["WETSUITS"],
   },
   {
     key: "surfgear",
     labelPt: "Material Técnico",
     labelEn: "Surf Gear",
+    labelZh: "冲浪装备",
     includes: ["SURFGEAR"],
   },
   {
     key: "essentials",
     labelPt: "Essenciais",
     labelEn: "Essentials",
+    labelZh: "必备用品",
     includes: ["SURF ESSENCIALS", "SURF ESSENTIALS"],
   },
   {
     key: "bodyboard",
     labelPt: "Bodyboard",
     labelEn: "Bodyboard",
+    labelZh: "趴板",
     includes: ["BODYBOARD"],
   },
   {
     key: "lifestyle",
     labelPt: "Lifestyle",
     labelEn: "Lifestyle",
+    labelZh: "生活方式",
     includes: ["LIFESTYLE"],
   },
 ];

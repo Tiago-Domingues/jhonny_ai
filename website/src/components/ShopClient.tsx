@@ -107,6 +107,47 @@ const copy = {
       "created-descending": "Date, new to old",
     } satisfies Record<ShopSortOption, string>,
   },
+  zh: {
+    filterSort: "筛选 / 排序",
+    filterBy: "筛选",
+    sortBy: "排序",
+    search: "搜索商品",
+    mainCategory: "主分类",
+    subcategory: "子分类",
+    availability: "库存状态",
+    inStock: "有货",
+    outOfStock: "缺货",
+    price: "价格",
+    from: "从",
+    to: "到",
+    productType: "产品类型",
+    gender: "性别",
+    brand: "品牌",
+    size: "尺码",
+    color: "颜色",
+    clearAll: "清除全部",
+    reset: "重置",
+    apply: "查看结果",
+    close: "关闭",
+    productsFound: "件商品",
+    loadingCatalog: "正在加载目录",
+    loadingSearch: "正在为你寻找最合适的装备...",
+    searching: "正在搜索商品...",
+    empty: "没有符合这些筛选条件的商品。",
+    loadMore: "查看更多商品",
+    selected: "已选",
+    sort: {
+      featured: "精选",
+      relevance: "最相关",
+      "best-selling": "最畅销",
+      "title-ascending": "按名称 A-Z",
+      "title-descending": "按名称 Z-A",
+      "price-ascending": "价格从低到高",
+      "price-descending": "价格从高到低",
+      "created-ascending": "日期从旧到新",
+      "created-descending": "日期从新到旧",
+    } satisfies Record<ShopSortOption, string>,
+  },
 } as const;
 
 function ProductSkeletonGrid() {
@@ -303,7 +344,9 @@ export function ShopClient({
   const selectedCategoryGroupLabel = selectedCategoryGroup
     ? locale === "pt"
       ? selectedCategoryGroup.labelPt
-      : selectedCategoryGroup.labelEn
+      : locale === "zh"
+        ? selectedCategoryGroup.labelZh
+        : selectedCategoryGroup.labelEn
     : null;
   const selectedSubcategoryLabel = activeSubcategory ? displayOdooCategoryName(activeSubcategory) : null;
   const selectedMenuCategory = MENU_CATEGORIES.find((entry) => entry.key === activeCategoryGroup);
@@ -366,7 +409,9 @@ export function ShopClient({
           setMessage(
             locale === "pt"
               ? "Não foi possível atualizar o catálogo. A mostrar os produtos já carregados."
-              : "Could not refresh the catalog. Showing previously loaded products."
+              : locale === "zh"
+                ? "无法更新目录。正在显示已加载的商品。"
+                : "Could not refresh the catalog. Showing previously loaded products."
           );
         }
       } finally {
@@ -491,7 +536,7 @@ export function ShopClient({
           <option value="">{t.mainCategory}</option>
           {ODOO_CATEGORY_GROUPS.map((group) => (
             <option key={group.key} value={group.key}>
-              {locale === "pt" ? group.labelPt : group.labelEn}
+              {locale === "pt" ? group.labelPt : locale === "zh" ? group.labelZh : group.labelEn}
             </option>
           ))}
         </select>
@@ -756,7 +801,9 @@ export function ShopClient({
               {selectedCategoryGroupLabel || "Jhonny Surf Store"}
             </p>
             <h1 className="font-display mt-1 text-3xl font-extrabold uppercase tracking-tight sm:text-4xl">
-              {selectedSubcategoryLabel || selectedCategoryGroupLabel || (locale === "pt" ? "Loja" : "Shop")}
+              {selectedSubcategoryLabel ||
+                selectedCategoryGroupLabel ||
+                (locale === "pt" ? "Loja" : locale === "zh" ? "商店" : "Shop")}
             </h1>
             <p className="mt-2 text-sm text-muted">
               {loadingProducts ? (
