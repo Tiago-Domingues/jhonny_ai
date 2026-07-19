@@ -3,7 +3,8 @@
 **Audience:** owner + shop/ops + technical team  
 **Last updated:** 19 July 2026  
 **Live sites:** [jhonnysurfstore.com](https://www.jhonnysurfstore.com) · [jhonnysurfstore.pt](https://www.jhonnysurfstore.pt)  
-**HTML version:** [website-launch-status.html](./website-launch-status.html)
+**HTML version:** [website-launch-status.html](./website-launch-status.html)  
+**PDF version:** [website-launch-status.pdf](./website-launch-status.pdf)
 
 ---
 
