@@ -423,7 +423,10 @@ export const translations: Record<Locale, Dict> = {
         { title: "Aconselhamento especializado", desc: "Ajudamos-te a escolher a prancha e o fato certos para o teu nível e ondas." },
         { title: "Reparação de pranchas e fatos", desc: "Damos nova vida ao teu equipamento com reparações de confiança." },
         { title: "Recompra de pranchas", desc: "Vais-te embora de Portugal? Compramos a tua prancha de volta." },
-        { title: "Aluguer", desc: "Aluguer de equipamento para apanhares ondas sem complicações." },
+        {
+          title: "Dicas de wave pools",
+          desc: "Conselhos do Jhonny sobre wave pools lendários pelo mundo — onde ir e como aproveitar cada sessão.",
+        },
         { title: "Viagens de surf", desc: "Dicas e apoio para a tua próxima aventura sobre as ondas." },
         { title: "Vantagens Erasmus", desc: "Descontos e packs de boas-vindas para a comunidade estudante." },
       ],
@@ -432,10 +435,10 @@ export const translations: Record<Locale, Dict> = {
       buyback: "Vender a minha prancha",
       buybackMsg: "Olá Jhonny! Quero vender a minha prancha. Envio já fotos e contactos.",
       wavePool: {
-        title: "Viagens a wave pools",
-        desc: "Viagens da comunidade a wave pools lendários pelo mundo — junta-te ao crew e apanha ondas perfeitas em qualquer altura.",
-        ask: "Quero ir a um wave pool",
-        askMsg: "Olá Jhonny! Quero saber das próximas viagens da comunidade a wave pools.",
+        title: "Dicas de wave pools",
+        desc: "Conselhos do Jhonny sobre wave pools lendários pelo mundo — onde ir e como aproveitar cada sessão.",
+        ask: "Pedir dicas ao Jhonny",
+        askMsg: "Olá Jhonny! Quero dicas sobre wave pools — onde ir e o que levar.",
       },
     },
     brands: { title: "Marcas que trabalhamos" },
@@ -449,7 +452,7 @@ export const translations: Record<Locale, Dict> = {
       eyebrow: "Próxima geração",
       title: "Local Hero Groom",
       subtitle:
-        "Jovens talentos locais em crescimento com a Jhonny Surf Store — placeholders até confirmarmos o roster oficial.",
+        "Jovens talentos locais em crescimento com a Jhonny Surf Store.",
     },
     dudes: {
       eyebrow: "Dentro da loja",
@@ -634,7 +637,10 @@ export const translations: Record<Locale, Dict> = {
         { title: "Expert advice", desc: "We help you choose the right board and wetsuit for your level and waves." },
         { title: "Board & wetsuit repairs", desc: "We give your gear a new life with repairs you can trust." },
         { title: "Board buy-back", desc: "Leaving Portugal? We'll buy your board back from you." },
-        { title: "Rentals", desc: "Equipment rental so you can catch waves hassle-free." },
+        {
+          title: "Wave pool tips",
+          desc: "Jhonny's advice on legendary wave pools around the world — where to go and how to make the most of every session.",
+        },
         { title: "Surf travel", desc: "Tips and support for your next adventure on the waves." },
         { title: "Erasmus perks", desc: "Discounts and welcome packs for the student community." },
       ],
@@ -643,10 +649,10 @@ export const translations: Record<Locale, Dict> = {
       buyback: "Sell my board",
       buybackMsg: "Hi Jhonny! I'd like to sell my board. I'll send photos and contacts now.",
       wavePool: {
-        title: "Wave pool trips",
-        desc: "Community trips to legendary wave pools around the world — join the crew and score perfect waves on tap.",
-        ask: "Ask about trips",
-        askMsg: "Hi Jhonny! I'd like to know about upcoming community wave pool trips.",
+        title: "Wave pool tips",
+        desc: "Jhonny's advice on legendary wave pools around the world — where to go and how to make the most of every session.",
+        ask: "Ask Jhonny for tips",
+        askMsg: "Hi Jhonny! I'd like tips on wave pools — where to go and what to bring.",
       },
     },
     brands: { title: "Brands we carry" },
@@ -660,7 +666,7 @@ export const translations: Record<Locale, Dict> = {
       eyebrow: "Next generation",
       title: "Local Hero Groom",
       subtitle:
-        "Local young talent growing with Jhonny Surf Store — placeholder profiles until the official roster is confirmed.",
+        "Local young talent growing with Jhonny Surf Store.",
     },
     dudes: {
       eyebrow: "Inside the store",
@@ -853,7 +859,10 @@ export const translations: Record<Locale, Dict> = {
         { title: "专业建议", desc: "根据你的水平与浪况，帮你选择合适的冲浪板和潜水衣。" },
         { title: "冲浪板与潜水衣维修", desc: "可信赖的维修服务，让装备重获新生。" },
         { title: "冲浪板回购", desc: "要离开葡萄牙？我们可以回购你的冲浪板。" },
-        { title: "租赁", desc: "装备租赁，让你轻松下水追浪。" },
+        {
+          title: "造浪池建议",
+          desc: "Jhonny 分享世界各地知名造浪池的建议——去哪儿冲、怎样把每一场浪冲到最好。",
+        },
         { title: "冲浪旅行", desc: "为你的下一次海上冒险提供建议与支持。" },
         { title: "Erasmus 优惠", desc: "面向学生社区的折扣与欢迎礼包。" },
       ],
@@ -862,10 +871,10 @@ export const translations: Record<Locale, Dict> = {
       buyback: "出售我的冲浪板",
       buybackMsg: "你好 Jhonny！我想出售冲浪板，稍后发送照片和联系方式。",
       wavePool: {
-        title: "造浪池旅行",
-        desc: "社区结伴前往世界各地知名造浪池——加入队伍，随时冲上完美浪。",
-        ask: "咨询造浪池行程",
-        askMsg: "你好 Jhonny！想了解社区即将出发的造浪池旅行。",
+        title: "造浪池建议",
+        desc: "Jhonny 分享世界各地知名造浪池的建议——去哪儿冲、怎样把每一场浪冲到最好。",
+        ask: "向 Jhonny 要建议",
+        askMsg: "你好 Jhonny！想听听造浪池建议——去哪儿、带什么。",
       },
     },
     brands: { title: "我们经营的品牌" },
@@ -877,7 +886,7 @@ export const translations: Record<Locale, Dict> = {
     localHeroGroom: {
       eyebrow: "下一代",
       title: "Local Hero Groom",
-      subtitle: "与 Jhonny Surf Store 一起成长的本地年轻冲浪人才——名单确认前为占位展示。",
+      subtitle: "与 Jhonny Surf Store 一起成长的本地年轻冲浪人才。",
     },
     dudes: {
       eyebrow: "店内",

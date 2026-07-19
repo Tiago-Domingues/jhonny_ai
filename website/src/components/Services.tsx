@@ -9,7 +9,6 @@ import {
   AdviceIcon,
   RepairIcon,
   BuybackIcon,
-  RentalIcon,
   TravelIcon,
   StudentIcon,
   WaveIcon,
@@ -22,7 +21,7 @@ const icons = [
   AdviceIcon,
   RepairIcon,
   BuybackIcon,
-  RentalIcon,
+  WaveIcon,
   TravelIcon,
   StudentIcon,
 ];
@@ -51,7 +50,7 @@ const surfSchoolLinks: Link[] = [
   { label: "@triple_tide", href: "https://www.instagram.com/triple_tide/", logo: "/brand/partners/instagram/triple-tide.jpg" },
 ];
 
-/** Legendary wave pools the community trips to around the world */
+/** Legendary wave pools Jhonny tips the community about */
 const wavePoolLinks: Link[] = [
   { label: "@kswaveco", href: "https://www.instagram.com/kswaveco/" },
   { label: "@urbnsurf", href: "https://www.instagram.com/urbnsurf/" },
@@ -169,7 +168,10 @@ export function Services() {
       },
     ],
     [{ label: t.services.buyback, href: wa(t.services.buybackMsg), wa: true }],
-    [],
+    [
+      ...wavePoolLinks,
+      { label: t.services.wavePool.ask, href: wa(t.services.wavePool.askMsg), wa: true },
+    ],
     [
       {
         label: "@underdogz",
@@ -195,16 +197,6 @@ export function Services() {
       Icon: icons[i] ?? AdviceIcon,
       actions: links[i] ?? [],
     })),
-    {
-      title: t.services.wavePool.title,
-      desc: t.services.wavePool.desc,
-      Icon: WaveIcon,
-      actions: [
-        ...wavePoolLinks,
-        { label: t.services.wavePool.ask, href: wa(t.services.wavePool.askMsg), wa: true },
-      ],
-      wide: true,
-    },
     {
       title: "Surf schools",
       desc: "Trusted school partners around Carcavelos and Lisbon that help new surfers get safely into the water.",

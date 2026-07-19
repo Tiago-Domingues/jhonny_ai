@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/components/LanguageProvider";
-import { ATHLETES, type Athlete } from "@/lib/athletes";
+import { LOCAL_HERO_GROOMS, type Athlete } from "@/lib/athletes";
 import { InstagramIcon } from "@/components/icons";
 
 function GroomCard({ a }: { a: Athlete }) {
@@ -40,9 +40,8 @@ function GroomCard({ a }: { a: Athlete }) {
         <p className="font-display text-xl font-extrabold uppercase leading-tight tracking-wide text-white drop-shadow">
           {a.name}
         </p>
-        <p className="mt-1 text-sm text-white/80">{a.bio}</p>
         <p className="mt-2 inline-flex rounded-full bg-white/20 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white">
-          Local Hero Groom
+          10% code: {a.couponCode}
         </p>
         <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-white/60 transition group-hover:text-white">
           @{a.handle}
@@ -55,7 +54,7 @@ function GroomCard({ a }: { a: Athlete }) {
 
 export function LocalHeroGroom() {
   const { t } = useLanguage();
-  const loop = [...ATHLETES, ...ATHLETES];
+  const loop = [...LOCAL_HERO_GROOMS, ...LOCAL_HERO_GROOMS];
 
   return (
     <section
