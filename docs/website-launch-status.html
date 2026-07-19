@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jhonny Surf Store — Website Launch Status</title>
+  <style>
+    :root {
+      --ink: #121417;
+      --muted: #5a6169;
+      --line: #d8dde3;
+      --paper: #f7f5f1;
+      --card: #ffffff;
+      --accent: #0b3d4a;
+      --warn: #8a2b12;
+      --ok: #1f5c3a;
+      --soft: #e8eef0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 10% 0%, #e4ecee 0%, transparent 45%),
+        linear-gradient(180deg, var(--paper) 0%, #efece6 100%);
+      font-family: "Source Sans 3", "Segoe UI", "Helvetica Neue", sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    header.doc-header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 3px solid var(--accent);
+    }
+
+    .brand {
+      font-family: "Fraunces", Georgia, "Times New Roman", serif;
+      font-size: clamp(1.75rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+      margin: 0 0 0.35rem;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    .meta {
+      margin-top: 1rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .meta a { color: var(--accent); }
+
+    .verdict {
+      background: #fff4ef;
+      border-left: 5px solid var(--warn);
+      padding: 1rem 1.15rem;
+      margin: 1.25rem 0 2rem;
+    }
+
+    .verdict strong { color: var(--warn); }
+
+    h2 {
+      font-family: "Fraunces", Georgia, "Times New Roman", serif;
+      font-size: 1.45rem;
+      margin: 2.25rem 0 0.75rem;
+      color: var(--accent);
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--ink);
+    }
+
+    p { margin: 0.65rem 0; }
+
+    ul, ol { padding-left: 1.25rem; }
+
+    li { margin: 0.35rem 0; }
+
+    a { color: var(--accent); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.85rem 0 1.25rem;
+      background: var(--card);
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 0.55rem 0.7rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--soft);
+      font-weight: 700;
+    }
+
+    .status-bad { color: var(--warn); font-weight: 700; }
+    .status-ok { color: var(--ok); font-weight: 600; }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .checklist li {
+      padding: 0.4rem 0 0.4rem 1.75rem;
+      position: relative;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .checklist li::before {
+      content: "☐";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    .sequence {
+      background: var(--card);
+      border: 1px solid var(--line);
+      padding: 1rem 1.15rem 1rem 2rem;
+      margin: 1rem 0;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin: 1rem 0 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    .flow span {
+      background: var(--soft);
+      border: 1px solid var(--line);
+      padding: 0.35rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .flow .arrow { background: transparent; border: 0; color: var(--muted); padding: 0; }
+
+    code {
+      font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--soft);
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+    }
+
+    footer {
+      margin-top: 2.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .wrap { max-width: none; padding: 0; }
+      a { color: inherit; text-decoration: none; }
+      .verdict { break-inside: avoid; }
+      table { break-inside: avoid; }
+    }
+
+    @media (max-width: 640px) {
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+      tr {
+        border: 1px solid var(--line);
+        margin-bottom: 0.75rem;
+        background: var(--card);
+      }
+      td {
+        border: 0;
+        border-top: 1px solid var(--line);
+        padding: 0.45rem 0.7rem;
+      }
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-bottom: 0.15rem;
+      }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="wrap">
+    <header class="doc-header">
+      <p class="brand">Jhonny Surf Store</p>
+      <p class="subtitle">Website Launch Status</p>
+      <div class="meta">
+        <div><strong>Audience:</strong> owner + shop/ops + technical team</div>
+        <div><strong>Last updated:</strong> 19 July 2026</div>
+        <div>
+          <strong>Live sites:</strong>
+          <a href="https://www.jhonnysurfstore.com">jhonnysurfstore.com</a>
+          ·
+          <a href="https://www.jhonnysurfstore.pt">jhonnysurfstore.pt</a>
+        </div>
+        <div><strong>Markdown source:</strong> <code>docs/website-launch-status.md</code></div>
+      </div>
+    </header>
+
+    <section>
+      <h2>1. Purpose</h2>
+      <p>
+        This document states whether the website is ready for <strong>public online purchases</strong>,
+        what already works, and the <strong>ordered backlog</strong> to go live on both domains with full payment support.
+      </p>
+    </section>
+
+    <section>
+      <h2>2. Executive verdict</h2>
+      <div class="verdict">
+        <strong>Not ready for public purchases yet.</strong>
+        <p style="margin-bottom:0">
+          The marketing site, product catalog, and shopping foundations are largely in place.
+          What still blocks selling online is <strong>real payment processing</strong>,
+          <strong>post-checkout payment instructions</strong>, <strong>stock/coupon correctness</strong>,
+          <strong>order emails</strong>, and <strong>opening the .pt domain</strong>.
+        </p>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Area</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready</td></tr>
+          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status" class="status-ok">Ready (synced)</td></tr>
+          <tr><td data-label="Area">Browse shop, filters, product pages</td><td data-label="Status" class="status-ok">Ready for browsing</td></tr>
+          <tr><td data-label="Area">Cart + guest/account checkout skeleton</td><td data-label="Status">Built, not production-safe</td></tr>
+          <tr><td data-label="Area">Payments (MB WAY, Multibanco, PayPal, Klarna)</td><td data-label="Status" class="status-bad">Not ready</td></tr>
+          <tr><td data-label="Area">Order email + ops admin</td><td data-label="Status" class="status-bad">Not ready</td></tr>
+          <tr><td data-label="Area">Public go-live (.com + .pt)</td><td data-label="Status" class="status-bad">Blocked</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>3. What works today</h2>
+      <ul>
+        <li>Homepage and store story (New In, categories, services, Local Heroes, visit/contact).</li>
+        <li>Shop at <code>/loja</code> with catalog from Odoo/Postgres; product detail pages and ratings.</li>
+        <li>Guest and registered carts; add-to-cart with stock checks at add/checkout time.</li>
+        <li>Account register / login / session.</li>
+        <li>Coupon validation plumbing (including welcome / athlete codes when seeded in DB).</li>
+        <li>Pickup vs ship-to-address pricing logic on the server.</li>
+        <li>Legal pages in Portuguese and English.</li>
+        <li><strong>.com</strong> is publicly browsable (home, shop, checkout pages load).</li>
+        <li><strong>Odoo</strong> is connected in production (catalog sync / auth OK as of last scan).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Target launch decisions</h2>
+      <p>These are the agreed end-state for go-live:</p>
+      <table>
+        <thead>
+          <tr><th>Decision</th><th>Choice</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Decision">Domains</td>
+            <td data-label="Choice">Open <strong>.com and .pt together</strong> (remove .pt coming-soon gate)</td>
+          </tr>
+          <tr>
+            <td data-label="Decision">Day-1 payments</td>
+            <td data-label="Choice"><strong>MB WAY + Multibanco + PayPal + Klarna</strong></td>
+          </tr>
+          <tr>
+            <td data-label="Decision">Free shipping</td>
+            <td data-label="Choice"><strong>€100</strong> everywhere (banner, checkout, legal)</td>
+          </tr>
+          <tr>
+            <td data-label="Decision">Languages at launch</td>
+            <td data-label="Choice">Site already supports PT / EN / ZH for most UX; legal ZH can follow later</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>5. Current gaps (snapshot)</h2>
+      <p>From production integration status and code review:</p>
+      <table>
+        <thead>
+          <tr><th>Integration</th><th>Production status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Integration">Odoo</td><td data-label="Status" class="status-ok">Configured and authenticated</td></tr>
+          <tr><td data-label="Integration">Email (Resend)</td><td data-label="Status" class="status-bad">Not configured — order emails skipped</td></tr>
+          <tr><td data-label="Integration">Ifthenpay MB WAY</td><td data-label="Status" class="status-bad">Not configured — would fall back to mocks</td></tr>
+          <tr><td data-label="Integration">Ifthenpay Multibanco</td><td data-label="Status" class="status-bad">Not configured — would fall back to mocks</td></tr>
+          <tr><td data-label="Integration">Ifthenpay callback secret</td><td data-label="Status" class="status-bad">Not configured</td></tr>
+          <tr><td data-label="Integration">PayPal</td><td data-label="Status" class="status-bad">Placeholder only</td></tr>
+          <tr><td data-label="Integration">Klarna</td><td data-label="Status" class="status-bad">Placeholder only</td></tr>
+        </tbody>
+      </table>
+
+      <p>Other important mismatches / risks:</p>
+      <ul>
+        <li>Banner already says free shipping over <strong>€100</strong>; checkout + legal still use <strong>€50</strong>.</li>
+        <li>After checkout, customers do <strong>not</strong> see Multibanco entity/reference or MB WAY next steps.</li>
+        <li>Stock is checked but <strong>not reserved/decremented</strong> → oversell risk.</li>
+        <li>Coupons can be consumed when the order is created, even if payment never completes.</li>
+        <li>Ship-to-address fields are not strictly required in the UI.</li>
+        <li><code>.pt</code> still rewrites to the coming-soon page.</li>
+        <li>If catalog/DB fails, mock demo products must not become sellable.</li>
+        <li>No simple admin screen to process orders; no customer “My orders” history.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>6. Priority backlog</h2>
+      <p class="note">
+        Effort below is <strong>rough technical sizing</strong> for planning (not a calendar commitment).
+        S ≈ hours · M ≈ 1–2 days · L ≈ several days.
+      </p>
+
+      <h3>P0 — Must ship before public purchases</h3>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Item</th><th>Why it matters</th><th>Effort</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="#">P0.1</td>
+            <td data-label="Item">Configure <strong>Ifthenpay</strong> (MB WAY + Multibanco keys + callback URL + secret) and <strong>fail closed</strong> in production (no mock refs)</td>
+            <td data-label="Why">Without this, “paid” orders are fake</td>
+            <td data-label="Effort">S–M (config + code guard)</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.2</td>
+            <td data-label="Item">Implement and connect <strong>PayPal</strong> for real capture/redirect</td>
+            <td data-label="Why">Required for day-1 payment set</td>
+            <td data-label="Effort">L</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.3</td>
+            <td data-label="Item">Implement and connect <strong>Klarna</strong> for real checkout</td>
+            <td data-label="Why">Required for day-1 payment set</td>
+            <td data-label="Effort">L</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.4</td>
+            <td data-label="Item">Harden payment <strong>callback</strong> (secret required, amount/status checks)</td>
+            <td data-label="Why">Prevents false “paid” states</td>
+            <td data-label="Effort">S–M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.5</td>
+            <td data-label="Item">Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps</td>
+            <td data-label="Why">Customer must know how to pay</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.6</td>
+            <td data-label="Item">Configure <strong>transactional email</strong> (Resend or SMTP) and send order + payment instructions</td>
+            <td data-label="Why">No email = broken ops and trust</td>
+            <td data-label="Effort">S (config) + S–M (content)</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.7</td>
+            <td data-label="Item"><strong>Reserve/decrement stock</strong> on order (release on cancel/expiry)</td>
+            <td data-label="Why">Stops overselling</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.8</td>
+            <td data-label="Item">Apply <strong>coupon usage only after payment</strong> (or roll back if unpaid)</td>
+            <td data-label="Why">Stops burned coupons</td>
+            <td data-label="Effort">S–M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.9</td>
+            <td data-label="Item">Require full <strong>shipping address</strong> when ship-to-home is selected</td>
+            <td data-label="Why">Avoid undeliverable orders</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.10</td>
+            <td data-label="Item">Align <strong>€100 free shipping</strong> in checkout logic + legal pages</td>
+            <td data-label="Why">Matches banner and launch decision</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.11</td>
+            <td data-label="Item">Show <strong>shipping cost in checkout total</strong> UI</td>
+            <td data-label="Why">Total currently can understate amount due</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.12</td>
+            <td data-label="Item">Remove <strong>.pt coming-soon</strong> gate when ready to open both domains</td>
+            <td data-label="Why">Needed for joint .com/.pt launch</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.13</td>
+            <td data-label="Item">Block <strong>mock catalog</strong> from selling in production</td>
+            <td data-label="Why">Avoid selling demo products</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.14</td>
+            <td data-label="Item">Confirm production secrets (session, DB, Odoo, payments, email) on Vercel</td>
+            <td data-label="Why">Security and reliability</td>
+            <td data-label="Effort">S</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>P0 rough total:</strong> about <strong>2–4 weeks</strong> of focused build + provider setup,
+        dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1.
+      </p>
+
+      <h3>P1 — Launch ops and trust</h3>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Item</th><th>Why it matters</th><th>Effort</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="#">P1.1</td>
+            <td data-label="Item">Minimal <strong>admin orders</strong> view (list, status, pickup/ship)</td>
+            <td data-label="Why">Staff cannot run the store blind</td>
+            <td data-label="Effort">M–L</td>
+          </tr>
+          <tr>
+            <td data-label="#">P1.2</td>
+            <td data-label="Item">Customer <strong>My orders</strong> in account</td>
+            <td data-label="Why">Expected after purchase</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P1.3</td>
+            <td data-label="Item">Password reset / email verification</td>
+            <td data-label="Why">Account safety for public traffic</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P1.4</td>
+            <td data-label="Item">Enforce <strong>JHONNY10</strong> rules (registered + first purchase)</td>
+            <td data-label="Why">Matches welcome offer promise</td>
+            <td data-label="Effort">S–M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P1.5</td>
+            <td data-label="Item">Update <strong>FAQ</strong> / trust copy that still implies the store is “not ready”</td>
+            <td data-label="Why">Avoid conflicting messages at launch</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P1.6</td>
+            <td data-label="Item">Smoke-test suite or scripted checklist for cart → pay → callback → paid</td>
+            <td data-label="Why">Catch regressions before opening traffic</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P1.7</td>
+            <td data-label="Item">End-to-end test orders on each payment method (sandbox then live)</td>
+            <td data-label="Why">Go-live gate</td>
+            <td data-label="Effort">M (ops time)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>P2 — Soon after go-live</h3>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Item</th><th>Effort</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="#">P2.1</td><td data-label="Item">Localize shop / PDP / checkout strings still hardcoded in Portuguese</td><td data-label="Effort">M</td></tr>
+          <tr><td data-label="#">P2.2</td><td data-label="Item">Real cart drawer (lines, qty, remove) instead of count-only header cart</td><td data-label="Effort">M</td></tr>
+          <tr><td data-label="#">P2.3</td><td data-label="Item">Hide empty Odoo categories (e.g. women wetsuits with 0 products) or fill in Odoo</td><td data-label="Effort">S–M</td></tr>
+          <tr><td data-label="#">P2.4</td><td data-label="Item">Product image gallery (beyond single thumbnail)</td><td data-label="Effort">M</td></tr>
+          <tr><td data-label="#">P2.5</td><td data-label="Item">Clear rules for bulky board shipping vs standard € shipping</td><td data-label="Effort">S–M (policy + code)</td></tr>
+          <tr><td data-label="#">P2.6</td><td data-label="Item">Variant UX if size/color are separate Odoo products</td><td data-label="Effort">M–L</td></tr>
+        </tbody>
+      </table>
+
+      <h3>P3 — Later / growth</h3>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Item</th><th>Effort</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="#">P3.1</td><td data-label="Item">Chinese (ZH) legal pages</td><td data-label="Effort">M</td></tr>
+          <tr><td data-label="#">P3.2</td><td data-label="Item">SEO: sitemap, robots, product OG/JSON-LD</td><td data-label="Effort">S–M</td></tr>
+          <tr><td data-label="#">P3.3</td><td data-label="Item">Analytics (consent flag exists; wire GA/GTM or equivalent)</td><td data-label="Effort">S–M</td></tr>
+          <tr><td data-label="#">P3.4</td><td data-label="Item">Ratings on product cards (already on PDP)</td><td data-label="Effort">S</td></tr>
+          <tr><td data-label="#">P3.5</td><td data-label="Item">Abandoned-cart emails</td><td data-label="Effort">M</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>7. Suggested go-live sequence</h2>
+      <ol class="sequence">
+        <li><strong>Configure production:</strong> Ifthenpay, email, Odoo, secrets — fail closed if payments/email missing.</li>
+        <li><strong>Ship PT payment path:</strong> MB WAY + Multibanco end-to-end (UI + email + callback).</li>
+        <li><strong>Ship international payments:</strong> PayPal, then Klarna (or in parallel if two people).</li>
+        <li><strong>Harden commerce rules:</strong> stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.</li>
+        <li><strong>Ops minimum:</strong> admin order list + FAQ/trust copy update.</li>
+        <li><strong>Open domains:</strong> remove <code>.pt</code> coming-soon; keep <code>.com</code> live.</li>
+        <li><strong>Gate:</strong> complete one successful live (or final sandbox) order per payment method; then announce.</li>
+      </ol>
+
+      <div class="flow" aria-label="Go-live flow">
+        <span>Config / secrets / providers</span>
+        <span class="arrow">→</span>
+        <span>MB WAY + Multibanco</span>
+        <span class="arrow">→</span>
+        <span>PayPal + Klarna</span>
+        <span class="arrow">→</span>
+        <span>Stock / coupons / shipping</span>
+        <span class="arrow">→</span>
+        <span>Admin + emails</span>
+        <span class="arrow">→</span>
+        <span>Open .com + .pt</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>8. Definition of “live for purchases”</h2>
+      <p>All of the following must be true:</p>
+      <ul class="checklist">
+        <li>Customers can pay with <strong>MB WAY, Multibanco, PayPal, and Klarna</strong> for real (no mocks/placeholders).</li>
+        <li>After checkout they receive clear <strong>payment instructions</strong> (page + email).</li>
+        <li>Paid orders update correctly via <strong>secure callback</strong>.</li>
+        <li>Stock cannot oversell; coupons only stick on paid orders.</li>
+        <li>Free shipping threshold is <strong>€100</strong> in banner, checkout, and legal text.</li>
+        <li>Order emails send reliably.</li>
+        <li>Staff can see and update orders.</li>
+        <li><strong>jhonnysurfstore.com</strong> and <strong>jhonnysurfstore.pt</strong> both serve the full shop (no coming-soon gate).</li>
+      </ul>
+      <p>
+        Until that checklist is green, treat the site as <strong>marketing + catalog preview</strong>, not an open webshop.
+      </p>
+    </section>
+
+    <section>
+      <h2>9. Key technical references</h2>
+      <table>
+        <thead>
+          <tr><th>Topic</th><th>Location</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Topic">.pt coming-soon gate</td><td data-label="Location"><code>website/src/proxy.ts</code></td></tr>
+          <tr><td data-label="Topic">Checkout / shipping threshold</td><td data-label="Location"><code>website/src/lib/ecommerce/checkout.ts</code></td></tr>
+          <tr><td data-label="Topic">Payments / mocks / placeholders</td><td data-label="Location"><code>website/src/lib/ecommerce/payments.ts</code></td></tr>
+          <tr><td data-label="Topic">Checkout UI</td><td data-label="Location"><code>website/src/components/CheckoutClient.tsx</code></td></tr>
+          <tr><td data-label="Topic">Dispatch free-shipping copy</td><td data-label="Location"><code>website/src/components/DispatchBanner.tsx</code></td></tr>
+          <tr><td data-label="Topic">Integrations status API</td><td data-label="Location"><code>/api/integrations/status</code></td></tr>
+          <tr><td data-label="Topic">Legal shipping copy</td><td data-label="Location"><code>website/src/app/pagamentos-e-envios/page.tsx</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      This document is the working backlog for launch. Update status checkboxes and dates as P0 items close.
+      Pair with <code>docs/website-launch-status.md</code> for the Markdown source of truth.
+    </footer>
+  </div>
+</body>
+</html>
