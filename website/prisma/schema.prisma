@@ -234,6 +234,7 @@ model Product {
   opportunityOriginalPriceCents Int?
   opportunityDiscountPercent Int?
   opportunitySource     String?
+  isNewIn               Boolean    @default(false)
   odooProductId         Int?       @unique
   odooProductTemplateId Int?
   odooSyncStatus        SyncStatus @default(NOT_SYNCED)
@@ -256,6 +257,7 @@ model Product {
   @@index([odooProductTemplateId])
   @@index([odooSyncStatus])
   @@index([isOpportunity])
+  @@index([isNewIn])
 }
 
 model ProductRating {

@@ -97,6 +97,7 @@ type SyncedOdooProduct = {
   excludedFromCatalog: boolean;
   exclusionReason: string | null;
   isOpportunity: boolean;
+  isNewIn: boolean;
   opportunityOriginalPriceCents: number | null;
   opportunityDiscountPercent: number | null;
   opportunitySource: string | null;
@@ -209,6 +210,13 @@ function findAttribute(
   return null;
 }
 
+function normalizeAttributeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 function hasOpportunityAttribute(
   ids: number[],
   attributeMap: Map<number, { attribute: string; value: string }>
@@ -216,8 +224,27 @@ function hasOpportunityAttribute(
   return ids.some((id) => {
     const item = attributeMap.get(id);
     if (!item) return false;
-    const combined = `${item.attribute} ${item.value}`.toLowerCase();
+    const combined = normalizeAttributeText(`${item.attribute} ${item.value}`);
     return combined.includes("oportunidade");
+  });
+}
+
+/** Match Odoo attribute/value tags like "New In", "Newin", "New Arrival", "Novidade(s)". */
+function hasNewInAttribute(
+  ids: number[],
+  attributeMap: Map<number, { attribute: string; value: string }>
+) {
+  return ids.some((id) => {
+    const item = attributeMap.get(id);
+    if (!item) return false;
+    const combined = normalizeAttributeText(`${item.attribute} ${item.value}`);
+    return (
+      combined.includes("new in") ||
+      combined.includes("newin") ||
+      combined.includes("new arrival") ||
+      combined.includes("newarrival") ||
+      combined.includes("novidade")
+    );
   });
 }
 
@@ -325,6 +352,7 @@ export async function fetchOdooProducts(limit = 2000) {
     const enrichment = buildSurfboardEnrichment({ name, category, brand: brandLabel });
     const odooListPriceCents = cents(product.list_price);
     const opportunity = hasOpportunityAttribute(attributeValueIds, attributes);
+    const newIn = hasNewInAttribute(attributeValueIds, attributes);
     const opportunityPercent = parseDiscountPercent(opportunityAttributeValue(attributeValueIds, attributes));
     const originalPrice = numberField(product, originalPriceFields);
     const discountPercent = numberField(product, discountPercentFields);
@@ -380,6 +408,7 @@ export async function fetchOdooProducts(limit = 2000) {
       excludedFromCatalog,
       exclusionReason: excludedFromCatalog ? "Food/beverage product excluded from website catalog." : null,
       isOpportunity: opportunity,
+      isNewIn: newIn,
       opportunityOriginalPriceCents: displayOriginalPriceCents,
       opportunityDiscountPercent: calculatedDiscountPercent && calculatedDiscountPercent > 0 ? calculatedDiscountPercent : null,
       opportunitySource: opportunity

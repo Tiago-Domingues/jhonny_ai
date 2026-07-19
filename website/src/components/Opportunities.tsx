@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CurrencyPrice } from "@/components/CurrencyDisplay";
+import { ProductCardsRail } from "@/components/ProductCardsRail";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { listOpportunityProducts, type StoreProduct } from "@/lib/ecommerce/catalog";
 
@@ -12,7 +13,8 @@ function OpportunityCard({ product }: { product: StoreProduct }) {
   return (
     <Link
       href={`/loja/${product.slug}`}
-      className="group mx-2 flex w-72 shrink-0 flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:mx-3 sm:w-80"
+      data-rail-card
+      className="group mx-2 flex w-72 shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:mx-3 sm:w-80"
     >
       <div className="relative h-44 bg-cream p-4 sm:h-52">
         <Image
@@ -60,7 +62,6 @@ function OpportunityCard({ product }: { product: StoreProduct }) {
 
 export async function Opportunities() {
   const products = await listOpportunityProducts(16);
-  const loop = [...products, ...products];
 
   return (
     <section className="overflow-hidden bg-paper py-16 sm:py-20">
@@ -84,15 +85,11 @@ export async function Opportunities() {
       </div>
 
       {products.length ? (
-        <div className="group relative mt-10 flex overflow-hidden">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-paper to-transparent sm:w-24" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-paper to-transparent sm:w-24" />
-          <div className="flex w-max animate-[marquee_45s_linear_infinite] items-stretch group-hover:[animation-play-state:paused]">
-            {loop.map((product, index) => (
-              <OpportunityCard key={`${product.id}-${index}`} product={product} />
-            ))}
-          </div>
-        </div>
+        <ProductCardsRail label="Opportunity products">
+          {products.map((product) => (
+            <OpportunityCard key={product.id} product={product} />
+          ))}
+        </ProductCardsRail>
       ) : (
         <div className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
           <div className="rounded-3xl border border-dashed border-line bg-white p-6 text-sm text-muted sm:p-8">

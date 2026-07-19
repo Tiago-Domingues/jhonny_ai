@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CurrencyPrice } from "@/components/CurrencyDisplay";
 import { NewArrivalsHeader } from "@/components/NewArrivalsHeader";
+import { ProductCardsRail } from "@/components/ProductCardsRail";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { listNewArrivalProducts, type StoreProduct } from "@/lib/ecommerce/catalog";
 
@@ -9,7 +10,8 @@ function NewArrivalCard({ product }: { product: StoreProduct }) {
   return (
     <Link
       href={`/loja/${product.slug}`}
-      className="group mx-2 flex w-72 shrink-0 flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:mx-3 sm:w-80"
+      data-rail-card
+      className="group mx-2 flex w-72 shrink-0 snap-start flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:mx-3 sm:w-80"
     >
       <div className="relative h-44 bg-cream p-4 sm:h-52">
         <Image
@@ -48,7 +50,6 @@ function NewArrivalCard({ product }: { product: StoreProduct }) {
 
 export async function NewArrivals() {
   const products = await listNewArrivalProducts(16);
-  const loop = [...products, ...products];
 
   return (
     <section className="overflow-hidden bg-paper py-16 sm:py-20">
@@ -57,22 +58,18 @@ export async function NewArrivals() {
       </div>
 
       {products.length ? (
-        <div className="group relative mt-10 flex overflow-hidden">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-paper to-transparent sm:w-24" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-paper to-transparent sm:w-24" />
-          <div className="flex w-max animate-[marquee_45s_linear_infinite] items-stretch group-hover:[animation-play-state:paused]">
-            {loop.map((product, index) => (
-              <NewArrivalCard key={`new-${product.id}-${index}`} product={product} />
-            ))}
-          </div>
-        </div>
+        <ProductCardsRail label="New In products">
+          {products.map((product) => (
+            <NewArrivalCard key={`new-${product.id}`} product={product} />
+          ))}
+        </ProductCardsRail>
       ) : (
         <div className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
           <div className="rounded-3xl border border-dashed border-line bg-white p-6 text-sm text-muted sm:p-8">
             <p className="font-bold uppercase tracking-wide text-ink">New picks landing soon</p>
             <p className="mt-2 max-w-2xl">
-              Jhonny is lining up the next drop. Swing by the shop or check back shortly for the
-              latest gear he wants you on.
+              Tag products with the Odoo <code className="text-ink">New In</code> attribute and sync
+              the catalog — they will show up here automatically.
             </p>
           </div>
         </div>
