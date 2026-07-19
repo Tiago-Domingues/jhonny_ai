@@ -31,6 +31,7 @@ function toCompactListProduct(product: StoreProduct) {
     ...(lean.stockState ? { stockState: lean.stockState } : {}),
     ...(lean.saleable != null ? { saleable: lean.saleable } : {}),
     ...(lean.isOpportunity ? { isOpportunity: true } : {}),
+    ...(lean.isNewIn ? { isNewIn: true } : {}),
     ...(lean.opportunityOriginalPriceCents != null
       ? { opportunityOriginalPriceCents: lean.opportunityOriginalPriceCents }
       : {}),
