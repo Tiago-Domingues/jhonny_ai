@@ -13,11 +13,11 @@ const athletes = [
   "Mário Henrique",
   "António Dantas",
   "João Dantas",
-  "Francisco Xixo",
-  "Xico Mittermayer",
-  "Tomás Bettencourt",
-  "Gagau Pereira",
-  "Andres Melendez",
+  { name: 'Francisco "Xixo"', code: "FRANCISCOXIXO" },
+  { name: "Xico Mittermayer" },
+  { name: "Tomás Maio", code: "TOMASBETTENCOURT" },
+  { name: "Gagau Pereira" },
+  { name: "Andres Melendez" },
 ];
 
 function codeFromName(name) {
@@ -29,8 +29,9 @@ function codeFromName(name) {
 }
 
 async function main() {
-  for (const name of athletes) {
-    const code = codeFromName(name);
+  for (const athlete of athletes) {
+    const name = typeof athlete === "string" ? athlete : athlete.name;
+    const code = typeof athlete === "string" ? codeFromName(athlete) : athlete.code || codeFromName(athlete.name);
     await prisma.coupon.upsert({
       where: { code },
       update: {

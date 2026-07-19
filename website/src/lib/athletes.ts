@@ -16,11 +16,14 @@ export function athleteCouponCode(name: string) {
     .toUpperCase();
 }
 
-function athlete(input: Omit<Athlete, "couponCode" | "instagramAvatarUrl">): Athlete {
+function athlete(
+  input: Omit<Athlete, "couponCode" | "instagramAvatarUrl"> & { couponCode?: string }
+): Athlete {
+  const { couponCode, ...rest } = input;
   return {
-    ...input,
+    ...rest,
     instagramAvatarUrl: `/api/instagram/${encodeURIComponent(input.handle)}/avatar`,
-    couponCode: athleteCouponCode(input.name),
+    couponCode: couponCode || athleteCouponCode(input.name),
   };
 }
 
@@ -92,10 +95,11 @@ export const ATHLETES: Athlete[] = [
   }),
   athlete({
     handle: "franciscoxixo",
-    name: "Francisco Xixo",
+    name: 'Francisco "Xixo"',
     url: "https://www.instagram.com/franciscoxixo/",
-    photo: "/brand/athletes/franciscoxixo.png",
+    photo: "/brand/athletes/franciscoxixo.jpg",
     bio: "Jovem talento da equipa JSS",
+    couponCode: "FRANCISCOXIXO",
   }),
   athlete({
     handle: "xico.mittermayer",
@@ -106,10 +110,12 @@ export const ATHLETES: Athlete[] = [
   }),
   athlete({
     handle: "tomasbettencourt",
-    name: "Tomás Bettencourt",
+    name: "Tomás Maio",
     url: "https://www.instagram.com/tomasbettencourt/",
     photo: "/brand/athletes/tomasbettencourt.jpg",
     bio: "Rider local · equipa JSS",
+    // Keep legacy code used on printed cards / prior seeds.
+    couponCode: "TOMASBETTENCOURT",
   }),
   athlete({
     handle: "gagau.pereira",
