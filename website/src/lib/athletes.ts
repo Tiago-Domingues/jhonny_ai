@@ -92,10 +92,10 @@ export const ATHLETES: Athlete[] = [
   }),
   athlete({
     handle: "franciscoxixo",
-    name: "Francisco Xixo",
+    name: 'Francisco "Xixo"',
     url: "https://www.instagram.com/franciscoxixo/",
-    photo: "/brand/athletes/franciscoxixo.png",
-    bio: "Jovem talento da equipa JSS",
+    photo: "/brand/athletes/franciscoxixo.jpg",
+    bio: "Free surfer e surf coach · Portugal",
   }),
   athlete({
     handle: "xico.mittermayer",
