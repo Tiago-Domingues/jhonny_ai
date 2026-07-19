@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/components/LanguageProvider";
 
-const STORAGE_KEY = "jss_welcome_coupon_seen_v1";
+const STORAGE_KEY = "jss_welcome_coupon_seen_v2";
 const COUPON_CODE = "JHONNY10";
 const IDLE_MS = 3000;
 
@@ -140,8 +140,7 @@ export function FirstPurchaseOffer() {
       aria-modal="true"
       aria-labelledby="welcome-offer-title"
     >
-      <div className="relative w-full max-w-lg overflow-hidden rounded-[1.75rem] border border-white/10 bg-paper shadow-2xl shadow-black/40">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-ink" />
+      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-black/40">
         <button
           type="button"
           onClick={close}
@@ -151,30 +150,9 @@ export function FirstPurchaseOffer() {
           ×
         </button>
 
-        <div className="grid gap-0 sm:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative flex min-h-[220px] flex-col items-center justify-center gap-4 bg-cream px-5 py-8 sm:min-h-full">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(227,111,67,0.12),transparent_55%)]" />
-            <div className="relative z-10 flex flex-col items-center gap-3">
-              <div className="relative flex h-28 w-28 items-center justify-center sm:h-32 sm:w-32">
-                <span className="absolute bottom-1 h-3 w-20 rounded-full bg-black/10 blur-md" aria-hidden />
-                <Image
-                  src="/brand/jhonny-character-cut.png"
-                  alt="Jhonny"
-                  width={240}
-                  height={300}
-                  priority
-                  className="animate-toy relative h-24 w-auto object-contain drop-shadow-sm sm:h-28"
-                />
-              </div>
-              <Image
-                src="/brand/logo-stacked.png"
-                alt="Jhonny Surf Store"
-                width={220}
-                height={155}
-                priority
-                className="h-auto w-28 object-contain drop-shadow-sm sm:w-32"
-              />
-            </div>
+        <div className="grid gap-0 sm:grid-cols-[0.85fr_1.15fr]">
+          <div className="flex min-h-[180px] flex-col items-center justify-center bg-ink px-6 py-10 sm:min-h-full">
+            <Logo type="stacked" variant="dark" priority className="h-auto w-28 sm:w-32" />
           </div>
 
           <div className="flex flex-col p-6 sm:p-7">

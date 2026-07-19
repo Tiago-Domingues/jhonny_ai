@@ -43,7 +43,6 @@ function AthleteCard({ a }: { a: Athlete }) {
         <p className="font-display text-xl font-extrabold uppercase leading-tight tracking-wide text-white drop-shadow">
           {a.name}
         </p>
-        <p className="mt-1 text-sm text-white/75">{a.bio}</p>
         <p className="mt-2 inline-flex rounded-full bg-white/15 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white">
           10% code: {a.couponCode}
         </p>

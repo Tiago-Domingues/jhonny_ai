@@ -93,7 +93,7 @@ export const ATHLETES: Athlete[] = [
   athlete({
     handle: "franciscoxixo",
     name: "Francisco Xixo",
-    url: "https://www.instagram.com/franciscoxixo",
+    url: "https://www.instagram.com/franciscoxixo/",
     photo: "/brand/athletes/franciscoxixo.png",
     bio: "Jovem talento da equipa JSS",
   }),
@@ -107,7 +107,7 @@ export const ATHLETES: Athlete[] = [
   athlete({
     handle: "tomasbettencourt",
     name: "Tomás Bettencourt",
-    url: "https://www.instagram.com/tomasbettencourt",
+    url: "https://www.instagram.com/tomasbettencourt/",
     photo: "/brand/athletes/tomasbettencourt.jpg",
     bio: "Rider local · equipa JSS",
   }),
@@ -126,3 +126,17 @@ export const ATHLETES: Athlete[] = [
     bio: "Rider da equipa JSS",
   }),
 ];
+
+/** Next-gen Local Hero Groom roster — young talent only */
+const GROOM_HANDLES = [
+  "franciscoxixo",
+  "tomasbettencourt",
+  "tomasslacerda",
+  "bernardo_tome",
+  "gagau.pereira",
+  "xico.mittermayer",
+] as const;
+
+export const LOCAL_HERO_GROOMS: Athlete[] = GROOM_HANDLES.map(
+  (handle) => ATHLETES.find((a) => a.handle === handle)!
+).filter(Boolean);
