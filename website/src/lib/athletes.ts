@@ -98,7 +98,7 @@ export const ATHLETES: Athlete[] = [
     name: 'Francisco "Xixo"',
     url: "https://www.instagram.com/franciscoxixo/",
     photo: "/brand/athletes/franciscoxixo.jpg",
-    bio: "Jovem talento da equipa JSS",
+    bio: "Free surfer e surf coach · Portugal",
     couponCode: "FRANCISCOXIXO",
   }),
   athlete({
