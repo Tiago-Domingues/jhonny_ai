@@ -163,6 +163,8 @@ The public website in `website/` is intended for Vercel.
 
 - `.vercelignore` excludes local DB, env files, and build caches from deploys
 - `.vercel/` is gitignored and must be recreated with `vercel link` on a new machine if using the CLI
+- **Auto-deploy:** GitHub Actions workflow `.github/workflows/deploy-website.yml` (needs repo secret `VERCEL_TOKEN`). See `docs/website-vercel-deploy.md`.
+- Manual/cloud-agent deploy: `VERCEL_TOKEN=... ./scripts/deploy-website.sh`
 
 ### Twilio / WhatsApp
 
