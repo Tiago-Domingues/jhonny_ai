@@ -35,6 +35,7 @@ export type StoreProduct = {
   saleable?: boolean;
   availableForSale?: boolean;
   isOpportunity?: boolean;
+  isNewIn?: boolean;
   opportunityOriginalPriceCents?: number | null;
   opportunityDiscountPercent?: number | null;
   opportunitySource?: string | null;
@@ -75,6 +76,7 @@ export const mockProducts: StoreProduct[] = [
     saleable: true,
     availableForSale: true,
     isOpportunity: false,
+    isNewIn: false,
   },
   {
     id: "mock-wetsuit-43",
@@ -96,6 +98,7 @@ export const mockProducts: StoreProduct[] = [
     saleable: true,
     availableForSale: true,
     isOpportunity: false,
+    isNewIn: false,
   },
   {
     id: "mock-jss-tee",
@@ -117,6 +120,7 @@ export const mockProducts: StoreProduct[] = [
     saleable: true,
     availableForSale: true,
     isOpportunity: false,
+    isNewIn: false,
   },
 ];
 
@@ -143,6 +147,7 @@ const productListSelect = {
   saleable: true,
   availableForSale: true,
   isOpportunity: true,
+  isNewIn: true,
   opportunityOriginalPriceCents: true,
   opportunityDiscountPercent: true,
   odooProductId: true,
@@ -186,6 +191,7 @@ type ListedProduct = {
   saleable: boolean;
   availableForSale: boolean;
   isOpportunity: boolean;
+  isNewIn?: boolean;
   opportunityOriginalPriceCents: number | null;
   opportunityDiscountPercent: number | null;
   opportunitySource?: string | null;
@@ -230,6 +236,7 @@ function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boo
     saleable: product.saleable,
     availableForSale: product.availableForSale,
     isOpportunity: product.isOpportunity,
+    isNewIn: product.isNewIn ?? false,
     opportunityOriginalPriceCents: product.opportunityOriginalPriceCents,
     opportunityDiscountPercent: product.opportunityDiscountPercent,
     opportunitySource: lean ? undefined : product.opportunitySource,
@@ -264,6 +271,7 @@ export function toLeanStoreProduct(product: StoreProduct): StoreProduct {
     saleable: product.saleable,
     availableForSale: product.availableForSale,
     isOpportunity: product.isOpportunity,
+    isNewIn: product.isNewIn ?? false,
     opportunityOriginalPriceCents: product.opportunityOriginalPriceCents ?? null,
     opportunityDiscountPercent: product.opportunityDiscountPercent ?? null,
     odooProductId: product.odooProductId ?? null,
@@ -489,17 +497,38 @@ export function isNewArrivalsCategory(category: string) {
 }
 
 /**
- * Products from the Odoo "New Arrivals" category.
- * Until that category exists / is synced, falls back to opportunity products as placeholders.
+ * Products tagged with the Odoo "New In" attribute (synced to `isNewIn`).
+ * Falls back to matching category paths if the attribute has no tagged products yet.
  */
 export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]> {
-  const fromLiveOrDb = async (): Promise<StoreProduct[]> => {
-    if (!hasDatabaseUrl()) {
+  if (!hasDatabaseUrl()) {
+    try {
       const liveProducts = await listLiveOdooProducts();
+      const tagged = (liveProducts || []).filter((product) => product.isNewIn);
+      if (tagged.length) return tagged.slice(0, limit);
       return (liveProducts || [])
         .filter((product) => isNewArrivalsCategory(product.category))
         .slice(0, limit);
+    } catch {
+      return [];
     }
+  }
+
+  try {
+    const tagged = await prisma.product.findMany({
+      where: {
+        active: true,
+        excludedFromCatalog: false,
+        isNewIn: true,
+      },
+      orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
+      take: limit * 3,
+      select: productListSelect,
+    });
+    const fromAttribute = dedupeStoreProducts(
+      tagged.map((product) => toStoreProduct(product, { lean: true }))
+    ).slice(0, limit);
+    if (fromAttribute.length) return fromAttribute;
 
     const products = await prisma.product.findMany({
       where: {
@@ -515,17 +544,9 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
         .map((product) => toStoreProduct(product, { lean: true }))
         .filter((product) => isNewArrivalsCategory(product.category))
     ).slice(0, limit);
-  };
-
-  try {
-    const arrivals = await fromLiveOrDb();
-    if (arrivals.length) return arrivals;
   } catch {
-    // Fall through to opportunity placeholders.
+    return [];
   }
-
-  // Placeholder until the Odoo "New Arrivals" category is created and synced.
-  return listOpportunityProducts(limit);
 }
 
 export async function getProduct(productId: string): Promise<StoreProduct | null> {
@@ -577,6 +598,7 @@ export async function ensureProduct(productId: string) {
       saleable: product.saleable ?? true,
       availableForSale: product.availableForSale ?? product.stockQuantity > 0,
       isOpportunity: product.isOpportunity ?? false,
+      isNewIn: product.isNewIn ?? false,
       opportunityOriginalPriceCents: product.opportunityOriginalPriceCents,
       opportunityDiscountPercent: product.opportunityDiscountPercent,
       opportunitySource: product.opportunitySource,
@@ -602,6 +624,7 @@ export async function ensureProduct(productId: string) {
       saleable: product.saleable ?? true,
       availableForSale: product.availableForSale ?? product.stockQuantity > 0,
       isOpportunity: product.isOpportunity ?? false,
+      isNewIn: product.isNewIn ?? false,
       opportunityOriginalPriceCents: product.opportunityOriginalPriceCents,
       opportunityDiscountPercent: product.opportunityDiscountPercent,
       opportunitySource: product.opportunitySource,

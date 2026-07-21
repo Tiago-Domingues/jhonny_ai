@@ -33,7 +33,7 @@ export function Hero() {
           {t.hero.eyebrow}
         </p>
 
-        <h1 className="font-display text-5xl font-extrabold uppercase leading-[0.92] tracking-tight text-pink-400 text-balance drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)] sm:text-7xl lg:text-[6.5rem]">
+        <h1 className="font-display text-5xl font-extrabold uppercase leading-[0.92] tracking-tight text-[#ff4d9a] text-balance drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)] sm:text-7xl lg:text-[6.5rem]">
           {t.hero.title1}
           <br />
           {t.hero.title2}

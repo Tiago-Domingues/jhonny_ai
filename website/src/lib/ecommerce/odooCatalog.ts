@@ -97,6 +97,7 @@ type SyncedOdooProduct = {
   excludedFromCatalog: boolean;
   exclusionReason: string | null;
   isOpportunity: boolean;
+  isNewIn: boolean;
   opportunityOriginalPriceCents: number | null;
   opportunityDiscountPercent: number | null;
   opportunitySource: string | null;
@@ -209,6 +210,13 @@ function findAttribute(
   return null;
 }
 
+function normalizeAttributeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 function hasOpportunityAttribute(
   ids: number[],
   attributeMap: Map<number, { attribute: string; value: string }>
@@ -216,9 +224,76 @@ function hasOpportunityAttribute(
   return ids.some((id) => {
     const item = attributeMap.get(id);
     if (!item) return false;
-    const combined = `${item.attribute} ${item.value}`.toLowerCase();
+    const combined = normalizeAttributeText(`${item.attribute} ${item.value}`);
     return combined.includes("oportunidade");
   });
+}
+
+function isNewInAttributeName(value: string) {
+  const normalized = normalizeAttributeText(value);
+  return (
+    normalized.includes("new in") ||
+    normalized.includes("newin") ||
+    normalized.includes("new arrival") ||
+    normalized.includes("newarrival") ||
+    normalized.includes("novidade")
+  );
+}
+
+/** Match Odoo variant attribute/value tags like "New In", "Newin", "New Arrival", "Novidade(s)". */
+function hasNewInAttribute(
+  ids: number[],
+  attributeMap: Map<number, { attribute: string; value: string }>
+) {
+  return ids.some((id) => {
+    const item = attributeMap.get(id);
+    if (!item) return false;
+    return isNewInAttributeName(`${item.attribute} ${item.value}`);
+  });
+}
+
+/**
+ * Odoo "NEW IN" is configured as create_variant=no_variant, so it does not appear on
+ * product.product.product_template_attribute_value_ids. Read template attribute lines instead.
+ */
+async function fetchNewInTemplateIds(client: OdooClient) {
+  const attributes = await client.searchRead(
+    "product.attribute",
+    [],
+    ["id", "name"],
+    { limit: 300, order: "name" }
+  );
+  const attributeIds = attributes
+    .filter((row) => isNewInAttributeName(String(row.name || "")))
+    .map((row) => Number(row.id))
+    .filter((id) => Number.isFinite(id) && id > 0);
+
+  if (!attributeIds.length) return new Set<number>();
+
+  const lines: Array<Record<string, unknown>> = [];
+  let offset = 0;
+  while (true) {
+    const batch = await client.searchRead(
+      "product.template.attribute.line",
+      [["attribute_id", "in", attributeIds]],
+      ["id", "product_tmpl_id", "value_ids"],
+      { limit: 200, offset }
+    );
+    lines.push(...batch);
+    if (batch.length < 200) break;
+    offset += batch.length;
+  }
+
+  const templateIds = new Set<number>();
+  for (const line of lines) {
+    const templateId = Array.isArray(line.product_tmpl_id) ? Number(line.product_tmpl_id[0]) : 0;
+    const valueIds = Array.isArray(line.value_ids) ? line.value_ids.map(Number) : [];
+    // A template line with at least one value means the product is tagged New In (e.g. SIM).
+    if (templateId > 0 && valueIds.length > 0) {
+      templateIds.add(templateId);
+    }
+  }
+  return templateIds;
 }
 
 function opportunityAttributeValue(
@@ -303,7 +378,10 @@ export async function fetchOdooProducts(limit = 2000) {
       )
     )
   );
-  const attributes = await variantAttributeMap(client, attributeIds);
+  const [attributes, newInTemplateIds] = await Promise.all([
+    variantAttributeMap(client, attributeIds),
+    fetchNewInTemplateIds(client),
+  ]);
 
   const mappedProducts: SyncedOdooProduct[] = products.map((product) => {
     const qty = Math.max(0, Math.floor(Number(product.qty_available || 0)));
@@ -325,6 +403,9 @@ export async function fetchOdooProducts(limit = 2000) {
     const enrichment = buildSurfboardEnrichment({ name, category, brand: brandLabel });
     const odooListPriceCents = cents(product.list_price);
     const opportunity = hasOpportunityAttribute(attributeValueIds, attributes);
+    const newIn =
+      hasNewInAttribute(attributeValueIds, attributes) ||
+      (templateId != null && newInTemplateIds.has(templateId));
     const opportunityPercent = parseDiscountPercent(opportunityAttributeValue(attributeValueIds, attributes));
     const originalPrice = numberField(product, originalPriceFields);
     const discountPercent = numberField(product, discountPercentFields);
@@ -380,6 +461,7 @@ export async function fetchOdooProducts(limit = 2000) {
       excludedFromCatalog,
       exclusionReason: excludedFromCatalog ? "Food/beverage product excluded from website catalog." : null,
       isOpportunity: opportunity,
+      isNewIn: newIn,
       opportunityOriginalPriceCents: displayOriginalPriceCents,
       opportunityDiscountPercent: calculatedDiscountPercent && calculatedDiscountPercent > 0 ? calculatedDiscountPercent : null,
       opportunitySource: opportunity
