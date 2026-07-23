@@ -29,7 +29,7 @@ export default function ComingSoon() {
         <div className="relative mt-8 flex h-52 w-52 items-center justify-center sm:h-56 sm:w-56">
           <span className="absolute bottom-4 h-4 w-28 rounded-full bg-black/10 blur-md" />
           <Image
-            src="/brand/jhonny-character.png"
+            src="/brand/jhonny-character-cut.png"
             alt="Jhonny"
             width={480}
             height={600}
