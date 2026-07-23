@@ -1,0 +1,67 @@
+# Auto-deploy the public storefront (`website/`) to Vercel on every push to main.
+#
+# One-time setup (repo admin):
+# 1. Create a Vercel token: https://vercel.com/account/tokens
+# 2. Add GitHub Actions secret `VERCEL_TOKEN` with that value
+#    (Settings → Secrets and variables → Actions)
+#
+# Project/org IDs are fixed for the existing `website` Vercel project
+# (tiagopaixaodomingues-6296s-projects / website).
+
+name: Deploy website to Vercel
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "website/**"
+      - ".github/workflows/deploy-website.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-website-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Production deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    env:
+      VERCEL_ORG_ID: team_xuQfcMjOwvDPxyLNr4PpDHa2
+      VERCEL_PROJECT_ID: prj_61MLIY40SIJ09GLCQuCSQcNNrXkD
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Require VERCEL_TOKEN
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::Missing GitHub Actions secret VERCEL_TOKEN."
+            echo "Create a token at https://vercel.com/account/tokens"
+            echo "then add it as repo secret VERCEL_TOKEN."
+            exit 1
+          fi
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@48.12.1
+
+      - name: Pull Vercel project metadata
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build for production
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy prebuilt production build
+        run: vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"
