@@ -216,16 +216,22 @@ async function resolveArtigoFieldName(client: OdooClient) {
 }
 
 function resolveOdooArtigoName(product: OdooRow, artigoField: string | null) {
+  const sku = product.default_code ? String(product.default_code).trim() : "";
   const candidates = [
     artigoField ? product[artigoField] : null,
     product.display_name,
     product.name,
   ];
   for (const candidate of candidates) {
-    if (typeof candidate === "string" && candidate.trim()) {
-      // Keep Odoo wording; only trim accidental leading/trailing whitespace.
-      return candidate.trim();
+    if (typeof candidate !== "string" || !candidate.trim()) continue;
+    let title = candidate.trim();
+    // Odoo name_get often prefixes "[default_code] ". Ref is shown separately on the
+    // storefront, so drop a matching code prefix while keeping variant text from Artigo.
+    if (sku) {
+      const escaped = sku.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      title = title.replace(new RegExp(`^\\[${escaped}\\]\\s*`, "i"), "").trim();
     }
+    if (title) return title;
   }
   return "Unnamed product";
 }
