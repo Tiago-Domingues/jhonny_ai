@@ -85,7 +85,7 @@ Other important mismatches / risks:
 - Stock is checked but **not reserved/decremented** → oversell risk.
 - Coupons can be consumed when the order is created, even if payment never completes.
 - Ship-to-address fields are not strictly required in the UI.
-- `.pt` still rewrites to the coming-soon page.
+- Until `SITE_PUBLIC_LAUNCH=true`, **both .com and .pt** show coming-soon to the public; staff unlock via `/preview-access` + `SITE_PREVIEW_PASSWORD`.
 - If catalog/DB fails, mock demo products must not become sellable.
 - No simple admin screen to process orders; no customer “My orders” history.
 - Homepage hero / category tile images may be outdated vs recent store photography.
@@ -146,7 +146,7 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 | P0.9 | Require full **shipping address** when ship-to-home is selected | Avoid undeliverable orders | S |
 | P0.10 | Align **€100 free shipping** in checkout logic + legal pages | Matches banner and launch decision | S |
 | P0.11 | Show **shipping cost in checkout total** UI | Total currently can understate amount due | S |
-| P0.12 | Remove **.pt coming-soon** gate when ready to open both domains | Needed for joint .com/.pt launch | S |
+| P0.12 | Open public domains: set **`SITE_PUBLIC_LAUNCH=true`** (removes coming-soon on .com + .pt) when checkout is ready | Needed for joint .com/.pt launch; until then public sees coming-soon and staff use `/preview-access` | S |
 | P0.13 | Block **mock catalog** from selling in production | Avoid selling demo products | S |
 | P0.14 | Confirm production secrets (session, DB, Odoo, payments, email) on Vercel; **refuse to boot/checkout** if `SESSION_SECRET` is missing or still the default | Security and reliability | S |
 | P0.15 | **Rate-limit** login, register, checkout, coupon, and payment-callback endpoints | Stops brute-force and callback flooding | S–M |
@@ -202,7 +202,7 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 5. **Ship international payments:** PayPal, then Klarna (or in parallel if two people).  
 6. **Harden commerce rules:** stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.  
 7. **Ops + brand:** admin order list, FAQ/trust copy, **recent homepage/category photos** (P1.8).  
-8. **Open domains:** remove `.pt` coming-soon; keep `.com` live.  
+8. **Open domains:** set `SITE_PUBLIC_LAUNCH=true` on Vercel (removes coming-soon on .com + .pt).  
 9. **Gate:** complete one successful live (or final sandbox) order per payment method; then announce.
 
 ```mermaid
@@ -231,7 +231,7 @@ All of the following must be true:
 - [ ] Free shipping threshold is **€100** in banner, checkout, and legal text.  
 - [ ] Order emails send reliably.  
 - [ ] Staff can see and update orders.  
-- [ ] **jhonnysurfstore.com** and **jhonnysurfstore.pt** both serve the full shop (no coming-soon gate).  
+- [ ] **jhonnysurfstore.com** and **jhonnysurfstore.pt** both serve the full shop (`SITE_PUBLIC_LAUNCH=true`).  
 - [ ] Auth/checkout/callback are **rate-limited**; Odoo sync is **not** anonymously callable.  
 - [ ] Production refuses weak/default **SESSION_SECRET**; security headers are on.  
 - [ ] Odoo catalog changes (products, price, stock, categories, offers) appear on the website in **near real time** (scheduled sync and/or webhook; sync health OK).  
@@ -245,7 +245,7 @@ Until that checklist is green, treat the site as **marketing + catalog preview**
 
 | Topic | Location |
 |-------|----------|
-| .pt coming-soon gate | `website/src/proxy.ts` |
+| Coming-soon + preview unlock | `website/src/proxy.ts`, `website/src/lib/ecommerce/siteAccess.ts`, `/preview-access` |
 | Checkout / shipping threshold | `website/src/lib/ecommerce/checkout.ts` |
 | Payments / mocks / placeholders | `website/src/lib/ecommerce/payments.ts` |
 | Ifthenpay callback | `website/src/app/api/payments/ifthenpay/callback/route.ts` |
