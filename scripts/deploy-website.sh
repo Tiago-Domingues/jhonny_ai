@@ -20,9 +20,25 @@ CLI_VERSION="${VERCEL_CLI_VERSION:-48.12.1}"
 
 cd "$WEB"
 
-if ! command -v vercel >/dev/null 2>&1; then
-  npm install --global "vercel@${CLI_VERSION}"
-fi
+ensure_vercel_cli() {
+  if command -v vercel >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # Prefer a user-local install — global npm often lacks write access in
+  # cloud/CI sandboxes (EACCES on /usr/lib/node_modules).
+  local prefix="${HOME}/.local"
+  mkdir -p "$prefix"
+  npm install --prefix "$prefix" "vercel@${CLI_VERSION}"
+  export PATH="${prefix}/node_modules/.bin:${PATH}"
+
+  if ! command -v vercel >/dev/null 2>&1; then
+    echo "Failed to install vercel@${CLI_VERSION}."
+    exit 1
+  fi
+}
+
+ensure_vercel_cli
 
 echo "Linking Vercel project (org=$VERCEL_ORG_ID project=$VERCEL_PROJECT_ID)…"
 vercel pull --yes --environment=production --token="$VERCEL_TOKEN"

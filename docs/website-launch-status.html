@@ -225,7 +225,7 @@
       <p class="subtitle">Website Launch Status</p>
       <div class="meta">
         <div><strong>Audience:</strong> owner + shop/ops + technical team</div>
-        <div><strong>Last updated:</strong> 19 July 2026</div>
+        <div><strong>Last updated:</strong> 23 July 2026</div>
         <div>
           <strong>Live sites:</strong>
           <a href="https://www.jhonnysurfstore.com">jhonnysurfstore.com</a>
@@ -241,7 +241,8 @@
       <h2>1. Purpose</h2>
       <p>
         This document states whether the website is ready for <strong>public online purchases</strong>,
-        what already works, and the <strong>ordered backlog</strong> to go live on both domains with full payment support.
+        what already works, and the <strong>ordered backlog</strong> to go live on both domains with full payment support —
+        including <strong>brand imagery</strong> and <strong>security hardening</strong> against abuse and external attacks.
       </p>
     </section>
 
@@ -253,7 +254,8 @@
           The marketing site, product catalog, and shopping foundations are largely in place.
           What still blocks selling online is <strong>real payment processing</strong>,
           <strong>post-checkout payment instructions</strong>, <strong>stock/coupon correctness</strong>,
-          <strong>order emails</strong>, and <strong>opening the .pt domain</strong>.
+          <strong>order emails</strong>, <strong>opening the .pt domain</strong>, and
+          <strong>security controls</strong> so payment callbacks and store APIs cannot be abused.
         </p>
       </div>
 
@@ -262,11 +264,12 @@
           <tr><th>Area</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready</td></tr>
-          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status" class="status-ok">Ready (synced)</td></tr>
+          <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready (imagery refresh still needed — see P1.8)</td></tr>
+          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status">Connected, but <strong>not guaranteed near real-time</strong> (see P0.18)</td></tr>
           <tr><td data-label="Area">Browse shop, filters, product pages</td><td data-label="Status" class="status-ok">Ready for browsing</td></tr>
           <tr><td data-label="Area">Cart + guest/account checkout skeleton</td><td data-label="Status">Built, not production-safe</td></tr>
           <tr><td data-label="Area">Payments (MB WAY, Multibanco, PayPal, Klarna)</td><td data-label="Status" class="status-bad">Not ready</td></tr>
+          <tr><td data-label="Area">Security / abuse protection</td><td data-label="Status" class="status-bad">Partial — harden before open checkout</td></tr>
           <tr><td data-label="Area">Order email + ops admin</td><td data-label="Status" class="status-bad">Not ready</td></tr>
           <tr><td data-label="Area">Public go-live (.com + .pt)</td><td data-label="Status" class="status-bad">Blocked</td></tr>
         </tbody>
@@ -285,6 +288,7 @@
         <li>Legal pages in Portuguese and English.</li>
         <li><strong>.com</strong> is publicly browsable (home, shop, checkout pages load).</li>
         <li><strong>Odoo</strong> is connected in production (catalog sync / auth OK as of last scan).</li>
+        <li>Baseline app security: httpOnly session cookies, bcrypt passwords, Zod validation on APIs, Prisma (no raw SQL), React-escaped UI.</li>
       </ul>
     </section>
 
@@ -312,6 +316,18 @@
             <td data-label="Decision">Languages at launch</td>
             <td data-label="Choice">Site already supports PT / EN / ZH for most UX; legal ZH can follow later</td>
           </tr>
+          <tr>
+            <td data-label="Decision">Brand imagery</td>
+            <td data-label="Choice">Homepage + category heroes use <strong>recent real store / product photos</strong></td>
+          </tr>
+          <tr>
+            <td data-label="Decision">Odoo ↔ website</td>
+            <td data-label="Choice">Catalog (products, price, stock, categories, New In / offers) stays in <strong>near real-time</strong> sync</td>
+          </tr>
+          <tr>
+            <td data-label="Decision">Security bar</td>
+            <td data-label="Choice">Fail closed on payments/secrets; authenticated admin/sync APIs; rate limits; security headers</td>
+          </tr>
         </tbody>
       </table>
     </section>
@@ -324,7 +340,7 @@
           <tr><th>Integration</th><th>Production status</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Integration">Odoo</td><td data-label="Status" class="status-ok">Configured and authenticated</td></tr>
+          <tr><td data-label="Integration">Odoo</td><td data-label="Status">Configured and authenticated — catalog sync exists but is <strong>not a reliable near-real-time pipeline</strong> yet</td></tr>
           <tr><td data-label="Integration">Email (Resend)</td><td data-label="Status" class="status-bad">Not configured — order emails skipped</td></tr>
           <tr><td data-label="Integration">Ifthenpay MB WAY</td><td data-label="Status" class="status-bad">Not configured — would fall back to mocks</td></tr>
           <tr><td data-label="Integration">Ifthenpay Multibanco</td><td data-label="Status" class="status-bad">Not configured — would fall back to mocks</td></tr>
@@ -341,9 +357,43 @@
         <li>Stock is checked but <strong>not reserved/decremented</strong> → oversell risk.</li>
         <li>Coupons can be consumed when the order is created, even if payment never completes.</li>
         <li>Ship-to-address fields are not strictly required in the UI.</li>
-        <li><code>.pt</code> still rewrites to the coming-soon page.</li>
+        <li>Until <code>SITE_PUBLIC_LAUNCH=true</code>, <strong>both .com and .pt</strong> show coming-soon to the public; staff unlock via <code>/preview-access</code> + <code>SITE_PREVIEW_PASSWORD</code>.</li>
         <li>If catalog/DB fails, mock demo products must not become sellable.</li>
         <li>No simple admin screen to process orders; no customer “My orders” history.</li>
+        <li>Homepage hero / category tile images may be outdated vs recent store photography.</li>
+        <li>Odoo → website catalog updates are <strong>not guaranteed near real-time</strong>: with <code>ODOO_LIVE_CATALOG=true</code>, listing may kick a <strong>background</strong> sync only when DB data is older than <strong>~15 minutes</strong> and someone hits the shop; there is no scheduled cron and no Odoo product-change webhook. Manual <code>POST /api/odoo/sync/products</code> still exists.</li>
+        <li>Security gaps listed in §5.1 below.</li>
+      </ul>
+
+      <h3>5.1 Security posture (attack resistance)</h3>
+      <p><strong>Already in good shape</strong></p>
+      <ul>
+        <li>Session JWT in httpOnly + <code>SameSite=lax</code> cookie; role re-checked from DB.</li>
+        <li>Passwords hashed with bcrypt; Zod schemas on auth/cart/checkout routes.</li>
+        <li>Guest cart/rating tokens stored as hashes; admin order-status requires <code>ADMIN</code>.</li>
+        <li>Prisma ORM only (no raw SQL); React-escaped UI (no <code>dangerouslySetInnerHTML</code>).</li>
+      </ul>
+      <p><strong>Must fix before open checkout (P0)</strong></p>
+      <table>
+        <thead>
+          <tr><th>Risk</th><th>Why it matters</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Risk">Ifthenpay callback secret optional + no amount/status check</td><td data-label="Why">Attacker who knows an order reference can mark orders <strong>paid</strong></td></tr>
+          <tr><td data-label="Risk">Missing payment keys → mock / placeholder “payments”</td><td data-label="Why">Fake paid state in production</td></tr>
+          <tr><td data-label="Risk">Mock catalog upserted into DB if catalog empty</td><td data-label="Why">Demo SKUs become sellable</td></tr>
+          <tr><td data-label="Risk"><code>POST /api/odoo/sync/products</code> unauthenticated</td><td data-label="Why">Anyone can trigger sync / DoS Odoo</td></tr>
+          <tr><td data-label="Risk">No rate limits on login, register, checkout, callback</td><td data-label="Why">Brute-force and abuse</td></tr>
+          <tr><td data-label="Risk">Soft-default <code>SESSION_SECRET</code> if unset</td><td data-label="Why">Predictable sessions if misconfigured</td></tr>
+          <tr><td data-label="Risk">No security HTTP headers</td><td data-label="Why">Clickjacking / XSS blast-radius / downgrade</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Should fix soon after / with launch ops (P1)</strong></p>
+      <ul>
+        <li>No password reset / email verification</li>
+        <li>Public integrations/Odoo status APIs leak config readiness</li>
+        <li>Order email HTML unsanitized fields</li>
+        <li>Ratings / availability without rate limits</li>
       </ul>
     </section>
 
@@ -380,8 +430,8 @@
           </tr>
           <tr>
             <td data-label="#">P0.4</td>
-            <td data-label="Item">Harden payment <strong>callback</strong> (secret required, amount/status checks)</td>
-            <td data-label="Why">Prevents false “paid” states</td>
+            <td data-label="Item">Harden payment <strong>callback</strong> (secret <strong>always</strong> required in prod, constant-time compare, <strong>amount + status</strong> checks)</td>
+            <td data-label="Why">Prevents forged “paid” states</td>
             <td data-label="Effort">S–M</td>
           </tr>
           <tr>
@@ -428,8 +478,8 @@
           </tr>
           <tr>
             <td data-label="#">P0.12</td>
-            <td data-label="Item">Remove <strong>.pt coming-soon</strong> gate when ready to open both domains</td>
-            <td data-label="Why">Needed for joint .com/.pt launch</td>
+            <td data-label="Item">Open public domains: set <strong><code>SITE_PUBLIC_LAUNCH=true</code></strong> (removes coming-soon on .com + .pt) when checkout is ready</td>
+            <td data-label="Why">Needed for joint .com/.pt launch; until then public sees coming-soon and staff use <code>/preview-access</code></td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
@@ -440,15 +490,40 @@
           </tr>
           <tr>
             <td data-label="#">P0.14</td>
-            <td data-label="Item">Confirm production secrets (session, DB, Odoo, payments, email) on Vercel</td>
+            <td data-label="Item">Confirm production secrets (session, DB, Odoo, payments, email) on Vercel; <strong>refuse to boot/checkout</strong> if <code>SESSION_SECRET</code> is missing or still the default</td>
             <td data-label="Why">Security and reliability</td>
             <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.15</td>
+            <td data-label="Item"><strong>Rate-limit</strong> login, register, checkout, coupon, and payment-callback endpoints</td>
+            <td data-label="Why">Stops brute-force and callback flooding</td>
+            <td data-label="Effort">S–M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.16</td>
+            <td data-label="Item"><strong>Lock down</strong> Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe)</td>
+            <td data-label="Why">Stops unauthorized sync / info leak</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.17</td>
+            <td data-label="Item">Add <strong>security HTTP headers</strong> (HSTS, frame deny, Referrer-Policy, baseline CSP, nosniff)</td>
+            <td data-label="Why">Hardens browser attack surface</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P0.18</td>
+            <td data-label="Item"><strong>Near real-time Odoo ↔ website catalog sync</strong>: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA</td>
+            <td data-label="Why">Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly</td>
+            <td data-label="Effort">M</td>
           </tr>
         </tbody>
       </table>
       <p>
         <strong>P0 rough total:</strong> about <strong>2–4 weeks</strong> of focused build + provider setup,
         dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1.
+        Security items P0.4 / P0.14–P0.17 and catalog freshness <strong>P0.18</strong> are mostly S–M and should be done <strong>before</strong> opening paid traffic.
       </p>
 
       <h3>P1 — Launch ops and trust</h3>
@@ -499,6 +574,18 @@
             <td data-label="Why">Go-live gate</td>
             <td data-label="Effort">M (ops time)</td>
           </tr>
+          <tr>
+            <td data-label="#">P1.8</td>
+            <td data-label="Item">Refresh <strong>homepage + category hero images</strong> with recent store / product photos (assets under <code>website/public/brand/</code> and mappings in <code>Products.tsx</code> / <code>categoryHeroes.ts</code>)</td>
+            <td data-label="Why">Brand looks current and trustworthy at launch</td>
+            <td data-label="Effort">S–M (assets + wire-up)</td>
+          </tr>
+          <tr>
+            <td data-label="#">P1.9</td>
+            <td data-label="Item">Escape/sanitize fields in <strong>order email HTML</strong>; tighten public ratings/availability against spam</td>
+            <td data-label="Why">Stops inbox HTML injection and abuse</td>
+            <td data-label="Effort">S–M</td>
+          </tr>
         </tbody>
       </table>
 
@@ -535,17 +622,23 @@
     <section>
       <h2>7. Suggested go-live sequence</h2>
       <ol class="sequence">
-        <li><strong>Configure production:</strong> Ifthenpay, email, Odoo, secrets — fail closed if payments/email missing.</li>
+        <li><strong>Configure production:</strong> Ifthenpay, email, Odoo, secrets — fail closed if payments/email/session secret missing.</li>
+        <li><strong>Security baseline:</strong> callback hardening, rate limits, lock sync/status APIs, security headers (P0.4, P0.14–P0.17).</li>
+        <li><strong>Odoo freshness:</strong> scheduled + (optional) webhook catalog sync with health monitoring (P0.18).</li>
         <li><strong>Ship PT payment path:</strong> MB WAY + Multibanco end-to-end (UI + email + callback).</li>
         <li><strong>Ship international payments:</strong> PayPal, then Klarna (or in parallel if two people).</li>
         <li><strong>Harden commerce rules:</strong> stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.</li>
-        <li><strong>Ops minimum:</strong> admin order list + FAQ/trust copy update.</li>
-        <li><strong>Open domains:</strong> remove <code>.pt</code> coming-soon; keep <code>.com</code> live.</li>
+        <li><strong>Ops + brand:</strong> admin order list, FAQ/trust copy, <strong>recent homepage/category photos</strong> (P1.8).</li>
+        <li><strong>Open domains:</strong> set <code>SITE_PUBLIC_LAUNCH=true</code> on Vercel (removes coming-soon on .com + .pt).</li>
         <li><strong>Gate:</strong> complete one successful live (or final sandbox) order per payment method; then announce.</li>
       </ol>
 
       <div class="flow" aria-label="Go-live flow">
-        <span>Config / secrets / providers</span>
+        <span>Config / secrets</span>
+        <span class="arrow">→</span>
+        <span>Security baseline</span>
+        <span class="arrow">→</span>
+        <span>Odoo near-realtime sync</span>
         <span class="arrow">→</span>
         <span>MB WAY + Multibanco</span>
         <span class="arrow">→</span>
@@ -553,7 +646,7 @@
         <span class="arrow">→</span>
         <span>Stock / coupons / shipping</span>
         <span class="arrow">→</span>
-        <span>Admin + emails</span>
+        <span>Admin + brand images</span>
         <span class="arrow">→</span>
         <span>Open .com + .pt</span>
       </div>
@@ -565,12 +658,16 @@
       <ul class="checklist">
         <li>Customers can pay with <strong>MB WAY, Multibanco, PayPal, and Klarna</strong> for real (no mocks/placeholders).</li>
         <li>After checkout they receive clear <strong>payment instructions</strong> (page + email).</li>
-        <li>Paid orders update correctly via <strong>secure callback</strong>.</li>
+        <li>Paid orders update correctly via <strong>secure callback</strong> (secret required; amount/status verified).</li>
         <li>Stock cannot oversell; coupons only stick on paid orders.</li>
         <li>Free shipping threshold is <strong>€100</strong> in banner, checkout, and legal text.</li>
         <li>Order emails send reliably.</li>
         <li>Staff can see and update orders.</li>
-        <li><strong>jhonnysurfstore.com</strong> and <strong>jhonnysurfstore.pt</strong> both serve the full shop (no coming-soon gate).</li>
+        <li><strong>jhonnysurfstore.com</strong> and <strong>jhonnysurfstore.pt</strong> both serve the full shop (<code>SITE_PUBLIC_LAUNCH=true</code>).</li>
+        <li>Auth/checkout/callback are <strong>rate-limited</strong>; Odoo sync is <strong>not</strong> anonymously callable.</li>
+        <li>Production refuses weak/default <strong>SESSION_SECRET</strong>; security headers are on.</li>
+        <li>Odoo catalog changes (products, price, stock, categories, offers) appear on the website in <strong>near real time</strong> (scheduled sync and/or webhook; sync health OK).</li>
+        <li>Homepage + category heroes use <strong>approved recent photos</strong>.</li>
       </ul>
       <p>
         Until that checklist is green, treat the site as <strong>marketing + catalog preview</strong>, not an open webshop.
@@ -584,13 +681,21 @@
           <tr><th>Topic</th><th>Location</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Topic">.pt coming-soon gate</td><td data-label="Location"><code>website/src/proxy.ts</code></td></tr>
+          <tr><td data-label="Topic">Coming-soon + preview unlock</td><td data-label="Location"><code>website/src/proxy.ts</code>, <code>/preview-access</code></td></tr>
           <tr><td data-label="Topic">Checkout / shipping threshold</td><td data-label="Location"><code>website/src/lib/ecommerce/checkout.ts</code></td></tr>
           <tr><td data-label="Topic">Payments / mocks / placeholders</td><td data-label="Location"><code>website/src/lib/ecommerce/payments.ts</code></td></tr>
+          <tr><td data-label="Topic">Ifthenpay callback</td><td data-label="Location"><code>website/src/app/api/payments/ifthenpay/callback/route.ts</code></td></tr>
+          <tr><td data-label="Topic">Session / cookies</td><td data-label="Location"><code>website/src/lib/ecommerce/session.ts</code></td></tr>
+          <tr><td data-label="Topic">Odoo product sync API</td><td data-label="Location"><code>website/src/app/api/odoo/sync/products/route.ts</code></td></tr>
+          <tr><td data-label="Topic">Catalog list + background stale sync (~15 min)</td><td data-label="Location"><code>website/src/lib/ecommerce/catalog.ts</code></td></tr>
+          <tr><td data-label="Topic">Odoo fetch / upsert sync</td><td data-label="Location"><code>website/src/lib/ecommerce/odooCatalog.ts</code></td></tr>
+          <tr><td data-label="Topic">Category hero images</td><td data-label="Location"><code>website/src/lib/ecommerce/categoryHeroes.ts</code>, <code>Products.tsx</code></td></tr>
+          <tr><td data-label="Topic">Homepage hero media</td><td data-label="Location"><code>website/src/components/Hero.tsx</code>, <code>website/public/brand/</code></td></tr>
           <tr><td data-label="Topic">Checkout UI</td><td data-label="Location"><code>website/src/components/CheckoutClient.tsx</code></td></tr>
           <tr><td data-label="Topic">Dispatch free-shipping copy</td><td data-label="Location"><code>website/src/components/DispatchBanner.tsx</code></td></tr>
           <tr><td data-label="Topic">Integrations status API</td><td data-label="Location"><code>/api/integrations/status</code></td></tr>
           <tr><td data-label="Topic">Legal shipping copy</td><td data-label="Location"><code>website/src/app/pagamentos-e-envios/page.tsx</code></td></tr>
+          <tr><td data-label="Topic">Vercel auto-deploy</td><td data-label="Location"><code>docs/website-vercel-deploy.md</code></td></tr>
         </tbody>
       </table>
     </section>
