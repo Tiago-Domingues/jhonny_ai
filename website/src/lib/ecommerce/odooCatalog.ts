@@ -391,7 +391,7 @@ function numberField(product: OdooRow, fields: string[]) {
   return null;
 }
 
-export async function fetchOdooProducts(limit = 2000) {
+export async function fetchOdooProducts(limit = 5000) {
   if (!hasOdooConfig()) return { configured: false, products: [] as SyncedOdooProduct[] };
   const client = new OdooClient();
   // One cached fields_get covers brand + price + image + artigo field discovery.
