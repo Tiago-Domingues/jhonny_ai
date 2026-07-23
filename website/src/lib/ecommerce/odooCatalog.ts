@@ -446,13 +446,15 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
   ];
 
   while (products.length < limit) {
-    const batch = await client.searchRead(
+    const batchRaw = await client.searchRead(
       "product.product",
       // Odoo domain triples; cast keeps XmlRpcValue typing happy.
       domain as unknown as Parameters<OdooClient["searchRead"]>[1],
       fields,
       { limit: Math.min(200, limit - products.length), offset, order: since ? "write_date desc" : "categ_id,name" }
     );
+    // XML-RPC may return a single struct instead of a one-element array.
+    const batch = Array.isArray(batchRaw) ? batchRaw : batchRaw ? [batchRaw as OdooRow] : [];
     products.push(...batch);
     if (batch.length < 200) break;
     offset += batch.length;
@@ -472,7 +474,9 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     fetchNewInTemplateIds(client),
   ]);
 
-  const mappedProducts: SyncedOdooProduct[] = products.map((product) => {
+  const mappedProducts: SyncedOdooProduct[] = products
+    .filter((product) => Number.isFinite(Number(product.id)) && Number(product.id) > 0)
+    .map((product) => {
     const qty = Math.max(0, Math.floor(Number(product.qty_available || 0)));
     const forecast = Math.floor(Number(product.virtual_available || 0));
     const saleable = Boolean(product.sale_ok);

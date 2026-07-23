@@ -203,6 +203,12 @@ export class OdooClient {
       offset: options.offset ?? 0,
     };
     if (options.order) kwargs.order = options.order;
-    return (await this.executeKw(model, "search_read", [domain], kwargs)) as Record<string, unknown>[];
+    const rows = await this.executeKw(model, "search_read", [domain], kwargs);
+    if (Array.isArray(rows)) return rows as Record<string, unknown>[];
+    // Single-row XML-RPC responses can arrive as one struct (must include id).
+    if (rows && typeof rows === "object" && "id" in (rows as Record<string, unknown>)) {
+      return [rows as Record<string, unknown>];
+    }
+    return [];
   }
 }
