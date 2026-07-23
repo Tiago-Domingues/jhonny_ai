@@ -34,7 +34,7 @@ function OpportunityCard({ product }: { product: StoreProduct }) {
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
           {displayOdooCategoryName(product.category)} · {product.brand || "Jhonny"}
         </p>
-        <h3 className="font-display mt-2 line-clamp-2 text-lg font-extrabold uppercase tracking-tight text-ink">
+        <h3 className="font-display mt-2 line-clamp-2 text-lg font-extrabold tracking-tight text-ink">
           {product.name}
         </h3>
         <div className="mt-4 flex items-end justify-between gap-3">

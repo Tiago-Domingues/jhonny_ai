@@ -31,6 +31,7 @@ const discountPercentFieldCandidates = [
 const productFields = [
   "id",
   "name",
+  "display_name",
   "default_code",
   "barcode",
   "list_price",
@@ -43,6 +44,15 @@ const productFields = [
   "description_sale",
   "description",
   "product_template_attribute_value_ids",
+];
+
+/** Prefer explicit Studio / custom fields that mirror Odoo’s “Artigo” column. */
+const artigoFieldCandidates = [
+  "x_studio_artigo",
+  "x_artigo",
+  "x_studio_nome_do_artigo",
+  "x_studio_nome_artigo",
+  "x_nome_artigo",
 ];
 
 const imagePresenceFieldCandidates = ["image_128", "image_256", "image_512"];
@@ -176,6 +186,48 @@ async function availableFields(client: OdooClient, model: string, candidates: st
   } catch {
     return [];
   }
+}
+
+/**
+ * Resolve the commercial product title as shown in Odoo (“Artigo”).
+ * Prefer a custom/Studio Artigo field when present; otherwise use display_name
+ * (includes variant attrs / default_code formatting), then raw name.
+ */
+async function resolveArtigoFieldName(client: OdooClient) {
+  const known = await availableField(client, "product.product", artigoFieldCandidates);
+  if (known) return known;
+
+  try {
+    const fields = await getModelFields(client, "product.product");
+    for (const [name, meta] of Object.entries(fields)) {
+      if (!meta || typeof meta !== "object") continue;
+      const info = meta as { string?: string; type?: string };
+      if (info.type && !["char", "text"].includes(info.type)) continue;
+      const label = String(info.string || "").trim().toLowerCase();
+      if (!label) continue;
+      if (label === "artigo" || label === "nome do artigo" || label === "nome artigo") {
+        return name;
+      }
+    }
+  } catch {
+    // fall through
+  }
+  return null;
+}
+
+function resolveOdooArtigoName(product: OdooRow, artigoField: string | null) {
+  const candidates = [
+    artigoField ? product[artigoField] : null,
+    product.display_name,
+    product.name,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim()) {
+      // Keep Odoo wording; only trim accidental leading/trailing whitespace.
+      return candidate.trim();
+    }
+  }
+  return "Unnamed product";
 }
 
 async function variantAttributeMap(client: OdooClient, ids: number[]) {
@@ -335,19 +387,26 @@ function numberField(product: OdooRow, fields: string[]) {
 export async function fetchOdooProducts(limit = 2000) {
   if (!hasOdooConfig()) return { configured: false, products: [] as SyncedOdooProduct[] };
   const client = new OdooClient();
-  // One cached fields_get covers brand + price + image field discovery (was 3+ sequential RPC calls).
+  // One cached fields_get covers brand + price + image + artigo field discovery.
   await getModelFields(client, "product.product").catch(() => ({}));
-  const [brandField, originalPriceFields, discountPercentFields, imagePresenceField] =
-    await Promise.all([
-      availableField(client, "product.product", brandFieldCandidates),
-      availableFields(client, "product.product", originalPriceFieldCandidates),
-      availableFields(client, "product.product", discountPercentFieldCandidates),
-      availableField(client, "product.product", imagePresenceFieldCandidates),
-    ]);
+  const [
+    brandField,
+    originalPriceFields,
+    discountPercentFields,
+    imagePresenceField,
+    artigoField,
+  ] = await Promise.all([
+    availableField(client, "product.product", brandFieldCandidates),
+    availableFields(client, "product.product", originalPriceFieldCandidates),
+    availableFields(client, "product.product", discountPercentFieldCandidates),
+    availableField(client, "product.product", imagePresenceFieldCandidates),
+    resolveArtigoFieldName(client),
+  ]);
   const fields = Array.from(new Set([
     ...productFields,
     ...(brandField ? [brandField] : []),
     ...(imagePresenceField ? [imagePresenceField] : []),
+    ...(artigoField ? [artigoField] : []),
     ...originalPriceFields,
     ...discountPercentFields,
   ]));
@@ -397,7 +456,7 @@ export async function fetchOdooProducts(limit = 2000) {
     const imageUrl = hasOdooImage(imagePresenceField ? product[imagePresenceField] : null)
       ? `/api/products/images/${product.id}`
       : "/brand/logo-stacked.svg";
-    const name = String(product.name || "Unnamed product");
+    const name = resolveOdooArtigoName(product, artigoField);
     const brandLabel = brand || "Jhonny Surf Store";
     const excludedFromCatalog = foodBeverageExclusion({ name, category, brand: brandLabel });
     const enrichment = buildSurfboardEnrichment({ name, category, brand: brandLabel });

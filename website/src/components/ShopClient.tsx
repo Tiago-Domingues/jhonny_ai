@@ -952,7 +952,7 @@ export function ShopClient({
                           {displayOdooCategoryName(product.category)} · {product.brand}
                         </p>
                         <Link href={`/loja/${product.slug}`} className="group">
-                          <h2 className="font-display mt-2 line-clamp-2 text-base font-extrabold uppercase tracking-tight transition group-hover:text-muted sm:text-lg">
+                          <h2 className="font-display mt-2 line-clamp-2 text-base font-extrabold tracking-tight transition group-hover:text-muted sm:text-lg">
                             {product.name}
                           </h2>
                         </Link>

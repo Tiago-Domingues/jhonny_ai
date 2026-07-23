@@ -70,7 +70,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-muted">
               {category} · {product.brand || "Jhonny Surf Store"}
             </p>
-            <h1 className="font-display mt-3 text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
+            <h1 className="font-display mt-3 text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
               {product.name}
             </h1>
             <p className="font-display mt-5 text-4xl font-extrabold text-ink">
