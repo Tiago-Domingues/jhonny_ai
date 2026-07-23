@@ -474,7 +474,9 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     fetchNewInTemplateIds(client),
   ]);
 
-  const mappedProducts: SyncedOdooProduct[] = products.map((product) => {
+  const mappedProducts: SyncedOdooProduct[] = products
+    .filter((product) => Number.isFinite(Number(product.id)) && Number(product.id) > 0)
+    .map((product) => {
     const qty = Math.max(0, Math.floor(Number(product.qty_available || 0)));
     const forecast = Math.floor(Number(product.virtual_available || 0));
     const saleable = Boolean(product.sale_ok);
