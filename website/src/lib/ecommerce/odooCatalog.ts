@@ -225,12 +225,13 @@ function resolveOdooArtigoName(product: OdooRow, artigoField: string | null) {
   for (const candidate of candidates) {
     if (typeof candidate !== "string" || !candidate.trim()) continue;
     let title = candidate.trim();
-    // Odoo name_get often prefixes "[default_code] ". Ref is shown separately on the
-    // storefront, so drop a matching code prefix while keeping variant text from Artigo.
+    // Odoo name_get prefixes "[default_code] ". Ref is shown separately on the
+    // storefront — drop that code prefix (exact SKU match, else any [code] head).
     if (sku) {
       const escaped = sku.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       title = title.replace(new RegExp(`^\\[${escaped}\\]\\s*`, "i"), "").trim();
     }
+    title = title.replace(/^\[[^\]]+\]\s*/, "").trim();
     if (title) return title;
   }
   return "Unnamed product";
@@ -390,7 +391,7 @@ function numberField(product: OdooRow, fields: string[]) {
   return null;
 }
 
-export async function fetchOdooProducts(limit = 2000) {
+export async function fetchOdooProducts(limit = 5000) {
   if (!hasOdooConfig()) return { configured: false, products: [] as SyncedOdooProduct[] };
   const client = new OdooClient();
   // One cached fields_get covers brand + price + image + artigo field discovery.
