@@ -5,6 +5,11 @@ import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { CookieConsent } from "@/components/CookieConsent";
 import { FirstPurchaseOffer } from "@/components/FirstPurchaseOffer";
+import {
+  SITE_PREVIEW_COOKIE,
+  isValidPreviewCookie,
+  shouldEnforceComingSoon,
+} from "@/lib/ecommerce/siteAccess";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,19 +63,34 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const showCookieBanner = !cookieStore.get("jss_consent")?.value;
+  const previewUnlocked = isValidPreviewCookie(
+    cookieStore.get(SITE_PREVIEW_COOKIE)?.value
+  );
+  // Pre-launch gate: hide store chrome so .com and .pt always match
+  // (consent cookies are per-domain and otherwise make one look "bigger").
+  const publicComingSoon = shouldEnforceComingSoon() && !previewUnlocked;
+  const showCookieBanner =
+    !publicComingSoon && !cookieStore.get("jss_consent")?.value;
 
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${montserrat.variable} ${notoSansSC.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-paper text-ink">
-        <LanguageProvider>
-          {children}
-          <CookieConsent initialVisible={showCookieBanner} />
-          <FirstPurchaseOffer />
-        </LanguageProvider>
+      <body
+        className={`min-h-full flex flex-col text-ink ${
+          publicComingSoon ? "bg-cream" : "bg-paper"
+        }`}
+      >
+        {publicComingSoon ? (
+          children
+        ) : (
+          <LanguageProvider>
+            {children}
+            <CookieConsent initialVisible={showCookieBanner} />
+            <FirstPurchaseOffer />
+          </LanguageProvider>
+        )}
       </body>
     </html>
   );
