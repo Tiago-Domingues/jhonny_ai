@@ -23,7 +23,7 @@ The marketing site, product catalog, and shopping foundations are largely in pla
 | Area | Status |
 |------|--------|
 | Brand / homepage content | Ready (imagery refresh still needed — see P1.8) |
-| Product catalog (Odoo → site) | Ready (synced) |
+| Product catalog (Odoo → site) | Connected, but **not guaranteed near real-time** (see P0.18) |
 | Browse shop, filters, product pages | Ready for browsing |
 | Cart + guest/account checkout skeleton | Built, not production-safe |
 | Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** |
@@ -59,6 +59,7 @@ These are the agreed end-state for go-live:
 | Free shipping | **€100** everywhere (banner, checkout, legal) |
 | Languages at launch | Site already supports PT / EN / ZH for most UX; legal ZH can follow later |
 | Brand imagery | Homepage + category heroes use **recent real store / product photos** (not stale assets) |
+| Odoo ↔ website | Catalog (products, price, stock, categories, New In / offers) stays in **near real-time** sync |
 | Security bar | Fail closed on payments/secrets; authenticated admin/sync APIs; rate limits; security headers |
 
 ---
@@ -69,7 +70,7 @@ From production integration status and code review:
 
 | Integration | Production status |
 |-------------|-------------------|
-| Odoo | Configured and authenticated |
+| Odoo | Configured and authenticated — catalog sync exists but is **not a reliable near-real-time pipeline** yet |
 | Email (Resend) | **Not configured** — order emails skipped |
 | Ifthenpay MB WAY | **Not configured** — would fall back to mocks |
 | Ifthenpay Multibanco | **Not configured** — would fall back to mocks |
@@ -88,6 +89,7 @@ Other important mismatches / risks:
 - If catalog/DB fails, mock demo products must not become sellable.
 - No simple admin screen to process orders; no customer “My orders” history.
 - Homepage hero / category tile images may be outdated vs recent store photography.
+- Odoo → website catalog updates are **not guaranteed near real-time**: with `ODOO_LIVE_CATALOG=true`, listing may kick a **background** sync only when DB data is older than **~15 minutes** and someone hits the shop; there is no scheduled cron and no Odoo product-change webhook. Manual `POST /api/odoo/sync/products` still exists.
 - Security gaps listed in §5.1 below.
 
 ### 5.1 Security posture (attack resistance)
@@ -150,8 +152,9 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 | P0.15 | **Rate-limit** login, register, checkout, coupon, and payment-callback endpoints | Stops brute-force and callback flooding | S–M |
 | P0.16 | **Lock down** Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe) | Stops unauthorized sync / info leak | S |
 | P0.17 | Add **security HTTP headers** (HSTS, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`, baseline CSP, `nosniff`) | Hardens browser attack surface | S |
+| P0.18 | **Near real-time Odoo ↔ website catalog sync**: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA | Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly | M |
 
-**P0 rough total:** about **2–4 weeks** of focused build + provider setup, dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1. Security items P0.4 / P0.14–P0.17 are mostly S–M and should be done **before** opening paid traffic.
+**P0 rough total:** about **2–4 weeks** of focused build + provider setup, dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1. Security items P0.4 / P0.14–P0.17 and catalog freshness **P0.18** are mostly S–M and should be done **before** opening paid traffic.
 
 ### P1 — Launch ops and trust
 
@@ -194,23 +197,25 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 1. **Configure production:** Ifthenpay, email, Odoo, secrets — fail closed if payments/email/session secret missing.  
 2. **Security baseline:** callback hardening, rate limits, lock sync/status APIs, security headers (P0.4, P0.14–P0.17).  
-3. **Ship PT payment path:** MB WAY + Multibanco end-to-end (UI + email + callback).  
-4. **Ship international payments:** PayPal, then Klarna (or in parallel if two people).  
-5. **Harden commerce rules:** stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.  
-6. **Ops + brand:** admin order list, FAQ/trust copy, **recent homepage/category photos** (P1.8).  
-7. **Open domains:** remove `.pt` coming-soon; keep `.com` live.  
-8. **Gate:** complete one successful live (or final sandbox) order per payment method; then announce.
+3. **Odoo freshness:** scheduled + (optional) webhook catalog sync with health monitoring (P0.18).  
+4. **Ship PT payment path:** MB WAY + Multibanco end-to-end (UI + email + callback).  
+5. **Ship international payments:** PayPal, then Klarna (or in parallel if two people).  
+6. **Harden commerce rules:** stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.  
+7. **Ops + brand:** admin order list, FAQ/trust copy, **recent homepage/category photos** (P1.8).  
+8. **Open domains:** remove `.pt` coming-soon; keep `.com` live.  
+9. **Gate:** complete one successful live (or final sandbox) order per payment method; then announce.
 
 ```mermaid
 flowchart LR
   config[Config_secrets_providers]
   security[Security_baseline]
+  odooSync[Odoo_near_realtime_sync]
   ptPay[MBWAY_Multibanco]
   intlPay[PayPal_Klarna]
   rules[Stock_coupons_shipping]
   ops[Admin_emails_brand_images]
   domains[Open_com_and_pt]
-  config --> security --> ptPay --> intlPay --> rules --> ops --> domains
+  config --> security --> odooSync --> ptPay --> intlPay --> rules --> ops --> domains
 ```
 
 ---
@@ -229,6 +234,7 @@ All of the following must be true:
 - [ ] **jhonnysurfstore.com** and **jhonnysurfstore.pt** both serve the full shop (no coming-soon gate).  
 - [ ] Auth/checkout/callback are **rate-limited**; Odoo sync is **not** anonymously callable.  
 - [ ] Production refuses weak/default **SESSION_SECRET**; security headers are on.  
+- [ ] Odoo catalog changes (products, price, stock, categories, offers) appear on the website in **near real time** (scheduled sync and/or webhook; sync health OK).  
 - [ ] Homepage + category heroes use **approved recent photos**.  
 
 Until that checklist is green, treat the site as **marketing + catalog preview**, not an open webshop.
@@ -246,6 +252,8 @@ Until that checklist is green, treat the site as **marketing + catalog preview**
 | Session / cookies | `website/src/lib/ecommerce/session.ts` |
 | Auth validation | `website/src/lib/ecommerce/security.ts`, `schemas.ts` |
 | Odoo product sync API | `website/src/app/api/odoo/sync/products/route.ts` |
+| Catalog list + background stale sync (~15 min) | `website/src/lib/ecommerce/catalog.ts` (`kickBackgroundOdooSync`) |
+| Odoo fetch / upsert sync | `website/src/lib/ecommerce/odooCatalog.ts` (`syncOdooProducts`) |
 | Category hero images | `website/src/lib/ecommerce/categoryHeroes.ts`, `website/src/components/Products.tsx` |
 | Homepage hero media | `website/src/components/Hero.tsx`, `website/public/brand/` |
 | Checkout UI | `website/src/components/CheckoutClient.tsx` |
