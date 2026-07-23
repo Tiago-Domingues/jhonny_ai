@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { STORE, whatsappHref } from "@/lib/i18n";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
+import { PreviewUnlockForm } from "@/components/PreviewUnlockForm";
 
 export const metadata: Metadata = {
   title: "Em construção · Under construction",
@@ -24,16 +25,16 @@ export default function ComingSoon() {
           className="h-auto w-44 sm:w-52"
         />
 
-        {/* Animated toy logo */}
-        <div className="relative mt-8 flex h-44 w-44 items-center justify-center">
-          <span className="absolute bottom-3 h-4 w-28 rounded-full bg-black/10 blur-md" />
+        {/* Jhonny toy */}
+        <div className="relative mt-8 flex h-52 w-52 items-center justify-center sm:h-56 sm:w-56">
+          <span className="absolute bottom-4 h-4 w-28 rounded-full bg-black/10 blur-md" />
           <Image
-            src="/brand/jhonny-character-cut.svg"
+            src="/brand/jhonny-character.png"
             alt="Jhonny"
-            width={240}
-            height={300}
+            width={480}
+            height={600}
             priority
-            className="animate-toy h-40 w-auto object-contain"
+            className="animate-toy h-48 w-auto object-contain sm:h-52"
           />
         </div>
 
@@ -70,6 +71,9 @@ export default function ComingSoon() {
         </div>
 
         <p className="mt-6 text-sm text-muted">{STORE.region}</p>
+
+        {/* Same unlock on .com and .pt — expands to password field */}
+        <PreviewUnlockForm />
       </div>
     </main>
   );
