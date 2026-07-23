@@ -203,6 +203,9 @@ export class OdooClient {
       offset: options.offset ?? 0,
     };
     if (options.order) kwargs.order = options.order;
-    return (await this.executeKw(model, "search_read", [domain], kwargs)) as Record<string, unknown>[];
+    const rows = await this.executeKw(model, "search_read", [domain], kwargs);
+    if (Array.isArray(rows)) return rows as Record<string, unknown>[];
+    if (rows && typeof rows === "object") return [rows as Record<string, unknown>];
+    return [];
   }
 }
