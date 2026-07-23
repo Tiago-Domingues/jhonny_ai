@@ -1,5 +1,6 @@
 import "server-only";
 
+import { after } from "next/server";
 import { Product } from "@prisma/client";
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { eurosToCents } from "@/lib/ecommerce/money";
@@ -282,13 +283,38 @@ export function toLeanStoreProduct(product: StoreProduct): StoreProduct {
 
 let odooSyncInFlight: Promise<unknown> | null = null;
 
-function kickBackgroundOdooSync() {
+/** Kick a non-blocking catalog refresh. Prefer incremental (seconds) over full. */
+export const ODOO_CATALOG_STALE_MS = 60 * 1000;
+
+function kickBackgroundOdooSync(mode: "incremental" | "full" = "incremental") {
   if (odooSyncInFlight) return;
-  odooSyncInFlight = syncOdooProducts()
+  const promise = syncOdooProducts({ mode })
     .catch(() => undefined)
     .finally(() => {
       odooSyncInFlight = null;
     });
+  odooSyncInFlight = promise;
+  // Keep the serverless invocation alive until sync finishes (Vercel/Next.js).
+  try {
+    after(async () => {
+      await promise;
+    });
+  } catch {
+    // Called outside a request context — promise still runs in-process.
+  }
+}
+
+async function maybeKickCatalogSync() {
+  if (process.env.ODOO_LIVE_CATALOG !== "true" || !hasOdooConfig()) return;
+  const newest = await prisma.product.findFirst({
+    where: { odooSyncStatus: "SYNCED" },
+    orderBy: { lastOdooSyncAt: "desc" },
+    select: { lastOdooSyncAt: true },
+  });
+  const stale =
+    !newest?.lastOdooSyncAt ||
+    Date.now() - newest.lastOdooSyncAt.getTime() > ODOO_CATALOG_STALE_MS;
+  if (stale) kickBackgroundOdooSync("incremental");
 }
 
 function toStoreProductFromOdoo(product: OdooProduct): StoreProduct {
@@ -415,17 +441,7 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
   }
 
   try {
-    if (process.env.ODOO_LIVE_CATALOG === "true" && hasOdooConfig()) {
-      const newest = await prisma.product.findFirst({
-        where: { odooSyncStatus: "SYNCED" },
-        orderBy: { lastOdooSyncAt: "desc" },
-        select: { lastOdooSyncAt: true },
-      });
-      const stale =
-        !newest?.lastOdooSyncAt || Date.now() - newest.lastOdooSyncAt.getTime() > 15 * 60 * 1000;
-      // Never block product listing on a full Odoo sync — refresh in the background.
-      if (stale) kickBackgroundOdooSync();
-    }
+    await maybeKickCatalogSync();
 
     const products = await prisma.product.findMany({
       where: { active: true, excludedFromCatalog: false },
@@ -515,6 +531,8 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
   }
 
   try {
+    await maybeKickCatalogSync();
+
     const tagged = await prisma.product.findMany({
       where: {
         active: true,

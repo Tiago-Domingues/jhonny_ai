@@ -391,8 +391,28 @@ function numberField(product: OdooRow, fields: string[]) {
   return null;
 }
 
-export async function fetchOdooProducts(limit = 5000) {
-  if (!hasOdooConfig()) return { configured: false, products: [] as SyncedOdooProduct[] };
+export type FetchOdooProductsOptions = {
+  /** Max products to pull (full sync). */
+  limit?: number;
+  /**
+   * When set, only products with write_date >= since (incremental).
+   * ISO-ish Odoo datetime string is derived from this Date.
+   */
+  since?: Date | null;
+};
+
+function odooDatetime(value: Date) {
+  // Odoo XML-RPC expects naive UTC "YYYY-MM-DD HH:MM:SS".
+  return value.toISOString().replace("T", " ").slice(0, 19);
+}
+
+export async function fetchOdooProducts(options: FetchOdooProductsOptions | number = {}) {
+  const normalized =
+    typeof options === "number" ? { limit: options } : options || {};
+  const limit = normalized.limit ?? 5000;
+  const since = normalized.since ?? null;
+
+  if (!hasOdooConfig()) return { configured: false, products: [] as SyncedOdooProduct[], since: null as string | null };
   const client = new OdooClient();
   // One cached fields_get covers brand + price + image + artigo field discovery.
   await getModelFields(client, "product.product").catch(() => ({}));
@@ -419,16 +439,19 @@ export async function fetchOdooProducts(limit = 5000) {
   ]));
   const products: OdooRow[] = [];
   let offset = 0;
+  const domain = [
+    ["active", "=", true],
+    ["sale_ok", "=", true],
+    ...(since ? [["write_date", ">=", odooDatetime(since)]] : []),
+  ];
 
   while (products.length < limit) {
     const batch = await client.searchRead(
       "product.product",
-      [
-        ["active", "=", true],
-        ["sale_ok", "=", true],
-      ],
+      // Odoo domain triples; cast keeps XmlRpcValue typing happy.
+      domain as unknown as Parameters<OdooClient["searchRead"]>[1],
       fields,
-      { limit: Math.min(200, limit - products.length), offset, order: "categ_id,name" }
+      { limit: Math.min(200, limit - products.length), offset, order: since ? "write_date desc" : "categ_id,name" }
     );
     products.push(...batch);
     if (batch.length < 200) break;
@@ -544,28 +567,106 @@ export async function fetchOdooProducts(limit = 5000) {
   return {
     configured: true,
     products: mappedProducts,
+    since: since ? odooDatetime(since) : null,
   };
 }
 
-export async function syncOdooProducts() {
-  const result = await fetchOdooProducts();
-  if (!result.configured) {
-    return { configured: false, upserted: 0 };
-  }
+/**
+ * Fast path: refresh only the New In boolean from Odoo attribute lines.
+ * Covers the common case of tagging an existing product as New In without
+ * waiting for a full product.product write_date change.
+ */
+export async function syncNewInFlagsFromOdoo() {
+  if (!hasOdooConfig()) return { configured: false as const, turnedOn: 0, turnedOff: 0, newInTemplates: 0 };
+  const client = new OdooClient();
+  const newInTemplateIds = Array.from(await fetchNewInTemplateIds(client));
 
+  const turnedOn = await prisma.product.updateMany({
+    where: {
+      active: true,
+      isNewIn: false,
+      odooProductTemplateId: { in: newInTemplateIds.length ? newInTemplateIds : [-1] },
+    },
+    data: { isNewIn: true, lastOdooSyncAt: new Date() },
+  });
+
+  const turnedOff = await prisma.product.updateMany({
+    where: {
+      isNewIn: true,
+      ...(newInTemplateIds.length
+        ? { OR: [{ odooProductTemplateId: { notIn: newInTemplateIds } }, { odooProductTemplateId: null }] }
+        : {}),
+    },
+    data: { isNewIn: false, lastOdooSyncAt: new Date() },
+  });
+
+  return {
+    configured: true as const,
+    turnedOn: turnedOn.count,
+    turnedOff: turnedOff.count,
+    newInTemplates: newInTemplateIds.length,
+  };
+}
+
+async function upsertProductsInChunks(products: SyncedOdooProduct[], chunkSize = 25) {
   let upserted = 0;
-  const seenOdooIds = new Set<number>();
-  for (const product of result.products) {
-    seenOdooIds.add(product.odooProductId);
-    await prisma.product.upsert({
-      where: { odooProductId: product.odooProductId },
-      update: product,
-      create: product,
-    });
-    upserted += 1;
+  for (let i = 0; i < products.length; i += chunkSize) {
+    const chunk = products.slice(i, i + chunkSize);
+    await Promise.all(
+      chunk.map((product) =>
+        prisma.product.upsert({
+          where: { odooProductId: product.odooProductId },
+          update: product,
+          create: product,
+        })
+      )
+    );
+    upserted += chunk.length;
+  }
+  return upserted;
+}
+
+export type SyncOdooProductsOptions = {
+  /** incremental = changed since last sync (+ New In flags). full = entire catalog. */
+  mode?: "incremental" | "full";
+};
+
+export async function syncOdooProducts(options: SyncOdooProductsOptions = {}) {
+  const mode = options.mode ?? "full";
+  if (!hasOdooConfig()) {
+    return { configured: false, mode, upserted: 0, newIn: null as Awaited<ReturnType<typeof syncNewInFlagsFromOdoo>> | null };
   }
 
-  if (seenOdooIds.size && seenOdooIds.size <= 900) {
+  // Always refresh New In flags — cheap and covers attribute-only edits.
+  const newIn = await syncNewInFlagsFromOdoo().catch(() => null);
+
+  let since: Date | null = null;
+  if (mode === "incremental") {
+    const newest = await prisma.product.findFirst({
+      where: { odooSyncStatus: "SYNCED" },
+      orderBy: { lastOdooSyncAt: "desc" },
+      select: { lastOdooSyncAt: true },
+    });
+    // Overlap window so edits mid-sync are not missed.
+    const overlapMs = 5 * 60 * 1000;
+    since = newest?.lastOdooSyncAt
+      ? new Date(Math.max(0, newest.lastOdooSyncAt.getTime() - overlapMs))
+      : new Date(Date.now() - 24 * 60 * 60 * 1000);
+  }
+
+  const result = await fetchOdooProducts({
+    since,
+    limit: mode === "full" ? 5000 : 2000,
+  });
+  if (!result.configured) {
+    return { configured: false, mode, upserted: 0, newIn };
+  }
+
+  const upserted = await upsertProductsInChunks(result.products);
+  const seenOdooIds = new Set(result.products.map((product) => product.odooProductId));
+
+  // Only deactivate missing rows on a full sync (incremental sets are partial).
+  if (mode === "full" && seenOdooIds.size > 0 && seenOdooIds.size <= 5000) {
     await prisma.product.updateMany({
       where: {
         odooProductId: { notIn: Array.from(seenOdooIds) },
@@ -575,5 +676,28 @@ export async function syncOdooProducts() {
     });
   }
 
-  return { configured: true, upserted };
+  // Keep freshness watermark moving even when nothing changed, so on-read
+  // kicks and cron overlap stay coherent.
+  if (mode === "incremental" && upserted === 0) {
+    const newest = await prisma.product.findFirst({
+      where: { odooSyncStatus: "SYNCED" },
+      orderBy: { lastOdooSyncAt: "desc" },
+      select: { id: true },
+    });
+    if (newest) {
+      await prisma.product.update({
+        where: { id: newest.id },
+        data: { lastOdooSyncAt: new Date() },
+      });
+    }
+  }
+
+  return {
+    configured: true,
+    mode,
+    upserted,
+    fetched: result.products.length,
+    since: result.since,
+    newIn,
+  };
 }
