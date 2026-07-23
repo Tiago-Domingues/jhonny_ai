@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/odoo/sync/products?mode=incremental",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/odoo/sync/products?mode=full",
+      "schedule": "15 * * * *"
+    }
+  ]
+}

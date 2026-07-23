@@ -89,7 +89,7 @@ Other important mismatches / risks:
 - If catalog/DB fails, mock demo products must not become sellable.
 - No simple admin screen to process orders; no customer “My orders” history.
 - Homepage hero / category tile images may be outdated vs recent store photography.
-- Odoo → website catalog updates are **not guaranteed near real-time**: with `ODOO_LIVE_CATALOG=true`, listing may kick a **background** sync only when DB data is older than **~15 minutes** and someone hits the shop; there is no scheduled cron and no Odoo product-change webhook. Manual `POST /api/odoo/sync/products` still exists.
+- Odoo → website catalog freshness: **Vercel Cron** runs incremental sync about **every 2 minutes** (plus hourly full sync). Shop/New In pages also kick a background incremental sync when the cache is older than **~60 seconds**. Typical delay after an Odoo edit (including New In tags): **under 2 minutes**. Manual `POST/GET /api/odoo/sync/products` still exists (requires `CRON_SECRET`).
 - Security gaps listed in §5.1 below.
 
 ### 5.1 Security posture (attack resistance)
