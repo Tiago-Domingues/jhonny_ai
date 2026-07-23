@@ -40,6 +40,15 @@ export VERCEL_TOKEN=...   # from vercel.com/account/tokens
 
 Or add `VERCEL_TOKEN` as a **Cursor Cloud environment secret** so agents can run the same script without pasting tokens in chat.
 
-## Rotate compromised tokens
+## Pre-launch public gate
 
-If a token was pasted into chat, revoke it in Vercel → Account → Tokens, create a new one, and update the GitHub Actions secret (and Cursor env secret if used).
+Until the shop is ready for purchases:
+
+1. Keep **`SITE_PUBLIC_LAUNCH`** unset or `false` on Vercel (default after this feature ships).
+2. Set **`SITE_PREVIEW_PASSWORD`** to a long private password (Vercel → Project → Settings → Environment Variables → Production).
+3. Public visitors on **www.jhonnysurfstore.com** / **.pt** only see `/coming-soon`.
+4. You review the full site at **https://www.jhonnysurfstore.com/preview-access** (enter the password once; cookie lasts 30 days).
+
+When go-live is approved, set `SITE_PUBLIC_LAUNCH=true` and redeploy (or wait for next `main` deploy).
+
+Optional: also enable Vercel **Deployment Protection** as a second lock, but the in-app gate is enough for hiding the unfinished shop.
