@@ -354,8 +354,8 @@
       <ul>
         <li>Free shipping threshold is <strong>€100</strong> in banner, checkout logic, checkout UI, and legal pages (P0.9–P0.11 ✅).</li>
         <li>After checkout, customers do <strong>not</strong> see Multibanco entity/reference or MB WAY next steps.</li>
-        <li>Stock is checked but <strong>not reserved/decremented</strong> → oversell risk.</li>
-        <li>Coupons can be consumed when the order is created, even if payment never completes.</li>
+        <li>Stock is <strong>reserved (decremented) at checkout</strong> and released on unpaid cancel/expiry (P0.7 ✅).</li>
+        <li>Coupon usage rows are written <strong>only after payment</strong>; unpaid orders hold the code until pay/cancel (P0.8 ✅).</li>
         <li>Until <code>SITE_PUBLIC_LAUNCH=true</code>, <strong>both .com and .pt</strong> show coming-soon to the public; staff unlock via <code>/preview-access</code> + <code>SITE_PREVIEW_PASSWORD</code>.</li>
         <li>If catalog/DB fails, mock demo products must not become sellable.</li>
         <li>No simple admin screen to process orders; no customer “My orders” history.</li>
