@@ -4,13 +4,27 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 import { prisma } from "@/lib/ecommerce/db";
+import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 const SESSION_COOKIE = "jss_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const DEV_DEFAULT_SECRET = "dev-only-change-me-before-production";
+
+export function assertSessionSecretConfigured() {
+  const secret = process.env.SESSION_SECRET?.trim();
+  if (!isProductionRuntime()) {
+    return secret || DEV_DEFAULT_SECRET;
+  }
+  if (!secret || secret === DEV_DEFAULT_SECRET || secret.length < 32) {
+    throw new Error(
+      "SESSION_SECRET is missing or too weak for production (need a unique secret, min 32 chars)."
+    );
+  }
+  return secret;
+}
 
 function sessionSecret() {
-  const secret = process.env.SESSION_SECRET || "dev-only-change-me-before-production";
-  return new TextEncoder().encode(secret);
+  return new TextEncoder().encode(assertSessionSecretConfigured());
 }
 
 export type SessionUser = {
@@ -30,6 +44,9 @@ export async function createSessionToken(userId: string) {
 }
 
 export async function readSessionUser(): Promise<SessionUser | null> {
+  // Fail closed in production if session crypto is misconfigured.
+  assertSessionSecretConfigured();
+
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
@@ -52,7 +69,10 @@ export async function readSessionUser(): Promise<SessionUser | null> {
       role: user.role,
       fullName: user.profile?.fullName,
     };
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("SESSION_SECRET")) {
+      throw error;
+    }
     return null;
   }
 }
@@ -61,7 +81,7 @@ export function setSessionCookie(response: NextResponse, token: string) {
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: isProductionRuntime(),
     maxAge: SESSION_MAX_AGE_SECONDS,
     path: "/",
   });

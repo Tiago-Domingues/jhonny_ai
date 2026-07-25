@@ -107,13 +107,13 @@ Other important mismatches / risks:
 
 | Risk | Why it matters |
 |------|----------------|
-| Ifthenpay callback secret optional + no amount/status check | Attacker who knows an order reference can mark orders **paid** |
-| Missing payment keys → mock / placeholder “payments” | Fake paid state in production |
-| Mock catalog upserted into DB if catalog empty | Demo SKUs become sellable |
-| `POST /api/odoo/sync/products` unauthenticated | Anyone can trigger sync / DoS Odoo |
-| No rate limits on login, register, checkout, callback | Brute-force and abuse |
-| Soft-default `SESSION_SECRET` if unset | Predictable sessions if misconfigured |
-| No security HTTP headers (CSP, HSTS, frame deny, etc.) | Clickjacking / XSS blast-radius / downgrade |
+| Ifthenpay callback secret optional + no amount/status check | **Hardened:** secret required in prod, constant-time compare, amount/status checks |
+| Missing payment keys → mock / placeholder “payments” | **Hardened:** production fail-closed (no mock MB WAY/Multibanco/PayPal/Klarna) |
+| Mock catalog upserted into DB if catalog empty | **Hardened:** demos blocked in production unless `ALLOW_MOCK_CATALOG=true` |
+| `POST /api/odoo/sync/products` unauthenticated | **Hardened:** `CRON_SECRET` / ops bearer required |
+| No rate limits on login, register, checkout, callback | **Hardened:** in-memory rate limits on auth/checkout/coupon/callback |
+| Soft-default `SESSION_SECRET` if unset | **Hardened:** production refuses missing/default/weak session secret |
+| No security HTTP headers (CSP, HSTS, frame deny, etc.) | **Hardened:** baseline headers via `next.config.ts` |
 
 **Should fix soon after / with launch ops (P1)**
 

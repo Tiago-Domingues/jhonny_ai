@@ -1,25 +1,18 @@
 import { revalidatePath } from "next/cache";
 import { syncOdooProducts } from "@/lib/ecommerce/odooCatalog";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
+import { hasValidOpsBearer, isProductionRuntime, readOpsSecret } from "@/lib/ecommerce/securityRuntime";
 
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 function authorized(request: Request) {
-  const cronSecret = process.env.CRON_SECRET?.trim();
-  const syncSecret = process.env.ODOO_SYNC_SECRET?.trim();
-  const expected = cronSecret || syncSecret;
-  // Fail closed in production when a secret is configured; allow local/dev without.
+  const expected = readOpsSecret();
   if (!expected) {
-    return process.env.NODE_ENV !== "production";
+    // Fail closed in production if no cron/sync secret is configured.
+    return !isProductionRuntime();
   }
-
-  const header = request.headers.get("authorization") || "";
-  const bearer = header.toLowerCase().startsWith("bearer ")
-    ? header.slice(7).trim()
-    : "";
-  const alt = request.headers.get("x-odoo-sync-secret")?.trim() || "";
-  return bearer === expected || alt === expected;
+  return hasValidOpsBearer(request);
 }
 
 async function runSync(request: Request) {
