@@ -361,7 +361,7 @@
         <li>If catalog/DB fails, mock demo products must not become sellable.</li>
         <li>No simple admin screen to process orders; no customer “My orders” history.</li>
         <li>Homepage hero / category tile images may be outdated vs recent store photography.</li>
-        <li>Odoo → website catalog updates are <strong>not guaranteed near real-time</strong>: with <code>ODOO_LIVE_CATALOG=true</code>, listing may kick a <strong>background</strong> sync only when DB data is older than <strong>~15 minutes</strong> and someone hits the shop; there is no scheduled cron and no Odoo product-change webhook. Manual <code>POST /api/odoo/sync/products</code> still exists.</li>
+        <li>Odoo → website catalog freshness: <strong>Vercel Cron</strong> incremental sync about every <strong>2 minutes</strong> (plus hourly full sync). Shop/New In also kick background sync when cache is older than <strong>~60 seconds</strong>. Typical delay after an Odoo edit: <strong>under 2 minutes</strong>.</li>
         <li>Security gaps listed in §5.1 below.</li>
       </ul>
 
@@ -373,27 +373,27 @@
         <li>Guest cart/rating tokens stored as hashes; admin order-status requires <code>ADMIN</code>.</li>
         <li>Prisma ORM only (no raw SQL); React-escaped UI (no <code>dangerouslySetInnerHTML</code>).</li>
       </ul>
-      <p><strong>Must fix before open checkout (P0)</strong></p>
+      <p><strong>Must fix before open checkout (P0) — baseline hardened</strong></p>
       <table>
         <thead>
           <tr><th>Risk</th><th>Why it matters</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Risk">Ifthenpay callback secret optional + no amount/status check</td><td data-label="Why">Attacker who knows an order reference can mark orders <strong>paid</strong></td></tr>
-          <tr><td data-label="Risk">Missing payment keys → mock / placeholder “payments”</td><td data-label="Why">Fake paid state in production</td></tr>
-          <tr><td data-label="Risk">Mock catalog upserted into DB if catalog empty</td><td data-label="Why">Demo SKUs become sellable</td></tr>
-          <tr><td data-label="Risk"><code>POST /api/odoo/sync/products</code> unauthenticated</td><td data-label="Why">Anyone can trigger sync / DoS Odoo</td></tr>
-          <tr><td data-label="Risk">No rate limits on login, register, checkout, callback</td><td data-label="Why">Brute-force and abuse</td></tr>
-          <tr><td data-label="Risk">Soft-default <code>SESSION_SECRET</code> if unset</td><td data-label="Why">Predictable sessions if misconfigured</td></tr>
-          <tr><td data-label="Risk">No security HTTP headers</td><td data-label="Why">Clickjacking / XSS blast-radius / downgrade</td></tr>
+          <tr><td data-label="Risk">Ifthenpay callback secret optional + no amount/status check</td><td data-label="Why"><strong>Hardened:</strong> secret required in prod, amount/status checks</td></tr>
+          <tr><td data-label="Risk">Missing payment keys → mock / placeholder “payments”</td><td data-label="Why"><strong>Hardened:</strong> production fail-closed</td></tr>
+          <tr><td data-label="Risk">Mock catalog upserted into DB if catalog empty</td><td data-label="Why"><strong>Hardened:</strong> demos blocked unless <code>ALLOW_MOCK_CATALOG=true</code></td></tr>
+          <tr><td data-label="Risk"><code>POST /api/odoo/sync/products</code> unauthenticated</td><td data-label="Why"><strong>Hardened:</strong> <code>CRON_SECRET</code> / ops bearer required</td></tr>
+          <tr><td data-label="Risk">No rate limits on login, register, checkout, callback</td><td data-label="Why"><strong>Hardened:</strong> in-memory rate limits</td></tr>
+          <tr><td data-label="Risk">Soft-default <code>SESSION_SECRET</code> if unset</td><td data-label="Why"><strong>Hardened:</strong> production refuses weak/default secret</td></tr>
+          <tr><td data-label="Risk">No security HTTP headers</td><td data-label="Why"><strong>Hardened:</strong> baseline headers via <code>next.config.ts</code></td></tr>
         </tbody>
       </table>
       <p><strong>Should fix soon after / with launch ops (P1)</strong></p>
       <ul>
         <li>No password reset / email verification</li>
-        <li>Public integrations/Odoo status APIs leak config readiness</li>
         <li>Order email HTML unsanitized fields</li>
         <li>Ratings / availability without rate limits</li>
+        <li>Integrations/Odoo status APIs: <strong>hardened</strong> (admin or ops secret)</li>
       </ul>
     </section>
 
@@ -521,10 +521,27 @@
         </tbody>
       </table>
       <p>
+        <strong>Status (see markdown for Status column):</strong>
+        ✅ Done — P0.4, P0.13–P0.18 ·
+        ⏸ Blocked (credentials) — P0.1–P0.3 ·
+        Open / can do now — P0.5–P0.12 (P0.5–P0.6 partly need providers).
+      </p>
+      <p>
         <strong>P0 rough total:</strong> about <strong>2–4 weeks</strong> of focused build + provider setup,
         dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1.
-        Security items P0.4 / P0.14–P0.17 and catalog freshness <strong>P0.18</strong> are mostly S–M and should be done <strong>before</strong> opening paid traffic.
+        Security baseline and catalog freshness are shipped; payments remain blocked on credentials.
       </p>
+
+      <h3>Recommended next (no payment credentials needed)</h3>
+      <ol>
+        <li><strong>P0.10 + P0.11 + P0.9</strong> — shipping rules (€100 free shipping, show shipping in total, require address)</li>
+        <li><strong>P0.7 + P0.8</strong> — stock reservation + coupon only after payment</li>
+        <li><strong>P1.5</strong> — FAQ / trust copy cleanup</li>
+        <li><strong>P1.9</strong> — sanitize order email HTML + rate-limit ratings/availability</li>
+        <li><strong>P1.1 / P1.2</strong> — admin orders + customer “My orders”</li>
+        <li><strong>P1.8</strong> — homepage/category imagery refresh (needs your photos)</li>
+        <li>Return to <strong>P0.1–P0.6</strong> when payment/email credentials arrive</li>
+      </ol>
 
       <h3>P1 — Launch ops and trust</h3>
       <table>
