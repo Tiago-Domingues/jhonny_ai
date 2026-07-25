@@ -7,8 +7,35 @@ import { eurosToCents } from "@/lib/ecommerce/money";
 import { fetchOdooProducts, syncOdooProducts } from "@/lib/ecommerce/odooCatalog";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { productMatchesCategoryGroup, productMatchesSubcategory } from "@/lib/ecommerce/categoryGroups";
+import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 type OdooProduct = Awaited<ReturnType<typeof fetchOdooProducts>>["products"][number];
+
+/** Demo catalog is for local/dev only unless explicitly re-enabled. */
+export function allowMockCatalog() {
+  if (process.env.ALLOW_MOCK_CATALOG === "true") return true;
+  return !isProductionRuntime();
+}
+
+export function isMockProductIdentity(product: {
+  id?: string | null;
+  slug?: string | null;
+  sku?: string | null;
+  refId?: string | null;
+}) {
+  const id = String(product.id || "");
+  const slug = String(product.slug || "");
+  const sku = String(product.sku || product.refId || "");
+  return (
+    id.startsWith("mock-") ||
+    slug.includes("-demo") ||
+    sku.startsWith("DEMO-")
+  );
+}
+
+function mockCatalogOrEmpty() {
+  return allowMockCatalog() ? mockProducts.map(toLeanStoreProduct) : [];
+}
 
 export type StoreProduct = {
   id: string;
@@ -437,20 +464,31 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
     } catch {
       // Fall through to mock products if Odoo is temporarily unavailable.
     }
-    return mockProducts.map(toLeanStoreProduct);
+    return mockCatalogOrEmpty().filter((product) => matchesFilters(product, filters));
   }
 
   try {
     await maybeKickCatalogSync();
 
     const products = await prisma.product.findMany({
-      where: { active: true, excludedFromCatalog: false },
+      where: {
+        active: true,
+        excludedFromCatalog: false,
+        ...(allowMockCatalog()
+          ? {}
+          : {
+              NOT: [
+                { sku: { startsWith: "DEMO-" } },
+                { slug: { contains: "-demo" } },
+              ],
+            }),
+      },
       orderBy: [{ category: "asc" }, { name: "asc" }],
       select: productListSelect,
     });
     const mapped = products.length
       ? products.map((product) => toStoreProduct(product, { lean: true }))
-      : mockProducts.map(toLeanStoreProduct);
+      : mockCatalogOrEmpty();
     return dedupeStoreProducts(mapped.filter((product) => matchesFilters(product, filters)));
   } catch {
     try {
@@ -460,7 +498,7 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
       // Fall through to mock products if both DB and Odoo fail.
     }
     return dedupeStoreProducts(
-      mockProducts.map(toLeanStoreProduct).filter((product) => matchesFilters(product, filters))
+      mockCatalogOrEmpty().filter((product) => matchesFilters(product, filters))
     );
   }
 }
@@ -568,7 +606,9 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
 }
 
 export async function getProduct(productId: string): Promise<StoreProduct | null> {
-  const mock = mockProducts.find((product) => product.id === productId || product.slug === productId);
+  const mock = allowMockCatalog()
+    ? mockProducts.find((product) => product.id === productId || product.slug === productId)
+    : undefined;
   if (!hasDatabaseUrl()) {
     try {
       const liveProducts = await listLiveOdooProducts();
@@ -588,7 +628,12 @@ export async function getProduct(productId: string): Promise<StoreProduct | null
       },
       select: productDetailSelect,
     });
-    return product ? toStoreProduct(product, { lean: false }) : mock || null;
+    if (product) {
+      const mapped = toStoreProduct(product, { lean: false });
+      if (!allowMockCatalog() && isMockProductIdentity(mapped)) return null;
+      return mapped;
+    }
+    return mock || null;
   } catch {
     return mock || null;
   }
@@ -598,6 +643,9 @@ export async function ensureProduct(productId: string) {
   const product = await getProduct(productId);
   if (!product) return null;
   if (!hasDatabaseUrl()) return null;
+  if (!allowMockCatalog() && isMockProductIdentity(product)) {
+    throw new Error("Demo products cannot be sold in production.");
+  }
 
   return prisma.product.upsert({
     where: { slug: product.slug },

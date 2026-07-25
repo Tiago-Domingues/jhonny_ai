@@ -4,9 +4,12 @@ import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
 import { registerCustomer } from "@/lib/ecommerce/auth";
 import { sendWelcomeEmail } from "@/lib/ecommerce/email";
 import { createSessionToken, setSessionCookie } from "@/lib/ecommerce/session";
+import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
 
 export async function POST(request: Request) {
   if (!hasDatabaseUrl()) return unavailableError();
+  const limited = enforceRateLimit(request, "auth-register", 8, 60_000);
+  if (limited) return limited;
 
   try {
     const user = await registerCustomer(await readJson(request));

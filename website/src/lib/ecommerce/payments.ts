@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/ecommerce/db";
 import { centsToEuros } from "@/lib/ecommerce/money";
 import { finalizeOdooOrderAfterPayment } from "@/lib/ecommerce/odooOrders";
+import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 type PaymentRequest = {
   method: "MBWAY" | "MULTIBANCO" | "PAYPAL" | "KLARNA" | "CARD" | "MANUAL";
@@ -42,6 +43,9 @@ async function createIfthenpayMbwayPayment(orderNumber: string, request: Payment
   const key = process.env.IFTHENPAY_MBWAY_KEY;
   const phone = request.mbwayPhone || request.phone;
   if (!key || !phone) {
+    if (isProductionRuntime()) {
+      throw new Error("MB WAY is not configured. Set IFTHENPAY_MBWAY_KEY (and a phone number) before checkout.");
+    }
     return {
       provider: "IFTHENPAY",
       status: "PENDING",
@@ -81,6 +85,9 @@ async function createIfthenpayMbwayPayment(orderNumber: string, request: Payment
 async function createIfthenpayMultibancoPayment(orderNumber: string, request: PaymentRequest): Promise<ProviderResult> {
   const key = process.env.IFTHENPAY_MB_KEY;
   if (!key) {
+    if (isProductionRuntime()) {
+      throw new Error("Multibanco is not configured. Set IFTHENPAY_MB_KEY before checkout.");
+    }
     return {
       provider: "IFTHENPAY",
       status: "PENDING",
@@ -121,6 +128,9 @@ async function createProviderPayment(orderNumber: string, request: PaymentReques
   if (request.method === "MBWAY") return createIfthenpayMbwayPayment(orderNumber, request);
   if (request.method === "MULTIBANCO") return createIfthenpayMultibancoPayment(orderNumber, request);
   if (request.method === "PAYPAL") {
+    if (isProductionRuntime()) {
+      throw new Error("PayPal is not connected yet.");
+    }
     return {
       provider: "PAYPAL",
       status: "REQUIRES_ACTION",
@@ -129,6 +139,9 @@ async function createProviderPayment(orderNumber: string, request: PaymentReques
     };
   }
   if (request.method === "KLARNA") {
+    if (isProductionRuntime()) {
+      throw new Error("Klarna is not connected yet.");
+    }
     return {
       provider: "KLARNA",
       status: "REQUIRES_ACTION",
@@ -166,12 +179,32 @@ export async function createPaymentForOrder(orderId: string, request: PaymentReq
   });
 }
 
-export async function markPaymentPaid(providerReference: string) {
+export async function markPaymentPaid(
+  providerReference: string,
+  options?: { amountCents?: number | null; status?: string | null }
+) {
   const payment = await prisma.payment.findFirst({
     where: { providerReference },
     include: { order: true },
   });
   if (!payment) return 0;
+  if (payment.status === "PAID") return 1;
+
+  const statusRaw = String(options?.status ?? "").trim().toLowerCase();
+  if (statusRaw) {
+    const ok = ["paid", "success", "ok", "paga", "pago", "confirmed", "completa", "complete"].includes(
+      statusRaw
+    );
+    if (!ok) {
+      throw new Error("invalid_payment_status");
+    }
+  }
+
+  if (options?.amountCents != null && Number.isFinite(options.amountCents)) {
+    if (Math.round(options.amountCents) !== payment.amountCents) {
+      throw new Error("amount_mismatch");
+    }
+  }
 
   await prisma.payment.update({
     where: { id: payment.id },

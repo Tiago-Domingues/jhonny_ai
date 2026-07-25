@@ -5,9 +5,12 @@ import { CART_COOKIE, getActiveCart, summarizeCart } from "@/lib/ecommerce/cart"
 import { validateCoupon } from "@/lib/ecommerce/coupons";
 import { couponValidationSchema } from "@/lib/ecommerce/schemas";
 import { readSessionUser } from "@/lib/ecommerce/session";
+import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
 
 export async function POST(request: Request) {
   if (!hasDatabaseUrl()) return unavailableError();
+  const limited = enforceRateLimit(request, "coupon-validate", 30, 60_000);
+  if (limited) return limited;
 
   try {
     const payload = couponValidationSchema.parse(await readJson(request));
