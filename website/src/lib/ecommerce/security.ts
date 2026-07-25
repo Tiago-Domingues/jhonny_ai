@@ -22,3 +22,13 @@ export function hashToken(token: string) {
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
+
+/** Escape untrusted strings before interpolating into HTML email bodies. */
+export function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}

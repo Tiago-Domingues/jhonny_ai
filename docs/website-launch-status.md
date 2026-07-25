@@ -120,8 +120,8 @@ Other important mismatches / risks:
 |------|----------------|
 | No password reset / email verification | Account recovery and takeover resistance |
 | Public integrations/Odoo status APIs | **Hardened:** admin or ops secret required |
-| Order email HTML unsanitized fields | HTML injection into customer inbox |
-| Ratings / availability without rate limits | Spam / abuse |
+| Order email HTML unsanitized fields | **Hardened:** `escapeHtml` on order/welcome email fields (P1.9 ✅) |
+| Ratings / availability without rate limits | **Hardened:** rate limits on rating + availability POSTs (P1.9 ✅) |
 
 ---
 
@@ -159,10 +159,9 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 Work these next while Ifthenpay / PayPal / Klarna credentials are pending:
 
-1. **P1.9** — sanitize order email HTML + rate-limit ratings/availability  
-2. **P1.1 / P1.2** — admin orders + customer “My orders”  
-3. **P1.8** — homepage/category imagery refresh (needs your photos)  
-4. Return to **P0.1–P0.6** when payment/email credentials arrive  
+1. **P1.1 / P1.2** — admin orders + customer “My orders”  
+2. **P1.8** — homepage/category imagery refresh (needs your photos)  
+3. Return to **P0.1–P0.6** when payment/email credentials arrive  
 
 ### P1 — Launch ops and trust
 
@@ -176,7 +175,7 @@ Work these next while Ifthenpay / PayPal / Klarna credentials are pending:
 | P1.6 | Smoke-test suite or scripted checklist for cart → pay → callback → paid | Open — later with payments | Catch regressions before opening traffic | M |
 | P1.7 | End-to-end test orders on each payment method (sandbox then live) | ⏸ Blocked — waiting on credentials | Go-live gate | M (ops time) |
 | P1.8 | Refresh **homepage + category hero images** with recent store / product photos (assets under `website/public/brand/` and mappings in `Products.tsx` / `categoryHeroes.ts`) | Open — needs your photos | Brand looks current and trustworthy at launch | S–M (assets + wire-up) |
-| P1.9 | Escape/sanitize fields in **order email HTML**; tighten public ratings/availability against spam | Open — can do now | Stops inbox HTML injection and abuse | S–M |
+| P1.9 | Escape/sanitize fields in **order email HTML**; tighten public ratings/availability against spam | ✅ Done | Stops inbox HTML injection and abuse | S–M |
 
 ### P2 — Soon after go-live
 
