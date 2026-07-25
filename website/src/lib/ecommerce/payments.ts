@@ -159,6 +159,9 @@ async function createProviderPayment(orderNumber: string, request: PaymentReques
 export async function createPaymentForOrder(orderId: string, request: PaymentRequest) {
   const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
   const providerResult = await createProviderPayment(order.orderNumber, request);
+  const expireHours = Number(process.env.UNPAID_ORDER_EXPIRE_HOURS || "72");
+  const hours = Number.isFinite(expireHours) && expireHours > 0 ? Math.min(expireHours, 24 * 14) : 72;
+  const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
 
   return prisma.payment.create({
     data: {
@@ -174,6 +177,7 @@ export async function createPaymentForOrder(orderId: string, request: PaymentReq
       multibancoEntity: providerResult.multibancoEntity,
       multibancoReference: providerResult.multibancoReference,
       mbwayPhone: providerResult.mbwayPhone,
+      expiresAt,
       rawProviderPayload: providerResult.rawProviderPayload === undefined ? undefined : (providerResult.rawProviderPayload as object),
     },
   });
@@ -214,6 +218,10 @@ export async function markPaymentPaid(
     where: { id: payment.orderId },
     data: { status: "PAID", paidAt: new Date() },
   });
+
+  const { recordCouponUsageForPaidOrder } = await import("@/lib/ecommerce/coupons");
+  await recordCouponUsageForPaidOrder(payment.orderId).catch(() => undefined);
+
   await finalizeOdooOrderAfterPayment(payment.orderId);
   return 1;
 }

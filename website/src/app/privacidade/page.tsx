@@ -16,7 +16,7 @@ const pt: InfoContent = {
     {
       heading: "Responsável pelo tratamento",
       paragraphs: [
-        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), NIF 516569783, com sede na Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede.",
+        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), NIF 516569783, com sede na Rua de Gaza 16 Lj direita, 2775-597 Carcavelos.",
       ],
     },
     {
@@ -42,8 +42,8 @@ const pt: InfoContent = {
     {
       heading: "Partilha de dados",
       paragraphs: [
-        "Não vendemos os teus dados. Apenas os partilhamos com parceiros estritamente necessários à prestação do serviço, incluindo transporte, pagamentos (por exemplo Ifthenpay, PayPal ou Klarna quando ativados), email transacional e ferramentas legais/fiscais quando exigido por lei.",
-        "Na próxima fase, alguns dados de cliente, produto, stock e encomenda poderão ser sincronizados com a conta Odoo do Jhonny para gestão operacional.",
+        "Não vendemos os teus dados. Apenas os partilhamos com parceiros estritamente necessários à prestação do serviço, incluindo transporte, pagamentos (por exemplo Ifthenpay, PayPal ou Klarna), email transacional e ferramentas legais/fiscais quando exigido por lei.",
+        "Dados de produto, stock e, quando aplicável, encomenda podem ser sincronizados com a conta Odoo do Jhonny para gestão operacional da loja.",
       ],
     },
     {
@@ -70,7 +70,7 @@ const en: InfoContent = {
     {
       heading: "Data controller",
       paragraphs: [
-        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), tax number 516569783, registered at Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede, Portugal.",
+        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), tax number 516569783, registered at Rua de Gaza 16 Lj direita, 2775-597 Carcavelos, Portugal.",
       ],
     },
     {
@@ -96,8 +96,8 @@ const en: InfoContent = {
     {
       heading: "Data sharing",
       paragraphs: [
-        "We do not sell your data. We only share it with partners strictly necessary to deliver the service, including shipping, payments (for example Ifthenpay, PayPal or Klarna when enabled), transactional email and legal/tax tools when required by law.",
-        "In the next phase, selected customer, product, stock and order data may be synchronized with Jhonny's Odoo account for operations management.",
+        "We do not sell your data. We only share it with partners strictly necessary to deliver the service, including shipping, payments (for example Ifthenpay, PayPal or Klarna), transactional email and legal/tax tools when required by law.",
+        "Product, stock and, where applicable, order data may be synchronized with Jhonny's Odoo account for store operations.",
       ],
     },
     {

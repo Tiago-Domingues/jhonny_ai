@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/ecommerce/db";
 import { registerSchema, loginSchema, profileSchema } from "@/lib/ecommerce/schemas";
+import { ensureAdminRoleForEmail, isAdminEmail } from "@/lib/ecommerce/admin";
 import { hashPassword, normalizeEmail, verifyPassword } from "@/lib/ecommerce/security";
 
 export async function registerCustomer(input: unknown) {
@@ -10,11 +11,12 @@ export async function registerCustomer(input: unknown) {
   const email = normalizeEmail(data.email);
 
   try {
-    return await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email,
         username: data.username.trim(),
         passwordHash: await hashPassword(data.password),
+        role: isAdminEmail(email) ? "ADMIN" : "CUSTOMER",
         profile: {
           create: {
             fullName: data.fullName.trim(),
@@ -28,6 +30,7 @@ export async function registerCustomer(input: unknown) {
       },
       include: { profile: true },
     });
+    return user;
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       throw new Error("Email or username is already registered.");
@@ -50,7 +53,11 @@ export async function loginCustomer(input: unknown) {
     throw new Error("Invalid login details.");
   }
 
-  return user;
+  await ensureAdminRoleForEmail(user.id, user.email);
+  return prisma.user.findUniqueOrThrow({
+    where: { id: user.id },
+    include: { profile: true },
+  });
 }
 
 export async function getProfile(userId: string) {

@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { Resend } from "resend";
 import { prisma } from "@/lib/ecommerce/db";
 import { formatEuro } from "@/lib/ecommerce/money";
+import { escapeHtml } from "@/lib/ecommerce/security";
 
 function emailFrom() {
   return process.env.EMAIL_FROM || "Jhonny Surf Store <orders@jhonnysurfstore.com>";
@@ -81,22 +82,27 @@ function orderHtml(order: Awaited<ReturnType<typeof loadOrderForEmail>>, audienc
   const itemRows = order.items
     .map(
       (item) =>
-        `<li>${item.quantity} x ${item.name} - ${formatEuro(item.totalCents)}</li>`
+        `<li>${escapeHtml(item.quantity)} x ${escapeHtml(item.name)} - ${escapeHtml(formatEuro(item.totalCents))}</li>`
     )
     .join("");
   const pickup =
     order.fulfillmentMethod === "PICKUP_IN_STORE"
-      ? "<p><strong>Pickup:</strong> Jhonny Surf Store, Rua de Gaza 16 loja direita, 2775-597 Carcavelos. Wait for pickup confirmation before coming to collect.</p>"
+      ? "<p><strong>Pickup:</strong> Jhonny Surf Store, Rua de Gaza 16 Lj direita, 2775-597 Carcavelos. Wait for pickup confirmation before coming to collect.</p>"
       : "<p><strong>Delivery:</strong> We will confirm shipping details after payment.</p>";
+
+  const notes = order.notes?.trim()
+    ? `<p><strong>Notes:</strong> ${escapeHtml(order.notes)}</p>`
+    : "";
 
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>${audience === "customer" ? "Obrigado pela tua encomenda" : "Nova encomenda Jhonny Surf Store"}</h1>
-      <p><strong>Order:</strong> ${order.orderNumber}</p>
-      <p><strong>Customer:</strong> ${order.customerName} (${order.customerEmail})</p>
+      <p><strong>Order:</strong> ${escapeHtml(order.orderNumber)}</p>
+      <p><strong>Customer:</strong> ${escapeHtml(order.customerName)} (${escapeHtml(order.customerEmail)})</p>
       <ul>${itemRows}</ul>
-      <p><strong>Total:</strong> ${formatEuro(order.totalCents)}</p>
+      <p><strong>Total:</strong> ${escapeHtml(formatEuro(order.totalCents))}</p>
       ${pickup}
+      ${notes}
       <p>Where surfers become legends.</p>
     </div>
   `;
@@ -145,10 +151,11 @@ async function recordEmailEvent(input: {
 
 export async function sendWelcomeEmail(input: { userId: string; email: string; fullName?: string | null }) {
   const subject = "Welcome to Jhonny Surf Store";
+  const safeName = escapeHtml(input.fullName || "Legend");
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Welcome to Jhonny Surf Store</h1>
-      <p>Hi ${input.fullName || "Legend"},</p>
+      <p>Hi ${safeName},</p>
       <p>Welcome to the Jhonny family. Your account is ready, and you can now save your profile, shop faster, and follow your surf gear orders.</p>
       <p>Where surfers become legends.</p>
     </div>

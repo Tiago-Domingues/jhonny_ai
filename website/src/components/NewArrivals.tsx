@@ -66,10 +66,13 @@ export async function NewArrivals() {
       ) : (
         <div className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
           <div className="rounded-3xl border border-dashed border-line bg-white p-6 text-sm text-muted sm:p-8">
-            <p className="font-bold uppercase tracking-wide text-ink">New picks landing soon</p>
+            <p className="font-bold uppercase tracking-wide text-ink">Novidades a caminho</p>
             <p className="mt-2 max-w-2xl">
-              Tag products with the Odoo <code className="text-ink">New In</code> attribute and sync
-              the catalog — they will show up here automatically.
+              Estamos a atualizar o New In. Entretanto explora a{" "}
+              <Link href="/loja" className="font-semibold text-ink underline underline-offset-2">
+                loja online
+              </Link>{" "}
+              ou fala connosco na loja.
             </p>
           </div>
         </div>
