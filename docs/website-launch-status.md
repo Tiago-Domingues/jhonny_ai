@@ -23,11 +23,11 @@ The marketing site, product catalog, and shopping foundations are largely in pla
 | Area | Status |
 |------|--------|
 | Brand / homepage content | Ready (imagery refresh still needed — see P1.8) |
-| Product catalog (Odoo → site) | Connected, but **not guaranteed near real-time** (see P0.18) |
+| Product catalog (Odoo → site) | Connected — near real-time sync live (P0.18 ✅) |
 | Browse shop, filters, product pages | Ready for browsing |
 | Cart + guest/account checkout skeleton | Built, not production-safe |
-| Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** |
-| Security / abuse protection | **Partial — harden before open checkout** |
+| Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** — credentials pending |
+| Security / abuse protection | **Baseline done** (P0.4, P0.13–P0.17); more at P1 |
 | Order email + ops admin | **Not ready** |
 | Public go-live (.com + .pt) | **Blocked** |
 
@@ -70,7 +70,7 @@ From production integration status and code review:
 
 | Integration | Production status |
 |-------------|-------------------|
-| Odoo | Configured and authenticated — catalog sync exists but is **not a reliable near-real-time pipeline** yet |
+| Odoo | Configured — incremental sync ~every 2 min (+ on-read kick ~60s); typical freshness **under 2 minutes** |
 | Email (Resend) | **Not configured** — order emails skipped |
 | Ifthenpay MB WAY | **Not configured** — would fall back to mocks |
 | Ifthenpay Multibanco | **Not configured** — would fall back to mocks |
