@@ -81,8 +81,8 @@ From production integration status and code review:
 Other important mismatches / risks:
 
 - After checkout, customers do **not** see Multibanco entity/reference or MB WAY next steps.
-- Stock is checked but **not reserved/decremented** → oversell risk.
-- Coupons can be consumed when the order is created, even if payment never completes.
+- Stock is **reserved (decremented) at checkout** and released on unpaid cancel/expiry (P0.7 ✅).
+- Coupon usage rows are written **only after payment**; unpaid orders hold the code until pay/cancel (P0.8 ✅).
 - Free shipping threshold is **€100** in banner, checkout logic, checkout UI, and legal pages (P0.9–P0.11 ✅).
 - Until `SITE_PUBLIC_LAUNCH=true`, **both .com and .pt** show coming-soon to the public; staff unlock via `/preview-access` + `SITE_PREVIEW_PASSWORD`.
 - If catalog/DB fails, mock demo products must not become sellable.
@@ -140,8 +140,8 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 | P0.4 | Harden payment **callback** (secret **always** required in prod, constant-time compare, **amount + status** checks) | ✅ Done | Prevents forged “paid” states | S–M |
 | P0.5 | Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps | Open (partially blocked by P0.1–P0.3) | Customer must know how to pay | M |
 | P0.6 | Configure **transactional email** (Resend or SMTP) and send order + payment instructions | Open — needs email credentials for live send; code can proceed | No email = broken ops and trust | S (config) + S–M (content) |
-| P0.7 | **Reserve/decrement stock** on order (release on cancel/expiry) | Open — can do now | Stops overselling | M |
-| P0.8 | Apply **coupon usage only after payment** (or roll back if unpaid) | Open — can do now | Stops burned coupons | S–M |
+| P0.7 | **Reserve/decrement stock** on order (release on cancel/expiry) | ✅ Done | Stops overselling | M |
+| P0.8 | Apply **coupon usage only after payment** (or roll back if unpaid) | ✅ Done | Stops burned coupons | S–M |
 | P0.9 | Require full **shipping address** when ship-to-home is selected | ✅ Done | Avoid undeliverable orders | S |
 | P0.10 | Align **€100 free shipping** in checkout logic + legal pages | ✅ Done | Matches banner and launch decision | S |
 | P0.11 | Show **shipping cost in checkout total** UI | ✅ Done | Total currently can understate amount due | S |
@@ -159,12 +159,11 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 Work these next while Ifthenpay / PayPal / Klarna credentials are pending:
 
-1. **P0.7 + P0.8** — stock reservation + coupon only after payment  
-2. **P1.5** — FAQ / trust copy cleanup  
-3. **P1.9** — sanitize order email HTML + rate-limit ratings/availability  
-4. **P1.1 / P1.2** — admin orders + customer “My orders”  
-5. **P1.8** — homepage/category imagery refresh (needs your photos)  
-6. Return to **P0.1–P0.6** when payment/email credentials arrive  
+1. **P1.5** — FAQ / trust copy cleanup  
+2. **P1.9** — sanitize order email HTML + rate-limit ratings/availability  
+3. **P1.1 / P1.2** — admin orders + customer “My orders”  
+4. **P1.8** — homepage/category imagery refresh (needs your photos)  
+5. Return to **P0.1–P0.6** when payment/email credentials arrive  
 
 ### P1 — Launch ops and trust
 
@@ -237,7 +236,7 @@ All of the following must be true:
 - [ ] Customers can pay with **MB WAY, Multibanco, PayPal, and Klarna** for real (no mocks/placeholders).  
 - [ ] After checkout they receive clear **payment instructions** (page + email).  
 - [ ] Paid orders update correctly via **secure callback** (secret required; amount/status verified).  
-- [ ] Stock cannot oversell; coupons only stick on paid orders.  
+- [x] Stock cannot oversell; coupons only stick on paid orders.  
 - [x] Free shipping threshold is **€100** in banner, checkout, and legal text.  
 - [ ] Order emails send reliably.  
 - [ ] Staff can see and update orders.  
@@ -257,6 +256,8 @@ Until that checklist is green, treat the site as **marketing + catalog preview**
 |-------|----------|
 | Coming-soon + preview unlock | `website/src/proxy.ts`, `website/src/lib/ecommerce/siteAccess.ts`, `/preview-access` |
 | Checkout / shipping threshold | `website/src/lib/ecommerce/shipping.ts`, `website/src/lib/ecommerce/checkout.ts` |
+| Stock reserve / unpaid expiry | `website/src/lib/ecommerce/inventory.ts`, `/api/cron/expire-unpaid-orders` |
+| Coupon usage after payment | `website/src/lib/ecommerce/coupons.ts` (`recordCouponUsageForPaidOrder`) |
 | Payments / mocks / placeholders | `website/src/lib/ecommerce/payments.ts` |
 | Ifthenpay callback | `website/src/app/api/payments/ifthenpay/callback/route.ts` |
 | Session / cookies | `website/src/lib/ecommerce/session.ts` |
