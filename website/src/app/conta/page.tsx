@@ -22,7 +22,7 @@ export default function AccountPage() {
             A minha conta
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">
-            Regista-te, entra ou compra como convidado. Os dados ficam na base de clientes do website e ficam preparados para sincronização futura com Odoo.
+            Regista-te, entra ou compra como convidado. Guarda o perfil, as moradas e as preferências para um checkout mais rápido.
           </p>
           <div className="mt-10">
             <AccountClient />

@@ -11,7 +11,7 @@ import { listMenuCategories } from "@/lib/ecommerce/menuCategories";
 export const metadata: Metadata = {
   title: "Loja Online",
   description:
-    "Loja online Jhonny Surf Store com catálogo, stock, filtros e checkout preparados para Odoo.",
+    "Loja online Jhonny Surf Store — catálogo, stock, filtros e checkout com envio ou levantamento em loja.",
 };
 
 export const dynamic = "force-dynamic";

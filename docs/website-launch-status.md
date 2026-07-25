@@ -159,11 +159,10 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 Work these next while Ifthenpay / PayPal / Klarna credentials are pending:
 
-1. **P1.5** — FAQ / trust copy cleanup  
-2. **P1.9** — sanitize order email HTML + rate-limit ratings/availability  
-3. **P1.1 / P1.2** — admin orders + customer “My orders”  
-4. **P1.8** — homepage/category imagery refresh (needs your photos)  
-5. Return to **P0.1–P0.6** when payment/email credentials arrive  
+1. **P1.9** — sanitize order email HTML + rate-limit ratings/availability  
+2. **P1.1 / P1.2** — admin orders + customer “My orders”  
+3. **P1.8** — homepage/category imagery refresh (needs your photos)  
+4. Return to **P0.1–P0.6** when payment/email credentials arrive  
 
 ### P1 — Launch ops and trust
 
@@ -173,7 +172,7 @@ Work these next while Ifthenpay / PayPal / Klarna credentials are pending:
 | P1.2 | Customer **My orders** in account | Open — can do now | Expected after purchase | M |
 | P1.3 | Password reset / email verification | Open — needs email provider | Account safety for public traffic | M |
 | P1.4 | Enforce **JHONNY10** rules (registered + first purchase) | Open — can do now | Matches welcome offer promise | S–M |
-| P1.5 | Update **FAQ** / trust copy that still implies the store is “not ready” | Open — can do now | Avoid conflicting messages at launch | S |
+| P1.5 | Update **FAQ** / trust copy that still implies the store is “not ready” | ✅ Done | Avoid conflicting messages at launch | S |
 | P1.6 | Smoke-test suite or scripted checklist for cart → pay → callback → paid | Open — later with payments | Catch regressions before opening traffic | M |
 | P1.7 | End-to-end test orders on each payment method (sandbox then live) | ⏸ Blocked — waiting on credentials | Go-live gate | M (ops time) |
 | P1.8 | Refresh **homepage + category hero images** with recent store / product photos (assets under `website/public/brand/` and mappings in `Products.tsx` / `categoryHeroes.ts`) | Open — needs your photos | Brand looks current and trustworthy at launch | S–M (assets + wire-up) |
