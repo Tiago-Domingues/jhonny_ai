@@ -14,7 +14,7 @@ const pt: InfoContent = {
     {
       heading: "Onde fica a loja?",
       paragraphs: [
-        "Estamos na Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede — a poucos minutos de Carcavelos.",
+        "Estamos na Rua de Gaza 16 Lj direita, 2775-597 Carcavelos.",
       ],
     },
     {
@@ -33,7 +33,7 @@ const pt: InfoContent = {
       heading: "Fazem envios? Há portes grátis?",
       paragraphs: [
         "Sim. Enviamos para Portugal Continental, Ilhas e Europa (sob consulta). Portes grátis em encomendas acima de €100 — artigos volumosos como pranchas podem ter condições específicas.",
-        "Também podes pagar online e levantar na loja em Parede / Carcavelos, sem custos de portes.",
+        "Também podes pagar online e levantar na loja em Carcavelos, sem custos de portes.",
       ],
     },
     {
@@ -70,7 +70,7 @@ const en: InfoContent = {
     {
       heading: "Where is the store?",
       paragraphs: [
-        "We're at Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede — a few minutes from Carcavelos.",
+        "We're at Rua de Gaza 16 Lj direita, 2775-597 Carcavelos.",
       ],
     },
     {
@@ -89,7 +89,7 @@ const en: InfoContent = {
       heading: "Do you ship? Is shipping free?",
       paragraphs: [
         "Yes. We ship to mainland Portugal, the islands and Europe (on request). Free shipping on orders over €100 — bulky items such as boards may have specific conditions.",
-        "You can also pay online and pick up at the Parede / Carcavelos store with no shipping fee.",
+        "You can also pay online and pick up at the Carcavelos store with no shipping fee.",
       ],
     },
     {
@@ -126,7 +126,7 @@ const zh: InfoContent = {
     {
       heading: "店在哪里？",
       paragraphs: [
-        "我们位于 Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede——距 Carcavelos 仅几分钟路程。",
+        "我们位于 Rua de Gaza 16 Lj direita, 2775-597 Carcavelos。",
       ],
     },
     {
@@ -145,7 +145,7 @@ const zh: InfoContent = {
       heading: "可以配送吗？有免运费吗？",
       paragraphs: [
         "可以。我们配送至葡萄牙大陆、岛屿及欧洲（需咨询）。订单满 €100 免运费——冲浪板等大件可能有特殊条件。",
-        "也可以在线付款后到 Parede / Carcavelos 门店自取，免运费。",
+        "也可以在线付款后到 Carcavelos 门店自取，免运费。",
       ],
     },
     {

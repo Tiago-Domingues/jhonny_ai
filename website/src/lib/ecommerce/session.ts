@@ -3,6 +3,7 @@ import "server-only";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
+import { ensureAdminRoleForEmail } from "@/lib/ecommerce/admin";
 import { prisma } from "@/lib/ecommerce/db";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
@@ -56,11 +57,18 @@ export async function readSessionUser(): Promise<SessionUser | null> {
     const userId = typeof payload.userId === "string" ? payload.userId : null;
     if (!userId) return null;
 
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { id: userId },
       include: { profile: true },
     });
     if (!user) return null;
+
+    if (user.role !== "ADMIN") {
+      const promoted = await ensureAdminRoleForEmail(user.id, user.email);
+      if (promoted) {
+        user = { ...user, role: "ADMIN" };
+      }
+    }
 
     return {
       id: user.id,

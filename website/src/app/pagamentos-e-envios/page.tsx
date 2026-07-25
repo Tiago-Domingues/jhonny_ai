@@ -40,7 +40,7 @@ const pt: InfoContent = {
     {
       heading: "Levantamento na loja",
       paragraphs: [
-        "Podes pagar online e levantar a tua encomenda sem custos na nossa loja em Parede / Carcavelos, durante o horário de funcionamento. Aguarda sempre pelo email de confirmação antes de levantar.",
+        "Podes pagar online e levantar a tua encomenda sem custos na nossa loja em Carcavelos (Rua de Gaza 16 Lj direita), durante o horário de funcionamento. Aguarda sempre pelo email de confirmação antes de levantar.",
       ],
     },
   ],
@@ -79,7 +79,7 @@ const en: InfoContent = {
     {
       heading: "Store pickup",
       paragraphs: [
-        "You can pay online and pick up your order free of charge at our store in Parede / Carcavelos during opening hours. Always wait for the confirmation email before collecting.",
+        "You can pay online and pick up your order free of charge at our store in Carcavelos (Rua de Gaza 16 Lj direita) during opening hours. Always wait for the confirmation email before collecting.",
       ],
     },
   ],

@@ -16,7 +16,7 @@ const pt: InfoContent = {
     {
       heading: "Responsável pelo tratamento",
       paragraphs: [
-        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), NIF 516569783, com sede na Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede.",
+        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), NIF 516569783, com sede na Rua de Gaza 16 Lj direita, 2775-597 Carcavelos.",
       ],
     },
     {
@@ -70,7 +70,7 @@ const en: InfoContent = {
     {
       heading: "Data controller",
       paragraphs: [
-        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), tax number 516569783, registered at Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede, Portugal.",
+        "Maori Surf Camp Unipessoal, Lda. (Jhonny Surf Store), tax number 516569783, registered at Rua de Gaza 16 Lj direita, 2775-597 Carcavelos, Portugal.",
       ],
     },
     {

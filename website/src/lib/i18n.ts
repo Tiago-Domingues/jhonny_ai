@@ -13,7 +13,7 @@ export const STORE = {
   phoneDisplay: "+351 935 968 825",
   phoneRaw: "351935968825",
   email: "jhonnysurfstore@gmail.com",
-  address: "Rua de Gaza 16 loja direita, 2775-597 Carcavelos",
+  address: "Rua de Gaza 16 Lj direita, 2775-597 Carcavelos",
   region: "Carcavelos · Cascais · Lisboa",
   lat: 38.6828,
   lon: -9.3422,
@@ -52,7 +52,7 @@ export const LEGAL = {
   company: "Maori Surf Camp Unipessoal, Lda.",
   brand: "Jhonny Surf Store",
   nif: "516569783",
-  address: "Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede",
+  address: "Rua de Gaza 16 Lj direita, 2775-597 Carcavelos",
 };
 
 export const NAV_LINKS = [

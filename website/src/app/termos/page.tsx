@@ -16,7 +16,7 @@ const pt: InfoContent = {
     {
       heading: "1. Identificação",
       paragraphs: [
-        "A marca Jhonny Surf Store é explorada por Maori Surf Camp Unipessoal, Lda., com sede na Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede, contribuinte fiscal 516569783.",
+        "A marca Jhonny Surf Store é explorada por Maori Surf Camp Unipessoal, Lda., com sede na Rua de Gaza 16 Lj direita, 2775-597 Carcavelos, contribuinte fiscal 516569783.",
       ],
     },
     {
@@ -70,7 +70,7 @@ const en: InfoContent = {
     {
       heading: "1. Who we are",
       paragraphs: [
-        "The Jhonny Surf Store brand is operated by Maori Surf Camp Unipessoal, Lda., registered at Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede, Portugal, tax number 516569783.",
+        "The Jhonny Surf Store brand is operated by Maori Surf Camp Unipessoal, Lda., registered at Rua de Gaza 16 Lj direita, 2775-597 Carcavelos, Portugal, tax number 516569783.",
       ],
     },
     {

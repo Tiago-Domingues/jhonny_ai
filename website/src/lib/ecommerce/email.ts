@@ -87,7 +87,7 @@ function orderHtml(order: Awaited<ReturnType<typeof loadOrderForEmail>>, audienc
     .join("");
   const pickup =
     order.fulfillmentMethod === "PICKUP_IN_STORE"
-      ? "<p><strong>Pickup:</strong> Jhonny Surf Store, Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede. Wait for pickup confirmation before coming to collect.</p>"
+      ? "<p><strong>Pickup:</strong> Jhonny Surf Store, Rua de Gaza 16 Lj direita, 2775-597 Carcavelos. Wait for pickup confirmation before coming to collect.</p>"
       : "<p><strong>Delivery:</strong> We will confirm shipping details after payment.</p>";
 
   const notes = order.notes?.trim()

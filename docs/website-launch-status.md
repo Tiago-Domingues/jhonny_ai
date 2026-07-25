@@ -157,18 +157,18 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 ### Recommended next (no payment credentials needed)
 
-Work these next while Ifthenpay / PayPal / Klarna credentials are pending:
+Work these next while Ifthenpay / PayPal / Klarna credentials / photos are pending:
 
-1. **P1.1 / P1.2** — admin orders + customer “My orders”  
+1. **P0.6** — configure transactional email (Resend or SMTP) when ready  
 2. **P1.8** — homepage/category imagery refresh (needs your photos)  
-3. Return to **P0.1–P0.6** when payment/email credentials arrive  
+3. Return to **P0.1–P0.5** when payment credentials arrive  
 
 ### P1 — Launch ops and trust
 
 | # | Item | Status | Why it matters | Effort |
 |---|------|--------|----------------|--------|
-| P1.1 | Minimal **admin orders** view (list, status, pickup/ship) | Open — can do now | Staff cannot run the store blind | M–L |
-| P1.2 | Customer **My orders** in account | Open — can do now | Expected after purchase | M |
+| P1.1 | Minimal **admin orders** view (list, status, pickup/ship) | ✅ Done (`/admin/encomendas`, admin = `jhonnysurfstore@gmail.com`) | Staff cannot run the store blind | M–L |
+| P1.2 | Customer **My orders** in account | ✅ Done (`/encomendas` + guest email/order lookup) | Expected after purchase | M |
 | P1.3 | Password reset / email verification | Open — needs email provider | Account safety for public traffic | M |
 | P1.4 | Enforce **JHONNY10** rules (registered + first purchase) | Open — can do now | Matches welcome offer promise | S–M |
 | P1.5 | Update **FAQ** / trust copy that still implies the store is “not ready” | ✅ Done | Avoid conflicting messages at launch | S |
