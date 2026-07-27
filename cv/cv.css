@@ -138,11 +138,19 @@ p {
   font-size: 8.1pt;
 }
 
-.two-col {
-  display: flex;
-  gap: 14pt;
+.page-break {
+  break-before: page;
+  page-break-before: always;
 }
 
-.two-col > div {
-  flex: 1;
+.edu-item, .cert-item {
+  margin: 0 0 4pt 0;
+}
+
+.pub-item {
+  margin: 0 0 5pt 0;
+}
+
+.act-item {
+  margin: 0 0 4pt 0;
 }
