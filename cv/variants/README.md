@@ -12,11 +12,11 @@ python3 cv/variants/build_all.py
 
 ## Variants
 
-| Version | Folder | Style | Best for |
-|--------|--------|-------|----------|
-| **V1 Classic refined** | [`v1-classic-refined/`](v1-classic-refined/) | Serif, uppercase sections (evolution of baseline) | Academic / traditional readers |
-| **V2 Executive** | [`v2-executive/`](v2-executive/) | Sans-serif, navy accent, board-pack look | Consulting / partner-facing |
-| **V3 Two-column** | [`v3-two-column/`](v3-two-column/) | Sidebar skills + main experience | Tech recruiters (fast skill scan) |
+| Version | Folder | Style | Pages | Best for |
+|--------|--------|-------|-------|----------|
+| **V1 Classic refined** | [`v1-classic-refined/`](v1-classic-refined/) | Serif, uppercase sections (evolution of baseline) | ~3 | Academic / traditional readers |
+| **V2 Executive** | [`v2-executive/`](v2-executive/) | Sans-serif, navy accent, board-pack look | ~2 | Consulting / partner-facing |
+| **V3 Two-column** | [`v3-two-column/`](v3-two-column/) | Sidebar skills + main experience | ~2 | Tech recruiters (fast skill scan) |
 
 ### PDF links (branch)
 
