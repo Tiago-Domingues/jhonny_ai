@@ -90,9 +90,10 @@ def publications_html() -> str:
     return "".join(f'<p class="pub-line">{esc(p)}</p>' for p in C.PUBLICATIONS)
 
 
-def activities_html() -> str:
+def activities_html(activities=None) -> str:
+    items = activities if activities is not None else C.ACTIVITIES
     parts = []
-    for title, body in C.ACTIVITIES:
+    for title, body in items:
         parts.append(
             f'<div class="act-item"><strong>{esc(title)}.</strong> {esc(body)}</div>'
         )
@@ -122,11 +123,17 @@ def sidebar_edu() -> str:
     )
 
 
-def sidebar_certs() -> str:
+def sidebar_certs(certs=None) -> str:
+    items = certs if certs is not None else C.CERTIFICATIONS
     return "".join(
         f'<div class="side-cert"><strong>{esc(name)}</strong><span>{esc(meta)}</span></div>'
-        for name, meta in C.CERTIFICATIONS
+        for name, meta in items
     )
+
+
+# V3-only trims to keep a single-page two-column layout
+V3_CERTIFICATIONS = [c for c in C.CERTIFICATIONS if not c[0].startswith("R Programming")]
+V3_ACTIVITIES = [a for a in C.ACTIVITIES if not a[0].startswith("Volunteer")]
 
 
 # --- V1 Classic refined ---
@@ -363,13 +370,13 @@ def render_v3() -> str:
         {sidebar_skills()}
         <div class="side-block"><h4>Spoken languages</h4><p>{esc(C.LANGUAGES)}</p></div>
         <h2>Certifications</h2>
-        {sidebar_certs()}
+        {sidebar_certs(V3_CERTIFICATIONS)}
         <h2>Education</h2>
         {sidebar_edu()}
         <h2>Publications</h2>
         {publications_html()}
         <h2>Activities</h2>
-        {activities_html()}
+        {activities_html(V3_ACTIVITIES)}
       </td>
       <td class="main">
         <h2>Profile</h2>
