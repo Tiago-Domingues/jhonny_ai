@@ -42,10 +42,10 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     key: "essentials",
-    labelPt: "Essenciais",
-    labelEn: "Essentials",
-    labelZh: "必备用品",
-    // Lifestyle lives under Surf Essentials in Odoo (SURF ESSENCIALS / LIFESTYLE / …).
+    labelPt: "Surf Essencials",
+    labelEn: "Surf Essencials",
+    labelZh: "Surf Essencials",
+    // Lifestyle lives under Surf Essencials in Odoo (SURF ESSENCIALS / LIFESTYLE / …).
     includes: ["SURF ESSENCIALS", "SURF ESSENTIALS"],
   },
   {
@@ -156,7 +156,6 @@ export function displayOdooCategoryName(category: string) {
         .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
         .replace(/\bLENGHT\b/gi, "LENGTH")
         .replace(/\bACESSORIES\b/gi, "ACCESSORIES")
-        .replace(/\bESSENCIALS\b/gi, "ESSENTIALS")
         .replace(/\s+/g, " ")
         .trim()
     )

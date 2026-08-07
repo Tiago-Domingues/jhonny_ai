@@ -50,9 +50,9 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
   },
   essentials: {
     image: "/brand/categories/hero-essentials.jpg",
-    labelPt: "Essenciais",
-    labelEn: "Essentials",
-    labelZh: "必备用品",
+    labelPt: "Surf Essencials",
+    labelEn: "Surf Essencials",
+    labelZh: "Surf Essencials",
     subtitlePt: "Parafina, ponchos, beach gear, lifestyle e tudo o que precisas na praia.",
     subtitleEn: "Wax, ponchos, beach gear, lifestyle and everything you need at the beach.",
     subtitleZh: "冲浪蜡、浴袍斗篷、海滩用品、生活方式以及你在沙滩需要的一切。",
