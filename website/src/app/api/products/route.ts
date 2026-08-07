@@ -2,6 +2,8 @@ import { listProducts, toLeanStoreProduct, type StoreProduct } from "@/lib/ecomm
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 
 export const maxDuration = 30;
+/** Allow CDN reuse between deploys / tag revalidations. */
+export const revalidate = 3600;
 
 function centsFromParam(value: string | null) {
   if (!value) return null;
@@ -76,6 +78,8 @@ export async function GET(request: Request) {
     {
       headers: {
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        "CDN-Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        "Vercel-CDN-Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     }
   );
