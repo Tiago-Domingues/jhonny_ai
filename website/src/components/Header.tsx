@@ -122,17 +122,17 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
         scrolled ? "border-b border-line-dark shadow-lg shadow-black/20" : ""
       }`}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
+      <div className="mx-auto flex max-w-[96rem] items-center justify-between gap-3 px-4 py-3.5 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Jhonny Surf Store" className="shrink-0">
           <Logo type="horizontal" variant="dark" priority className="h-9 sm:h-10" />
         </Link>
 
-        <nav className="hidden items-center gap-6 xl:flex">
+        <nav className="hidden items-center gap-2.5 xl:flex 2xl:gap-3.5">
           {menuCategories.map((cat) => (
             <div key={cat.key} className="group relative">
               <Link
                 href={categoryHref(cat.key)}
-                className="flex items-center gap-1 text-[0.8rem] font-semibold uppercase tracking-[0.12em] text-white/85 transition hover:text-white"
+                className="flex items-center gap-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-white/85 transition hover:text-white 2xl:text-[0.75rem] 2xl:tracking-[0.1em]"
               >
                 {t.nav[cat.key]}
                 <Chevron className="h-3 w-3 opacity-70 transition-transform duration-200 group-hover:rotate-180" />

@@ -4,6 +4,10 @@ export type CategoryGroupKey =
   | "surfgear"
   | "essentials"
   | "bodyboard"
+  | "clothing"
+  | "footwear"
+  | "travel"
+  | "surfskate"
   | "lifestyle";
 
 type CategoryGroup = {
@@ -41,6 +45,7 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     labelPt: "Essenciais",
     labelEn: "Essentials",
     labelZh: "必备用品",
+    // Lifestyle lives under Surf Essentials in Odoo (SURF ESSENCIALS / LIFESTYLE / …).
     includes: ["SURF ESSENCIALS", "SURF ESSENTIALS"],
   },
   {
@@ -51,10 +56,39 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     includes: ["BODYBOARD"],
   },
   {
+    key: "clothing",
+    labelPt: "Vestuário",
+    labelEn: "Clothing",
+    labelZh: "服装",
+    includes: ["CLOTHING"],
+  },
+  {
+    key: "footwear",
+    labelPt: "Calçado",
+    labelEn: "Footwear",
+    labelZh: "鞋履",
+    includes: ["FOOTWEAR"],
+  },
+  {
+    key: "travel",
+    labelPt: "Viagem",
+    labelEn: "Travel",
+    labelZh: "旅行",
+    includes: ["TRAVEL"],
+  },
+  {
+    key: "surfskate",
+    labelPt: "Surfskate",
+    labelEn: "Surfskate",
+    labelZh: "陆地冲浪",
+    includes: ["SURFSKATE"],
+  },
+  {
     key: "lifestyle",
     labelPt: "Lifestyle",
     labelEn: "Lifestyle",
     labelZh: "生活方式",
+    // Kept for deep links / homepage tiles; Odoo paths are usually under Essentials.
     includes: ["LIFESTYLE"],
   },
 ];
@@ -66,11 +100,16 @@ export function categoryGroupHref(group: CategoryGroupKey, extra?: Record<string
 
 function normalizeCategoryText(value: string) {
   return value
-    .replace(/�/g, "")
-    .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
-    .replace(/\s*\/\s*/g, " / ")
-    .replace(/\s+/g, " ")
-    .trim()
+    .replace(/\uFE0F/g, "")
+    .split("/")
+    .map((part) =>
+      part
+        .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter(Boolean)
+    .join(" / ")
     .toUpperCase();
 }
 

@@ -21,10 +21,15 @@ export type MenuCategory = {
 export function normalizeCategoryPath(category: string) {
   return category
     .replace(/\uFE0F/g, "")
-    .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
-    .replace(/\s*\/\s*/g, " / ")
-    .replace(/\s+/g, " ")
-    .trim();
+    .split("/")
+    .map((part) =>
+      part
+        .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter(Boolean)
+    .join(" / ");
 }
 
 /** Odoo `complete_name` often starts with the root "All / …" — drop that for menu grouping. */
@@ -132,7 +137,7 @@ async function buildMenuCategories(): Promise<MenuCategory[]> {
  * present on synced products. Cached + tag-revalidated with the catalog after sync.
  */
 export async function listMenuCategories(): Promise<MenuCategory[]> {
-  return unstable_cache(buildMenuCategories, ["menu-categories-v2"], {
+  return unstable_cache(buildMenuCategories, ["menu-categories-v3"], {
     revalidate: CATALOG_CACHE_REVALIDATE_SECONDS,
     tags: [CATALOG_CACHE_TAG],
   })();
