@@ -265,7 +265,7 @@
         </thead>
         <tbody>
           <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready (imagery refresh still needed — see P1.8)</td></tr>
-          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status" class="status-ok">Connected — near real-time sync live (P0.18)</td></tr>
+          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status" class="status-ok">Connected — daily midnight Lisbon sync + catalog cache (P0.18)</td></tr>
           <tr><td data-label="Area">Browse shop, filters, product pages</td><td data-label="Status" class="status-ok">Ready for browsing</td></tr>
           <tr><td data-label="Area">Cart + guest/account checkout skeleton</td><td data-label="Status">Built, not production-safe</td></tr>
           <tr><td data-label="Area">Payments (MB WAY, Multibanco, PayPal, Klarna)</td><td data-label="Status" class="status-bad">Not ready — credentials pending</td></tr>
@@ -322,7 +322,7 @@
           </tr>
           <tr>
             <td data-label="Decision">Odoo ↔ website</td>
-            <td data-label="Choice">Catalog (products, price, stock, categories, New In / offers) stays in <strong>near real-time</strong> sync</td>
+            <td data-label="Choice">Catalog (products, price, stock, categories, New In / offers) syncs <strong>once daily</strong> at midnight Lisbon (ops-safe)</td>
           </tr>
           <tr>
             <td data-label="Decision">Security bar</td>
@@ -360,7 +360,7 @@
         <li>If catalog/DB fails, mock demo products must not become sellable.</li>
         <li>No simple admin screen to process orders; no customer “My orders” history.</li>
         <li>Homepage hero / category tile images may be outdated vs recent store photography.</li>
-        <li>Odoo → website catalog freshness: <strong>Vercel Cron</strong> incremental sync about every <strong>2 minutes</strong> (plus hourly full sync). Shop/New In also kick background sync when cache is older than <strong>~60 seconds</strong>. Typical delay after an Odoo edit: <strong>under 2 minutes</strong>.</li>
+        <li>Odoo → website catalog freshness: <strong>Vercel Cron</strong> one <strong>full sync daily at 23:00 UTC</strong> (midnight Lisbon in summer). On-read sync is <strong>off by default</strong>. Shop/New In/Opportunities share a <strong>1h catalog cache</strong> (revalidated after sync). Manual sync still available with <code>CRON_SECRET</code>.</li>
         <li>Security gaps listed in §5.1 below.</li>
       </ul>
 
@@ -513,8 +513,8 @@
           </tr>
           <tr>
             <td data-label="#">P0.18</td>
-            <td data-label="Item"><strong>Near real-time Odoo ↔ website catalog sync</strong>: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA</td>
-            <td data-label="Why">Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly</td>
+            <td data-label="Item"><strong>Odoo ↔ website catalog sync</strong> (ops-safe): daily full sync at midnight Lisbon (Vercel Cron <code>0 23 * * *</code> UTC), shared catalog cache, on-read sync opt-in only; optional webhook later</td>
+            <td data-label="Why">Stale catalog sells wrong price/stock; frequent sync burned Prisma Free ops</td>
             <td data-label="Effort">M</td>
           </tr>
         </tbody>
@@ -637,7 +637,7 @@
       <ol class="sequence">
         <li><strong>Configure production:</strong> Ifthenpay, email, Odoo, secrets — fail closed if payments/email/session secret missing.</li>
         <li><strong>Security baseline:</strong> callback hardening, rate limits, lock sync/status APIs, security headers (P0.4, P0.14–P0.17).</li>
-        <li><strong>Odoo freshness:</strong> scheduled + (optional) webhook catalog sync with health monitoring (P0.18).</li>
+        <li><strong>Odoo freshness:</strong> daily midnight-Lisbon full sync + shared catalog cache; optional webhook later (P0.18).</li>
         <li><strong>Ship PT payment path:</strong> MB WAY + Multibanco end-to-end (UI + email + callback).</li>
         <li><strong>Ship international payments:</strong> PayPal, then Klarna (or in parallel if two people).</li>
         <li><strong>Harden commerce rules:</strong> stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.</li>

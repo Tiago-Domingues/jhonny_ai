@@ -425,7 +425,7 @@ export function ShopClient({
 
         const response = await fetch(
           `/api/products${requestParams.toString() ? `?${requestParams.toString()}` : ""}`,
-          { signal: controller.signal, cache: "no-store" }
+          { signal: controller.signal }
         );
         if (!response.ok) throw new Error("Product request failed.");
         const data = await response.json();

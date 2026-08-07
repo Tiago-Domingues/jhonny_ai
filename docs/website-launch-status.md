@@ -23,7 +23,7 @@ The marketing site, product catalog, and shopping foundations are largely in pla
 | Area | Status |
 |------|--------|
 | Brand / homepage content | Ready (imagery refresh still needed — see P1.8) |
-| Product catalog (Odoo → site) | Connected — near real-time sync live (P0.18 ✅) |
+| Product catalog (Odoo → site) | Connected — daily midnight Lisbon sync + catalog cache (P0.18 ✅) |
 | Browse shop, filters, product pages | Ready for browsing |
 | Cart + guest/account checkout skeleton | Built, not production-safe |
 | Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** — credentials pending |
@@ -59,7 +59,7 @@ These are the agreed end-state for go-live:
 | Free shipping | **€100** everywhere (banner, checkout, legal) |
 | Languages at launch | Site already supports PT / EN / ZH for most UX; legal ZH can follow later |
 | Brand imagery | Homepage + category heroes use **recent real store / product photos** (not stale assets) |
-| Odoo ↔ website | Catalog (products, price, stock, categories, New In / offers) stays in **near real-time** sync |
+| Odoo ↔ website | Catalog (products, price, stock, categories, New In / offers) syncs **once daily** at midnight Lisbon (ops-safe) |
 | Security bar | Fail closed on payments/secrets; authenticated admin/sync APIs; rate limits; security headers |
 
 ---
@@ -70,7 +70,7 @@ From production integration status and code review:
 
 | Integration | Production status |
 |-------------|-------------------|
-| Odoo | Configured — incremental sync ~every 2 min (+ on-read kick ~60s); typical freshness **under 2 minutes** |
+| Odoo | Configured — **daily full sync** at 23:00 UTC (midnight Lisbon in summer); on-read sync off by default; 1h shared catalog cache |
 | Email (Resend) | **Not configured** — order emails skipped |
 | Ifthenpay MB WAY | **Not configured** — would fall back to mocks |
 | Ifthenpay Multibanco | **Not configured** — would fall back to mocks |
@@ -88,7 +88,7 @@ Other important mismatches / risks:
 - If catalog/DB fails, mock demo products must not become sellable.
 - No simple admin screen to process orders; no customer “My orders” history.
 - Homepage hero / category tile images may be outdated vs recent store photography.
-- Odoo → website catalog freshness: **Vercel Cron** runs incremental sync about **every 2 minutes** (plus hourly full sync). Shop/New In pages also kick a background incremental sync when the cache is older than **~60 seconds**. Typical delay after an Odoo edit (including New In tags): **under 2 minutes**. Manual `POST/GET /api/odoo/sync/products` still exists (requires `CRON_SECRET`).
+- Odoo → website catalog freshness: **Vercel Cron** runs one **full sync daily at 23:00 UTC** (midnight Lisbon during WEST / summer; 23:00 Lisbon in winter). On-read sync is **off by default** (`ODOO_ON_READ_SYNC`); shop/New In/Opportunities share a **1h `unstable_cache`** of the active catalog (tag-revalidated after sync). Manual `POST/GET /api/odoo/sync/products` still exists (requires `CRON_SECRET`).
 - Security gaps listed in §5.1 below.
 
 ### 5.1 Security posture (attack resistance)
@@ -151,7 +151,7 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 | P0.15 | **Rate-limit** login, register, checkout, coupon, and payment-callback endpoints | ✅ Done | Stops brute-force and callback flooding | S–M |
 | P0.16 | **Lock down** Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe) | ✅ Done | Stops unauthorized sync / info leak | S |
 | P0.17 | Add **security HTTP headers** (HSTS, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`, baseline CSP, `nosniff`) | ✅ Done | Hardens browser attack surface | S |
-| P0.18 | **Near real-time Odoo ↔ website catalog sync**: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA | ✅ Done (cron every 2 min + incremental sync; webhook optional later) | Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly | M |
+| P0.18 | **Odoo ↔ website catalog sync** (ops-safe): daily full sync at midnight Lisbon (Vercel Cron `0 23 * * *` UTC), shared catalog cache, on-read sync opt-in only; optional webhook later | ✅ Done (daily cron + cache; was near-real-time until Prisma Free ops burn) | Stale catalog sells wrong price/stock; frequent sync burned Prisma Free ops | M |
 
 **P0 rough total:** about **2–4 weeks** of focused build + provider setup, dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1. Security items P0.4 / P0.14–P0.17 and catalog freshness **P0.18** are mostly S–M and should be done **before** opening paid traffic.
 
@@ -204,7 +204,7 @@ Work these next while Ifthenpay / PayPal / Klarna credentials / photos are pendi
 
 1. **Configure production:** Ifthenpay, email, Odoo, secrets — fail closed if payments/email/session secret missing.  
 2. **Security baseline:** callback hardening, rate limits, lock sync/status APIs, security headers (P0.4, P0.14–P0.17).  
-3. **Odoo freshness:** scheduled + (optional) webhook catalog sync with health monitoring (P0.18).  
+3. **Odoo freshness:** daily midnight-Lisbon full sync + shared catalog cache; optional webhook later (P0.18).  
 4. **Ship PT payment path:** MB WAY + Multibanco end-to-end (UI + email + callback).  
 5. **Ship international payments:** PayPal, then Klarna (or in parallel if two people).  
 6. **Harden commerce rules:** stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.  
