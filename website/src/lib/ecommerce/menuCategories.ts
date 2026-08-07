@@ -137,7 +137,7 @@ async function buildMenuCategories(): Promise<MenuCategory[]> {
  * present on synced products. Cached + tag-revalidated with the catalog after sync.
  */
 export async function listMenuCategories(): Promise<MenuCategory[]> {
-  return unstable_cache(buildMenuCategories, ["menu-categories-v3"], {
+  return unstable_cache(buildMenuCategories, ["menu-categories-v4"], {
     revalidate: CATALOG_CACHE_REVALIDATE_SECONDS,
     tags: [CATALOG_CACHE_TAG],
   })();

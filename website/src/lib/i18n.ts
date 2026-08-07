@@ -62,10 +62,8 @@ export const NAV_LINKS = [
   { id: "essentials", key: "essentials" as const },
   { id: "bodyboard", key: "bodyboard" as const },
   { id: "clothing", key: "clothing" as const },
-  { id: "footwear", key: "footwear" as const },
   { id: "travel", key: "travel" as const },
   { id: "surfskate", key: "surfskate" as const },
-  { id: "lifestyle", key: "lifestyle" as const },
 ];
 
 // Top-menu categories with their dropdown sub-items.
@@ -79,10 +77,8 @@ export type NavKey =
   | "essentials"
   | "bodyboard"
   | "clothing"
-  | "footwear"
   | "travel"
-  | "surfskate"
-  | "lifestyle";
+  | "surfskate";
 
 export const MENU_CATEGORIES: {
   key: NavKey;
@@ -158,12 +154,8 @@ export const MENU_CATEGORIES: {
       "CLOTHING / JSS MERCH",
       "CLOTHING / SUNGLASSES",
       "CLOTHING / SOCKS",
+      "CLOTHING / FOOTWEAR",
     ],
-  },
-  {
-    key: "footwear",
-    anchor: "footwear",
-    items: ["FOOTWEAR / MEN", "FOOTWEAR / WOMEN"],
   },
   {
     key: "travel",
@@ -180,15 +172,6 @@ export const MENU_CATEGORIES: {
     anchor: "surfskate",
     items: ["SURFSKATE / PROTECTIVE GEAR", "SURFSKATE / ACESSORIES"],
   },
-  {
-    key: "lifestyle",
-    anchor: "lifestyle",
-    items: [
-      "LIFESTYLE / YETI GEAR",
-      "LIFESTYLE / DRINKWEAR & ACESSORIES",
-      "LIFESTYLE / BOOKS",
-    ],
-  },
 ];
 
 type Dict = {
@@ -199,10 +182,8 @@ type Dict = {
     essentials: string;
     bodyboard: string;
     clothing: string;
-    footwear: string;
     travel: string;
     surfskate: string;
-    lifestyle: string;
     contact: string;
   };
   menuItems: Record<string, string>;
@@ -349,10 +330,8 @@ export const translations: Record<Locale, Dict> = {
       essentials: "Surf Essencials",
       bodyboard: "Bodyboard",
       clothing: "Vestuário",
-      footwear: "Calçado",
       travel: "Viagem",
       surfskate: "Surfskate",
-      lifestyle: "Lifestyle",
       contact: "Contacto",
     },
     menuItems: {
@@ -394,6 +373,7 @@ export const translations: Record<Locale, Dict> = {
       "CLOTHING / JSS MERCH": "JSS Merch",
       "CLOTHING / SUNGLASSES": "Óculos de sol",
       "CLOTHING / SOCKS": "Meias",
+      "CLOTHING / FOOTWEAR": "Calçado",
       "FOOTWEAR / MEN": "Homem",
       "FOOTWEAR / WOMEN": "Mulher",
       "TRAVEL / BACKPACKS": "Mochilas",
@@ -450,11 +430,9 @@ export const translations: Record<Locale, Dict> = {
         { id: "surfgear", title: "Material Técnico", desc: "Quilhas, leashes, decks, capas e acessórios técnicos." },
         { id: "essentials", title: "Surf Essencials", desc: "Parafina, ponchos, praia, earplugs, reparações e lifestyle." },
         { id: "bodyboard", title: "Bodyboard", desc: "Pranchas, pés de pato, leashes e acessórios de bodyboard." },
-        { id: "clothing", title: "Vestuário", desc: "Roupa de homem, mulher, kids, hats e merch JSS." },
-        { id: "footwear", title: "Calçado", desc: "Sandálias, boots e calçado para a praia e o dia a dia." },
+        { id: "clothing", title: "Vestuário", desc: "Roupa, calçado, hats e merch JSS." },
         { id: "travel", title: "Viagem", desc: "Mochilas, duffels, trolleys e everyday carry." },
         { id: "surfskate", title: "Surfskate", desc: "Surfskates, proteção e acessórios." },
-        { id: "lifestyle", title: "Lifestyle", desc: "YETI gear, drinkware, livros e lifestyle da loja." },
       ],
     },
     jss: {
@@ -602,10 +580,8 @@ export const translations: Record<Locale, Dict> = {
       essentials: "Surf Essencials",
       bodyboard: "Bodyboard",
       clothing: "Clothing",
-      footwear: "Footwear",
       travel: "Travel",
       surfskate: "Surfskate",
-      lifestyle: "Lifestyle",
       contact: "Contact",
     },
     menuItems: {
@@ -648,6 +624,7 @@ export const translations: Record<Locale, Dict> = {
       "CLOTHING / JSS MERCH": "JSS Merch",
       "CLOTHING / SUNGLASSES": "Sunglasses",
       "CLOTHING / SOCKS": "Socks",
+      "CLOTHING / FOOTWEAR": "Footwear",
       "FOOTWEAR / MEN": "Men",
       "FOOTWEAR / WOMEN": "Women",
       "TRAVEL / BACKPACKS": "Backpacks",
@@ -692,11 +669,9 @@ export const translations: Record<Locale, Dict> = {
         { id: "surfgear", title: "Surf Gear", desc: "Fins, leashes, decks, boardbags and technical accessories." },
         { id: "essentials", title: "Surf Essencials", desc: "Wax, ponchos, beach gear, earplugs, repairs and lifestyle." },
         { id: "bodyboard", title: "Bodyboard", desc: "Boards, swim fins, leashes and bodyboard accessories." },
-        { id: "clothing", title: "Clothing", desc: "Men's, women's, kids, hats and JSS merch." },
-        { id: "footwear", title: "Footwear", desc: "Sandals, boots and everyday beach footwear." },
+        { id: "clothing", title: "Clothing", desc: "Apparel, footwear, hats and JSS merch." },
         { id: "travel", title: "Travel", desc: "Backpacks, duffels, trolleys and everyday carry." },
         { id: "surfskate", title: "Surfskate", desc: "Surfskates, protective gear and accessories." },
-        { id: "lifestyle", title: "Lifestyle", desc: "YETI gear, drinkware, books and store lifestyle products." },
       ],
     },
     jss: {
@@ -844,10 +819,8 @@ export const translations: Record<Locale, Dict> = {
       essentials: "Surf Essencials",
       bodyboard: "趴板",
       clothing: "服装",
-      footwear: "鞋履",
       travel: "旅行",
       surfskate: "陆地冲浪",
-      lifestyle: "生活方式",
       contact: "联系我们",
     },
     menuItems: {
@@ -891,6 +864,7 @@ export const translations: Record<Locale, Dict> = {
       "CLOTHING / JSS MERCH": "JSS 周边",
       "CLOTHING / SUNGLASSES": "太阳镜",
       "CLOTHING / SOCKS": "袜子",
+      "CLOTHING / FOOTWEAR": "鞋履",
       "FOOTWEAR / MEN": "男士",
       "FOOTWEAR / WOMEN": "女士",
       "TRAVEL / BACKPACKS": "背包",
@@ -944,11 +918,9 @@ export const translations: Record<Locale, Dict> = {
         { id: "surfgear", title: "冲浪装备", desc: "鱼鳍、脚绳、防滑垫、板袋与专业配件。" },
         { id: "essentials", title: "Surf Essencials", desc: "冲浪蜡、浴袍斗篷、海滩用品、耳塞、修补与生活方式。" },
         { id: "bodyboard", title: "趴板", desc: "趴板、脚蹼、脚绳与趴板配件。" },
-        { id: "clothing", title: "服装", desc: "男装、女装、童装、帽子与 JSS 周边。" },
-        { id: "footwear", title: "鞋履", desc: "凉鞋、靴子与日常沙滩鞋履。" },
+        { id: "clothing", title: "服装", desc: "服装、鞋履、帽子与 JSS 周边。" },
         { id: "travel", title: "旅行", desc: "背包、旅行袋、拉杆箱与日常携带。" },
         { id: "surfskate", title: "陆地冲浪", desc: "陆地冲浪板、护具与配件。" },
-        { id: "lifestyle", title: "生活方式", desc: "YETI、水杯、书籍与门店生活方式单品。" },
       ],
     },
     jss: {

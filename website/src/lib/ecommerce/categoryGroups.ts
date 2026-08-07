@@ -5,10 +5,8 @@ export type CategoryGroupKey =
   | "essentials"
   | "bodyboard"
   | "clothing"
-  | "footwear"
   | "travel"
-  | "surfskate"
-  | "lifestyle";
+  | "surfskate";
 
 type CategoryGroup = {
   key: CategoryGroupKey;
@@ -45,7 +43,7 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     labelPt: "Surf Essencials",
     labelEn: "Surf Essencials",
     labelZh: "Surf Essencials",
-    // Lifestyle lives under Surf Essencials in Odoo (SURF ESSENCIALS / LIFESTYLE / …).
+    // Lifestyle is nested under Surf Essencials in Odoo.
     includes: ["SURF ESSENCIALS", "SURF ESSENTIALS"],
   },
   {
@@ -60,14 +58,8 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     labelPt: "Vestuário",
     labelEn: "Clothing",
     labelZh: "服装",
-    includes: ["CLOTHING"],
-  },
-  {
-    key: "footwear",
-    labelPt: "Calçado",
-    labelEn: "Footwear",
-    labelZh: "鞋履",
-    includes: ["FOOTWEAR"],
+    // Footwear is nested under Clothing in Odoo; keep FOOTWEAR so root paths still match.
+    includes: ["CLOTHING", "FOOTWEAR"],
   },
   {
     key: "travel",
@@ -82,14 +74,6 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     labelEn: "Surfskate",
     labelZh: "陆地冲浪",
     includes: ["SURFSKATE"],
-  },
-  {
-    key: "lifestyle",
-    labelPt: "Lifestyle",
-    labelEn: "Lifestyle",
-    labelZh: "生活方式",
-    // Kept for deep links / homepage tiles; Odoo paths are usually under Essentials.
-    includes: ["LIFESTYLE"],
   },
 ];
 

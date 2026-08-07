@@ -71,18 +71,9 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     labelPt: "Vestuário",
     labelEn: "Clothing",
     labelZh: "服装",
-    subtitlePt: "Roupa de homem, mulher, kids, hats e merch JSS.",
-    subtitleEn: "Men's, women's, kids, hats and JSS merch.",
-    subtitleZh: "男装、女装、童装、帽子与 JSS 周边。",
-  },
-  footwear: {
-    image: "/brand/categories/hero-essentials.jpg",
-    labelPt: "Calçado",
-    labelEn: "Footwear",
-    labelZh: "鞋履",
-    subtitlePt: "Sandálias, boots e calçado para a praia e o dia a dia.",
-    subtitleEn: "Sandals, boots and everyday beach footwear.",
-    subtitleZh: "凉鞋、靴子与日常沙滩鞋履。",
+    subtitlePt: "Roupa, calçado, hats e merch JSS.",
+    subtitleEn: "Apparel, footwear, hats and JSS merch.",
+    subtitleZh: "服装、鞋履、帽子与 JSS 周边。",
   },
   travel: {
     image: "/brand/categories/hero-lifestyle.png",
@@ -101,15 +92,6 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitlePt: "Surfskates, proteção e acessórios.",
     subtitleEn: "Surfskates, protective gear and accessories.",
     subtitleZh: "陆地冲浪板、护具与配件。",
-  },
-  lifestyle: {
-    image: "/brand/categories/hero-lifestyle.png",
-    labelPt: "Lifestyle",
-    labelEn: "Lifestyle",
-    labelZh: "生活方式",
-    subtitlePt: "YETI, drinkware, livros e lifestyle da comunidade Jhonny.",
-    subtitleEn: "YETI, drinkware, books and lifestyle from the Jhonny crew.",
-    subtitleZh: "YETI、水杯、书籍与 Jhonny 社区生活方式单品。",
   },
 };
 
