@@ -129,7 +129,12 @@ export function AccountClient() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Profile</p>
-              <p className="mt-2 text-sm text-muted">Keep your details ready for faster checkouts and Odoo customer sync.</p>
+              <p className="mt-2 text-sm text-muted">Keep your details ready for faster checkouts.</p>
+              <p className="mt-3 text-sm">
+                <a href="/encomendas" className="font-semibold text-ink underline underline-offset-2">
+                  Ver as minhas encomendas
+                </a>
+              </p>
             </div>
             <input name="fullName" required defaultValue={String(profile?.fullName || user.fullName || "")} placeholder="Full name" className="rounded-2xl border border-line px-4 py-3" />
             <input name="birthDate" type="date" defaultValue={profile?.birthDate ? String(profile.birthDate).slice(0, 10) : ""} className="rounded-2xl border border-line px-4 py-3" />

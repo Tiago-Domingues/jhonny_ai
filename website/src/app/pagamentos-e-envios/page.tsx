@@ -11,16 +11,15 @@ const pt: InfoContent = {
   title: "Pagamentos e Envios",
   updated: "Última atualização: 2026",
   intro:
-    "Aqui encontras a informação sobre como pagar e como receber o teu material. O checkout online fica preparado para MB WAY, Multibanco, PayPal, Klarna, envio e levantamento em loja.",
+    "Aqui encontras a informação sobre como pagar e como receber o teu material — MB WAY, Multibanco, PayPal, Klarna, envio e levantamento em loja.",
   sections: [
     {
       heading: "Métodos de pagamento",
       bullets: [
-        "MB WAY via Ifthenpay.",
-        "Multibanco entidade/referência via Ifthenpay.",
-        "PayPal, quando a conta de comerciante estiver ligada.",
-        "Klarna, quando o contrato/provider estiver confirmado.",
-        "Cartão de débito/crédito (Visa, Mastercard).",
+        "MB WAY (Ifthenpay).",
+        "Multibanco entidade/referência (Ifthenpay).",
+        "PayPal.",
+        "Klarna.",
         "Dinheiro na loja física.",
         "Transferência bancária para encomendas especiais.",
       ],
@@ -35,13 +34,13 @@ const pt: InfoContent = {
       heading: "Envios",
       paragraphs: [
         "Realizamos envios para Portugal Continental, Ilhas e Europa, sob consulta. O prazo de entrega depende do destino e da transportadora.",
-        "Portes grátis em encomendas acima de €50 (artigos volumosos como pranchas podem ter condições específicas — confirmamos sempre o custo contigo antes de avançar).",
+        "Portes grátis em encomendas acima de €100 (artigos volumosos como pranchas podem ter condições específicas — confirmamos sempre o custo contigo antes de avançar).",
       ],
     },
     {
       heading: "Levantamento na loja",
       paragraphs: [
-        "Podes pagar online e levantar a tua encomenda sem custos na nossa loja em Parede / Carcavelos, durante o horário de funcionamento. Aguarda sempre pelo email de confirmação antes de levantar.",
+        "Podes pagar online e levantar a tua encomenda sem custos na nossa loja em Carcavelos (Rua de Gaza 16 Lj direita), durante o horário de funcionamento. Aguarda sempre pelo email de confirmação antes de levantar.",
       ],
     },
   ],
@@ -51,16 +50,15 @@ const en: InfoContent = {
   title: "Payments & Shipping",
   updated: "Last updated: 2026",
   intro:
-    "Here's how to pay and how to get your gear. The online checkout is prepared for MB WAY, Multibanco, PayPal, Klarna, shipping and in-store pickup.",
+    "Here's how to pay and how to get your gear — MB WAY, Multibanco, PayPal, Klarna, shipping and in-store pickup.",
   sections: [
     {
       heading: "Payment methods",
       bullets: [
-        "MB WAY through Ifthenpay.",
-        "Multibanco entity/reference through Ifthenpay.",
-        "PayPal once the merchant account is connected.",
-        "Klarna once the contract/provider is confirmed.",
-        "Debit/credit card (Visa, Mastercard).",
+        "MB WAY (Ifthenpay).",
+        "Multibanco entity/reference (Ifthenpay).",
+        "PayPal.",
+        "Klarna.",
         "Cash in the physical store.",
         "Bank transfer for special orders.",
       ],
@@ -75,13 +73,13 @@ const en: InfoContent = {
       heading: "Shipping",
       paragraphs: [
         "We ship to mainland Portugal, the islands and Europe, on request. Delivery time depends on the destination and carrier.",
-        "Free shipping on orders over €50 (bulky items such as boards may have specific conditions — we always confirm the cost with you before proceeding).",
+        "Free shipping on orders over €100 (bulky items such as boards may have specific conditions — we always confirm the cost with you before proceeding).",
       ],
     },
     {
       heading: "Store pickup",
       paragraphs: [
-        "You can pay online and pick up your order free of charge at our store in Parede / Carcavelos during opening hours. Always wait for the confirmation email before collecting.",
+        "You can pay online and pick up your order free of charge at our store in Carcavelos (Rua de Gaza 16 Lj direita) during opening hours. Always wait for the confirmation email before collecting.",
       ],
     },
   ],

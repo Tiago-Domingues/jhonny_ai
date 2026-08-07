@@ -16,6 +16,7 @@ type HeaderUser = {
   fullName?: string;
   username?: string;
   email?: string;
+  role?: "CUSTOMER" | "ADMIN";
 } | null;
 
 type MenuCategory = {
@@ -226,18 +227,28 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                 >
                   {user ? t.account.title : t.account.signIn}
                 </a>
+                {!user && (
+                  <a
+                    href="/conta"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                  >
+                    {t.account.register}
+                  </a>
+                )}
                 <a
-                  href="/conta"
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                >
-                  {t.account.register}
-                </a>
-                <a
-                  href="/checkout"
+                  href="/encomendas"
                   className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                 >
                   {t.account.orders}
                 </a>
+                {user?.role === "ADMIN" && (
+                  <a
+                    href="/admin/encomendas"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                  >
+                    Admin encomendas
+                  </a>
+                )}
                 {user && (
                   <button
                     type="button"
@@ -247,9 +258,6 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                     Sair
                   </button>
                 )}
-                <p className="px-3 pb-1 pt-2 text-[0.65rem] uppercase tracking-wide text-muted">
-                  Dados preparados para Odoo
-                </p>
               </div>
             )}
           </div>

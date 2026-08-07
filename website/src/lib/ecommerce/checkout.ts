@@ -6,6 +6,12 @@ import { checkoutSchema } from "@/lib/ecommerce/schemas";
 import { createPaymentForOrder } from "@/lib/ecommerce/payments";
 import { sendOrderEmails } from "@/lib/ecommerce/email";
 import { validateCoupon } from "@/lib/ecommerce/coupons";
+import { computeShippingCents } from "@/lib/ecommerce/shipping";
+import {
+  cancelUnpaidOrder,
+  releaseStockForItems,
+  reserveStockForItems,
+} from "@/lib/ecommerce/inventory";
 
 type CheckoutIdentity = {
   userId?: string;
@@ -34,131 +40,150 @@ export async function createCheckout(identity: CheckoutIdentity, input: unknown)
     }
   }
 
+  if (data.fulfillmentMethod === "SHIP_TO_ADDRESS") {
+    const missing = [
+      !data.addressLine1?.trim() && "address",
+      !data.postalCode?.trim() && "postal code",
+      !data.city?.trim() && "city",
+      !data.country?.trim() && "country",
+    ].filter(Boolean);
+    if (missing.length) {
+      throw new Error(`Shipping address is incomplete (${missing.join(", ")}).`);
+    }
+  }
+
   const coupon = await validateCoupon(data.couponCode, summary.subtotalCents, {
     userId: identity.userId,
     email: data.email,
   });
   const discountCents = coupon?.discountCents || 0;
-  const FREE_SHIPPING_THRESHOLD_CENTS = 5000; // €50
-  const STANDARD_SHIPPING_CENTS = 690;
   const amountForShippingCents = Math.max(0, summary.subtotalCents - discountCents);
-  const shippingCents =
-    data.fulfillmentMethod === "PICKUP_IN_STORE" ||
-    amountForShippingCents >= FREE_SHIPPING_THRESHOLD_CENTS
-      ? 0
-      : STANDARD_SHIPPING_CENTS;
+  const shippingCents = computeShippingCents({
+    fulfillmentMethod: data.fulfillmentMethod,
+    amountForShippingCents,
+  });
   const totalCents = Math.max(0, summary.subtotalCents + shippingCents - discountCents);
-  const guestCheckoutId = identity.userId
-    ? null
-    : (
-        await prisma.guestCheckout.create({
-          data: {
-            email: data.email,
-            phoneCountryCode: data.phoneCountryCode,
-            phone: data.phone,
-            fullName: data.fullName,
-            addressLine1: data.addressLine1 || null,
-            addressLine2: data.addressLine2 || null,
-            postalCode: data.postalCode || null,
-            city: data.city || null,
-            country: data.country,
-            billingSameAsShipping: data.billingSameAsShipping,
-            billingAddressJson: data.billingSameAsShipping
-              ? undefined
-              : {
-                  addressLine1: data.billingAddressLine1,
-                  addressLine2: data.billingAddressLine2,
-                  postalCode: data.billingPostalCode,
-                  city: data.billingCity,
-                  country: data.billingCountry,
-                },
-            marketingOptIn: data.marketingOptIn,
-          },
-        })
-      ).id;
 
-  const order = await prisma.order.create({
-    data: {
-      orderNumber: nextOrderNumber(),
-      userId: identity.userId,
-      guestCheckoutId,
-      cartId: cart.id,
-      customerEmail: data.email,
-      customerPhoneCountryCode: data.phoneCountryCode,
-      customerPhone: data.phone,
-      customerName: data.fullName,
-      fulfillmentMethod: data.fulfillmentMethod,
-      shippingAddressJson:
-        data.fulfillmentMethod === "SHIP_TO_ADDRESS"
-          ? {
-              addressLine1: data.addressLine1,
-              addressLine2: data.addressLine2,
-              postalCode: data.postalCode,
-              city: data.city,
+  const stockLines = cart.items.map((item) => ({
+    productId: item.productId,
+    quantity: item.quantity,
+    name: item.product.name,
+  }));
+
+  // Reserve stock before creating the order so concurrent checkouts cannot oversell.
+  await reserveStockForItems(stockLines);
+
+  let orderId: string | null = null;
+  try {
+    const guestCheckoutId = identity.userId
+      ? null
+      : (
+          await prisma.guestCheckout.create({
+            data: {
+              email: data.email,
+              phoneCountryCode: data.phoneCountryCode,
+              phone: data.phone,
+              fullName: data.fullName,
+              addressLine1: data.addressLine1 || null,
+              addressLine2: data.addressLine2 || null,
+              postalCode: data.postalCode || null,
+              city: data.city || null,
               country: data.country,
-            }
-          : undefined,
-      billingAddressJson: data.billingSameAsShipping
-        ? undefined
-        : {
-            addressLine1: data.billingAddressLine1,
-            addressLine2: data.billingAddressLine2,
-            postalCode: data.billingPostalCode,
-            city: data.billingCity,
-            country: data.billingCountry,
-          },
-      subtotalCents: summary.subtotalCents,
-      shippingCents,
-      discountCents,
-      couponCode: coupon?.code || null,
-      totalCents,
-      taxCents: 0,
-      currency: summary.currency,
-      notes: data.notes || null,
-      odooSyncStatus: "PENDING_SYNC",
-      items: {
-        create: cart.items.map((item) => ({
-          productId: item.productId,
-          sku: item.product.sku || item.product.refId || item.product.slug,
-          name: item.product.name,
-          quantity: item.quantity,
-          unitPriceCents: item.unitPriceCents,
-          totalCents: item.unitPriceCents * item.quantity,
-          currency: item.currency,
-          odooProductId: item.product.odooProductId,
-          odooProductTemplateId: item.product.odooProductTemplateId,
-        })),
-      },
-    },
-    include: { items: true },
-  });
+              billingSameAsShipping: data.billingSameAsShipping,
+              billingAddressJson: data.billingSameAsShipping
+                ? undefined
+                : {
+                    addressLine1: data.billingAddressLine1,
+                    addressLine2: data.billingAddressLine2,
+                    postalCode: data.billingPostalCode,
+                    city: data.billingCity,
+                    country: data.billingCountry,
+                  },
+              marketingOptIn: data.marketingOptIn,
+            },
+          })
+        ).id;
 
-  if (coupon) {
-    await prisma.couponUsage.create({
+    const order = await prisma.order.create({
       data: {
-        couponId: coupon.id,
-        orderId: order.id,
-        userId: identity.userId || null,
-        guestEmail: identity.userId ? null : data.email,
-        code: coupon.code,
-        discountCents,
+        orderNumber: nextOrderNumber(),
+        userId: identity.userId,
+        guestCheckoutId,
+        cartId: cart.id,
+        customerEmail: data.email,
+        customerPhoneCountryCode: data.phoneCountryCode,
+        customerPhone: data.phone,
+        customerName: data.fullName,
+        fulfillmentMethod: data.fulfillmentMethod,
+        shippingAddressJson:
+          data.fulfillmentMethod === "SHIP_TO_ADDRESS"
+            ? {
+                addressLine1: data.addressLine1,
+                addressLine2: data.addressLine2,
+                postalCode: data.postalCode,
+                city: data.city,
+                country: data.country,
+              }
+            : undefined,
+        billingAddressJson: data.billingSameAsShipping
+          ? undefined
+          : {
+              addressLine1: data.billingAddressLine1,
+              addressLine2: data.billingAddressLine2,
+              postalCode: data.billingPostalCode,
+              city: data.billingCity,
+              country: data.billingCountry,
+            },
         subtotalCents: summary.subtotalCents,
+        shippingCents,
+        discountCents,
+        couponCode: coupon?.code || null,
+        totalCents,
+        taxCents: 0,
+        currency: summary.currency,
+        notes: data.notes || null,
+        odooSyncStatus: "PENDING_SYNC",
+        items: {
+          create: cart.items.map((item) => ({
+            productId: item.productId,
+            sku: item.product.sku || item.product.refId || item.product.slug,
+            name: item.product.name,
+            quantity: item.quantity,
+            unitPriceCents: item.unitPriceCents,
+            totalCents: item.unitPriceCents * item.quantity,
+            currency: item.currency,
+            odooProductId: item.product.odooProductId,
+            odooProductTemplateId: item.product.odooProductTemplateId,
+          })),
+        },
       },
+      include: { items: true },
     });
+    orderId = order.id;
+
+    // CouponUsage is recorded only after payment (see markPaymentPaid).
+    await prisma.cart.update({ where: { id: cart.id }, data: { status: "ORDERED" } });
+
+    const payment = await createPaymentForOrder(order.id, {
+      method: data.paymentMethod,
+      amountCents: order.totalCents,
+      currency: order.currency,
+      email: order.customerEmail,
+      phone: order.customerPhone
+        ? `${order.customerPhoneCountryCode}${order.customerPhone}`
+        : undefined,
+      mbwayPhone: data.mbwayPhone || `${data.phoneCountryCode}${data.phone}`,
+      description: `Jhonny Surf Store ${order.orderNumber}`,
+    });
+
+    await sendOrderEmails(order.id);
+    return { order, payment };
+  } catch (error) {
+    if (orderId) {
+      await cancelUnpaidOrder(orderId, "checkout_failed").catch(() => undefined);
+    } else {
+      await releaseStockForItems(stockLines).catch(() => undefined);
+    }
+    throw error;
   }
-
-  await prisma.cart.update({ where: { id: cart.id }, data: { status: "ORDERED" } });
-
-  const payment = await createPaymentForOrder(order.id, {
-    method: data.paymentMethod,
-    amountCents: order.totalCents,
-    currency: order.currency,
-    email: order.customerEmail,
-    phone: order.customerPhone ? `${order.customerPhoneCountryCode}${order.customerPhone}` : undefined,
-    mbwayPhone: data.mbwayPhone || `${data.phoneCountryCode}${data.phone}`,
-    description: `Jhonny Surf Store ${order.orderNumber}`,
-  });
-
-  await sendOrderEmails(order.id);
-  return { order, payment };
 }
