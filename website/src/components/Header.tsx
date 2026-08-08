@@ -48,12 +48,14 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
   const [panel, setPanel] = useState<Panel>(null);
   const [langOpen, setLangOpen] = useState(false);
   const [openCat, setOpenCat] = useState<string | null>(null);
+  const [desktopCat, setDesktopCat] = useState<NavKey | null>(null);
   const [user, setUser] = useState<HeaderUser>(null);
   const [cartCount, setCartCount] = useState(0);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(
     categories?.length ? categories : MENU_CATEGORIES
   );
   const menuRef = useRef<HTMLDivElement>(null);
+  const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (categories?.length) {
@@ -104,6 +106,12 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
     return () => window.removeEventListener("jss-cart-updated", refresh);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
+    };
+  }, []);
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
@@ -116,52 +124,76 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
   const subcategoryHref = (key: NavKey, item: string) =>
     categoryGroupHref(key, { subcategory: item });
 
+  const activeDesktopCategory =
+    desktopCat != null ? menuCategories.find((cat) => cat.key === desktopCat) : null;
+
+  function openMega(key: NavKey) {
+    if (megaCloseTimer.current) {
+      clearTimeout(megaCloseTimer.current);
+      megaCloseTimer.current = null;
+    }
+    setDesktopCat(key);
+    setPanel(null);
+    setLangOpen(false);
+  }
+
+  function scheduleCloseMega() {
+    if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
+    megaCloseTimer.current = setTimeout(() => setDesktopCat(null), 120);
+  }
+
+  const shopAllLabel =
+    locale === "pt" ? "Ver tudo" : locale === "zh" ? "查看全部" : "Shop all";
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 bg-ink transition-all duration-300 ${
         scrolled ? "border-b border-line-dark shadow-lg shadow-black/20" : ""
       }`}
+      onMouseLeave={scheduleCloseMega}
     >
       <div className="mx-auto flex max-w-[96rem] items-center justify-between gap-3 px-4 py-3.5 sm:px-6 lg:px-8">
         <Link href="/" aria-label="Jhonny Surf Store" className="shrink-0">
           <Logo type="horizontal" variant="dark" priority className="h-9 sm:h-10" />
         </Link>
 
-        <nav className="hidden items-center gap-2.5 xl:flex 2xl:gap-3.5">
-          {menuCategories.map((cat) => (
-            <div key={cat.key} className="group relative">
+        <nav className="hidden items-center gap-1 xl:flex 2xl:gap-2" onMouseEnter={() => {
+          if (megaCloseTimer.current) {
+            clearTimeout(megaCloseTimer.current);
+            megaCloseTimer.current = null;
+          }
+        }}>
+          {menuCategories.map((cat) => {
+            const isActive = desktopCat === cat.key;
+            return (
               <Link
+                key={cat.key}
                 href={categoryHref(cat.key)}
-                className="flex items-center gap-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-white/85 transition hover:text-white 2xl:text-[0.75rem] 2xl:tracking-[0.1em]"
+                onMouseEnter={() => openMega(cat.key)}
+                onFocus={() => openMega(cat.key)}
+                className={`relative px-2.5 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] transition 2xl:px-3 2xl:text-[0.75rem] 2xl:tracking-[0.1em] ${
+                  isActive ? "text-white" : "text-white/80 hover:text-white"
+                }`}
               >
                 {t.nav[cat.key]}
-                <Chevron className="h-3 w-3 opacity-70 transition-transform duration-200 group-hover:rotate-180" />
+                <span
+                  className={`absolute inset-x-2.5 bottom-0 h-[2px] origin-left bg-white transition-transform duration-200 2xl:inset-x-3 ${
+                    isActive ? "scale-x-100" : "scale-x-0"
+                  }`}
+                />
               </Link>
-
-              {/* Dropdown */}
-              <div className="invisible absolute left-1/2 top-full z-50 w-56 -translate-x-1/2 pt-3 opacity-0 transition duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-                <div className="rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">
-                  {cat.items.map((item) => (
-                    <Link
-                      key={item}
-                      href={subcategoryHref(cat.key, item)}
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                    >
-                      {label(item)}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Language selector: EN / PT / 中文 */}
           <div className="relative">
             <button
               type="button"
-              onClick={() => setLangOpen((value) => !value)}
+              onClick={() => {
+                setLangOpen((value) => !value);
+                setDesktopCat(null);
+              }}
               aria-label="Change language"
               aria-expanded={langOpen}
               className="flex items-center gap-1.5 rounded-full border border-white/30 px-2.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:border-white"
@@ -201,99 +233,109 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
           </div>
 
           <div ref={menuRef} className="flex items-center gap-2 sm:gap-3">
-          {/* Account (placeholder) */}
-          <div className="relative">
-            <button
-              onClick={() => togglePanel("account")}
-              aria-label={t.account.title}
-              aria-expanded={panel === "account"}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white"
-            >
-              <UserIcon className="h-5 w-5" />
-            </button>
-            {panel === "account" && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">
-                <p className="px-3 pb-2 pt-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                  {t.account.title}
-                </p>
-                {user && (
-                  <p className="px-3 pb-2 text-sm font-semibold text-ink">
-                    {user.fullName || user.username || user.email}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  togglePanel("account");
+                  setDesktopCat(null);
+                }}
+                aria-label={t.account.title}
+                aria-expanded={panel === "account"}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white"
+              >
+                <UserIcon className="h-5 w-5" />
+              </button>
+              {panel === "account" && (
+                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">
+                  <p className="px-3 pb-2 pt-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                    {t.account.title}
                   </p>
-                )}
-                <a
-                  href="/conta"
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                >
-                  {user ? t.account.title : t.account.signIn}
-                </a>
-                {!user && (
+                  {user && (
+                    <p className="px-3 pb-2 text-sm font-semibold text-ink">
+                      {user.fullName || user.username || user.email}
+                    </p>
+                  )}
                   <a
                     href="/conta"
                     className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                   >
-                    {t.account.register}
+                    {user ? t.account.title : t.account.signIn}
                   </a>
-                )}
-                <a
-                  href="/encomendas"
-                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                >
-                  {t.account.orders}
-                </a>
-                {user?.role === "ADMIN" && (
+                  {!user && (
+                    <a
+                      href="/conta"
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                    >
+                      {t.account.register}
+                    </a>
+                  )}
                   <a
-                    href="/admin/encomendas"
+                    href="/encomendas"
                     className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                   >
-                    Admin encomendas
+                    {t.account.orders}
                   </a>
-                )}
-                {user && (
-                  <button
-                    type="button"
-                    onClick={logout}
-                    className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                  >
-                    Sair
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Cart (placeholder) */}
-          <div className="relative">
-            <button
-              onClick={() => togglePanel("cart")}
-              aria-label={t.account.cartTitle}
-              aria-expanded={panel === "cart"}
-              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white"
-            >
-              <CartIcon className="h-5 w-5" />
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[0.6rem] font-bold text-ink">
-                {cartCount}
-              </span>
-            </button>
-            {panel === "cart" && (
-              <div className="absolute right-0 mt-2 w-60 rounded-xl border border-line bg-paper p-4 text-ink shadow-xl">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                  {t.account.cartTitle}
-                </p>
-                <p className="mt-2 text-sm text-muted">
-                  {cartCount > 0 ? `${cartCount} item(s) no carrinho.` : t.account.cartEmpty}
-                </p>
-                <div className="mt-4 grid gap-2">
-                  <a href="/loja" className="rounded-full border border-line px-4 py-2 text-center text-xs font-bold uppercase tracking-wide">
-                    Continuar compras
-                  </a>
-                  <a href="/checkout" className="rounded-full bg-ink px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-white">
-                    Checkout
-                  </a>
+                  {user?.role === "ADMIN" && (
+                    <a
+                      href="/admin/encomendas"
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                    >
+                      Admin encomendas
+                    </a>
+                  )}
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                    >
+                      Sair
+                    </button>
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <button
+                onClick={() => {
+                  togglePanel("cart");
+                  setDesktopCat(null);
+                }}
+                aria-label={t.account.cartTitle}
+                aria-expanded={panel === "cart"}
+                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white"
+              >
+                <CartIcon className="h-5 w-5" />
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[0.6rem] font-bold text-ink">
+                  {cartCount}
+                </span>
+              </button>
+              {panel === "cart" && (
+                <div className="absolute right-0 mt-2 w-60 rounded-xl border border-line bg-paper p-4 text-ink shadow-xl">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                    {t.account.cartTitle}
+                  </p>
+                  <p className="mt-2 text-sm text-muted">
+                    {cartCount > 0 ? `${cartCount} item(s) no carrinho.` : t.account.cartEmpty}
+                  </p>
+                  <div className="mt-4 grid gap-2">
+                    <a
+                      href="/loja"
+                      className="rounded-full border border-line px-4 py-2 text-center text-xs font-bold uppercase tracking-wide"
+                    >
+                      Continuar compras
+                    </a>
+                    <a
+                      href="/checkout"
+                      className="rounded-full bg-ink px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-white"
+                    >
+                      Checkout
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <button
@@ -323,6 +365,60 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
         </div>
       </div>
 
+      {/* Full-width mega menu bar (Pukas-style) */}
+      <div
+        className={`hidden overflow-hidden border-t border-white/10 bg-paper text-ink transition-[max-height,opacity] duration-200 xl:block ${
+          activeDesktopCategory
+            ? "max-h-[320px] opacity-100 shadow-xl"
+            : "pointer-events-none max-h-0 opacity-0"
+        }`}
+        onMouseEnter={() => {
+          if (megaCloseTimer.current) {
+            clearTimeout(megaCloseTimer.current);
+            megaCloseTimer.current = null;
+          }
+        }}
+      >
+        {activeDesktopCategory && (
+          <div className="mx-auto max-w-[96rem] px-6 py-6 lg:px-8">
+            <div className="mb-4 flex items-end justify-between gap-4 border-b border-line pb-3">
+              <div>
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-muted">
+                  {t.nav[activeDesktopCategory.key]}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {locale === "pt"
+                    ? "Escolhe uma subcategoria"
+                    : locale === "zh"
+                      ? "选择子分类"
+                      : "Choose a subcategory"}
+                </p>
+              </div>
+              <Link
+                href={categoryHref(activeDesktopCategory.key)}
+                className="text-xs font-bold uppercase tracking-[0.14em] text-ink underline-offset-4 transition hover:underline"
+                onClick={() => setDesktopCat(null)}
+              >
+                {shopAllLabel}
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap gap-x-8 gap-y-3">
+              {activeDesktopCategory.items.map((item) => (
+                <Link
+                  key={item}
+                  href={subcategoryHref(activeDesktopCategory.key, item)}
+                  onClick={() => setDesktopCat(null)}
+                  className="text-sm font-medium uppercase tracking-[0.08em] text-ink/80 transition hover:text-ink"
+                >
+                  {label(item)}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <DispatchBanner />
 
       {open && (
@@ -342,18 +438,16 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                     </Link>
                     <button
                       type="button"
-                      onClick={() =>
-                        setOpenCat((c) => (c === cat.key ? null : cat.key))
-                      }
+                      onClick={() => setOpenCat((c) => (c === cat.key ? null : cat.key))}
                       aria-expanded={expanded}
                       className="px-3 py-3.5 text-white/80 transition hover:text-white"
                     >
                       <span className="sr-only">Abrir subcategorias</span>
-                    <Chevron
-                      className={`h-4 w-4 transition-transform duration-200 ${
-                        expanded ? "rotate-180" : ""
-                      }`}
-                    />
+                      <Chevron
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          expanded ? "rotate-180" : ""
+                        }`}
+                      />
                     </button>
                   </div>
                   {expanded && (
