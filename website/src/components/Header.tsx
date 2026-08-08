@@ -212,8 +212,10 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                 href={categoryHref(cat.key)}
                 onMouseEnter={() => openMega(cat.key)}
                 onFocus={() => openMega(cat.key)}
-                className={`relative px-2.5 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.08em] transition 2xl:px-3 2xl:text-[0.75rem] 2xl:tracking-[0.1em] ${
-                  isActive ? "text-white" : "text-white/80 hover:text-white"
+                className={`relative px-2.5 py-2 text-[0.68rem] uppercase tracking-[0.08em] transition 2xl:px-3 2xl:text-[0.75rem] 2xl:tracking-[0.1em] ${
+                  isActive
+                    ? "font-bold text-white"
+                    : "font-semibold text-white/80 hover:text-white"
                 }`}
               >
                 {t.nav[cat.key]}
@@ -422,22 +424,46 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       >
         {activeDesktopCategory && (
           <div className="mx-auto max-w-[96rem] px-6 py-6 lg:px-8">
-            <div className="mb-4 flex items-end justify-between gap-4 border-b border-line pb-3">
-              <div>
-                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-muted">
+            <div className="mb-5 flex items-start justify-between gap-4 border-b border-line pb-4">
+              <div className="min-w-0">
+                <p className="font-display text-xl font-extrabold uppercase tracking-tight text-ink sm:text-2xl">
                   {t.nav[activeDesktopCategory.key]}
                 </p>
-                <p className="mt-1 text-sm text-muted">
-                  {locale === "pt"
-                    ? "Escolhe uma subcategoria"
-                    : locale === "zh"
-                      ? "选择子分类"
-                      : "Choose a subcategory"}
-                </p>
+                <nav
+                  aria-label="Category path"
+                  className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs uppercase tracking-[0.12em]"
+                >
+                  <span className="font-bold text-ink">{t.nav[activeDesktopCategory.key]}</span>
+                  {activeSubcategory && (
+                    <>
+                      <span className="text-muted" aria-hidden>
+                        /
+                      </span>
+                      <span className="font-bold text-ink">{label(activeSubcategory.path)}</span>
+                    </>
+                  )}
+                  {activeNestedSubcategory && (
+                    <>
+                      <span className="text-muted" aria-hidden>
+                        /
+                      </span>
+                      <span className="font-bold text-ink">{label(activeNestedSubcategory.path)}</span>
+                    </>
+                  )}
+                  {!activeSubcategory && (
+                    <span className="font-medium normal-case tracking-normal text-muted">
+                      {locale === "pt"
+                        ? "— escolhe uma subcategoria"
+                        : locale === "zh"
+                          ? "— 选择子分类"
+                          : "— choose a subcategory"}
+                    </span>
+                  )}
+                </nav>
               </div>
               <Link
                 href={categoryHref(activeDesktopCategory.key)}
-                className="text-xs font-bold uppercase tracking-[0.14em] text-ink underline-offset-4 transition hover:underline"
+                className="shrink-0 text-xs font-bold uppercase tracking-[0.14em] text-ink underline-offset-4 transition hover:underline"
                 onClick={() => {
                   setDesktopCat(null);
                   setActiveSubPath(null);
@@ -448,46 +474,56 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               </Link>
             </div>
 
-            <div className="flex flex-wrap gap-x-8 gap-y-3">
-              {activeDesktopCategory.items.map((item) => {
-                const hasChildren = item.children.length > 0;
-                const isActive = activeSubPath === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    href={subcategoryHref(activeDesktopCategory.key, item.path)}
-                    onMouseEnter={() => {
-                      setActiveSubPath(item.path);
-                      setActiveNestedPath(null);
-                    }}
-                    onFocus={() => {
-                      setActiveSubPath(item.path);
-                      setActiveNestedPath(null);
-                    }}
-                    onClick={() => {
-                      setDesktopCat(null);
-                      setActiveSubPath(null);
-                      setActiveNestedPath(null);
-                    }}
-                    className={`inline-flex items-center gap-1.5 text-sm font-medium uppercase tracking-[0.08em] transition ${
-                      isActive ? "text-ink" : "text-ink/80 hover:text-ink"
-                    }`}
-                  >
-                    {label(item.path)}
-                    {hasChildren && (
-                      <Chevron direction="right" className="h-3.5 w-3.5 opacity-60" />
-                    )}
-                  </Link>
-                );
-              })}
+            <div>
+              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-ink">
+                {locale === "pt" ? "Categorias" : locale === "zh" ? "分类" : "Categories"}
+              </p>
+              <div className="flex flex-wrap gap-x-7 gap-y-3">
+                {activeDesktopCategory.items.map((item) => {
+                  const hasChildren = item.children.length > 0;
+                  const isActive = activeSubPath === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      href={subcategoryHref(activeDesktopCategory.key, item.path)}
+                      onMouseEnter={() => {
+                        setActiveSubPath(item.path);
+                        setActiveNestedPath(null);
+                      }}
+                      onFocus={() => {
+                        setActiveSubPath(item.path);
+                        setActiveNestedPath(null);
+                      }}
+                      onClick={() => {
+                        setDesktopCat(null);
+                        setActiveSubPath(null);
+                        setActiveNestedPath(null);
+                      }}
+                      className={`inline-flex items-center gap-1.5 text-sm uppercase tracking-[0.08em] transition ${
+                        isActive
+                          ? "font-bold text-ink underline decoration-2 underline-offset-4"
+                          : "font-bold text-ink/70 hover:text-ink"
+                      }`}
+                    >
+                      {label(item.path)}
+                      {hasChildren && (
+                        <Chevron
+                          direction="right"
+                          className={`h-3.5 w-3.5 ${isActive ? "opacity-80" : "opacity-50"}`}
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
 
             {activeSubcategory && activeSubcategory.children.length > 0 && (
               <div className="mt-5 border-t border-line pt-4">
-                <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                <p className="mb-3 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-ink">
                   {label(activeSubcategory.path)}
                 </p>
-                <div className="flex flex-wrap gap-x-7 gap-y-2.5">
+                <div className="flex flex-wrap gap-x-6 gap-y-2.5">
                   {activeSubcategory.children.map((child) => {
                     const hasChildren = child.children.length > 0;
                     const isActive = activeNestedPath === child.path;
@@ -502,8 +538,10 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                           setActiveSubPath(null);
                           setActiveNestedPath(null);
                         }}
-                        className={`inline-flex items-center gap-1.5 text-[0.8rem] font-medium uppercase tracking-[0.08em] transition ${
-                          isActive ? "text-ink" : "text-ink/70 hover:text-ink"
+                        className={`inline-flex items-center gap-1.5 text-[0.8rem] uppercase tracking-[0.08em] transition ${
+                          isActive
+                            ? "font-bold text-ink underline decoration-2 underline-offset-4"
+                            : "font-medium text-ink/65 hover:text-ink"
                         }`}
                       >
                         {label(child.path)}
@@ -519,7 +557,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
 
             {activeNestedSubcategory && activeNestedSubcategory.children.length > 0 && (
               <div className="mt-4 border-t border-line/80 pt-4">
-                <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                <p className="mb-3 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-ink">
                   {label(activeNestedSubcategory.path)}
                 </p>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -532,7 +570,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                         setActiveSubPath(null);
                         setActiveNestedPath(null);
                       }}
-                      className="text-[0.75rem] font-medium uppercase tracking-[0.08em] text-ink/65 transition hover:text-ink"
+                      className="text-[0.75rem] font-medium uppercase tracking-[0.08em] text-ink/60 transition hover:text-ink"
                     >
                       {label(child.path)}
                     </Link>
@@ -557,7 +595,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                     <Link
                       href={categoryHref(cat.key)}
                       onClick={() => setOpen(false)}
-                      className="flex-1 px-1 py-3.5 text-sm font-semibold uppercase tracking-[0.12em] text-white/80 transition hover:text-white"
+                      className="flex-1 px-1 py-3.5 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:text-white"
                     >
                       {t.nav[cat.key]}
                     </Link>
@@ -582,7 +620,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                           <Link
                             href={subcategoryHref(cat.key, item.path)}
                             onClick={() => setOpen(false)}
-                            className="block w-full rounded-md px-2 py-2 text-left text-[0.8rem] tracking-wide text-white/65 transition hover:text-white"
+                            className="block w-full rounded-md px-2 py-2 text-left text-[0.8rem] font-bold uppercase tracking-wide text-white/85 transition hover:text-white"
                           >
                             {label(item.path)}
                           </Link>
@@ -593,7 +631,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                                   <Link
                                     href={subcategoryHref(cat.key, child.path)}
                                     onClick={() => setOpen(false)}
-                                    className="block w-full rounded-md px-2 py-1.5 text-left text-[0.75rem] tracking-wide text-white/55 transition hover:text-white"
+                                    className="block w-full rounded-md px-2 py-1.5 text-left text-[0.75rem] font-medium tracking-wide text-white/60 transition hover:text-white"
                                   >
                                     {label(child.path)}
                                   </Link>
@@ -604,7 +642,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                                           key={nested.path}
                                           href={subcategoryHref(cat.key, nested.path)}
                                           onClick={() => setOpen(false)}
-                                          className="block w-full rounded-md px-2 py-1.5 text-left text-[0.7rem] tracking-wide text-white/45 transition hover:text-white"
+                                          className="block w-full rounded-md px-2 py-1.5 text-left text-[0.7rem] font-normal tracking-wide text-white/45 transition hover:text-white"
                                         >
                                           {label(nested.path)}
                                         </Link>
