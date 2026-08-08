@@ -61,6 +61,61 @@ function groupKeyForPath(normalizedPath: string): CategoryGroupKey | null {
   return null;
 }
 
+/**
+ * Preferred top-menu subcategory order (Odoo path keys).
+ * Unknown live items still appear after the preferred list, alphabetically.
+ */
+const MENU_SUBCATEGORY_ORDER: Partial<Record<CategoryGroupKey, string[]>> = {
+  wetsuits: [
+    "WETSUITS / MEN",
+    "WETSUITS / WOMAN",
+    "WETSUITS / WOMEN",
+    "WETSUITS / JUNIOR",
+    "WETSUITS / NEOPRENE ACESSORIES",
+  ],
+  surfgear: [
+    "SURFGEAR / FINS",
+    "SURFGEAR / DECKS",
+    "SURFGEAR / LEASHES",
+    "SURFGEAR / BOARDBAGS",
+    "SURFGEAR / RACK",
+    "SURFGEAR / CAR ACESSORIES",
+  ],
+  bodyboard: [
+    "BODYBOARD / BOARDS",
+    "BODYBOARD / LEASHES",
+    "BODYBOARD / BAGS",
+    "BODYBOARD / BOARDSOCKS",
+    "BODYBOARD / FINS (PÉS DE PATO)",
+    "BODYBOARD / FINS",
+    "BODYBOARD / ACESSORIES",
+  ],
+  clothing: [
+    "CLOTHING / MEN",
+    "CLOTHING / WOMEN",
+    "CLOTHING / WOMAN",
+    "CLOTHING / KIDS",
+    "CLOTHING / FOOTWEAR",
+    "CLOTHING / HATS",
+    "CLOTHING / JSS MERCH",
+    "CLOTHING / SUNGLASSES",
+    "CLOTHING / SOCKS",
+    "FOOTWEAR / MEN",
+    "FOOTWEAR / WOMEN",
+  ],
+};
+
+function sortMenuItems(groupKey: CategoryGroupKey, items: string[]) {
+  const preferred = MENU_SUBCATEGORY_ORDER[groupKey] || [];
+  const rank = new Map(preferred.map((item, index) => [item, index]));
+  return [...items].sort((a, b) => {
+    const aRank = rank.has(a) ? rank.get(a)! : Number.MAX_SAFE_INTEGER;
+    const bRank = rank.has(b) ? rank.get(b)! : Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.localeCompare(b);
+  });
+}
+
 export function buildMenuFromCategoryPaths(paths: string[]): MenuCategory[] {
   const itemsByGroup = new Map<CategoryGroupKey, Set<string>>();
 
@@ -76,14 +131,14 @@ export function buildMenuFromCategoryPaths(paths: string[]): MenuCategory[] {
   }
 
   return MENU_CATEGORIES.map((fallback) => {
-    const dynamicItems = Array.from(itemsByGroup.get(fallback.key) || []).sort((a, b) =>
-      a.localeCompare(b)
-    );
+    const dynamicItems = Array.from(itemsByGroup.get(fallback.key) || []);
+    const ordered = dynamicItems.length
+      ? sortMenuItems(fallback.key, dynamicItems)
+      : sortMenuItems(fallback.key, fallback.items);
     return {
       key: fallback.key,
       anchor: fallback.anchor,
-      // Prefer live Odoo-derived items; keep static fallback if Odoo returns nothing for that group.
-      items: dynamicItems.length ? dynamicItems : fallback.items,
+      items: ordered,
     };
   });
 }
@@ -137,7 +192,7 @@ async function buildMenuCategories(): Promise<MenuCategory[]> {
  * present on synced products. Cached + tag-revalidated with the catalog after sync.
  */
 export async function listMenuCategories(): Promise<MenuCategory[]> {
-  return unstable_cache(buildMenuCategories, ["menu-categories-v4"], {
+  return unstable_cache(buildMenuCategories, ["menu-categories-v5"], {
     revalidate: CATALOG_CACHE_REVALIDATE_SECONDS,
     tags: [CATALOG_CACHE_TAG],
   })();

@@ -104,7 +104,7 @@ export const MENU_CATEGORIES: {
     // Fallback only — live menu is built from Odoo product.category paths.
     items: [
       "WETSUITS / MEN",
-      "WETSUITS / WOMEN",
+      "WETSUITS / WOMAN",
       "WETSUITS / JUNIOR",
       "WETSUITS / NEOPRENE ACESSORIES",
     ],
@@ -114,11 +114,11 @@ export const MENU_CATEGORIES: {
     anchor: "technical",
     items: [
       "SURFGEAR / FINS",
-      "SURFGEAR / LEASHES",
       "SURFGEAR / DECKS",
+      "SURFGEAR / LEASHES",
       "SURFGEAR / BOARDBAGS",
       "SURFGEAR / RACK",
-      "SURFGEAR / KEYVAULT",
+      "SURFGEAR / CAR ACESSORIES",
     ],
   },
   {
@@ -138,8 +138,10 @@ export const MENU_CATEGORIES: {
     anchor: "bodyboard",
     items: [
       "BODYBOARD / BOARDS",
-      "BODYBOARD / FINS (PÉS DE PATO)",
       "BODYBOARD / LEASHES",
+      "BODYBOARD / BAGS",
+      "BODYBOARD / BOARDSOCKS",
+      "BODYBOARD / FINS (PÉS DE PATO)",
       "BODYBOARD / ACESSORIES",
     ],
   },
@@ -150,11 +152,11 @@ export const MENU_CATEGORIES: {
       "CLOTHING / MEN",
       "CLOTHING / WOMEN",
       "CLOTHING / KIDS",
+      "CLOTHING / FOOTWEAR",
       "CLOTHING / HATS",
       "CLOTHING / JSS MERCH",
       "CLOTHING / SUNGLASSES",
       "CLOTHING / SOCKS",
-      "CLOTHING / FOOTWEAR",
     ],
   },
   {
