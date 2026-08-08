@@ -19,13 +19,35 @@ type HeaderUser = {
   role?: "CUSTOMER" | "ADMIN";
 } | null;
 
+type MenuSubcategory = {
+  path: string;
+  children: MenuSubcategory[];
+};
+
 type MenuCategory = {
   key: NavKey;
   anchor: string;
-  items: string[];
+  items: MenuSubcategory[];
 };
 
-function Chevron({ className = "" }: { className?: string }) {
+function coerceMenuCategories(
+  categories: Array<{ key: NavKey; anchor: string; items: Array<string | MenuSubcategory> }>
+): MenuCategory[] {
+  const coerceItem = (item: string | MenuSubcategory): MenuSubcategory => {
+    if (typeof item === "string") return { path: item, children: [] };
+    return {
+      path: item.path,
+      children: (item.children || []).map(coerceItem),
+    };
+  };
+  return categories.map((cat) => ({
+    key: cat.key,
+    anchor: cat.anchor,
+    items: cat.items.map(coerceItem),
+  }));
+}
+
+function Chevron({ className = "", direction = "down" }: { className?: string; direction?: "down" | "right" }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -34,7 +56,7 @@ function Chevron({ className = "" }: { className?: string }) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={className}
+      className={`${className} ${direction === "right" ? "-rotate-90" : ""}`}
     >
       <path d="m6 9 6 6 6-6" />
     </svg>
@@ -49,24 +71,26 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
   const [langOpen, setLangOpen] = useState(false);
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [desktopCat, setDesktopCat] = useState<NavKey | null>(null);
+  const [activeSubPath, setActiveSubPath] = useState<string | null>(null);
+  const [activeNestedPath, setActiveNestedPath] = useState<string | null>(null);
   const [user, setUser] = useState<HeaderUser>(null);
   const [cartCount, setCartCount] = useState(0);
-  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(
-    categories?.length ? categories : MENU_CATEGORIES
+  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(() =>
+    coerceMenuCategories(categories?.length ? categories : MENU_CATEGORIES)
   );
   const menuRef = useRef<HTMLDivElement>(null);
   const megaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (categories?.length) {
-      setMenuCategories(categories);
+      setMenuCategories(coerceMenuCategories(categories));
       return;
     }
     fetch("/api/menu-categories")
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (Array.isArray(data?.categories) && data.categories.length) {
-          setMenuCategories(data.categories);
+          setMenuCategories(coerceMenuCategories(data.categories));
         }
       })
       .catch(() => undefined);
@@ -132,6 +156,10 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       clearTimeout(megaCloseTimer.current);
       megaCloseTimer.current = null;
     }
+    if (desktopCat !== key) {
+      setActiveSubPath(null);
+      setActiveNestedPath(null);
+    }
     setDesktopCat(key);
     setPanel(null);
     setLangOpen(false);
@@ -139,8 +167,21 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
 
   function scheduleCloseMega() {
     if (megaCloseTimer.current) clearTimeout(megaCloseTimer.current);
-    megaCloseTimer.current = setTimeout(() => setDesktopCat(null), 120);
+    megaCloseTimer.current = setTimeout(() => {
+      setDesktopCat(null);
+      setActiveSubPath(null);
+      setActiveNestedPath(null);
+    }, 120);
   }
+
+  const activeSubcategory =
+    activeDesktopCategory && activeSubPath
+      ? activeDesktopCategory.items.find((item) => item.path === activeSubPath) || null
+      : null;
+  const activeNestedSubcategory =
+    activeSubcategory && activeNestedPath
+      ? activeSubcategory.children.find((item) => item.path === activeNestedPath) || null
+      : null;
 
   const shopAllLabel =
     locale === "pt" ? "Ver tudo" : locale === "zh" ? "查看全部" : "Shop all";
@@ -369,7 +410,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       <div
         className={`hidden overflow-hidden border-t border-white/10 bg-paper text-ink transition-[max-height,opacity] duration-200 xl:block ${
           activeDesktopCategory
-            ? "max-h-[320px] opacity-100 shadow-xl"
+            ? "max-h-[min(70vh,28rem)] opacity-100 shadow-xl"
             : "pointer-events-none max-h-0 opacity-0"
         }`}
         onMouseEnter={() => {
@@ -397,24 +438,108 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               <Link
                 href={categoryHref(activeDesktopCategory.key)}
                 className="text-xs font-bold uppercase tracking-[0.14em] text-ink underline-offset-4 transition hover:underline"
-                onClick={() => setDesktopCat(null)}
+                onClick={() => {
+                  setDesktopCat(null);
+                  setActiveSubPath(null);
+                  setActiveNestedPath(null);
+                }}
               >
                 {shopAllLabel}
               </Link>
             </div>
 
             <div className="flex flex-wrap gap-x-8 gap-y-3">
-              {activeDesktopCategory.items.map((item) => (
-                <Link
-                  key={item}
-                  href={subcategoryHref(activeDesktopCategory.key, item)}
-                  onClick={() => setDesktopCat(null)}
-                  className="text-sm font-medium uppercase tracking-[0.08em] text-ink/80 transition hover:text-ink"
-                >
-                  {label(item)}
-                </Link>
-              ))}
+              {activeDesktopCategory.items.map((item) => {
+                const hasChildren = item.children.length > 0;
+                const isActive = activeSubPath === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    href={subcategoryHref(activeDesktopCategory.key, item.path)}
+                    onMouseEnter={() => {
+                      setActiveSubPath(item.path);
+                      setActiveNestedPath(null);
+                    }}
+                    onFocus={() => {
+                      setActiveSubPath(item.path);
+                      setActiveNestedPath(null);
+                    }}
+                    onClick={() => {
+                      setDesktopCat(null);
+                      setActiveSubPath(null);
+                      setActiveNestedPath(null);
+                    }}
+                    className={`inline-flex items-center gap-1.5 text-sm font-medium uppercase tracking-[0.08em] transition ${
+                      isActive ? "text-ink" : "text-ink/80 hover:text-ink"
+                    }`}
+                  >
+                    {label(item.path)}
+                    {hasChildren && (
+                      <Chevron direction="right" className="h-3.5 w-3.5 opacity-60" />
+                    )}
+                  </Link>
+                );
+              })}
             </div>
+
+            {activeSubcategory && activeSubcategory.children.length > 0 && (
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                  {label(activeSubcategory.path)}
+                </p>
+                <div className="flex flex-wrap gap-x-7 gap-y-2.5">
+                  {activeSubcategory.children.map((child) => {
+                    const hasChildren = child.children.length > 0;
+                    const isActive = activeNestedPath === child.path;
+                    return (
+                      <Link
+                        key={child.path}
+                        href={subcategoryHref(activeDesktopCategory.key, child.path)}
+                        onMouseEnter={() => setActiveNestedPath(child.path)}
+                        onFocus={() => setActiveNestedPath(child.path)}
+                        onClick={() => {
+                          setDesktopCat(null);
+                          setActiveSubPath(null);
+                          setActiveNestedPath(null);
+                        }}
+                        className={`inline-flex items-center gap-1.5 text-[0.8rem] font-medium uppercase tracking-[0.08em] transition ${
+                          isActive ? "text-ink" : "text-ink/70 hover:text-ink"
+                        }`}
+                      >
+                        {label(child.path)}
+                        {hasChildren && (
+                          <Chevron direction="right" className="h-3 w-3 opacity-50" />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {activeNestedSubcategory && activeNestedSubcategory.children.length > 0 && (
+              <div className="mt-4 border-t border-line/80 pt-4">
+                <p className="mb-3 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                  {label(activeNestedSubcategory.path)}
+                </p>
+                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                  {activeNestedSubcategory.children.map((child) => (
+                    <Link
+                      key={child.path}
+                      href={subcategoryHref(activeDesktopCategory.key, child.path)}
+                      onClick={() => {
+                        setDesktopCat(null);
+                        setActiveSubPath(null);
+                        setActiveNestedPath(null);
+                      }}
+                      className="text-[0.75rem] font-medium uppercase tracking-[0.08em] text-ink/65 transition hover:text-ink"
+                    >
+                      {label(child.path)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -453,14 +578,44 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                   {expanded && (
                     <div className="pb-3 pl-2">
                       {cat.items.map((item) => (
-                        <Link
-                          key={item}
-                          href={subcategoryHref(cat.key, item)}
-                          onClick={() => setOpen(false)}
-                          className="block w-full rounded-md px-2 py-2 text-left text-[0.8rem] tracking-wide text-white/65 transition hover:text-white"
-                        >
-                          {label(item)}
-                        </Link>
+                        <div key={item.path}>
+                          <Link
+                            href={subcategoryHref(cat.key, item.path)}
+                            onClick={() => setOpen(false)}
+                            className="block w-full rounded-md px-2 py-2 text-left text-[0.8rem] tracking-wide text-white/65 transition hover:text-white"
+                          >
+                            {label(item.path)}
+                          </Link>
+                          {item.children.length > 0 && (
+                            <div className="ml-3 border-l border-white/10 pl-2">
+                              {item.children.map((child) => (
+                                <div key={child.path}>
+                                  <Link
+                                    href={subcategoryHref(cat.key, child.path)}
+                                    onClick={() => setOpen(false)}
+                                    className="block w-full rounded-md px-2 py-1.5 text-left text-[0.75rem] tracking-wide text-white/55 transition hover:text-white"
+                                  >
+                                    {label(child.path)}
+                                  </Link>
+                                  {child.children.length > 0 && (
+                                    <div className="ml-3 border-l border-white/10 pl-2">
+                                      {child.children.map((nested) => (
+                                        <Link
+                                          key={nested.path}
+                                          href={subcategoryHref(cat.key, nested.path)}
+                                          onClick={() => setOpen(false)}
+                                          className="block w-full rounded-md px-2 py-1.5 text-left text-[0.7rem] tracking-wide text-white/45 transition hover:text-white"
+                                        >
+                                          {label(nested.path)}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   )}

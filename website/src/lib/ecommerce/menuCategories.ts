@@ -11,10 +11,16 @@ import {
 import { ODOO_CATEGORY_GROUPS, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
 import { hasOdooConfig, OdooClient } from "@/lib/ecommerce/odooClient";
 
+export type MenuSubcategory = {
+  /** Full Odoo-style path used for filtering, e.g. "SURFGEAR / FINS / THRUSTER". */
+  path: string;
+  children: MenuSubcategory[];
+};
+
 export type MenuCategory = {
   key: NavKey;
   anchor: string;
-  items: string[];
+  items: MenuSubcategory[];
 };
 
 /** Strip emoji / decorative prefixes so "👔 WETSUITS / MEN" → "WETSUITS / MEN". */
@@ -150,12 +156,56 @@ function sortMenuItems(groupKey: CategoryGroupKey, items: string[]) {
   });
 }
 
+function pathSegments(path: string) {
+  return path
+    .split(" / ")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/** Find immediate children under a parent path (supports nested JSS Merch windows). */
+function buildChildrenUnder(parentPath: string, allPaths: string[]): MenuSubcategory[] {
+  const parentParts = pathSegments(parentPath);
+  if (!parentParts.length) return [];
+
+  const childByName = new Map<string, string>();
+  for (const candidate of allPaths) {
+    const parts = pathSegments(candidate);
+    if (parts.length <= parentParts.length) continue;
+
+    for (let start = 0; start <= parts.length - parentParts.length; start++) {
+      const matches = parentParts.every((part, index) => parts[start + index] === part);
+      if (!matches) continue;
+      const childIndex = start + parentParts.length;
+      if (childIndex >= parts.length) break;
+      const childName = parts[childIndex];
+      if (!childByName.has(childName)) {
+        childByName.set(childName, `${parentPath} / ${childName}`);
+      }
+      break;
+    }
+  }
+
+  return Array.from(childByName.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, childPath]) => ({
+      path: childPath,
+      children: buildChildrenUnder(childPath, allPaths),
+    }));
+}
+
+function toMenuSubcategories(paths: string[]): MenuSubcategory[] {
+  return paths.map((path) => ({ path, children: [] }));
+}
+
 export function buildMenuFromCategoryPaths(paths: string[]): MenuCategory[] {
   const itemsByGroup = new Map<CategoryGroupKey, Set<string>>();
+  const normalizedPaths: string[] = [];
 
   for (const path of paths) {
     const normalized = stripAllCategoryRoot(normalizeCategoryPath(path).toUpperCase());
     if (!normalized || normalized === "ALL") continue;
+    normalizedPaths.push(normalized);
     const groupKey = groupKeyForPath(normalized);
     if (!groupKey) continue;
     // Surfskate stays shop-filterable but is hidden from the top menu.
@@ -174,7 +224,10 @@ export function buildMenuFromCategoryPaths(paths: string[]): MenuCategory[] {
     return {
       key: fallback.key,
       anchor: fallback.anchor,
-      items: ordered,
+      items: ordered.map((path) => ({
+        path,
+        children: buildChildrenUnder(path, normalizedPaths),
+      })),
     };
   });
 }
@@ -220,7 +273,13 @@ async function buildMenuCategories(): Promise<MenuCategory[]> {
 
   // If everything failed, return the static fallback menu.
   const hasAnyItems = built.some((entry) => entry.items.length > 0);
-  return hasAnyItems ? built : MENU_CATEGORIES.map((entry) => ({ ...entry }));
+  return hasAnyItems
+    ? built
+    : MENU_CATEGORIES.map((entry) => ({
+        key: entry.key,
+        anchor: entry.anchor,
+        items: toMenuSubcategories(entry.items),
+      }));
 }
 
 /**
@@ -228,7 +287,7 @@ async function buildMenuCategories(): Promise<MenuCategory[]> {
  * present on synced products. Cached + tag-revalidated with the catalog after sync.
  */
 export async function listMenuCategories(): Promise<MenuCategory[]> {
-  return unstable_cache(buildMenuCategories, ["menu-categories-v6"], {
+  return unstable_cache(buildMenuCategories, ["menu-categories-v7"], {
     revalidate: CATALOG_CACHE_REVALIDATE_SECONDS,
     tags: [CATALOG_CACHE_TAG],
   })();
