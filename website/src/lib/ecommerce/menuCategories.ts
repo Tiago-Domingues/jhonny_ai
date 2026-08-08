@@ -51,9 +51,36 @@ function secondLevelItem(normalizedPath: string) {
   return `${parts[0]} / ${parts[1]}`.toUpperCase();
 }
 
+/** Menu leaf under a group — supports nested JSS Merch (CLOTHING / JSS MERCH / PANTS). */
+function menuItemForGroup(normalizedPath: string, groupKey: CategoryGroupKey) {
+  const parts = normalizedPath
+    .split(" / ")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return null;
+
+  if (groupKey === "jssMerch") {
+    const idx = parts.findIndex((part) => part.includes("JSS MERCH"));
+    if (idx < 0) return null;
+    const child = parts[idx + 1];
+    if (!child) return null;
+    return `JSS MERCH / ${child}`.toUpperCase();
+  }
+
+  if (groupKey === "clothing" && parts.some((part) => part.includes("JSS MERCH"))) {
+    return null;
+  }
+
+  return secondLevelItem(normalizedPath);
+}
+
 function groupKeyForPath(normalizedPath: string): CategoryGroupKey | null {
+  // Prefer JSS Merch over Clothing when the path still nests under Clothing.
+  if (normalizedPath.includes("JSS MERCH")) return "jssMerch";
+
   const top = topLevelToken(normalizedPath);
   for (const group of ODOO_CATEGORY_GROUPS) {
+    if (group.key === "jssMerch") continue;
     if (group.includes.some((token) => top.includes(token) || token.includes(top))) {
       return group.key;
     }
@@ -97,11 +124,18 @@ const MENU_SUBCATEGORY_ORDER: Partial<Record<CategoryGroupKey, string[]>> = {
     "CLOTHING / KIDS",
     "CLOTHING / FOOTWEAR",
     "CLOTHING / HATS",
-    "CLOTHING / JSS MERCH",
     "CLOTHING / SUNGLASSES",
     "CLOTHING / SOCKS",
     "FOOTWEAR / MEN",
     "FOOTWEAR / WOMEN",
+  ],
+  jssMerch: [
+    "JSS MERCH / T-SHIRTS & TOPS",
+    "JSS MERCH / SWEATERS & HOODIES",
+    "JSS MERCH / SHORTS",
+    "JSS MERCH / PANTS",
+    "JSS MERCH / HATS",
+    "JSS MERCH / SURF PONCHO",
   ],
 };
 
@@ -124,7 +158,9 @@ export function buildMenuFromCategoryPaths(paths: string[]): MenuCategory[] {
     if (!normalized || normalized === "ALL") continue;
     const groupKey = groupKeyForPath(normalized);
     if (!groupKey) continue;
-    const item = secondLevelItem(normalized);
+    // Surfskate stays shop-filterable but is hidden from the top menu.
+    if (groupKey === "surfskate") continue;
+    const item = menuItemForGroup(normalized, groupKey);
     if (!item) continue;
     if (!itemsByGroup.has(groupKey)) itemsByGroup.set(groupKey, new Set());
     itemsByGroup.get(groupKey)!.add(item);
@@ -192,7 +228,7 @@ async function buildMenuCategories(): Promise<MenuCategory[]> {
  * present on synced products. Cached + tag-revalidated with the catalog after sync.
  */
 export async function listMenuCategories(): Promise<MenuCategory[]> {
-  return unstable_cache(buildMenuCategories, ["menu-categories-v5"], {
+  return unstable_cache(buildMenuCategories, ["menu-categories-v6"], {
     revalidate: CATALOG_CACHE_REVALIDATE_SECONDS,
     tags: [CATALOG_CACHE_TAG],
   })();

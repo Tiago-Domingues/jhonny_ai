@@ -5,6 +5,7 @@ export type CategoryGroupKey =
   | "essentials"
   | "bodyboard"
   | "clothing"
+  | "jssMerch"
   | "travel"
   | "surfskate";
 
@@ -59,7 +60,15 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     labelEn: "Clothing",
     labelZh: "服装",
     // Footwear is nested under Clothing in Odoo; keep FOOTWEAR so root paths still match.
+    // JSS Merch is its own top-level group (excluded in productMatchesCategoryGroup).
     includes: ["CLOTHING", "FOOTWEAR"],
+  },
+  {
+    key: "jssMerch",
+    labelPt: "JSS Merch",
+    labelEn: "JSS Merch",
+    labelZh: "JSS Merch",
+    includes: ["JSS MERCH"],
   },
   {
     key: "travel",
@@ -102,6 +111,15 @@ export function productMatchesCategoryGroup(category: string, groupKey?: string 
   const group = ODOO_CATEGORY_GROUPS.find((entry) => entry.key === groupKey);
   if (!group) return true;
   const normalized = normalizeCategoryText(category);
+
+  // JSS Merch is its own menu group even when Odoo still nests it under Clothing.
+  if (groupKey === "jssMerch") {
+    return normalized.includes("JSS MERCH");
+  }
+  if (groupKey === "clothing" && normalized.includes("JSS MERCH")) {
+    return false;
+  }
+
   return group.includes.some((token) => normalized.includes(token));
 }
 
@@ -119,7 +137,13 @@ export function productMatchesSubcategory(category: string, subcategory?: string
     .map((part) => part.trim())
     .filter(Boolean);
   if (!subcategoryParts.length || categoryParts.length < subcategoryParts.length) return false;
-  return subcategoryParts.every((part, index) => categoryParts[index] === part);
+  // Prefix match (WETSUITS / MEN) or nested match (CLOTHING / JSS MERCH / PANTS ↔ JSS MERCH / PANTS).
+  for (let start = 0; start <= categoryParts.length - subcategoryParts.length; start++) {
+    if (subcategoryParts.every((part, index) => categoryParts[start + index] === part)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function titleCase(value: string) {

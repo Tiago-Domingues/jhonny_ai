@@ -11,6 +11,7 @@ const categoryImages: Record<string, string> = {
   essentials: "/brand/categories/hero-essentials.jpg",
   bodyboard: "/brand/categories/hero-bodyboard.jpg",
   clothing: "/brand/categories/hero-lifestyle.png",
+  jssMerch: "/brand/categories/hero-lifestyle.png",
   travel: "/brand/categories/hero-lifestyle.png",
   surfskate: "/brand/categories/hero-surfgear.jpg",
 };
@@ -22,6 +23,7 @@ const categoryPhotoFallbacks: Record<string, string> = {
   essentials: "/brand/categories/cat-apparel.jpg",
   bodyboard: "/brand/categories/cat-bodyboard.jpg",
   clothing: "/brand/categories/cat-apparel.jpg",
+  jssMerch: "/brand/categories/cat-jss.jpg",
   travel: "/brand/categories/cat-lifestyle.svg",
   surfskate: "/brand/categories/cat-surfgear.svg",
 };
