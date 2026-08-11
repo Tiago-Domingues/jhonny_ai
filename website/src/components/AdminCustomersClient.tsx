@@ -41,6 +41,8 @@ const customerTypeLabels: Record<string, string> = {
   SURF_PARENT: "Surf parent",
   LOCAL_CUSTOMER: "Local",
   OTHER: "Other",
+  BODYBOARDER: "Bodyboarder",
+  LONGBOARDER: "Longboarder",
 };
 
 function formatDate(value: string) {
@@ -77,29 +79,36 @@ export function AdminCustomersClient() {
   const load = useCallback(async () => {
     setLoading(true);
     setMessage(null);
-    const params = new URLSearchParams({
-      q,
-      auth,
-      marketing,
-      limit: "100",
-    });
-    const response = await fetch(`/api/admin/customers?${params.toString()}`);
-    if (response.status === 401) {
-      setUnauthorized(true);
+    try {
+      const params = new URLSearchParams({
+        q,
+        auth,
+        marketing,
+        limit: "100",
+      });
+      const response = await fetch(`/api/admin/customers?${params.toString()}`);
+      if (response.status === 401) {
+        setUnauthorized(true);
+        setLoading(false);
+        return;
+      }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage(data.message || data.error || "Não foi possível carregar os clientes.");
+        setCustomers([]);
+        setLoading(false);
+        return;
+      }
+      setUnauthorized(false);
+      setCustomers(data.customers || []);
+      setStats(data.stats || null);
+      setTotal(data.total || 0);
+    } catch {
+      setMessage("Erro de rede ao carregar clientes.");
+      setCustomers([]);
+    } finally {
       setLoading(false);
-      return;
     }
-    const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.message || "Não foi possível carregar os clientes.");
-      setLoading(false);
-      return;
-    }
-    setUnauthorized(false);
-    setCustomers(data.customers || []);
-    setStats(data.stats || null);
-    setTotal(data.total || 0);
-    setLoading(false);
   }, [q, auth, marketing]);
 
   useEffect(() => {

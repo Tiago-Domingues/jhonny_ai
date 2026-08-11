@@ -5,6 +5,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { CookieConsent } from "@/components/CookieConsent";
 import { FirstPurchaseOffer } from "@/components/FirstPurchaseOffer";
+import { VisitBeacon } from "@/components/VisitBeacon";
 import {
   SITE_PREVIEW_COOKIE,
   isValidPreviewCookie,
@@ -87,6 +88,7 @@ export default async function RootLayout({
         ) : (
           <LanguageProvider>
             {children}
+            <VisitBeacon />
             <CookieConsent initialVisible={showCookieBanner} />
             <FirstPurchaseOffer />
           </LanguageProvider>

@@ -20,6 +20,8 @@ const patchSchema = z.object({
       "SURF_PARENT",
       "LOCAL_CUSTOMER",
       "OTHER",
+      "BODYBOARDER",
+      "LONGBOARDER",
     ])
     .optional(),
   role: z.enum(["CUSTOMER", "ADMIN"]).optional(),
