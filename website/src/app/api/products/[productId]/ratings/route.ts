@@ -6,6 +6,7 @@ import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
 import { CART_COOKIE, CART_MAX_AGE_SECONDS } from "@/lib/ecommerce/cart";
 import { getProductRatingSummary, upsertProductRating } from "@/lib/ecommerce/ratings";
 import { randomToken } from "@/lib/ecommerce/security";
+import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
 import { readSessionUser } from "@/lib/ecommerce/session";
 
 const rateSchema = z.object({
@@ -67,6 +68,8 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   if (!hasDatabaseUrl()) return unavailableError();
+  const limited = enforceRateLimit(request, "product-rating", 20, 60_000);
+  if (limited) return limited;
 
   try {
     const { productId: rawId } = await context.params;

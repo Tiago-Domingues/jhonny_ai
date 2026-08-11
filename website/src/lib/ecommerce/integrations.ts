@@ -34,7 +34,17 @@ export function integrationStatus() {
           ? hasValue(process.env.SMTP_HOST) &&
             hasValue(process.env.SMTP_USER) &&
             hasValue(process.env.SMTP_PASSWORD)
-          : hasValue(process.env.RESEND_API_KEY),
+          : emailProvider === "odoo"
+            ? hasValue(process.env.ODOO_URL) &&
+              hasValue(process.env.ODOO_DB) &&
+              hasValue(process.env.ODOO_USERNAME) &&
+              hasValue(process.env.ODOO_API_KEY)
+            : hasValue(process.env.RESEND_API_KEY),
+      odooFallback:
+        hasValue(process.env.ODOO_URL) &&
+        hasValue(process.env.ODOO_DB) &&
+        hasValue(process.env.ODOO_USERNAME) &&
+        hasValue(process.env.ODOO_API_KEY),
       gmailReady:
         emailProvider === "smtp" &&
         process.env.SMTP_HOST === "smtp.gmail.com" &&
@@ -61,6 +71,13 @@ export function integrationStatus() {
         hasValue(process.env.KLARNA_USERNAME) &&
         hasValue(process.env.KLARNA_PASSWORD),
       implementation: "placeholder",
+    },
+    sms: {
+      provider: "twilio",
+      configured:
+        hasValue(process.env.TWILIO_ACCOUNT_SID) &&
+        hasValue(process.env.TWILIO_AUTH_TOKEN) &&
+        hasValue(process.env.TWILIO_FROM_NUMBER),
     },
   };
 }

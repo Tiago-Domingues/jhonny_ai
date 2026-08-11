@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
+import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
 import { readSessionUser } from "@/lib/ecommerce/session";
 
 const availabilitySchema = z.object({
@@ -14,6 +15,8 @@ const availabilitySchema = z.object({
 
 export async function POST(request: Request) {
   if (!hasDatabaseUrl()) return unavailableError();
+  const limited = enforceRateLimit(request, "availability-request", 10, 60_000);
+  if (limited) return limited;
 
   try {
     const data = availabilitySchema.parse(await readJson(request));

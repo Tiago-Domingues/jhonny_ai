@@ -1,6 +1,7 @@
 import "server-only";
 
 import { after } from "next/server";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { Product } from "@prisma/client";
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { eurosToCents } from "@/lib/ecommerce/money";
@@ -310,10 +311,13 @@ export function toLeanStoreProduct(product: StoreProduct): StoreProduct {
 
 let odooSyncInFlight: Promise<unknown> | null = null;
 
-/** Kick a non-blocking catalog refresh. Prefer incremental (seconds) over full. */
-export const ODOO_CATALOG_STALE_MS = 60 * 1000;
+/** On-read sync is opt-in — daily cron is the default to protect Prisma ops quota. */
+export const ODOO_CATALOG_STALE_MS = 24 * 60 * 60 * 1000;
+export const CATALOG_CACHE_TAG = "odoo-catalog";
+/** In-process/edge cache for the active catalog — cuts Prisma reads on every page view. */
+export const CATALOG_CACHE_REVALIDATE_SECONDS = 60 * 60;
 
-function kickBackgroundOdooSync(mode: "incremental" | "full" = "incremental") {
+function kickBackgroundOdooSync(mode: "incremental" | "full" = "full") {
   if (odooSyncInFlight) return;
   const promise = syncOdooProducts({ mode })
     .catch(() => undefined)
@@ -332,6 +336,8 @@ function kickBackgroundOdooSync(mode: "incremental" | "full" = "incremental") {
 }
 
 async function maybeKickCatalogSync() {
+  // Default OFF: frequent on-read syncs burned the Prisma Free plan ops quota.
+  if (process.env.ODOO_ON_READ_SYNC !== "true") return;
   if (process.env.ODOO_LIVE_CATALOG !== "true" || !hasOdooConfig()) return;
   const newest = await prisma.product.findFirst({
     where: { odooSyncStatus: "SYNCED" },
@@ -341,7 +347,46 @@ async function maybeKickCatalogSync() {
   const stale =
     !newest?.lastOdooSyncAt ||
     Date.now() - newest.lastOdooSyncAt.getTime() > ODOO_CATALOG_STALE_MS;
-  if (stale) kickBackgroundOdooSync("incremental");
+  if (stale) kickBackgroundOdooSync("full");
+}
+
+async function fetchActiveCatalogFromDb(): Promise<StoreProduct[]> {
+  const products = await prisma.product.findMany({
+    where: {
+      active: true,
+      excludedFromCatalog: false,
+      ...(allowMockCatalog()
+        ? {}
+        : {
+            NOT: [{ sku: { startsWith: "DEMO-" } }, { slug: { contains: "-demo" } }],
+          }),
+    },
+    orderBy: [{ category: "asc" }, { name: "asc" }],
+    select: productListSelect,
+  });
+  if (!products.length) return mockCatalogOrEmpty();
+  return dedupeStoreProducts(products.map((product) => toStoreProduct(product, { lean: true })));
+}
+
+/** One cached DB read shared by shop / New In / Opportunities (revalidated on sync). */
+export async function getCachedActiveCatalog(): Promise<StoreProduct[]> {
+  return unstable_cache(fetchActiveCatalogFromDb, ["active-catalog-lean-v2"], {
+    revalidate: CATALOG_CACHE_REVALIDATE_SECONDS,
+    tags: [CATALOG_CACHE_TAG],
+  })();
+}
+
+export function revalidateCatalogCache() {
+  try {
+    revalidateTag(CATALOG_CACHE_TAG, "max");
+  } catch {
+    try {
+      // Next.js versions that only accept the tag string.
+      (revalidateTag as (tag: string) => void)(CATALOG_CACHE_TAG);
+    } catch {
+      // ignore outside request context
+    }
+  }
 }
 
 function toStoreProductFromOdoo(product: OdooProduct): StoreProduct {
@@ -469,27 +514,8 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
 
   try {
     await maybeKickCatalogSync();
-
-    const products = await prisma.product.findMany({
-      where: {
-        active: true,
-        excludedFromCatalog: false,
-        ...(allowMockCatalog()
-          ? {}
-          : {
-              NOT: [
-                { sku: { startsWith: "DEMO-" } },
-                { slug: { contains: "-demo" } },
-              ],
-            }),
-      },
-      orderBy: [{ category: "asc" }, { name: "asc" }],
-      select: productListSelect,
-    });
-    const mapped = products.length
-      ? products.map((product) => toStoreProduct(product, { lean: true }))
-      : mockCatalogOrEmpty();
-    return dedupeStoreProducts(mapped.filter((product) => matchesFilters(product, filters)));
+    const products = await getCachedActiveCatalog();
+    return products.filter((product) => matchesFilters(product, filters));
   } catch {
     try {
       const liveProducts = await listLiveOdooProducts(filters);
@@ -516,20 +542,16 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
   }
 
   try {
-    const products = await prisma.product.findMany({
-      where: {
-        active: true,
-        excludedFromCatalog: false,
-        isOpportunity: true,
-      },
-      orderBy: [{ opportunityDiscountPercent: "desc" }, { name: "asc" }],
-      take: limit * 3,
-      select: productListSelect,
-    });
-    return dedupeStoreProducts(products.map((product) => toStoreProduct(product, { lean: true }))).slice(
-      0,
-      limit
-    );
+    await maybeKickCatalogSync();
+    const products = await getCachedActiveCatalog();
+    return products
+      .filter((product) => product.isOpportunity)
+      .sort(
+        (a, b) =>
+          (b.opportunityDiscountPercent ?? 0) - (a.opportunityDiscountPercent ?? 0) ||
+          a.name.localeCompare(b.name)
+      )
+      .slice(0, limit);
   } catch {
     return [];
   }
@@ -570,36 +592,10 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
 
   try {
     await maybeKickCatalogSync();
-
-    const tagged = await prisma.product.findMany({
-      where: {
-        active: true,
-        excludedFromCatalog: false,
-        isNewIn: true,
-      },
-      orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
-      take: limit * 3,
-      select: productListSelect,
-    });
-    const fromAttribute = dedupeStoreProducts(
-      tagged.map((product) => toStoreProduct(product, { lean: true }))
-    ).slice(0, limit);
+    const products = await getCachedActiveCatalog();
+    const fromAttribute = products.filter((product) => product.isNewIn).slice(0, limit);
     if (fromAttribute.length) return fromAttribute;
-
-    const products = await prisma.product.findMany({
-      where: {
-        active: true,
-        excludedFromCatalog: false,
-      },
-      orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
-      take: 400,
-      select: productListSelect,
-    });
-    return dedupeStoreProducts(
-      products
-        .map((product) => toStoreProduct(product, { lean: true }))
-        .filter((product) => isNewArrivalsCategory(product.category))
-    ).slice(0, limit);
+    return products.filter((product) => isNewArrivalsCategory(product.category)).slice(0, limit);
   } catch {
     return [];
   }

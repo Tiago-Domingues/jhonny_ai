@@ -9,9 +9,13 @@ type SessionUser = {
   fullName?: string;
 } | null;
 
+type ProfileRecord = Record<string, string | boolean | null | undefined>;
+
 const customerTypes = [
   ["PROFESSIONAL", "Professional"],
   ["SURFER", "Surfer"],
+  ["BODYBOARDER", "Bodyboarder"],
+  ["LONGBOARDER", "Longboarder"],
   ["BEGINNER", "Beginner"],
   ["TOURIST", "Tourist"],
   ["ERASMUS_STUDENT", "Erasmus / estudante"],
@@ -31,15 +35,116 @@ const dialCodes = [
   ["+1", "US/CA +1"],
 ];
 
+function EyeIcon({ open, className = "" }: { open: boolean; className?: string }) {
+  if (open) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden>
+        <path d="M3 3l18 18" strokeLinecap="round" />
+        <path d="M10.58 10.58a2 2 0 002.83 2.83" strokeLinecap="round" />
+        <path
+          d="M9.88 5.09A10.94 10.94 0 0112 5c5 0 9.27 3.11 11 7a11.66 11.66 0 01-2.16 3.19M6.61 6.61C4.62 7.9 3.06 9.71 2 12c1.73 3.89 6 7 10 7a10.5 10.5 0 004.39-.93"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function PasswordField({
+  name = "password",
+  placeholder = "Password",
+  required = false,
+  autoComplete,
+}: {
+  name?: string;
+  placeholder?: string;
+  required?: boolean;
+  autoComplete?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative min-w-0">
+      <input
+        name={name}
+        required={required}
+        type={visible ? "text" : "password"}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className="w-full rounded-2xl border border-line px-4 py-3 pr-12"
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((value) => !value)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        aria-pressed={visible}
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted transition hover:text-ink"
+      >
+        <EyeIcon open={visible} className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+function PhoneFields({
+  defaultCountryCode = "+351",
+  defaultPhone = "",
+  required = false,
+}: {
+  defaultCountryCode?: string;
+  defaultPhone?: string;
+  required?: boolean;
+}) {
+  return (
+    <div className="grid min-w-0 grid-cols-[6.75rem_minmax(0,1fr)] gap-2">
+      <select
+        name="phoneCountryCode"
+        defaultValue={defaultCountryCode}
+        aria-label="Country code"
+        className="min-w-0 w-full truncate rounded-2xl border border-line px-2 py-3 text-sm"
+      >
+        {dialCodes.map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <input
+        name="phone"
+        defaultValue={defaultPhone}
+        required={required}
+        placeholder="Mobile"
+        inputMode="tel"
+        className="min-w-0 w-full rounded-2xl border border-line px-4 py-3"
+      />
+    </div>
+  );
+}
+
+function formatFieldErrors(fields: Record<string, string[] | undefined> | undefined) {
+  if (!fields) return null;
+  const parts = Object.entries(fields)
+    .flatMap(([key, messages]) => (messages || []).map((message) => `${key}: ${message}`))
+    .slice(0, 4);
+  return parts.length ? parts.join(" · ") : null;
+}
+
 export function AccountClient() {
   const [user, setUser] = useState<SessionUser>(null);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [message, setMessage] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Record<string, string | boolean | null> | null>(null);
+  const [formStatus, setFormStatus] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<ProfileRecord | null>(null);
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me")
+    fetch("/api/auth/me", { credentials: "same-origin" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => setUser(data?.user || null))
       .catch(() => undefined);
@@ -47,64 +152,104 @@ export function AccountClient() {
 
   useEffect(() => {
     if (!user) return;
-    fetch("/api/profile")
+    let cancelled = false;
+    fetch("/api/profile", { credentials: "same-origin" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        const loadedProfile = data?.user?.profile || null;
+        if (cancelled) return;
+        const loadedProfile = (data?.user?.profile || null) as ProfileRecord | null;
         setProfile(loadedProfile);
-        setBillingSameAsShipping(loadedProfile?.billingSameAsShipping ?? true);
+        setBillingSameAsShipping(Boolean(loadedProfile?.billingSameAsShipping ?? true));
       })
       .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   async function submit(path: string, event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMessage(null);
+    setFormStatus(null);
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
-    const response = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...payload,
-        marketingOptIn: form.get("marketingOptIn") === "on",
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.message || "Não foi possível concluir o pedido.");
-      return;
+    try {
+      const response = await fetch(path, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          marketingOptIn: form.get("marketingOptIn") === "on",
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const details = formatFieldErrors(data.fields);
+        setMessage(details || data.message || "Não foi possível concluir o pedido.");
+        return;
+      }
+      setUser(data.user);
+      if (data.profile) {
+        setProfile(data.profile as ProfileRecord);
+        setBillingSameAsShipping(Boolean(data.profile.billingSameAsShipping ?? true));
+      }
+      setMessage("Conta pronta. Completa o teu perfil abaixo.");
+      setFormStatus({ type: "ok", text: "Account ready — complete your profile details below." });
+      window.dispatchEvent(new Event("jss-cart-updated"));
+    } catch {
+      setMessage("Network error. Please try again.");
     }
-    setUser(data.user);
-    setMessage("Conta pronta.");
-    window.dispatchEvent(new Event("jss-cart-updated"));
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
     const payload = Object.fromEntries(form.entries());
-    const response = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...payload,
-        billingSameAsShipping,
-        marketingOptIn: form.get("marketingOptIn") === "on",
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.message || "Could not save your profile.");
-      return;
+    setSaving(true);
+    setFormStatus(null);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          billingSameAsShipping,
+          marketingOptIn: form.get("marketingOptIn") === "on",
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const details = formatFieldErrors(data.fields);
+        setFormStatus({
+          type: "error",
+          text: details || data.message || "Could not save your profile.",
+        });
+        setMessage(details || data.message || "Could not save your profile.");
+        return;
+      }
+      setProfile(data.profile as ProfileRecord);
+      setUser((current) =>
+        current ? { ...current, fullName: String(data.profile?.fullName || current.fullName || "") } : current
+      );
+      setFormStatus({ type: "ok", text: "Profile saved." });
+      setMessage("Profile saved.");
+    } catch {
+      setFormStatus({ type: "error", text: "Network error. Please try again." });
+    } finally {
+      setSaving(false);
     }
-    setProfile(data.profile);
-    setUser(user ? { ...user, fullName: data.profile.fullName } : user);
-    setMessage("Profile saved.");
   }
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
     setUser(null);
+    setProfile(null);
+    setFormStatus(null);
+    setMessage(null);
   }
 
   if (user) {
@@ -118,20 +263,39 @@ export function AccountClient() {
             <a href="/checkout" className="rounded-2xl bg-ink px-5 py-4 text-center text-sm font-bold uppercase tracking-wide text-white">
               Go to checkout
             </a>
-            <button onClick={logout} className="rounded-2xl border border-line px-5 py-4 text-sm font-bold uppercase tracking-wide">
+            <button type="button" onClick={logout} className="rounded-2xl border border-line px-5 py-4 text-sm font-bold uppercase tracking-wide">
               Sign out
             </button>
           </div>
           {message && <p className="mt-4 rounded-xl bg-cream p-3 text-sm text-muted">{message}</p>}
         </aside>
 
-        <form key={String(profile?.id || "profile-loading")} onSubmit={saveProfile} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
+        <form key={String(profile?.id || "profile-loading")} onSubmit={saveProfile} className="min-w-0 rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Profile</p>
-              <p className="mt-2 text-sm text-muted">Keep your details ready for faster checkouts and Odoo customer sync.</p>
+              <p className="mt-2 text-sm text-muted">
+                We keep your name, email, phone and address in your customer profile for faster checkouts.
+              </p>
+              <p className="mt-3 text-sm">
+                <a href="/encomendas" className="font-semibold text-ink underline underline-offset-2">
+                  Ver as minhas encomendas
+                </a>
+              </p>
             </div>
-            <input name="fullName" required defaultValue={String(profile?.fullName || user.fullName || "")} placeholder="Full name" className="rounded-2xl border border-line px-4 py-3" />
+            <input
+              name="fullName"
+              required
+              defaultValue={String(profile?.fullName || user.fullName || "")}
+              placeholder="Full name"
+              className="rounded-2xl border border-line px-4 py-3"
+            />
+            <input
+              value={user.email}
+              readOnly
+              aria-label="Email"
+              className="rounded-2xl border border-line bg-cream/60 px-4 py-3 text-muted"
+            />
             <input name="birthDate" type="date" defaultValue={profile?.birthDate ? String(profile.birthDate).slice(0, 10) : ""} className="rounded-2xl border border-line px-4 py-3" />
             <select name="gender" defaultValue={String(profile?.gender || "")} className="rounded-2xl border border-line px-4 py-3">
               <option value="">Gender</option>
@@ -139,21 +303,19 @@ export function AccountClient() {
               <option value="FEMALE">Female</option>
               <option value="NON_BINARY">Non-binary</option>
               <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+              <option value="OTHER">Other</option>
             </select>
             <select name="customerType" defaultValue={String(profile?.customerType || "SURFER")} className="rounded-2xl border border-line px-4 py-3">
               {customerTypes.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
-            <div className="grid grid-cols-[minmax(96px,0.45fr)_1fr] gap-2">
-              <select name="phoneCountryCode" defaultValue={String(profile?.phoneCountryCode || "+351")} className="rounded-2xl border border-line px-4 py-3">
-                {dialCodes.map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-              <input name="phone" defaultValue={String(profile?.phone || "")} placeholder="Mobile" className="rounded-2xl border border-line px-4 py-3" />
-            </div>
-            <select name="preferredLanguage" defaultValue={String(profile?.preferredLanguage || "en")} className="rounded-2xl border border-line px-4 py-3">
+            <PhoneFields
+              defaultCountryCode={String(profile?.phoneCountryCode || "+351")}
+              defaultPhone={String(profile?.phone || "")}
+              required
+            />
+            <select name="preferredLanguage" defaultValue={String(profile?.preferredLanguage || "en")} className="rounded-2xl border border-line px-4 py-3 md:col-span-2">
               <option value="en">English</option>
               <option value="pt">Português</option>
               <option value="zh">中文</option>
@@ -190,7 +352,22 @@ export function AccountClient() {
               <input name="marketingOptIn" defaultChecked={Boolean(profile?.marketingOptIn)} type="checkbox" className="mt-1" />
               I want to receive Jhonny drops, campaigns, and cart reminders.
             </label>
-            <button className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white md:col-span-2">Save profile</button>
+            {formStatus && (
+              <p
+                className={`rounded-xl px-4 py-3 text-sm md:col-span-2 ${
+                  formStatus.type === "ok" ? "bg-cream text-ink" : "bg-[#f8e8e4] text-[#8a2b12]"
+                }`}
+              >
+                {formStatus.text}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white disabled:opacity-60 md:col-span-2"
+            >
+              {saving ? "Saving…" : "Save profile"}
+            </button>
           </div>
         </form>
       </div>
@@ -206,10 +383,10 @@ export function AccountClient() {
           Create an account to save your profile, addresses, preferences, and order history. You can still shop as a guest at checkout.
         </p>
         <div className="mt-5 flex gap-2">
-          <button onClick={() => setMode("login")} className={`rounded-full px-4 py-2 text-sm font-bold ${mode === "login" ? "bg-ink text-white" : "border border-line"}`}>
+          <button type="button" onClick={() => setMode("login")} className={`rounded-full px-4 py-2 text-sm font-bold ${mode === "login" ? "bg-ink text-white" : "border border-line"}`}>
             Sign in
           </button>
-          <button onClick={() => setMode("register")} className={`rounded-full px-4 py-2 text-sm font-bold ${mode === "register" ? "bg-ink text-white" : "border border-line"}`}>
+          <button type="button" onClick={() => setMode("register")} className={`rounded-full px-4 py-2 text-sm font-bold ${mode === "register" ? "bg-ink text-white" : "border border-line"}`}>
             Create account
           </button>
         </div>
@@ -217,29 +394,22 @@ export function AccountClient() {
       </aside>
 
       {mode === "login" ? (
-        <form onSubmit={(event) => submit("/api/auth/login", event)} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
+        <form onSubmit={(event) => submit("/api/auth/login", event)} className="min-w-0 rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4">
             <input name="emailOrUsername" required placeholder="Email or username" className="rounded-2xl border border-line px-4 py-3" />
-            <input name="password" required type="password" placeholder="Password" className="rounded-2xl border border-line px-4 py-3" />
-            <button className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white">Sign in</button>
+            <PasswordField required autoComplete="current-password" />
+            <button type="submit" className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white">Sign in</button>
           </div>
         </form>
       ) : (
-        <form onSubmit={(event) => submit("/api/auth/register", event)} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
+        <form onSubmit={(event) => submit("/api/auth/register", event)} className="min-w-0 overflow-hidden rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2">
-            <input name="fullName" required placeholder="Full name" className="rounded-2xl border border-line px-4 py-3" />
-            <input name="username" required placeholder="Username" className="rounded-2xl border border-line px-4 py-3" />
-            <input name="email" required type="email" placeholder="Email" className="rounded-2xl border border-line px-4 py-3" />
-            <div className="grid grid-cols-[minmax(96px,0.45fr)_1fr] gap-2">
-              <select name="phoneCountryCode" defaultValue="+351" className="rounded-2xl border border-line px-4 py-3">
-                {dialCodes.map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-              <input name="phone" placeholder="Mobile" className="rounded-2xl border border-line px-4 py-3" />
-            </div>
-            <input name="password" required type="password" placeholder="Password" className="rounded-2xl border border-line px-4 py-3" />
-            <select name="customerType" defaultValue="SURFER" className="rounded-2xl border border-line px-4 py-3">
+            <input name="fullName" required placeholder="Full name" className="min-w-0 rounded-2xl border border-line px-4 py-3" />
+            <input name="username" required placeholder="Username" className="min-w-0 rounded-2xl border border-line px-4 py-3" />
+            <input name="email" required type="email" placeholder="Email" className="min-w-0 rounded-2xl border border-line px-4 py-3" />
+            <PhoneFields required />
+            <PasswordField required autoComplete="new-password" />
+            <select name="customerType" defaultValue="SURFER" className="min-w-0 rounded-2xl border border-line px-4 py-3">
               {customerTypes.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -248,7 +418,7 @@ export function AccountClient() {
               <input name="marketingOptIn" type="checkbox" className="mt-1" />
               I want to receive Jhonny drops, cart reminders, and campaigns.
             </label>
-            <button className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white md:col-span-2">Create account</button>
+            <button type="submit" className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white md:col-span-2">Create account</button>
           </div>
         </form>
       )}

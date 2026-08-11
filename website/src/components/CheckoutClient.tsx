@@ -2,6 +2,11 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
+import {
+  computeShippingCents,
+  freeShippingThresholdEuros,
+  type FulfillmentMethod,
+} from "@/lib/ecommerce/shipping";
 
 type CartSummary = {
   itemCount: number;
@@ -13,7 +18,7 @@ export function CheckoutClient() {
   const [cart, setCart] = useState<CartSummary | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("MBWAY");
-  const [fulfillmentMethod, setFulfillmentMethod] = useState("PICKUP_IN_STORE");
+  const [fulfillmentMethod, setFulfillmentMethod] = useState<FulfillmentMethod>("PICKUP_IN_STORE");
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscountCents, setCouponDiscountCents] = useState(0);
@@ -68,7 +73,14 @@ export function CheckoutClient() {
     setCouponMessage(`${data.coupon?.code} aplicado: ${data.coupon?.percentOff}% off.`);
   }
 
-  const discountedSubtotalCents = Math.max(0, (cart?.subtotalCents || 0) - couponDiscountCents);
+  const subtotalCents = cart?.subtotalCents || 0;
+  const discountedSubtotalCents = Math.max(0, subtotalCents - couponDiscountCents);
+  const shippingCents = computeShippingCents({
+    fulfillmentMethod,
+    amountForShippingCents: discountedSubtotalCents,
+  });
+  const totalCents = discountedSubtotalCents + shippingCents;
+  const freeShippingEuros = freeShippingThresholdEuros();
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
@@ -103,10 +115,32 @@ export function CheckoutClient() {
 
           {fulfillmentMethod === "SHIP_TO_ADDRESS" && (
             <>
-              <input name="addressLine1" placeholder="Morada" className="rounded-2xl border border-line px-4 py-3 md:col-span-2" />
-              <input name="addressLine2" placeholder="Detalhes morada" className="rounded-2xl border border-line px-4 py-3 md:col-span-2" />
-              <input name="postalCode" placeholder="Código postal" className="rounded-2xl border border-line px-4 py-3" />
-              <input name="city" placeholder="Cidade" className="rounded-2xl border border-line px-4 py-3" />
+              <input
+                name="addressLine1"
+                required
+                placeholder="Morada"
+                className="rounded-2xl border border-line px-4 py-3 md:col-span-2"
+              />
+              <input
+                name="addressLine2"
+                placeholder="Detalhes morada (opcional)"
+                className="rounded-2xl border border-line px-4 py-3 md:col-span-2"
+              />
+              <input
+                name="postalCode"
+                required
+                placeholder="Código postal"
+                className="rounded-2xl border border-line px-4 py-3"
+              />
+              <input name="city" required placeholder="Cidade" className="rounded-2xl border border-line px-4 py-3" />
+              <select name="country" defaultValue="PT" required className="rounded-2xl border border-line px-4 py-3 md:col-span-2">
+                <option value="PT">Portugal</option>
+                <option value="ES">Espanha</option>
+                <option value="FR">França</option>
+                <option value="DE">Alemanha</option>
+                <option value="GB">Reino Unido</option>
+                <option value="US">Estados Unidos</option>
+              </select>
             </>
           )}
 
@@ -117,11 +151,37 @@ export function CheckoutClient() {
 
           {!billingSameAsShipping && (
             <>
-              <input name="billingAddressLine1" placeholder="Morada de faturação" className="rounded-2xl border border-line px-4 py-3 md:col-span-2" />
-              <input name="billingAddressLine2" placeholder="Detalhes morada de faturação" className="rounded-2xl border border-line px-4 py-3 md:col-span-2" />
-              <input name="billingPostalCode" placeholder="Código postal faturação" className="rounded-2xl border border-line px-4 py-3" />
-              <input name="billingCity" placeholder="Cidade faturação" className="rounded-2xl border border-line px-4 py-3" />
-              <input name="billingCountry" maxLength={2} defaultValue="PT" placeholder="País faturação" className="rounded-2xl border border-line px-4 py-3" />
+              <input
+                name="billingAddressLine1"
+                required
+                placeholder="Morada de faturação"
+                className="rounded-2xl border border-line px-4 py-3 md:col-span-2"
+              />
+              <input
+                name="billingAddressLine2"
+                placeholder="Detalhes morada de faturação (opcional)"
+                className="rounded-2xl border border-line px-4 py-3 md:col-span-2"
+              />
+              <input
+                name="billingPostalCode"
+                required
+                placeholder="Código postal faturação"
+                className="rounded-2xl border border-line px-4 py-3"
+              />
+              <input
+                name="billingCity"
+                required
+                placeholder="Cidade faturação"
+                className="rounded-2xl border border-line px-4 py-3"
+              />
+              <input
+                name="billingCountry"
+                maxLength={2}
+                defaultValue="PT"
+                required
+                placeholder="País faturação (ex: PT)"
+                className="rounded-2xl border border-line px-4 py-3"
+              />
             </>
           )}
 
@@ -185,23 +245,37 @@ export function CheckoutClient() {
             <p className="text-sm text-muted">O carrinho está vazio.</p>
           )}
         </div>
-        <div className="mt-5 border-t border-line pt-4">
+        <div className="mt-5 border-t border-line pt-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span className="font-semibold"><CurrencyPrice cents={subtotalCents} /></span>
+          </div>
           {couponDiscountCents > 0 && (
-            <div className="mb-3 flex justify-between text-sm font-semibold text-muted">
-              <span>Coupon discount</span>
+            <div className="flex justify-between text-sm font-semibold text-muted">
+              <span>Desconto cupão</span>
               <span>-<CurrencyPrice cents={couponDiscountCents} /></span>
             </div>
           )}
-          <div className="flex flex-col gap-1 font-display text-2xl font-extrabold sm:flex-row sm:justify-between">
+          <div className="flex justify-between text-sm">
+            <span>Portes</span>
+            <span className="font-semibold">
+              {fulfillmentMethod === "PICKUP_IN_STORE"
+                ? "Grátis (levantamento)"
+                : shippingCents === 0
+                  ? "Grátis"
+                  : <CurrencyPrice cents={shippingCents} />}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1 border-t border-line pt-3 font-display text-2xl font-extrabold sm:flex-row sm:justify-between">
             <span>Total</span>
-            <span className="sm:text-right"><CurrencyPrice cents={discountedSubtotalCents} /></span>
+            <span className="sm:text-right"><CurrencyPrice cents={totalCents} /></span>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <CurrencySelector compact />
             <CurrencyNote />
           </div>
           <p className="mt-2 text-xs text-muted">
-            Portes grátis em encomendas acima de €50. Levantamento em loja é gratuito.
+            Portes grátis em encomendas acima de €{freeShippingEuros}. Levantamento em loja é gratuito.
           </p>
         </div>
       </aside>
