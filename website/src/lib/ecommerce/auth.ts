@@ -5,6 +5,7 @@ import { prisma } from "@/lib/ecommerce/db";
 import type { GoogleUserInfo } from "@/lib/ecommerce/googleOAuth";
 import { registerSchema, loginSchema, profileSchema } from "@/lib/ecommerce/schemas";
 import { hashPassword, normalizeEmail, randomToken, verifyPassword } from "@/lib/ecommerce/security";
+import { isAdminEmail } from "@/lib/ecommerce/admin";
 
 export async function registerCustomer(input: unknown) {
   const data = registerSchema.parse(input);
@@ -16,6 +17,7 @@ export async function registerCustomer(input: unknown) {
         email,
         username: data.username.trim(),
         passwordHash: await hashPassword(data.password),
+        role: isAdminEmail(email) ? "ADMIN" : "CUSTOMER",
         profile: {
           create: {
             fullName: data.fullName.trim(),
