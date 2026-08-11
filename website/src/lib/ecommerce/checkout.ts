@@ -6,6 +6,7 @@ import { checkoutSchema } from "@/lib/ecommerce/schemas";
 import { createPaymentForOrder } from "@/lib/ecommerce/payments";
 import { sendOrderEmails } from "@/lib/ecommerce/email";
 import { validateCoupon } from "@/lib/ecommerce/coupons";
+import { computeShippingCents } from "@/lib/ecommerce/shipping";
 
 type CheckoutIdentity = {
   userId?: string;
@@ -34,19 +35,28 @@ export async function createCheckout(identity: CheckoutIdentity, input: unknown)
     }
   }
 
+  if (data.fulfillmentMethod === "SHIP_TO_ADDRESS") {
+    const missing = [
+      !data.addressLine1?.trim() && "address",
+      !data.postalCode?.trim() && "postal code",
+      !data.city?.trim() && "city",
+      !data.country?.trim() && "country",
+    ].filter(Boolean);
+    if (missing.length) {
+      throw new Error(`Shipping address is incomplete (${missing.join(", ")}).`);
+    }
+  }
+
   const coupon = await validateCoupon(data.couponCode, summary.subtotalCents, {
     userId: identity.userId,
     email: data.email,
   });
   const discountCents = coupon?.discountCents || 0;
-  const FREE_SHIPPING_THRESHOLD_CENTS = 5000; // €50
-  const STANDARD_SHIPPING_CENTS = 690;
   const amountForShippingCents = Math.max(0, summary.subtotalCents - discountCents);
-  const shippingCents =
-    data.fulfillmentMethod === "PICKUP_IN_STORE" ||
-    amountForShippingCents >= FREE_SHIPPING_THRESHOLD_CENTS
-      ? 0
-      : STANDARD_SHIPPING_CENTS;
+  const shippingCents = computeShippingCents({
+    fulfillmentMethod: data.fulfillmentMethod,
+    amountForShippingCents,
+  });
   const totalCents = Math.max(0, summary.subtotalCents + shippingCents - discountCents);
   const guestCheckoutId = identity.userId
     ? null
