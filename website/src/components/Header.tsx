@@ -247,9 +247,6 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                     Sair
                   </button>
                 )}
-                <p className="px-3 pb-1 pt-2 text-[0.65rem] uppercase tracking-wide text-muted">
-                  Dados preparados para Odoo
-                </p>
               </div>
             )}
           </div>

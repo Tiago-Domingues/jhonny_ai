@@ -4,7 +4,7 @@ import { InfoPage, type InfoContent } from "@/components/InfoPage";
 export const metadata: Metadata = {
   title: "Perguntas Frequentes",
   description:
-    "Respostas às perguntas mais comuns sobre a Jhonny Surf Store: loja, compras, reparações e mais.",
+    "Respostas às perguntas mais comuns sobre a Jhonny Surf Store: loja online, pagamentos, envios, reparações e mais.",
 };
 
 const pt: InfoContent = {
@@ -18,9 +18,22 @@ const pt: InfoContent = {
       ],
     },
     {
-      heading: "Já posso comprar online?",
+      heading: "Posso comprar online?",
       paragraphs: [
-        "A loja online está em preparação. Para já, podes comprar na loja física ou encomendar por WhatsApp, telefone ou Instagram.",
+        "Sim. Na loja online podes ver o catálogo, adicionar ao carrinho e finalizar a compra com conta ou como convidado. Também podes continuar a encomendar por WhatsApp, telefone ou Instagram.",
+      ],
+    },
+    {
+      heading: "Que métodos de pagamento aceitam?",
+      paragraphs: [
+        "No checkout online: MB WAY, Multibanco (entidade/referência), PayPal e Klarna. Na loja física também aceitamos numerário e os meios habituais no balcão.",
+      ],
+    },
+    {
+      heading: "Fazem envios? Há portes grátis?",
+      paragraphs: [
+        "Sim. Enviamos para Portugal Continental, Ilhas e Europa (sob consulta). Portes grátis em encomendas acima de €100 — artigos volumosos como pranchas podem ter condições específicas.",
+        "Também podes pagar online e levantar na loja em Parede / Carcavelos, sem custos de portes.",
       ],
     },
     {
@@ -61,9 +74,22 @@ const en: InfoContent = {
       ],
     },
     {
-      heading: "Can I buy online yet?",
+      heading: "Can I buy online?",
       paragraphs: [
-        "The online store is being prepared. For now, you can buy in the physical store or order via WhatsApp, phone or Instagram.",
+        "Yes. In the online shop you can browse the catalog, add to cart and checkout with an account or as a guest. You can also keep ordering via WhatsApp, phone or Instagram.",
+      ],
+    },
+    {
+      heading: "Which payment methods do you accept?",
+      paragraphs: [
+        "At online checkout: MB WAY, Multibanco (entity/reference), PayPal and Klarna. In the physical store we also accept cash and the usual in-store methods.",
+      ],
+    },
+    {
+      heading: "Do you ship? Is shipping free?",
+      paragraphs: [
+        "Yes. We ship to mainland Portugal, the islands and Europe (on request). Free shipping on orders over €100 — bulky items such as boards may have specific conditions.",
+        "You can also pay online and pick up at the Parede / Carcavelos store with no shipping fee.",
       ],
     },
     {
@@ -104,9 +130,22 @@ const zh: InfoContent = {
       ],
     },
     {
-      heading: "现在可以在线上购买吗？",
+      heading: "可以在线上购买吗？",
       paragraphs: [
-        "网上商店正在筹备中。目前你可以到实体店购买，或通过 WhatsApp、电话或 Instagram 下单。",
+        "可以。在网上商店可浏览目录、加入购物车，并使用账户或游客结账。也可以继续通过 WhatsApp、电话或 Instagram 下单。",
+      ],
+    },
+    {
+      heading: "支持哪些支付方式？",
+      paragraphs: [
+        "在线结账：MB WAY、Multibanco（实体/参考号）、PayPal 和 Klarna。实体店也接受现金及店内常用支付方式。",
+      ],
+    },
+    {
+      heading: "可以配送吗？有免运费吗？",
+      paragraphs: [
+        "可以。我们配送至葡萄牙大陆、岛屿及欧洲（需咨询）。订单满 €100 免运费——冲浪板等大件可能有特殊条件。",
+        "也可以在线付款后到 Parede / Carcavelos 门店自取，免运费。",
       ],
     },
     {
