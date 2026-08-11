@@ -225,7 +225,7 @@
       <p class="subtitle">Website Launch Status</p>
       <div class="meta">
         <div><strong>Audience:</strong> owner + shop/ops + technical team</div>
-        <div><strong>Last updated:</strong> 23 July 2026</div>
+        <div><strong>Last updated:</strong> 25 July 2026</div>
         <div>
           <strong>Live sites:</strong>
           <a href="https://www.jhonnysurfstore.com">jhonnysurfstore.com</a>
@@ -265,11 +265,11 @@
         </thead>
         <tbody>
           <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready (imagery refresh still needed — see P1.8)</td></tr>
-          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status">Connected, but <strong>not guaranteed near real-time</strong> (see P0.18)</td></tr>
+          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status" class="status-ok">Connected — near real-time sync live (P0.18)</td></tr>
           <tr><td data-label="Area">Browse shop, filters, product pages</td><td data-label="Status" class="status-ok">Ready for browsing</td></tr>
           <tr><td data-label="Area">Cart + guest/account checkout skeleton</td><td data-label="Status">Built, not production-safe</td></tr>
-          <tr><td data-label="Area">Payments (MB WAY, Multibanco, PayPal, Klarna)</td><td data-label="Status" class="status-bad">Not ready</td></tr>
-          <tr><td data-label="Area">Security / abuse protection</td><td data-label="Status" class="status-bad">Partial — harden before open checkout</td></tr>
+          <tr><td data-label="Area">Payments (MB WAY, Multibanco, PayPal, Klarna)</td><td data-label="Status" class="status-bad">Not ready — credentials pending</td></tr>
+          <tr><td data-label="Area">Security / abuse protection</td><td data-label="Status" class="status-ok">Baseline done (P0.4, P0.13–P0.17); more at P1</td></tr>
           <tr><td data-label="Area">Order email + ops admin</td><td data-label="Status" class="status-bad">Not ready</td></tr>
           <tr><td data-label="Area">Public go-live (.com + .pt)</td><td data-label="Status" class="status-bad">Blocked</td></tr>
         </tbody>
@@ -352,16 +352,15 @@
 
       <p>Other important mismatches / risks:</p>
       <ul>
-        <li>Banner already says free shipping over <strong>€100</strong>; checkout + legal still use <strong>€50</strong>.</li>
+        <li>Free shipping threshold is <strong>€100</strong> in banner, checkout logic, checkout UI, and legal pages (P0.9–P0.11 ✅).</li>
         <li>After checkout, customers do <strong>not</strong> see Multibanco entity/reference or MB WAY next steps.</li>
-        <li>Stock is checked but <strong>not reserved/decremented</strong> → oversell risk.</li>
-        <li>Coupons can be consumed when the order is created, even if payment never completes.</li>
-        <li>Ship-to-address fields are not strictly required in the UI.</li>
+        <li>Stock is <strong>reserved (decremented) at checkout</strong> and released on unpaid cancel/expiry (P0.7 ✅).</li>
+        <li>Coupon usage rows are written <strong>only after payment</strong>; unpaid orders hold the code until pay/cancel (P0.8 ✅).</li>
         <li>Until <code>SITE_PUBLIC_LAUNCH=true</code>, <strong>both .com and .pt</strong> show coming-soon to the public; staff unlock via <code>/preview-access</code> + <code>SITE_PREVIEW_PASSWORD</code>.</li>
         <li>If catalog/DB fails, mock demo products must not become sellable.</li>
         <li>No simple admin screen to process orders; no customer “My orders” history.</li>
         <li>Homepage hero / category tile images may be outdated vs recent store photography.</li>
-        <li>Odoo → website catalog updates are <strong>not guaranteed near real-time</strong>: with <code>ODOO_LIVE_CATALOG=true</code>, listing may kick a <strong>background</strong> sync only when DB data is older than <strong>~15 minutes</strong> and someone hits the shop; there is no scheduled cron and no Odoo product-change webhook. Manual <code>POST /api/odoo/sync/products</code> still exists.</li>
+        <li>Odoo → website catalog freshness: <strong>Vercel Cron</strong> incremental sync about every <strong>2 minutes</strong> (plus hourly full sync). Shop/New In also kick background sync when cache is older than <strong>~60 seconds</strong>. Typical delay after an Odoo edit: <strong>under 2 minutes</strong>.</li>
         <li>Security gaps listed in §5.1 below.</li>
       </ul>
 
@@ -373,27 +372,27 @@
         <li>Guest cart/rating tokens stored as hashes; admin order-status requires <code>ADMIN</code>.</li>
         <li>Prisma ORM only (no raw SQL); React-escaped UI (no <code>dangerouslySetInnerHTML</code>).</li>
       </ul>
-      <p><strong>Must fix before open checkout (P0)</strong></p>
+      <p><strong>Must fix before open checkout (P0) — baseline hardened</strong></p>
       <table>
         <thead>
           <tr><th>Risk</th><th>Why it matters</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Risk">Ifthenpay callback secret optional + no amount/status check</td><td data-label="Why">Attacker who knows an order reference can mark orders <strong>paid</strong></td></tr>
-          <tr><td data-label="Risk">Missing payment keys → mock / placeholder “payments”</td><td data-label="Why">Fake paid state in production</td></tr>
-          <tr><td data-label="Risk">Mock catalog upserted into DB if catalog empty</td><td data-label="Why">Demo SKUs become sellable</td></tr>
-          <tr><td data-label="Risk"><code>POST /api/odoo/sync/products</code> unauthenticated</td><td data-label="Why">Anyone can trigger sync / DoS Odoo</td></tr>
-          <tr><td data-label="Risk">No rate limits on login, register, checkout, callback</td><td data-label="Why">Brute-force and abuse</td></tr>
-          <tr><td data-label="Risk">Soft-default <code>SESSION_SECRET</code> if unset</td><td data-label="Why">Predictable sessions if misconfigured</td></tr>
-          <tr><td data-label="Risk">No security HTTP headers</td><td data-label="Why">Clickjacking / XSS blast-radius / downgrade</td></tr>
+          <tr><td data-label="Risk">Ifthenpay callback secret optional + no amount/status check</td><td data-label="Why"><strong>Hardened:</strong> secret required in prod, amount/status checks</td></tr>
+          <tr><td data-label="Risk">Missing payment keys → mock / placeholder “payments”</td><td data-label="Why"><strong>Hardened:</strong> production fail-closed</td></tr>
+          <tr><td data-label="Risk">Mock catalog upserted into DB if catalog empty</td><td data-label="Why"><strong>Hardened:</strong> demos blocked unless <code>ALLOW_MOCK_CATALOG=true</code></td></tr>
+          <tr><td data-label="Risk"><code>POST /api/odoo/sync/products</code> unauthenticated</td><td data-label="Why"><strong>Hardened:</strong> <code>CRON_SECRET</code> / ops bearer required</td></tr>
+          <tr><td data-label="Risk">No rate limits on login, register, checkout, callback</td><td data-label="Why"><strong>Hardened:</strong> in-memory rate limits</td></tr>
+          <tr><td data-label="Risk">Soft-default <code>SESSION_SECRET</code> if unset</td><td data-label="Why"><strong>Hardened:</strong> production refuses weak/default secret</td></tr>
+          <tr><td data-label="Risk">No security HTTP headers</td><td data-label="Why"><strong>Hardened:</strong> baseline headers via <code>next.config.ts</code></td></tr>
         </tbody>
       </table>
       <p><strong>Should fix soon after / with launch ops (P1)</strong></p>
       <ul>
         <li>No password reset / email verification</li>
-        <li>Public integrations/Odoo status APIs leak config readiness</li>
         <li>Order email HTML unsanitized fields</li>
         <li>Ratings / availability without rate limits</li>
+        <li>Integrations/Odoo status APIs: <strong>hardened</strong> (admin or ops secret)</li>
       </ul>
     </section>
 
@@ -521,10 +520,25 @@
         </tbody>
       </table>
       <p>
+        <strong>Status (see markdown for Status column):</strong>
+        ✅ Done — P0.4, P0.7–P0.11, P0.13–P0.18 ·
+        ⏸ Blocked (credentials) — P0.1–P0.3 ·
+        Open / can do now — P0.5–P0.6, P0.12 (partly need providers).
+      </p>
+      <p>
         <strong>P0 rough total:</strong> about <strong>2–4 weeks</strong> of focused build + provider setup,
         dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1.
-        Security items P0.4 / P0.14–P0.17 and catalog freshness <strong>P0.18</strong> are mostly S–M and should be done <strong>before</strong> opening paid traffic.
+        Security, catalog sync, shipping rules, stock reservation, and coupon-after-pay are shipped; payments remain blocked on credentials.
       </p>
+
+      <h3>Recommended next (no payment credentials needed)</h3>
+      <ol>
+        <li><strong>P1.9</strong> — sanitize order email HTML + rate-limit ratings/availability</li>
+        <li><strong>P1.1 / P1.2</strong> — admin orders + customer “My orders”</li>
+        <li><strong>P1.8</strong> — homepage/category imagery refresh (needs your photos)</li>
+        <li>Return to <strong>P0.1–P0.6</strong> when payment/email credentials arrive</li>
+      </ol>
+      <p class="note">✅ P1.5 FAQ / trust copy updated (online shop, payments, shipping).</p>
 
       <h3>P1 — Launch ops and trust</h3>
       <table>

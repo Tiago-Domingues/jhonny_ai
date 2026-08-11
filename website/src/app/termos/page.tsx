@@ -30,7 +30,7 @@ const pt: InfoContent = {
       heading: "3. Compras",
       paragraphs: [
         "A loja online permite compras com conta de cliente ou como convidado. A encomenda só fica confirmada depois de o pagamento ser iniciado ou confirmado, conforme o método escolhido.",
-        "A disponibilidade e o preço final são validados no checkout. Na fase de ligação ao Odoo, o catálogo online será sincronizado com o stock e produtos da conta Odoo do Jhonny.",
+        "A disponibilidade e o preço final são validados no checkout. O catálogo online é sincronizado com o stock e produtos da conta Odoo do Jhonny.",
       ],
     },
     {
@@ -84,7 +84,7 @@ const en: InfoContent = {
       heading: "3. Purchases",
       paragraphs: [
         "The online store supports customer accounts and guest checkout. An order is confirmed only after payment is started or confirmed, depending on the selected payment method.",
-        "Availability and final price are validated at checkout. During the Odoo integration phase, the online catalog will be synchronized with Jhonny's Odoo products and stock.",
+        "Availability and final price are validated at checkout. The online catalog is synchronized with Jhonny's Odoo products and stock.",
       ],
     },
     {
