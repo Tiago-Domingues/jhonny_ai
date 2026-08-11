@@ -20,6 +20,8 @@ enum CustomerType {
   SURF_PARENT
   LOCAL_CUSTOMER
   OTHER
+  BODYBOARDER
+  LONGBOARDER
 }
 
 enum Gender {
@@ -510,4 +512,20 @@ model AvailabilityRequest {
 
   @@index([productId, status])
   @@index([email])
+}
+
+/// First-party pageview beacon for admin analytics (country from Vercel edge headers).
+model PageView {
+  id        String   @id @default(cuid())
+  path      String
+  referrer  String?
+  country   String?
+  region    String?
+  city      String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([country, createdAt])
+  @@index([path, createdAt])
 }

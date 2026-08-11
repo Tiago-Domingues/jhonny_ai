@@ -3,15 +3,15 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { AdminNav } from "@/components/AdminNav";
-import { AdminCustomersClient } from "@/components/AdminCustomersClient";
+import { AdminOrdersClient } from "@/components/AdminOrdersClient";
 
 export const metadata: Metadata = {
-  title: "Admin · Clientes",
-  description: "Gerir clientes registados na Jhonny Surf Store.",
+  title: "Admin · Encomendas",
+  description: "Gerir encomendas da Jhonny Surf Store.",
   robots: { index: false, follow: false },
 };
 
-export default function AdminClientesPage() {
+export default function AdminEncomendasPage() {
   return (
     <>
       <SiteHeader />
@@ -19,14 +19,14 @@ export default function AdminClientesPage() {
         <section className="mx-auto max-w-6xl px-5 sm:px-8">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-muted">Admin Jhonny</p>
           <h1 className="font-display mt-3 text-5xl font-extrabold uppercase tracking-tight text-ink sm:text-6xl">
-            Clientes
+            Encomendas
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">
-            Vê quem se registou na loja, pesquisa por contacto, filtra por Google/password e atualiza dados de perfil.
+            Acompanha encomendas em curso, pagamento e fulfillment, e atualiza o estado operacional.
           </p>
           <AdminNav />
           <div className="mt-10">
-            <AdminCustomersClient />
+            <AdminOrdersClient />
           </div>
         </section>
       </main>

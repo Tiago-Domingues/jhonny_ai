@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, unavailableError } from "@/lib/ecommerce/api";
 import { requireAdminSession } from "@/lib/ecommerce/admin";
-import { listCustomersForAdmin } from "@/lib/ecommerce/customers";
+import { listOrdersForAdmin } from "@/lib/ecommerce/orders";
 
 export async function GET(request: Request) {
   if (!hasDatabaseUrl()) return unavailableError();
@@ -13,13 +13,11 @@ export async function GET(request: Request) {
 
   try {
     const url = new URL(request.url);
-    const q = url.searchParams.get("q") || undefined;
-    const auth = (url.searchParams.get("auth") || "all") as "all" | "google" | "password";
-    const marketing = (url.searchParams.get("marketing") || "all") as "all" | "yes" | "no";
-    const limit = Number(url.searchParams.get("limit") || 50);
-    const offset = Number(url.searchParams.get("offset") || 0);
-
-    const data = await listCustomersForAdmin({ q, auth, marketing, limit, offset });
+    const data = await listOrdersForAdmin({
+      q: url.searchParams.get("q") || undefined,
+      status: url.searchParams.get("status") || "all",
+      limit: Number(url.searchParams.get("limit") || 100),
+    });
     return NextResponse.json(data);
   } catch (error) {
     return apiError(error);
