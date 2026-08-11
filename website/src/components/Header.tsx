@@ -16,6 +16,7 @@ type HeaderUser = {
   fullName?: string;
   username?: string;
   email?: string;
+  role?: "CUSTOMER" | "ADMIN";
 } | null;
 
 type MenuCategory = {
@@ -238,6 +239,14 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                 >
                   {t.account.orders}
                 </a>
+                {user?.role === "ADMIN" && (
+                  <a
+                    href="/admin/clientes"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                  >
+                    Admin · Clientes
+                  </a>
+                )}
                 {user && (
                   <button
                     type="button"

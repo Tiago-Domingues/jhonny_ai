@@ -4,6 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 import { prisma } from "@/lib/ecommerce/db";
+import { ensureAdminRoleForEmail } from "@/lib/ecommerce/admin";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 const SESSION_COOKIE = "jss_session";
@@ -62,11 +63,22 @@ export async function readSessionUser(): Promise<SessionUser | null> {
     });
     if (!user) return null;
 
+    await ensureAdminRoleForEmail(user.id, user.email);
+    const effectiveRole =
+      user.role === "ADMIN"
+        ? "ADMIN"
+        : (
+            await prisma.user.findUnique({
+              where: { id: user.id },
+              select: { role: true },
+            })
+          )?.role || user.role;
+
     return {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: user.role,
+      role: effectiveRole,
       fullName: user.profile?.fullName,
     };
   } catch (error) {
