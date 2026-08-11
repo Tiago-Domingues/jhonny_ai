@@ -132,7 +132,10 @@ model User {
   id              String           @id @default(cuid())
   email           String           @unique
   username        String           @unique
-  passwordHash    String
+  /// Null for Google-only accounts; required for email/password login.
+  passwordHash    String?
+  /// Google OpenID `sub` claim. Unique when set.
+  googleSub       String?          @unique
   emailVerifiedAt DateTime?
   role            UserRole         @default(CUSTOMER)
   createdAt       DateTime         @default(now())
