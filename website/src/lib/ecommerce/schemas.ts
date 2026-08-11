@@ -3,6 +3,8 @@ import { z } from "zod";
 export const customerTypes = [
   "PROFESSIONAL",
   "SURFER",
+  "BODYBOARDER",
+  "LONGBOARDER",
   "BEGINNER",
   "TOURIST",
   "ERASMUS_STUDENT",

@@ -12,6 +12,8 @@ type SessionUser = {
 const customerTypes = [
   ["PROFESSIONAL", "Professional"],
   ["SURFER", "Surfer"],
+  ["BODYBOARDER", "Bodyboarder"],
+  ["LONGBOARDER", "Longboarder"],
   ["BEGINNER", "Beginner"],
   ["TOURIST", "Tourist"],
   ["ERASMUS_STUDENT", "Erasmus / estudante"],
@@ -30,6 +32,93 @@ const dialCodes = [
   ["+31", "NL +31"],
   ["+1", "US/CA +1"],
 ];
+
+function EyeIcon({ open, className = "" }: { open: boolean; className?: string }) {
+  if (open) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden>
+        <path d="M3 3l18 18" strokeLinecap="round" />
+        <path d="M10.58 10.58a2 2 0 002.83 2.83" strokeLinecap="round" />
+        <path
+          d="M9.88 5.09A10.94 10.94 0 0112 5c5 0 9.27 3.11 11 7a11.66 11.66 0 01-2.16 3.19M6.61 6.61C4.62 7.9 3.06 9.71 2 12c1.73 3.89 6 7 10 7a10.5 10.5 0 004.39-.93"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function PasswordField({
+  name = "password",
+  placeholder = "Password",
+  required = false,
+  autoComplete,
+}: {
+  name?: string;
+  placeholder?: string;
+  required?: boolean;
+  autoComplete?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="relative min-w-0">
+      <input
+        name={name}
+        required={required}
+        type={visible ? "text" : "password"}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className="w-full rounded-2xl border border-line px-4 py-3 pr-12"
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((value) => !value)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        aria-pressed={visible}
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted transition hover:text-ink"
+      >
+        <EyeIcon open={visible} className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+function PhoneFields({
+  defaultCountryCode = "+351",
+  defaultPhone = "",
+}: {
+  defaultCountryCode?: string;
+  defaultPhone?: string;
+}) {
+  return (
+    <div className="grid min-w-0 grid-cols-[6.75rem_minmax(0,1fr)] gap-2">
+      <select
+        name="phoneCountryCode"
+        defaultValue={defaultCountryCode}
+        aria-label="Country code"
+        className="min-w-0 w-full truncate rounded-2xl border border-line px-2 py-3 text-sm"
+      >
+        {dialCodes.map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <input
+        name="phone"
+        defaultValue={defaultPhone}
+        placeholder="Mobile"
+        className="min-w-0 w-full rounded-2xl border border-line px-4 py-3"
+      />
+    </div>
+  );
+}
 
 export function AccountClient() {
   const [user, setUser] = useState<SessionUser>(null);
@@ -125,7 +214,7 @@ export function AccountClient() {
           {message && <p className="mt-4 rounded-xl bg-cream p-3 text-sm text-muted">{message}</p>}
         </aside>
 
-        <form key={String(profile?.id || "profile-loading")} onSubmit={saveProfile} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
+        <form key={String(profile?.id || "profile-loading")} onSubmit={saveProfile} className="min-w-0 rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Profile</p>
@@ -150,14 +239,10 @@ export function AccountClient() {
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
-            <div className="grid grid-cols-[minmax(96px,0.45fr)_1fr] gap-2">
-              <select name="phoneCountryCode" defaultValue={String(profile?.phoneCountryCode || "+351")} className="rounded-2xl border border-line px-4 py-3">
-                {dialCodes.map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-              <input name="phone" defaultValue={String(profile?.phone || "")} placeholder="Mobile" className="rounded-2xl border border-line px-4 py-3" />
-            </div>
+            <PhoneFields
+              defaultCountryCode={String(profile?.phoneCountryCode || "+351")}
+              defaultPhone={String(profile?.phone || "")}
+            />
             <select name="preferredLanguage" defaultValue={String(profile?.preferredLanguage || "en")} className="rounded-2xl border border-line px-4 py-3">
               <option value="en">English</option>
               <option value="pt">Português</option>
@@ -222,29 +307,22 @@ export function AccountClient() {
       </aside>
 
       {mode === "login" ? (
-        <form onSubmit={(event) => submit("/api/auth/login", event)} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
+        <form onSubmit={(event) => submit("/api/auth/login", event)} className="min-w-0 rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4">
             <input name="emailOrUsername" required placeholder="Email or username" className="rounded-2xl border border-line px-4 py-3" />
-            <input name="password" required type="password" placeholder="Password" className="rounded-2xl border border-line px-4 py-3" />
+            <PasswordField required autoComplete="current-password" />
             <button className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white">Sign in</button>
           </div>
         </form>
       ) : (
-        <form onSubmit={(event) => submit("/api/auth/register", event)} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
+        <form onSubmit={(event) => submit("/api/auth/register", event)} className="min-w-0 overflow-hidden rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2">
-            <input name="fullName" required placeholder="Full name" className="rounded-2xl border border-line px-4 py-3" />
-            <input name="username" required placeholder="Username" className="rounded-2xl border border-line px-4 py-3" />
-            <input name="email" required type="email" placeholder="Email" className="rounded-2xl border border-line px-4 py-3" />
-            <div className="grid grid-cols-[minmax(96px,0.45fr)_1fr] gap-2">
-              <select name="phoneCountryCode" defaultValue="+351" className="rounded-2xl border border-line px-4 py-3">
-                {dialCodes.map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-              <input name="phone" placeholder="Mobile" className="rounded-2xl border border-line px-4 py-3" />
-            </div>
-            <input name="password" required type="password" placeholder="Password" className="rounded-2xl border border-line px-4 py-3" />
-            <select name="customerType" defaultValue="SURFER" className="rounded-2xl border border-line px-4 py-3">
+            <input name="fullName" required placeholder="Full name" className="min-w-0 rounded-2xl border border-line px-4 py-3" />
+            <input name="username" required placeholder="Username" className="min-w-0 rounded-2xl border border-line px-4 py-3" />
+            <input name="email" required type="email" placeholder="Email" className="min-w-0 rounded-2xl border border-line px-4 py-3" />
+            <PhoneFields />
+            <PasswordField required autoComplete="new-password" />
+            <select name="customerType" defaultValue="SURFER" className="min-w-0 rounded-2xl border border-line px-4 py-3">
               {customerTypes.map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
