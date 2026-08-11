@@ -4,7 +4,10 @@ export type CategoryGroupKey =
   | "surfgear"
   | "essentials"
   | "bodyboard"
-  | "lifestyle";
+  | "clothing"
+  | "jssMerch"
+  | "travel"
+  | "surfskate";
 
 type CategoryGroup = {
   key: CategoryGroupKey;
@@ -38,9 +41,10 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     key: "essentials",
-    labelPt: "Essenciais",
-    labelEn: "Essentials",
-    labelZh: "必备用品",
+    labelPt: "Surf Essencials",
+    labelEn: "Surf Essencials",
+    labelZh: "Surf Essencials",
+    // Lifestyle is nested under Surf Essencials in Odoo.
     includes: ["SURF ESSENCIALS", "SURF ESSENTIALS"],
   },
   {
@@ -51,11 +55,34 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
     includes: ["BODYBOARD"],
   },
   {
-    key: "lifestyle",
-    labelPt: "Lifestyle",
-    labelEn: "Lifestyle",
-    labelZh: "生活方式",
-    includes: ["LIFESTYLE"],
+    key: "clothing",
+    labelPt: "Vestuário",
+    labelEn: "Clothing",
+    labelZh: "服装",
+    // Footwear is nested under Clothing in Odoo; keep FOOTWEAR so root paths still match.
+    // JSS Merch is its own top-level group (excluded in productMatchesCategoryGroup).
+    includes: ["CLOTHING", "FOOTWEAR"],
+  },
+  {
+    key: "jssMerch",
+    labelPt: "JSS Merch",
+    labelEn: "JSS Merch",
+    labelZh: "JSS Merch",
+    includes: ["JSS MERCH"],
+  },
+  {
+    key: "travel",
+    labelPt: "Viagem",
+    labelEn: "Travel",
+    labelZh: "旅行",
+    includes: ["TRAVEL"],
+  },
+  {
+    key: "surfskate",
+    labelPt: "Surfskate",
+    labelEn: "Surfskate",
+    labelZh: "陆地冲浪",
+    includes: ["SURFSKATE"],
   },
 ];
 
@@ -66,11 +93,16 @@ export function categoryGroupHref(group: CategoryGroupKey, extra?: Record<string
 
 function normalizeCategoryText(value: string) {
   return value
-    .replace(/�/g, "")
-    .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
-    .replace(/\s*\/\s*/g, " / ")
-    .replace(/\s+/g, " ")
-    .trim()
+    .replace(/\uFE0F/g, "")
+    .split("/")
+    .map((part) =>
+      part
+        .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
+        .replace(/\s+/g, " ")
+        .trim()
+    )
+    .filter(Boolean)
+    .join(" / ")
     .toUpperCase();
 }
 
@@ -79,6 +111,15 @@ export function productMatchesCategoryGroup(category: string, groupKey?: string 
   const group = ODOO_CATEGORY_GROUPS.find((entry) => entry.key === groupKey);
   if (!group) return true;
   const normalized = normalizeCategoryText(category);
+
+  // JSS Merch is its own menu group even when Odoo still nests it under Clothing.
+  if (groupKey === "jssMerch") {
+    return normalized.includes("JSS MERCH");
+  }
+  if (groupKey === "clothing" && normalized.includes("JSS MERCH")) {
+    return false;
+  }
+
   return group.includes.some((token) => normalized.includes(token));
 }
 
@@ -96,7 +137,13 @@ export function productMatchesSubcategory(category: string, subcategory?: string
     .map((part) => part.trim())
     .filter(Boolean);
   if (!subcategoryParts.length || categoryParts.length < subcategoryParts.length) return false;
-  return subcategoryParts.every((part, index) => categoryParts[index] === part);
+  // Prefix match (WETSUITS / MEN) or nested match (CLOTHING / JSS MERCH / PANTS ↔ JSS MERCH / PANTS).
+  for (let start = 0; start <= categoryParts.length - subcategoryParts.length; start++) {
+    if (subcategoryParts.every((part, index) => categoryParts[start + index] === part)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function titleCase(value: string) {
@@ -117,7 +164,6 @@ export function displayOdooCategoryName(category: string) {
         .replace(/^[^A-Za-z0-9À-ÿ]+/, "")
         .replace(/\bLENGHT\b/gi, "LENGTH")
         .replace(/\bACESSORIES\b/gi, "ACCESSORIES")
-        .replace(/\bESSENCIALS\b/gi, "ESSENTIALS")
         .replace(/\s+/g, " ")
         .trim()
     )

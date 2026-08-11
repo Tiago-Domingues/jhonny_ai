@@ -24,11 +24,47 @@ import {
 } from "@/lib/ecommerce/shopFilters";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
 
+type MenuSubcategory = {
+  path: string;
+  children: MenuSubcategory[];
+};
+
 type MenuCategory = {
   key: NavKey;
   anchor: string;
-  items: string[];
+  items: MenuSubcategory[];
 };
+
+function coerceMenuCategories(
+  categories: Array<{ key: NavKey; anchor: string; items: Array<string | MenuSubcategory> }>
+): MenuCategory[] {
+  const coerceItem = (item: string | MenuSubcategory): MenuSubcategory => {
+    if (typeof item === "string") return { path: item, children: [] };
+    return {
+      path: item.path,
+      children: (item.children || []).map(coerceItem),
+    };
+  };
+  return categories.map((cat) => ({
+    key: cat.key,
+    anchor: cat.anchor,
+    items: cat.items.map(coerceItem),
+  }));
+}
+
+function flattenMenuItems(
+  items: MenuSubcategory[],
+  depth = 0
+): Array<{ path: string; depth: number }> {
+  const rows: Array<{ path: string; depth: number }> = [];
+  for (const item of items) {
+    rows.push({ path: item.path, depth });
+    if (item.children.length) {
+      rows.push(...flattenMenuItems(item.children, depth + 1));
+    }
+  }
+  return rows;
+}
 
 const copy = {
   pt: {
@@ -335,13 +371,15 @@ export function ShopClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<StoreProduct[]>(initialProducts);
-  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(
-    initialMenuCategories?.length ? initialMenuCategories : MENU_CATEGORIES
+  const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(() =>
+    coerceMenuCategories(
+      initialMenuCategories?.length ? initialMenuCategories : MENU_CATEGORIES
+    )
   );
 
   useEffect(() => {
     if (initialMenuCategories?.length) {
-      setMenuCategories(initialMenuCategories);
+      setMenuCategories(coerceMenuCategories(initialMenuCategories));
       return;
     }
     let cancelled = false;
@@ -350,7 +388,7 @@ export function ShopClient({
       .then((data) => {
         if (cancelled) return;
         if (Array.isArray(data?.categories) && data.categories.length) {
-          setMenuCategories(data.categories);
+          setMenuCategories(coerceMenuCategories(data.categories));
         }
       })
       .catch(() => undefined);
@@ -425,7 +463,7 @@ export function ShopClient({
 
         const response = await fetch(
           `/api/products${requestParams.toString() ? `?${requestParams.toString()}` : ""}`,
-          { signal: controller.signal, cache: "no-store" }
+          { signal: controller.signal }
         );
         if (!response.ok) throw new Error("Product request failed.");
         const data = await response.json();
@@ -578,11 +616,15 @@ export function ShopClient({
           className="rounded-2xl border border-line px-4 py-3 text-sm disabled:opacity-50"
         >
           <option value="">{t.subcategory}</option>
-          {selectedMenuCategory?.items.map((item) => (
-            <option key={item} value={item}>
-              {i18n.menuItems[item] || displayOdooCategoryName(item)}
-            </option>
-          ))}
+          {selectedMenuCategory
+            ? flattenMenuItems(selectedMenuCategory.items).map(({ path, depth }) => (
+                <option key={path} value={path}>
+                  {`${depth > 0 ? `${"— ".repeat(depth)}` : ""}${
+                    i18n.menuItems[path] || displayOdooCategoryName(path)
+                  }`}
+                </option>
+              ))
+            : null}
         </select>
       </div>
 
