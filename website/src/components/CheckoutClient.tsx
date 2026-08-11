@@ -9,15 +9,36 @@ type CartSummary = {
   items: Array<{ id: string; name: string; quantity: number; totalCents: number }>;
 };
 
+type CheckoutPayment = {
+  method?: string;
+  status?: string;
+  amountCents?: number;
+  multibancoEntity?: string | null;
+  multibancoReference?: string | null;
+  mbwayPhone?: string | null;
+};
+
+type CheckoutResult = {
+  orderNumber: string;
+  payment: CheckoutPayment | null;
+};
+
+const PAYMENT_METHODS = [
+  { id: "MBWAY", label: "MB WAY" },
+  { id: "MULTIBANCO", label: "Entidade/ref." },
+] as const;
+
 export function CheckoutClient() {
   const [cart, setCart] = useState<CartSummary | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [checkoutResult, setCheckoutResult] = useState<CheckoutResult | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("MBWAY");
   const [fulfillmentMethod, setFulfillmentMethod] = useState("PICKUP_IN_STORE");
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscountCents, setCouponDiscountCents] = useState(0);
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch("/api/cart")
@@ -28,26 +49,46 @@ export function CheckoutClient() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setMessage(null);
+    setCheckoutResult(null);
+    setSubmitting(true);
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
-    const response = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...payload,
-        fulfillmentMethod,
-        paymentMethod,
-        marketingOptIn: form.get("marketingOptIn") === "on",
-        billingSameAsShipping,
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.message || "Não foi possível criar a encomenda.");
+    const phone = String(payload.phone || "").trim();
+    const mbwayPhone = String(payload.mbwayPhone || "").trim();
+    if (paymentMethod === "MBWAY" && !mbwayPhone && !phone) {
+      setMessage("Indica o telemóvel MB WAY para continuar.");
+      setSubmitting(false);
       return;
     }
-    setMessage(`Encomenda ${data.order.orderNumber} criada. Confirma o email para os próximos passos.`);
-    window.dispatchEvent(new Event("jss-cart-updated"));
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          fulfillmentMethod,
+          paymentMethod,
+          marketingOptIn: form.get("marketingOptIn") === "on",
+          billingSameAsShipping,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.message || "Não foi possível criar a encomenda.");
+        return;
+      }
+      setCheckoutResult({
+        orderNumber: data.order.orderNumber,
+        payment: data.payment || null,
+      });
+      setCart({ itemCount: 0, subtotalCents: 0, items: [] });
+      window.dispatchEvent(new Event("jss-cart-updated"));
+    } catch {
+      setMessage("Não foi possível criar a encomenda.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function applyCoupon() {
@@ -69,6 +110,7 @@ export function CheckoutClient() {
   }
 
   const discountedSubtotalCents = Math.max(0, (cart?.subtotalCents || 0) - couponDiscountCents);
+  const payment = checkoutResult?.payment;
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
@@ -87,7 +129,12 @@ export function CheckoutClient() {
             </select>
             <input name="phone" required placeholder="Telemóvel" className="rounded-2xl border border-line px-4 py-3" />
           </div>
-          <input name="mbwayPhone" placeholder="Telemóvel MB WAY" className="rounded-2xl border border-line px-4 py-3" />
+          <input
+            name="mbwayPhone"
+            placeholder="Telemóvel MB WAY"
+            required={paymentMethod === "MBWAY"}
+            className="rounded-2xl border border-line px-4 py-3"
+          />
 
           <div className="md:col-span-2">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-muted">Entrega</p>
@@ -127,13 +174,24 @@ export function CheckoutClient() {
 
           <div className="md:col-span-2">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-muted">Pagamento</p>
-            <div className="grid gap-2 md:grid-cols-4">
-              {["MBWAY", "MULTIBANCO", "PAYPAL", "KLARNA"].map((method) => (
-                <button key={method} type="button" onClick={() => setPaymentMethod(method)} className={`rounded-2xl border px-4 py-3 text-sm font-bold ${paymentMethod === method ? "border-ink bg-ink text-white" : "border-line"}`}>
-                  {method === "MULTIBANCO" ? "Entidade/ref." : method}
+            <div className="grid gap-2 md:grid-cols-2">
+              {PAYMENT_METHODS.map((method) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => setPaymentMethod(method.id)}
+                  className={`rounded-2xl border px-4 py-3 text-sm font-bold ${paymentMethod === method.id ? "border-ink bg-ink text-white" : "border-line"}`}
+                >
+                  {method.label}
                 </button>
               ))}
             </div>
+            {paymentMethod === "MBWAY" && (
+              <p className="mt-2 text-sm text-muted">Vais receber um pedido MB WAY no telemóvel para aprovar o pagamento.</p>
+            )}
+            {paymentMethod === "MULTIBANCO" && (
+              <p className="mt-2 text-sm text-muted">Depois da encomenda mostramos a entidade e a referência Multibanco.</p>
+            )}
           </div>
 
           <div className="grid gap-2 md:col-span-2 md:grid-cols-[1fr_auto]">
@@ -164,10 +222,46 @@ export function CheckoutClient() {
             <input name="marketingOptIn" type="checkbox" className="mt-1" />
             Aceito receber novidades e lembretes de carrinho da Jhonny Surf Store.
           </label>
-          <button className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white md:col-span-2">
-            Confirmar encomenda
+          <button
+            disabled={submitting || Boolean(checkoutResult)}
+            className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white disabled:opacity-50 md:col-span-2"
+          >
+            {submitting ? "A criar encomenda…" : "Confirmar encomenda"}
           </button>
           {message && <p className="rounded-xl bg-cream p-3 text-sm text-muted md:col-span-2">{message}</p>}
+          {checkoutResult && (
+            <div className="rounded-2xl border border-line bg-cream/60 p-4 text-sm text-ink md:col-span-2">
+              <p className="font-bold">Encomenda {checkoutResult.orderNumber} criada.</p>
+              {payment?.method === "MULTIBANCO" && (
+                <div className="mt-3 space-y-1">
+                  <p>Paga por Multibanco com estes dados:</p>
+                  <p>
+                    <strong>Entidade:</strong> {payment.multibancoEntity || "—"}
+                  </p>
+                  <p>
+                    <strong>Referência:</strong> {payment.multibancoReference || "—"}
+                  </p>
+                  {typeof payment.amountCents === "number" && (
+                    <p>
+                      <strong>Valor:</strong> <CurrencyPrice cents={payment.amountCents} />
+                    </p>
+                  )}
+                </div>
+              )}
+              {payment?.method === "MBWAY" && (
+                <div className="mt-3 space-y-1">
+                  <p>Pedido MB WAY enviado{payment.mbwayPhone ? ` para ${payment.mbwayPhone}` : ""}.</p>
+                  <p>Abre a app MB WAY no telemóvel e aprova o pagamento.</p>
+                  {typeof payment.amountCents === "number" && (
+                    <p>
+                      <strong>Valor:</strong> <CurrencyPrice cents={payment.amountCents} />
+                    </p>
+                  )}
+                </div>
+              )}
+              <p className="mt-3 text-muted">Enviámos também os detalhes por email.</p>
+            </div>
+          )}
         </div>
       </form>
 
@@ -182,7 +276,7 @@ export function CheckoutClient() {
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted">O carrinho está vazio.</p>
+            <p className="text-sm text-muted">{checkoutResult ? "Encomenda criada." : "O carrinho está vazio."}</p>
           )}
         </div>
         <div className="mt-5 border-t border-line pt-4">
