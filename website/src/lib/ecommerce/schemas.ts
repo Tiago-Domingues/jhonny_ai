@@ -9,6 +9,8 @@ export const customerTypes = [
   "SURF_PARENT",
   "LOCAL_CUSTOMER",
   "OTHER",
+  "BODYBOARDER",
+  "LONGBOARDER",
 ] as const;
 
 export const genders = [
