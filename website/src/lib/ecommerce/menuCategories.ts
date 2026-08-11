@@ -2,14 +2,12 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
-import { hasDatabaseUrl } from "@/lib/ecommerce/db";
-import {
-  CATALOG_CACHE_REVALIDATE_SECONDS,
-  CATALOG_CACHE_TAG,
-  getCachedActiveCatalog,
-} from "@/lib/ecommerce/catalog";
+import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { ODOO_CATEGORY_GROUPS, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
 import { hasOdooConfig, OdooClient } from "@/lib/ecommerce/odooClient";
+
+const MENU_CACHE_REVALIDATE_SECONDS = 60;
+const MENU_CACHE_TAG = "menu-categories";
 
 export type MenuSubcategory = {
   /** Full Odoo-style path used for filtering, e.g. "SURFGEAR / FINS / THRUSTER". */
@@ -251,12 +249,16 @@ async function listOdooCategoryPaths(): Promise<string[]> {
   }
 }
 
-/** Distinct category paths from the cached product catalog (no extra Prisma findMany). */
+/** Distinct category paths from active catalog products. */
 async function listProductCategoryPaths(): Promise<string[]> {
   if (!hasDatabaseUrl()) return [];
   try {
-    const products = await getCachedActiveCatalog();
-    return Array.from(new Set(products.map((product) => product.category).filter(Boolean)));
+    const rows = await prisma.product.findMany({
+      where: { active: true, excludedFromCatalog: false },
+      select: { category: true },
+      distinct: ["category"],
+    });
+    return rows.map((row) => row.category).filter(Boolean);
   } catch {
     return [];
   }
@@ -284,11 +286,11 @@ async function buildMenuCategories(): Promise<MenuCategory[]> {
 
 /**
  * Build top-nav categories from real Odoo `product.category` plus categories
- * present on synced products. Cached + tag-revalidated with the catalog after sync.
+ * present on synced products. Cached briefly so menu stays responsive.
  */
 export async function listMenuCategories(): Promise<MenuCategory[]> {
-  return unstable_cache(buildMenuCategories, ["menu-categories-v8"], {
-    revalidate: CATALOG_CACHE_REVALIDATE_SECONDS,
-    tags: [CATALOG_CACHE_TAG],
+  return unstable_cache(buildMenuCategories, ["menu-categories-v9"], {
+    revalidate: MENU_CACHE_REVALIDATE_SECONDS,
+    tags: [MENU_CACHE_TAG],
   })();
 }
