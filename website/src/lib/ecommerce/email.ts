@@ -17,6 +17,17 @@ function emailProvider() {
   return (process.env.EMAIL_PROVIDER || "resend").toLowerCase();
 }
 
+/** Absolute site origin for email assets (Gmail blocks relative image URLs). */
+function publicSiteOrigin() {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim();
+  if (configured) return configured.replace(/\/$/, "");
+  return "https://www.jhonnysurfstore.com";
+}
+
+function jhonnyToyImageUrl() {
+  return `${publicSiteOrigin()}/brand/jhonny-character-cut.png`;
+}
+
 async function sendSmtpEmail(to: string, subject: string, html: string) {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 465);
@@ -145,12 +156,22 @@ async function recordEmailEvent(input: {
 
 export async function sendWelcomeEmail(input: { userId: string; email: string; fullName?: string | null }) {
   const subject = "Welcome to Jhonny Surf Store";
+  const toyUrl = jhonnyToyImageUrl();
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Welcome to Jhonny Surf Store</h1>
       <p>Hi ${input.fullName || "Legend"},</p>
       <p>Welcome to the Jhonny family. Your account is ready, and you can now save your profile, shop faster, and follow your surf gear orders.</p>
       <p>Where surfers become legends.</p>
+      <p style="margin:28px 0 8px;text-align:left">
+        <img
+          src="${toyUrl}"
+          alt="Jhonny"
+          width="120"
+          height="182"
+          style="display:block;width:120px;height:auto;border:0;outline:none;text-decoration:none"
+        />
+      </p>
     </div>
   `;
   const result = await sendEmail(input.email, subject, html);
