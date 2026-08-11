@@ -116,15 +116,17 @@ async function sendOdooEmail(to: string, subject: string, html: string): Promise
   try {
     const client = new OdooClient();
     await client.authenticate();
+    const emailFromAddress =
+      (process.env.EMAIL_FROM || "").replace(/^.*<([^>]+)>.*$/, "$1").trim() ||
+      process.env.JHONNY_ORDER_EMAIL ||
+      "jhonnysurfstore@gmail.com";
     const mailId = await client.executeKw("mail.mail", "create", [
       {
         subject,
         body_html: html,
+        body: html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
         email_to: to,
-        email_from:
-          (process.env.EMAIL_FROM || "").replace(/^.*<([^>]+)>.*$/, "$1").trim() ||
-          process.env.JHONNY_ORDER_EMAIL ||
-          "jhonnysurfstore@gmail.com",
+        email_from: emailFromAddress,
         auto_delete: true,
       },
     ]);
@@ -132,14 +134,27 @@ async function sendOdooEmail(to: string, subject: string, html: string): Promise
     if (!id) {
       return { status: "FAILED", provider: "odoo", providerId: null, error: "Odoo mail.mail create returned no id." };
     }
-    await client.executeKw("mail.mail", "send", [[id]]);
+    try {
+      await client.executeKw("mail.mail", "send", [[id]]);
+    } catch (error) {
+      // Odoo `mail.mail.send` often returns None; XML-RPC then fails marshalling even when send worked.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/cannot marshal None/i.test(message)) {
+        // Queue for the mail cron instead of failing hard.
+        try {
+          await client.executeKw("mail.mail", "write", [[id], { state: "outgoing" }]);
+        } catch {
+          return { status: "FAILED", provider: "odoo", providerId: String(id), error: message.slice(0, 500) };
+        }
+      }
+    }
     return { status: "SENT", provider: "odoo", providerId: String(id), error: null };
   } catch (error) {
     return {
       status: "FAILED",
       provider: "odoo",
       providerId: null,
-      error: error instanceof Error ? error.message : "Odoo email send failed.",
+      error: error instanceof Error ? error.message.slice(0, 500) : "Odoo email send failed.",
     };
   }
 }
