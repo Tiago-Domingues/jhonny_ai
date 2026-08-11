@@ -60,10 +60,10 @@ export const NAV_LINKS = [
   { id: "wetsuits", key: "wetsuits" as const },
   { id: "surfgear", key: "surfgear" as const },
   { id: "essentials", key: "essentials" as const },
-  { id: "bodyboard", key: "bodyboard" as const },
-  { id: "clothing", key: "clothing" as const },
-  { id: "jssMerch", key: "jssMerch" as const },
   { id: "travel", key: "travel" as const },
+  { id: "jssMerch", key: "jssMerch" as const },
+  { id: "clothing", key: "clothing" as const },
+  { id: "bodyboard", key: "bodyboard" as const },
 ];
 
 // Top-menu categories with their dropdown sub-items.
@@ -134,15 +134,25 @@ export const MENU_CATEGORIES: {
     ],
   },
   {
-    key: "bodyboard",
-    anchor: "bodyboard",
+    key: "travel",
+    anchor: "travel",
     items: [
-      "BODYBOARD / BOARDS",
-      "BODYBOARD / LEASHES",
-      "BODYBOARD / BAGS",
-      "BODYBOARD / BOARDSOCKS",
-      "BODYBOARD / FINS (PÉS DE PATO)",
-      "BODYBOARD / ACESSORIES",
+      "TRAVEL / BACKPACKS",
+      "TRAVEL / EVERYDAY CARRY",
+      "TRAVEL / DUFFEL BAGS",
+      "TRAVEL / TROLLEYS",
+    ],
+  },
+  {
+    key: "jssMerch",
+    anchor: "jss-merch",
+    items: [
+      "JSS MERCH / T-SHIRTS & TOPS",
+      "JSS MERCH / SWEATERS & HOODIES",
+      "JSS MERCH / SHORTS",
+      "JSS MERCH / PANTS",
+      "JSS MERCH / HATS",
+      "JSS MERCH / SURF PONCHO",
     ],
   },
   {
@@ -159,25 +169,15 @@ export const MENU_CATEGORIES: {
     ],
   },
   {
-    key: "jssMerch",
-    anchor: "jss-merch",
+    key: "bodyboard",
+    anchor: "bodyboard",
     items: [
-      "JSS MERCH / T-SHIRTS & TOPS",
-      "JSS MERCH / SWEATERS & HOODIES",
-      "JSS MERCH / SHORTS",
-      "JSS MERCH / PANTS",
-      "JSS MERCH / HATS",
-      "JSS MERCH / SURF PONCHO",
-    ],
-  },
-  {
-    key: "travel",
-    anchor: "travel",
-    items: [
-      "TRAVEL / BACKPACKS",
-      "TRAVEL / EVERYDAY CARRY",
-      "TRAVEL / DUFFEL BAGS",
-      "TRAVEL / TROLLEYS",
+      "BODYBOARD / BOARDS",
+      "BODYBOARD / LEASHES",
+      "BODYBOARD / BAGS",
+      "BODYBOARD / BOARDSOCKS",
+      "BODYBOARD / FINS (PÉS DE PATO)",
+      "BODYBOARD / ACESSORIES",
     ],
   },
 ];
