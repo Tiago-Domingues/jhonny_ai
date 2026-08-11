@@ -17,6 +17,8 @@ const customerTypes = [
   ["ERASMUS_STUDENT", "Erasmus / estudante"],
   ["SURF_PARENT", "Surf parent"],
   ["LOCAL_CUSTOMER", "Local customer"],
+  ["BODYBOARDER", "Bodyboarder"],
+  ["LONGBOARDER", "Longboarder"],
   ["OTHER", "Other"],
 ];
 
