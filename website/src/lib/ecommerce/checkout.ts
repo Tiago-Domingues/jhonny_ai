@@ -159,6 +159,10 @@ export async function createCheckout(identity: CheckoutIdentity, input: unknown)
     description: `Jhonny Surf Store ${order.orderNumber}`,
   });
 
-  await sendOrderEmails(order.id);
+  try {
+    await sendOrderEmails(order.id);
+  } catch {
+    // Order + payment already exist; email failures must not fail checkout.
+  }
   return { order, payment };
 }

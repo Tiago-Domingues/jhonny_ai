@@ -14,7 +14,7 @@ function jhonnyEmail() {
 }
 
 function emailProvider() {
-  return (process.env.EMAIL_PROVIDER || "resend").toLowerCase();
+  return (process.env.EMAIL_PROVIDER || "smtp").toLowerCase();
 }
 
 /** Absolute site origin for email assets (Gmail blocks relative image URLs). */
@@ -28,7 +28,13 @@ function jhonnyToyImageUrl() {
   return `${publicSiteOrigin()}/brand/jhonny-character-cut.png`;
 }
 
-async function sendSmtpEmail(to: string, subject: string, html: string) {
+type SendResult = {
+  status: "SENT" | "FAILED" | "SKIPPED";
+  providerId: string | null;
+  error: string | null;
+};
+
+async function sendSmtpEmail(to: string, subject: string, html: string): Promise<SendResult> {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 465);
   const user = process.env.SMTP_USER;
@@ -37,62 +43,118 @@ async function sendSmtpEmail(to: string, subject: string, html: string) {
 
   if (!host || !user || !pass) {
     return {
-      status: "SKIPPED" as const,
+      status: "SKIPPED",
       providerId: null,
       error: "SMTP_HOST, SMTP_USER, or SMTP_PASSWORD is not configured.",
     };
   }
 
-  const transport = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: { user, pass },
-  });
-  const result = await transport.sendMail({
-    from: emailFrom(),
-    to,
-    subject,
-    html,
-  });
+  try {
+    const transport = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: { user, pass },
+    });
+    const result = await transport.sendMail({
+      from: emailFrom(),
+      to,
+      subject,
+      html,
+    });
 
-  return { status: "SENT" as const, providerId: result.messageId, error: null };
+    return { status: "SENT", providerId: result.messageId, error: null };
+  } catch (error) {
+    return {
+      status: "FAILED",
+      providerId: null,
+      error: error instanceof Error ? error.message : "SMTP send failed.",
+    };
+  }
 }
 
-async function sendResendEmail(to: string, subject: string, html: string) {
+async function sendResendEmail(to: string, subject: string, html: string): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    return { status: "SKIPPED" as const, providerId: null, error: "RESEND_API_KEY is not configured." };
+    return { status: "SKIPPED", providerId: null, error: "RESEND_API_KEY is not configured." };
   }
 
-  const resend = new Resend(key);
-  const response = await resend.emails.send({
-    from: emailFrom(),
-    to,
-    subject,
-    html,
-  });
+  try {
+    const resend = new Resend(key);
+    const response = await resend.emails.send({
+      from: emailFrom(),
+      to,
+      subject,
+      html,
+    });
 
-  if (response.error) {
-    return { status: "FAILED" as const, providerId: null, error: response.error.message };
+    if (response.error) {
+      return { status: "FAILED", providerId: null, error: response.error.message };
+    }
+
+    return { status: "SENT", providerId: response.data?.id || null, error: null };
+  } catch (error) {
+    return {
+      status: "FAILED",
+      providerId: null,
+      error: error instanceof Error ? error.message : "Resend send failed.",
+    };
   }
-
-  return { status: "SENT" as const, providerId: response.data?.id || null, error: null };
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
   if (emailProvider() === "smtp") {
     return sendSmtpEmail(to, subject, html);
   }
   return sendResendEmail(to, subject, html);
 }
 
-function orderHtml(order: Awaited<ReturnType<typeof loadOrderForEmail>>, audience: "customer" | "jhonny") {
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function paymentInstructionsHtml(order: NonNullable<Awaited<ReturnType<typeof loadOrderForEmail>>>) {
+  const payment = order.payments[0];
+  if (!payment) return "";
+
+  if (payment.method === "MULTIBANCO") {
+    return `
+      <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:8px">
+        <p><strong>Pagamento Multibanco</strong></p>
+        <p>Entidade: <strong>${escapeHtml(payment.multibancoEntity || "—")}</strong></p>
+        <p>Referência: <strong>${escapeHtml(payment.multibancoReference || "—")}</strong></p>
+        <p>Valor: <strong>${formatEuro(payment.amountCents)}</strong></p>
+      </div>
+    `;
+  }
+
+  if (payment.method === "MBWAY") {
+    return `
+      <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:8px">
+        <p><strong>Pagamento MB WAY</strong></p>
+        <p>Pedido enviado${payment.mbwayPhone ? ` para <strong>${escapeHtml(payment.mbwayPhone)}</strong>` : ""}.</p>
+        <p>Abre a app MB WAY e aprova o pagamento de <strong>${formatEuro(payment.amountCents)}</strong>.</p>
+      </div>
+    `;
+  }
+
+  return `<p><strong>Método de pagamento:</strong> ${escapeHtml(payment.method)}</p>`;
+}
+
+function orderHtml(
+  order: Awaited<ReturnType<typeof loadOrderForEmail>>,
+  audience: "customer" | "jhonny",
+  variant: "received" | "paid" = "received"
+) {
   if (!order) return "";
   const itemRows = order.items
     .map(
       (item) =>
-        `<li>${item.quantity} x ${item.name} - ${formatEuro(item.totalCents)}</li>`
+        `<li>${item.quantity} x ${escapeHtml(item.name)} - ${formatEuro(item.totalCents)}</li>`
     )
     .join("");
   const pickup =
@@ -100,13 +162,28 @@ function orderHtml(order: Awaited<ReturnType<typeof loadOrderForEmail>>, audienc
       ? "<p><strong>Pickup:</strong> Jhonny Surf Store, Rua de Gaza 16 loja direita, 2775-597 Carcavelos. Wait for pickup confirmation before coming to collect.</p>"
       : "<p><strong>Delivery:</strong> We will confirm shipping details after payment.</p>";
 
+  const title =
+    variant === "paid"
+      ? audience === "customer"
+        ? "Pagamento confirmado"
+        : "Pagamento recebido"
+      : audience === "customer"
+        ? "Obrigado pela tua encomenda"
+        : "Nova encomenda Jhonny Surf Store";
+
+  const paidNote =
+    variant === "paid"
+      ? "<p>O pagamento desta encomenda foi confirmado.</p>"
+      : paymentInstructionsHtml(order);
+
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
-      <h1>${audience === "customer" ? "Obrigado pela tua encomenda" : "Nova encomenda Jhonny Surf Store"}</h1>
-      <p><strong>Order:</strong> ${order.orderNumber}</p>
-      <p><strong>Customer:</strong> ${order.customerName} (${order.customerEmail})</p>
+      <h1>${title}</h1>
+      <p><strong>Order:</strong> ${escapeHtml(order.orderNumber)}</p>
+      <p><strong>Customer:</strong> ${escapeHtml(order.customerName)} (${escapeHtml(order.customerEmail)})</p>
       <ul>${itemRows}</ul>
       <p><strong>Total:</strong> ${formatEuro(order.totalCents)}</p>
+      ${paidNote}
       ${pickup}
       <p>Where surfers become legends.</p>
     </div>
@@ -116,7 +193,7 @@ function orderHtml(order: Awaited<ReturnType<typeof loadOrderForEmail>>, audienc
 async function loadOrderForEmail(orderId: string) {
   return prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true, payments: true },
+    include: { items: true, payments: { orderBy: { createdAt: "desc" } } },
   });
 }
 
@@ -160,7 +237,7 @@ export async function sendWelcomeEmail(input: { userId: string; email: string; f
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Welcome to Jhonny Surf Store</h1>
-      <p>Hi ${input.fullName || "Legend"},</p>
+      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
       <p>Welcome to the Jhonny family. Your account is ready, and you can now save your profile, shop faster, and follow your surf gear orders.</p>
       <p>Where surfers become legends.</p>
       <p style="margin:28px 0 8px;text-align:left">
@@ -195,31 +272,90 @@ export async function sendOrderEmails(orderId: string) {
   const order = await loadOrderForEmail(orderId);
   if (!order) throw new Error("Order not found.");
 
-  const customerSubject = `Jhonny Surf Store order ${order.orderNumber}`;
-  const customer = await sendEmail(order.customerEmail, customerSubject, orderHtml(order, "customer"));
-  await recordEmailEvent({
-    orderId,
-    userId: order.userId,
-    type: "ORDER_RECEIVED_CUSTOMER",
-    recipientEmail: order.customerEmail,
-    subject: customerSubject,
-    status: customer.status,
-    providerId: customer.providerId,
-    error: customer.error,
-  });
+  try {
+    const customerSubject = `Jhonny Surf Store order ${order.orderNumber}`;
+    const customer = await sendEmail(order.customerEmail, customerSubject, orderHtml(order, "customer"));
+    await recordEmailEvent({
+      orderId,
+      userId: order.userId,
+      type: "ORDER_RECEIVED_CUSTOMER",
+      recipientEmail: order.customerEmail,
+      subject: customerSubject,
+      status: customer.status,
+      providerId: customer.providerId,
+      error: customer.error,
+    });
 
-  const ownerSubject = `New order ${order.orderNumber}`;
-  const owner = await sendEmail(jhonnyEmail(), ownerSubject, orderHtml(order, "jhonny"));
-  await recordEmailEvent({
-    orderId,
-    userId: order.userId,
-    type: "ORDER_RECEIVED_JHONNY",
-    recipientEmail: jhonnyEmail(),
-    subject: ownerSubject,
-    status: owner.status,
-    providerId: owner.providerId,
-    error: owner.error,
-  });
+    const ownerSubject = `New order ${order.orderNumber}`;
+    const owner = await sendEmail(jhonnyEmail(), ownerSubject, orderHtml(order, "jhonny"));
+    await recordEmailEvent({
+      orderId,
+      userId: order.userId,
+      type: "ORDER_RECEIVED_JHONNY",
+      recipientEmail: jhonnyEmail(),
+      subject: ownerSubject,
+      status: owner.status,
+      providerId: owner.providerId,
+      error: owner.error,
+    });
+  } catch (error) {
+    await recordEmailEvent({
+      orderId,
+      userId: order.userId,
+      type: "ORDER_RECEIVED_CUSTOMER",
+      recipientEmail: order.customerEmail,
+      subject: `Jhonny Surf Store order ${order.orderNumber}`,
+      status: "FAILED",
+      error: error instanceof Error ? error.message : "order_email_failed",
+    }).catch(() => null);
+  }
+}
+
+export async function sendPaymentConfirmedEmails(orderId: string) {
+  const order = await loadOrderForEmail(orderId);
+  if (!order) return;
+
+  try {
+    const customerSubject = `Pagamento confirmado — ${order.orderNumber}`;
+    const customer = await sendEmail(
+      order.customerEmail,
+      customerSubject,
+      orderHtml(order, "customer", "paid")
+    );
+    await recordEmailEvent({
+      orderId,
+      userId: order.userId,
+      type: "PAYMENT_CONFIRMED",
+      recipientEmail: order.customerEmail,
+      subject: customerSubject,
+      status: customer.status,
+      providerId: customer.providerId,
+      error: customer.error,
+    });
+
+    const ownerSubject = `Pagamento recebido — ${order.orderNumber}`;
+    const owner = await sendEmail(jhonnyEmail(), ownerSubject, orderHtml(order, "jhonny", "paid"));
+    await recordEmailEvent({
+      orderId,
+      userId: order.userId,
+      type: "PAYMENT_CONFIRMED",
+      recipientEmail: jhonnyEmail(),
+      subject: ownerSubject,
+      status: owner.status,
+      providerId: owner.providerId,
+      error: owner.error,
+    });
+  } catch (error) {
+    await recordEmailEvent({
+      orderId,
+      userId: order.userId,
+      type: "PAYMENT_CONFIRMED",
+      recipientEmail: order.customerEmail,
+      subject: `Pagamento confirmado — ${order.orderNumber}`,
+      status: "FAILED",
+      error: error instanceof Error ? error.message : "payment_email_failed",
+    }).catch(() => null);
+  }
 }
 
 export async function scheduleReviewRequest(orderId: string) {

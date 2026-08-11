@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
+import { sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
 import { centsToEuros } from "@/lib/ecommerce/money";
 import { finalizeOdooOrderAfterPayment } from "@/lib/ecommerce/odooOrders";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
@@ -75,7 +76,7 @@ async function createIfthenpayMbwayPayment(orderNumber: string, request: Payment
   return {
     provider: "IFTHENPAY",
     status: "PENDING",
-    providerReference: String(payload.orderId || orderNumber),
+    providerReference: String(payload.orderId || orderNumber.slice(0, 15)),
     providerRequestId: payload.RequestId || payload.requestId,
     mbwayPhone: phone,
     rawProviderPayload: payload,
@@ -116,7 +117,7 @@ async function createIfthenpayMultibancoPayment(orderNumber: string, request: Pa
   return {
     provider: "IFTHENPAY",
     status: "PENDING",
-    providerReference: String(payload.orderId || orderNumber),
+    providerReference: String(payload.orderId || orderNumber.slice(0, 15)),
     providerRequestId: payload.RequestId || payload.requestId || payload.transactionId,
     multibancoEntity: payload.Entity || payload.entity,
     multibancoReference: payload.Reference || payload.reference,
@@ -183,10 +184,16 @@ export async function markPaymentPaid(
   providerReference: string,
   options?: { amountCents?: number | null; status?: string | null }
 ) {
-  const payment = await prisma.payment.findFirst({
-    where: { providerReference },
-    include: { order: true },
-  });
+  const reference = providerReference.trim();
+  const payment =
+    (await prisma.payment.findFirst({
+      where: { providerReference: reference },
+      include: { order: true },
+    })) ||
+    (await prisma.payment.findFirst({
+      where: { providerRequestId: reference },
+      include: { order: true },
+    }));
   if (!payment) return 0;
   if (payment.status === "PAID") return 1;
 
@@ -214,6 +221,18 @@ export async function markPaymentPaid(
     where: { id: payment.orderId },
     data: { status: "PAID", paidAt: new Date() },
   });
-  await finalizeOdooOrderAfterPayment(payment.orderId);
+
+  try {
+    await finalizeOdooOrderAfterPayment(payment.orderId);
+  } catch {
+    // Payment is already marked paid; Odoo sync can be retried separately.
+  }
+
+  try {
+    await sendPaymentConfirmedEmails(payment.orderId);
+  } catch {
+    // Never roll back payment because of email failures.
+  }
+
   return 1;
 }
