@@ -27,7 +27,7 @@ export const registerSchema = z.object({
   password: z.string().min(8).max(128),
   fullName: z.string().min(2).max(120),
   phoneCountryCode: z.string().min(2).max(8).default("+351"),
-  phone: z.string().max(40).optional().or(z.literal("")),
+  phone: z.string().min(6).max(40),
   customerType: z.enum(customerTypes).default("SURFER"),
   marketingOptIn: z.boolean().default(false),
   preferredLanguage: z.enum(["pt", "en", "zh"]).default("en"),
@@ -50,13 +50,23 @@ export const profileSchema = z.object({
   addressLine2: z.string().max(160).optional().or(z.literal("")),
   postalCode: z.string().max(20).optional().or(z.literal("")),
   city: z.string().max(80).optional().or(z.literal("")),
-  country: z.string().length(2).default("PT"),
+  country: z
+    .string()
+    .max(2)
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => (value && value.length === 2 ? value.toUpperCase() : "PT")),
   billingSameAsShipping: z.boolean().default(true),
   billingAddressLine1: z.string().max(160).optional().or(z.literal("")),
   billingAddressLine2: z.string().max(160).optional().or(z.literal("")),
   billingPostalCode: z.string().max(20).optional().or(z.literal("")),
   billingCity: z.string().max(80).optional().or(z.literal("")),
-  billingCountry: z.string().length(2).default("PT"),
+  billingCountry: z
+    .string()
+    .max(2)
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => (value && value.length === 2 ? value.toUpperCase() : "PT")),
   marketingOptIn: z.boolean().default(false),
 });
 

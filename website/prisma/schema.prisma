@@ -144,6 +144,7 @@ model User {
   orders          Order[]
   consents        ConsentEvent[]
   emailEvents     EmailEvent[]
+  smsEvents       SmsEvent[]
   couponUsages    CouponUsage[]
   productRatings  ProductRating[]
 
@@ -473,6 +474,24 @@ model EmailEvent {
   @@index([userId, type])
   @@index([orderId, type])
   @@index([status, scheduledFor])
+}
+
+model SmsEvent {
+  id            String      @id @default(cuid())
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type          String      @default("WELCOME_CUSTOMER")
+  status        EmailStatus @default(PENDING)
+  recipientPhone String
+  body          String
+  provider      String?
+  providerId    String?
+  error         String?
+  sentAt        DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, type])
+  @@index([status])
 }
 
 model AvailabilityRequest {
