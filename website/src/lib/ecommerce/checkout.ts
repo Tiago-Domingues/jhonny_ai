@@ -6,6 +6,7 @@ import { checkoutSchema } from "@/lib/ecommerce/schemas";
 import { createPaymentForOrder } from "@/lib/ecommerce/payments";
 import { sendOrderEmails } from "@/lib/ecommerce/email";
 import { validateCoupon } from "@/lib/ecommerce/coupons";
+import { shippingCentsFor } from "@/lib/ecommerce/shipping";
 
 type CheckoutIdentity = {
   userId?: string;
@@ -39,14 +40,11 @@ export async function createCheckout(identity: CheckoutIdentity, input: unknown)
     email: data.email,
   });
   const discountCents = coupon?.discountCents || 0;
-  const FREE_SHIPPING_THRESHOLD_CENTS = 5000; // €50
-  const STANDARD_SHIPPING_CENTS = 690;
   const amountForShippingCents = Math.max(0, summary.subtotalCents - discountCents);
-  const shippingCents =
-    data.fulfillmentMethod === "PICKUP_IN_STORE" ||
-    amountForShippingCents >= FREE_SHIPPING_THRESHOLD_CENTS
-      ? 0
-      : STANDARD_SHIPPING_CENTS;
+  const shippingCents = shippingCentsFor({
+    fulfillmentMethod: data.fulfillmentMethod,
+    amountAfterDiscountCents: amountForShippingCents,
+  });
   const totalCents = Math.max(0, summary.subtotalCents + shippingCents - discountCents);
   const guestCheckoutId = identity.userId
     ? null
