@@ -133,20 +133,6 @@ export async function createCheckout(identity: CheckoutIdentity, input: unknown)
     include: { items: true },
   });
 
-  if (coupon) {
-    await prisma.couponUsage.create({
-      data: {
-        couponId: coupon.id,
-        orderId: order.id,
-        userId: identity.userId || null,
-        guestEmail: identity.userId ? null : data.email,
-        code: coupon.code,
-        discountCents,
-        subtotalCents: summary.subtotalCents,
-      },
-    });
-  }
-
   await prisma.cart.update({ where: { id: cart.id }, data: { status: "ORDERED" } });
 
   const payment = await createPaymentForOrder(order.id, {

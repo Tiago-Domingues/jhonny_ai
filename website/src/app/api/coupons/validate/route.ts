@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     const summary = summarizeCart(cart);
     const coupon = await validateCoupon(payload.code, summary.subtotalCents, {
       userId: session?.id,
+      email: session?.email,
     });
 
     return Response.json({

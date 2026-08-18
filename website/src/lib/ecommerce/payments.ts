@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
 import { sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
+import { recordCouponUsageForPaidOrder } from "@/lib/ecommerce/coupons";
 import { centsToEuros } from "@/lib/ecommerce/money";
 import { finalizeOdooOrderAfterPayment } from "@/lib/ecommerce/odooOrders";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
@@ -221,6 +222,12 @@ export async function markPaymentPaid(
     where: { id: payment.orderId },
     data: { status: "PAID", paidAt: new Date() },
   });
+
+  try {
+    await recordCouponUsageForPaidOrder(payment.orderId);
+  } catch {
+    // Payment already succeeded; coupon accounting can be retried from the paid order.
+  }
 
   try {
     await finalizeOdooOrderAfterPayment(payment.orderId);
