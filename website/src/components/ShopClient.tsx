@@ -96,6 +96,8 @@ const copy = {
     empty: "Nenhum produto encontrado com estes filtros.",
     loadMore: "Ver mais produtos",
     selected: "selecionados",
+    variants: "variantes",
+    chooseOptions: "Escolher opções",
     sort: {
       featured: "Em destaque",
       relevance: "Mais relevantes",
@@ -137,6 +139,8 @@ const copy = {
     empty: "No products found with these filters.",
     loadMore: "Show more products",
     selected: "selected",
+    variants: "variants",
+    chooseOptions: "Choose options",
     sort: {
       featured: "Featured",
       relevance: "Most relevant",
@@ -178,6 +182,8 @@ const copy = {
     empty: "没有符合这些筛选条件的商品。",
     loadMore: "查看更多商品",
     selected: "已选",
+    variants: "款可选",
+    chooseOptions: "选择规格",
     sort: {
       featured: "精选",
       relevance: "最相关",
@@ -975,9 +981,19 @@ export function ShopClient({
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                  {visibleProducts.map((product) => (
+                  {visibleProducts.map((product) => {
+                    const hasVariants = Boolean(product.hasVariants && (product.variantCount ?? 0) > 1);
+                    const priceLabel =
+                      hasVariants &&
+                      product.minPriceCents != null &&
+                      product.maxPriceCents != null &&
+                      product.minPriceCents !== product.maxPriceCents
+                        ? "from"
+                        : null;
+
+                    return (
                     <article
-                      key={product.id}
+                      key={product.slug || product.id}
                       className="overflow-hidden rounded-3xl border border-line bg-white shadow-sm"
                     >
                       <Link href={`/loja/${product.slug}`} className="relative block h-44 bg-cream p-3 sm:h-52">
@@ -1009,13 +1025,19 @@ export function ShopClient({
                             <dt className="font-bold uppercase">Stock</dt>
                             <dd>{product.stockQuantity > 0 ? `${product.stockQuantity}` : "0"}</dd>
                           </div>
-                          {product.size && (
+                          {hasVariants ? (
+                            <div className="col-span-2">
+                              <dt className="font-bold uppercase">{t.variants}</dt>
+                              <dd>{product.variantCount}</dd>
+                            </div>
+                          ) : null}
+                          {!hasVariants && product.size && (
                             <div>
                               <dt className="font-bold uppercase">{t.size}</dt>
                               <dd>{product.size}</dd>
                             </div>
                           )}
-                          {product.color && (
+                          {!hasVariants && product.color && (
                             <div>
                               <dt className="font-bold uppercase">{t.color}</dt>
                               <dd>{product.color}</dd>
@@ -1025,7 +1047,14 @@ export function ShopClient({
                         <div className="mt-4 flex flex-col gap-2">
                           <div className="min-w-0">
                             <p className="font-display text-xl font-extrabold">
-                              <CurrencyPrice cents={product.priceCents} />
+                              {priceLabel ? (
+                                <span>
+                                  <span className="mr-1 text-sm font-semibold uppercase text-muted">{t.from}</span>
+                                  <CurrencyPrice cents={product.minPriceCents ?? product.priceCents} />
+                                </span>
+                              ) : (
+                                <CurrencyPrice cents={product.priceCents} />
+                              )}
                             </p>
                             <p className="text-[0.7rem] text-muted">
                               {product.stockQuantity > 0
@@ -1039,16 +1068,18 @@ export function ShopClient({
                                 href={`/loja/${product.slug}`}
                                 className="rounded-full border border-line px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-cream"
                               >
-                                Detalhes
+                                {hasVariants ? t.chooseOptions : "Detalhes"}
                               </Link>
-                              <button
-                                type="button"
-                                onClick={() => addToCart(product.id)}
-                                disabled={adding === product.id}
-                                className="rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white transition hover:bg-ink-soft disabled:opacity-60"
-                              >
-                                {adding === product.id ? "..." : "Adicionar"}
-                              </button>
+                              {!hasVariants ? (
+                                <button
+                                  type="button"
+                                  onClick={() => addToCart(product.id)}
+                                  disabled={adding === product.id}
+                                  className="rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white transition hover:bg-ink-soft disabled:opacity-60"
+                                >
+                                  {adding === product.id ? "..." : "Adicionar"}
+                                </button>
+                              ) : null}
                             </div>
                           ) : (
                             <Link
@@ -1107,7 +1138,8 @@ export function ShopClient({
                         )}
                       </div>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
                 {visibleProducts.length === 0 && (
                   <p className="py-16 text-center text-sm font-semibold text-muted">{t.empty}</p>

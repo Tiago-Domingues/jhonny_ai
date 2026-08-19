@@ -39,7 +39,13 @@ function toCompactListProduct(product: StoreProduct) {
       ? { opportunityDiscountPercent: lean.opportunityDiscountPercent }
       : {}),
     ...(lean.odooProductId != null ? { odooProductId: lean.odooProductId } : {}),
+    ...(lean.odooProductTemplateId != null ? { odooProductTemplateId: lean.odooProductTemplateId } : {}),
     ...(lean.createdAt ? { createdAt: lean.createdAt } : {}),
+    ...(lean.hasVariants ? { hasVariants: true, variantCount: lean.variantCount } : {}),
+    ...(lean.minPriceCents != null ? { minPriceCents: lean.minPriceCents } : {}),
+    ...(lean.maxPriceCents != null ? { maxPriceCents: lean.maxPriceCents } : {}),
+    ...(lean.variantSizes?.length ? { variantSizes: lean.variantSizes } : {}),
+    ...(lean.variantColors?.length ? { variantColors: lean.variantColors } : {}),
   };
 }
 
@@ -62,8 +68,20 @@ export async function GET(request: Request) {
   const leanProducts = products.map(toCompactListProduct);
   const categories = Array.from(new Set(leanProducts.map((product) => product.category).filter(Boolean))).sort();
   const brands = Array.from(new Set(leanProducts.map((product) => product.brand).filter(Boolean))).sort();
-  const sizes = Array.from(new Set(leanProducts.map((product) => product.size).filter(Boolean))).sort();
-  const colors = Array.from(new Set(leanProducts.map((product) => product.color).filter(Boolean))).sort();
+  const sizes = Array.from(
+    new Set(
+      leanProducts.flatMap((product) =>
+        product.variantSizes?.length ? product.variantSizes : product.size ? [product.size] : []
+      )
+    )
+  ).sort();
+  const colors = Array.from(
+    new Set(
+      leanProducts.flatMap((product) =>
+        product.variantColors?.length ? product.variantColors : product.color ? [product.color] : []
+      )
+    )
+  ).sort();
 
   return Response.json(
     {
