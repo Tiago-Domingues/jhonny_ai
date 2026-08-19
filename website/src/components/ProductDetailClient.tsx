@@ -20,16 +20,6 @@ type ProductDetailClientProps = {
   extras?: ReactNode;
 };
 
-function DetailRow({ label, value }: { label: string; value?: string | number | null }) {
-  if (value === undefined || value === null || value === "") return null;
-  return (
-    <div className="rounded-2xl border border-line bg-white px-4 py-3">
-      <dt className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-muted">{label}</dt>
-      <dd className="mt-1 text-sm font-semibold text-ink">{value}</dd>
-    </div>
-  );
-}
-
 export function ProductDetailClient({
   initialProduct,
   variants,
@@ -147,18 +137,6 @@ export function ProductDetailClient({
           productName={templateName}
           availableForSale={availableForSale}
         />
-
-        <dl className="mt-8 grid gap-3 sm:grid-cols-2">
-          <DetailRow label="Referência" value={selectedVariant.refId || selectedVariant.sku} />
-          <DetailRow label="SKU" value={selectedVariant.sku} />
-          <DetailRow label="Marca" value={selectedVariant.brand} />
-          <DetailRow label="Categoria Odoo" value={categoryLabel} />
-          {!hasMultipleVariants && <DetailRow label="Tamanho" value={selectedVariant.size} />}
-          {!hasMultipleVariants && <DetailRow label="Cor" value={selectedVariant.color} />}
-          <DetailRow label="Stock atual" value={selectedVariant.stockQuantity} />
-          <DetailRow label="Stock previsto" value={selectedVariant.forecastQuantity} />
-          <DetailRow label="Estado" value={selectedVariant.stockState} />
-        </dl>
       </div>
     </>
   );
