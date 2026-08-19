@@ -9,6 +9,8 @@ import { CartIcon, UserIcon, FlagPT, FlagEN, FlagZH } from "@/components/icons";
 import { LOCALE_META, LOCALES, type Locale } from "@/lib/i18n";
 import { categoryGroupHref, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { DispatchBanner } from "@/components/DispatchBanner";
+import { VOLUME_CALCULATOR_PATH } from "@/lib/ecommerce/volumeCalculator";
+import { volumeCalculatorCopy } from "@/lib/volumeCalculatorCopy";
 
 type Panel = "cart" | "account" | null;
 
@@ -185,6 +187,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
 
   const shopAllLabel =
     locale === "pt" ? "Ver tudo" : locale === "zh" ? "查看全部" : "Shop all";
+  const volumeCopy = volumeCalculatorCopy(locale);
 
   return (
     <header
@@ -532,6 +535,30 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               </div>
             </div>
 
+            {activeDesktopCategory.key === "surfboards" && (
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-ink">
+                  {locale === "pt" ? "Ferramentas" : locale === "zh" ? "工具" : "Tools"}
+                </p>
+                <Link
+                  href={VOLUME_CALCULATOR_PATH}
+                  onClick={() => {
+                    setDesktopCat(null);
+                    setActiveSubPath(null);
+                    setActiveNestedPath(null);
+                  }}
+                  className="inline-flex max-w-xl flex-col rounded-2xl border border-line bg-cream/70 px-4 py-3 transition hover:border-ink hover:bg-cream"
+                >
+                  <span className="text-sm font-bold uppercase tracking-[0.08em] text-ink">
+                    {volumeCopy.menuLabel}
+                  </span>
+                  <span className="mt-1 text-xs normal-case tracking-normal text-muted">
+                    {volumeCopy.menuHint}
+                  </span>
+                </Link>
+              </div>
+            )}
+
             {activeSubcategory && activeSubcategory.children.length > 0 && (
               <div className="mt-5 border-t border-line pt-4">
                 <p className="mb-3 text-[0.7rem] font-bold uppercase tracking-[0.16em] text-ink">
@@ -629,6 +656,15 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                   </div>
                   {expanded && (
                     <div className="pb-3 pl-2">
+                      {cat.key === "surfboards" && (
+                        <Link
+                          href={VOLUME_CALCULATOR_PATH}
+                          onClick={() => setOpen(false)}
+                          className="mb-2 block w-full rounded-md border border-white/15 bg-white/5 px-2 py-2.5 text-left text-[0.8rem] font-bold uppercase tracking-wide text-white transition hover:bg-white/10"
+                        >
+                          {volumeCopy.menuLabel}
+                        </Link>
+                      )}
                       {cat.items.map((item) => (
                         <div key={item.path}>
                           <Link
