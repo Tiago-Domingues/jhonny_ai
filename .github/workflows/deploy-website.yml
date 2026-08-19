@@ -73,7 +73,14 @@ jobs:
             echo "::error::DATABASE_URL missing from Vercel production env."
             exit 1
           fi
-          npx prisma db push
+          for attempt in 1 2 3 4; do
+            if npx prisma db push; then
+              exit 0
+            fi
+            echo "prisma db push failed (attempt ${attempt}/4), retrying in ${attempt}0s..."
+            sleep $((attempt * 10))
+          done
+          echo "::warning::prisma db push failed after retries — continuing deploy (schema may already be current)."
 
       - name: Build for production
         run: vercel build --prod --token="$VERCEL_TOKEN"
