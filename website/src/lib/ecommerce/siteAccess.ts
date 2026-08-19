@@ -4,7 +4,7 @@ export const SITE_PREVIEW_COOKIE = "jss_site_preview";
 
 /** Public launch flag — when true, coming-soon gate is off. */
 export function isSitePubliclyLaunched() {
-  return process.env.SITE_PUBLIC_LAUNCH === "true";
+  return process.env.SITE_PUBLIC_LAUNCH?.trim() === "true";
 }
 
 /**
