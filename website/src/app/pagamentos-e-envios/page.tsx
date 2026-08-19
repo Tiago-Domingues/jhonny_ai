@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { InfoPage, type InfoContent } from "@/components/InfoPage";
+import { FREE_SHIPPING_THRESHOLD_EUROS } from "@/lib/ecommerce/shipping";
 
 export const metadata: Metadata = {
   title: "Pagamentos e Envios",
@@ -35,7 +36,7 @@ const pt: InfoContent = {
       heading: "Envios",
       paragraphs: [
         "Realizamos envios para Portugal Continental, Ilhas e Europa, sob consulta. O prazo de entrega depende do destino e da transportadora.",
-        "Portes grátis em encomendas acima de €50 (artigos volumosos como pranchas podem ter condições específicas — confirmamos sempre o custo contigo antes de avançar).",
+        `Portes grátis em encomendas acima de €${FREE_SHIPPING_THRESHOLD_EUROS} (artigos volumosos como pranchas podem ter condições específicas — confirmamos sempre o custo contigo antes de avançar).`,
       ],
     },
     {
@@ -75,7 +76,7 @@ const en: InfoContent = {
       heading: "Shipping",
       paragraphs: [
         "We ship to mainland Portugal, the islands and Europe, on request. Delivery time depends on the destination and carrier.",
-        "Free shipping on orders over €50 (bulky items such as boards may have specific conditions — we always confirm the cost with you before proceeding).",
+        `Free shipping on orders over €${FREE_SHIPPING_THRESHOLD_EUROS} (bulky items such as boards may have specific conditions — we always confirm the cost with you before proceeding).`,
       ],
     },
     {

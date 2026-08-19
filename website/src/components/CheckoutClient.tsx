@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
+import { FREE_SHIPPING_THRESHOLD_EUROS } from "@/lib/ecommerce/shipping";
 
 type CartSummary = {
   itemCount: number;
@@ -295,7 +296,7 @@ export function CheckoutClient() {
             <CurrencyNote />
           </div>
           <p className="mt-2 text-xs text-muted">
-            Portes grátis em encomendas acima de €50. Levantamento em loja é gratuito.
+            Portes grátis em encomendas acima de €{FREE_SHIPPING_THRESHOLD_EUROS}. Levantamento em loja é gratuito.
           </p>
         </div>
       </aside>
