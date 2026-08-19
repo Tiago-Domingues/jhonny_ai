@@ -88,6 +88,7 @@ type SyncedOdooProduct = {
   brand: string;
   size: string | null;
   color: string | null;
+  variantAttributesJson: string | null;
   imageUrl: string;
   imageUrlsJson: string;
   marketingDescription: string | null;
@@ -267,6 +268,30 @@ function findAttribute(
     }
   }
   return null;
+}
+
+function isInternalVariantAttribute(attribute: string) {
+  const normalized = normalizeAttributeText(attribute);
+  return normalized.includes("oportunidade") || isNewInAttributeName(attribute);
+}
+
+function formatVariantAttributeLabel(attribute: string) {
+  const trimmed = attribute.trim();
+  if (!trimmed) return "Option";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+function extractVariantAttributesJson(
+  ids: number[],
+  attributeMap: Map<number, { attribute: string; value: string }>
+) {
+  const attributes: Record<string, string> = {};
+  for (const id of ids) {
+    const item = attributeMap.get(id);
+    if (!item?.value || isInternalVariantAttribute(item.attribute)) continue;
+    attributes[formatVariantAttributeLabel(item.attribute)] = String(item.value).trim();
+  }
+  return Object.keys(attributes).length ? JSON.stringify(attributes) : null;
 }
 
 function normalizeAttributeText(value: string) {
@@ -534,6 +559,7 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
       brand: brandLabel,
       size: findAttribute(attributeValueIds, attributes, ["size", "tamanho"]) || null,
       color: findAttribute(attributeValueIds, attributes, ["color", "colour", "cor"]) || null,
+      variantAttributesJson: extractVariantAttributesJson(attributeValueIds, attributes),
       imageUrl,
       // Store URL pointers only — avoid megabyte base64 payloads in Postgres/API responses.
       imageUrlsJson: JSON.stringify([imageUrl]),

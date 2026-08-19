@@ -7,6 +7,7 @@ import { eurosToCents } from "@/lib/ecommerce/money";
 import { fetchOdooProducts, syncOdooProducts } from "@/lib/ecommerce/odooCatalog";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { productMatchesCategoryGroup, productMatchesSubcategory } from "@/lib/ecommerce/categoryGroups";
+import { groupStoreProductsForListing, type StoreProductListing } from "@/lib/ecommerce/productVariants";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 type OdooProduct = Awaited<ReturnType<typeof fetchOdooProducts>>["products"][number];
@@ -49,6 +50,7 @@ export type StoreProduct = {
   brand: string;
   size?: string | null;
   color?: string | null;
+  variantAttributesJson?: string | null;
   imageUrl: string;
   imageUrls?: string[];
   marketingDescription?: string | null;
@@ -70,6 +72,13 @@ export type StoreProduct = {
   odooProductId?: number | null;
   odooProductTemplateId?: number | null;
   createdAt?: string | null;
+  variantCount?: number;
+  hasVariants?: boolean;
+  variantSizes?: string[];
+  variantColors?: string[];
+  variantAttributeOptions?: Record<string, string[]>;
+  minPriceCents?: number;
+  maxPriceCents?: number;
 };
 
 export type ProductFilters = {
@@ -166,6 +175,7 @@ const productListSelect = {
   brand: true,
   size: true,
   color: true,
+  variantAttributesJson: true,
   imageUrl: true,
   priceCents: true,
   currency: true,
@@ -206,6 +216,7 @@ type ListedProduct = {
   brand: string | null;
   size: string | null;
   color: string | null;
+  variantAttributesJson?: string | null;
   imageUrl: string | null;
   marketingDescription?: string | null;
   videoUrl?: string | null;
@@ -249,6 +260,7 @@ function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boo
     brand: product.brand || "",
     size: product.size,
     color: product.color,
+    variantAttributesJson: product.variantAttributesJson,
     imageUrl: product.imageUrl || "/brand/logo-stacked.svg",
     // Keep list responses lean; detail pages can still hydrate media separately.
     imageUrls: undefined,
@@ -290,6 +302,7 @@ export function toLeanStoreProduct(product: StoreProduct): StoreProduct {
     brand: product.brand || "",
     size: product.size ?? null,
     color: product.color ?? null,
+    variantAttributesJson: product.variantAttributesJson ?? null,
     imageUrl: product.imageUrl || "/brand/logo-stacked.svg",
     priceCents: product.priceCents,
     currency: product.currency,
@@ -305,6 +318,13 @@ export function toLeanStoreProduct(product: StoreProduct): StoreProduct {
     odooProductId: product.odooProductId ?? null,
     odooProductTemplateId: product.odooProductTemplateId ?? null,
     createdAt: product.createdAt ?? null,
+    variantCount: product.variantCount,
+    hasVariants: product.hasVariants,
+    variantSizes: product.variantSizes,
+    variantColors: product.variantColors,
+    variantAttributeOptions: product.variantAttributeOptions,
+    minPriceCents: product.minPriceCents,
+    maxPriceCents: product.maxPriceCents,
   };
 }
 
@@ -361,7 +381,7 @@ async function listLiveOdooProducts(filters: ProductFilters = {}) {
     .filter((product) => !product.excludedFromCatalog)
     .map(toStoreProductFromOdoo);
 
-  return dedupeStoreProducts(products.filter((product) => matchesFilters(product, filters)));
+  return finalizeCatalogList(products.filter((product) => matchesFilters(product, filters)));
 }
 
 function matchesFilters(product: StoreProduct, filters: ProductFilters = {}) {
@@ -456,6 +476,10 @@ function dedupeStoreProducts(products: StoreProduct[]) {
   return Array.from(byKey.values());
 }
 
+function finalizeCatalogList(products: StoreProduct[]) {
+  return groupStoreProductsForListing(dedupeStoreProducts(products));
+}
+
 export async function listProducts(filters: ProductFilters = {}): Promise<StoreProduct[]> {
   if (!hasDatabaseUrl()) {
     try {
@@ -464,7 +488,9 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
     } catch {
       // Fall through to mock products if Odoo is temporarily unavailable.
     }
-    return mockCatalogOrEmpty().filter((product) => matchesFilters(product, filters));
+    return finalizeCatalogList(
+      mockCatalogOrEmpty().filter((product) => matchesFilters(product, filters))
+    ).map(toLeanStoreProduct);
   }
 
   try {
@@ -489,7 +515,9 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
     const mapped = products.length
       ? products.map((product) => toStoreProduct(product, { lean: true }))
       : mockCatalogOrEmpty();
-    return dedupeStoreProducts(mapped.filter((product) => matchesFilters(product, filters)));
+    return finalizeCatalogList(mapped.filter((product) => matchesFilters(product, filters))).map(
+      toLeanStoreProduct
+    );
   } catch {
     try {
       const liveProducts = await listLiveOdooProducts(filters);
@@ -497,9 +525,9 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
     } catch {
       // Fall through to mock products if both DB and Odoo fail.
     }
-    return dedupeStoreProducts(
+    return finalizeCatalogList(
       mockCatalogOrEmpty().filter((product) => matchesFilters(product, filters))
-    );
+    ).map(toLeanStoreProduct);
   }
 }
 
@@ -526,10 +554,9 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
       take: limit * 3,
       select: productListSelect,
     });
-    return dedupeStoreProducts(products.map((product) => toStoreProduct(product, { lean: true }))).slice(
-      0,
-      limit
-    );
+    return finalizeCatalogList(
+      products.map((product) => toStoreProduct(product, { lean: true }))
+    ).slice(0, limit);
   } catch {
     return [];
   }
@@ -581,7 +608,7 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
       take: limit * 3,
       select: productListSelect,
     });
-    const fromAttribute = dedupeStoreProducts(
+    const fromAttribute = finalizeCatalogList(
       tagged.map((product) => toStoreProduct(product, { lean: true }))
     ).slice(0, limit);
     if (fromAttribute.length) return fromAttribute;
@@ -595,7 +622,7 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
       take: 400,
       select: productListSelect,
     });
-    return dedupeStoreProducts(
+    return finalizeCatalogList(
       products
         .map((product) => toStoreProduct(product, { lean: true }))
         .filter((product) => isNewArrivalsCategory(product.category))
@@ -611,12 +638,23 @@ export async function getProduct(productId: string): Promise<StoreProduct | null
     : undefined;
   if (!hasDatabaseUrl()) {
     try {
+      if (process.env.ODOO_LIVE_CATALOG === "true" && hasOdooConfig()) {
+        const result = await fetchOdooProducts();
+        if (result.configured) {
+          const liveProduct = result.products
+            .filter((row) => !row.excludedFromCatalog)
+            .map(toStoreProductFromOdoo)
+            .find((row) => row.id === productId || row.slug === productId);
+          if (liveProduct) return liveProduct;
+        }
+      }
       const liveProducts = await listLiveOdooProducts();
-      const liveProduct = liveProducts?.find((product) => product.id === productId || product.slug === productId);
-      return liveProduct || mock || null;
+      const liveProduct = liveProducts?.find((row) => row.id === productId || row.slug === productId);
+      if (liveProduct) return liveProduct;
     } catch {
       return mock || null;
     }
+    return mock || null;
   }
 
   try {
@@ -636,6 +674,46 @@ export async function getProduct(productId: string): Promise<StoreProduct | null
     return mock || null;
   } catch {
     return mock || null;
+  }
+}
+
+export async function listProductVariants(product: StoreProduct): Promise<StoreProduct[]> {
+  if (!product.odooProductTemplateId) return [product];
+
+  if (!hasDatabaseUrl()) {
+    try {
+      if (process.env.ODOO_LIVE_CATALOG === "true" && hasOdooConfig()) {
+        const result = await fetchOdooProducts();
+        if (result.configured) {
+          const variants = result.products
+            .filter(
+              (row) =>
+                !row.excludedFromCatalog && row.odooProductTemplateId === product.odooProductTemplateId
+            )
+            .map(toStoreProductFromOdoo);
+          return variants.length ? variants : [product];
+        }
+      }
+    } catch {
+      return [product];
+    }
+    return [product];
+  }
+
+  try {
+    const variants = await prisma.product.findMany({
+      where: {
+        active: true,
+        excludedFromCatalog: false,
+        odooProductTemplateId: product.odooProductTemplateId,
+      },
+      orderBy: [{ name: "asc" }],
+      select: productDetailSelect,
+    });
+    if (variants.length <= 1) return [product];
+    return variants.map((row) => toStoreProduct(row, { lean: false }));
+  } catch {
+    return [product];
   }
 }
 

@@ -218,6 +218,7 @@ model Product {
   brand                 String?
   size                  String?
   color                 String?
+  variantAttributesJson String?
   imageUrl              String?
   imageUrlsJson         String?
   marketingDescription  String?

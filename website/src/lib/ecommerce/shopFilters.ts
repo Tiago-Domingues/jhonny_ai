@@ -1,5 +1,9 @@
 import type { StoreProduct } from "@/lib/ecommerce/catalog";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
+import {
+  listingMatchesColorFilter,
+  listingMatchesSizeFilter,
+} from "@/lib/ecommerce/productVariants";
 
 /** Shopify / Pukas-style sort keys. */
 export const SHOP_SORT_OPTIONS = [
@@ -97,6 +101,12 @@ function eurosToCents(value: string) {
   return Math.round(parsed * 100);
 }
 
+function listingPriceBounds(product: StoreProduct) {
+  const min = product.minPriceCents ?? product.priceCents;
+  const max = product.maxPriceCents ?? product.priceCents;
+  return { min, max };
+}
+
 export function applyShopFacetFilters(products: StoreProduct[], filters: ShopFacetFilters) {
   const query = filters.query.trim().toLowerCase();
   const minPriceCents = eurosToCents(filters.minPriceEuros);
@@ -115,8 +125,9 @@ export function applyShopFacetFilters(products: StoreProduct[], filters: ShopFac
       if (!ok) return false;
     }
 
-    if (minPriceCents !== null && product.priceCents < minPriceCents) return false;
-    if (maxPriceCents !== null && product.priceCents > maxPriceCents) return false;
+    const { min, max } = listingPriceBounds(product);
+    if (minPriceCents !== null && max < minPriceCents) return false;
+    if (maxPriceCents !== null && min > maxPriceCents) return false;
 
     if (filters.productTypes.length) {
       const type = productTypeFromCategory(product.category);
@@ -129,10 +140,13 @@ export function applyShopFacetFilters(products: StoreProduct[], filters: ShopFac
     }
 
     if (filters.brands.length && !filters.brands.includes(product.brand)) return false;
-    if (filters.sizes.length && (!product.size || !filters.sizes.includes(product.size))) return false;
-    if (filters.colors.length && (!product.color || !filters.colors.includes(product.color))) return false;
+    if (filters.sizes.length && !listingMatchesSizeFilter(product, filters.sizes)) return false;
+    if (filters.colors.length && !listingMatchesColorFilter(product, filters.colors)) return false;
 
     if (!query) return true;
+    const variantOptionText = product.variantAttributeOptions
+      ? Object.values(product.variantAttributeOptions).flat().join(" ")
+      : "";
     return [
       product.name,
       product.description,
@@ -142,6 +156,9 @@ export function applyShopFacetFilters(products: StoreProduct[], filters: ShopFac
       product.refId,
       product.size,
       product.color,
+      ...(product.variantSizes || []),
+      ...(product.variantColors || []),
+      variantOptionText,
     ]
       .filter(Boolean)
       .join(" ")
@@ -170,9 +187,9 @@ export function sortShopProducts(products: StoreProduct[], sort: ShopSortOption,
       case "title-descending":
         return b.name.localeCompare(a.name);
       case "price-ascending":
-        return a.priceCents - b.priceCents || a.name.localeCompare(b.name);
+        return (a.minPriceCents ?? a.priceCents) - (b.minPriceCents ?? b.priceCents) || a.name.localeCompare(b.name);
       case "price-descending":
-        return b.priceCents - a.priceCents || a.name.localeCompare(b.name);
+        return (b.maxPriceCents ?? b.priceCents) - (a.maxPriceCents ?? a.priceCents) || a.name.localeCompare(b.name);
       case "created-ascending": {
         const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
         const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
@@ -233,8 +250,16 @@ function countFacet(values: Array<string | null | undefined>) {
 export function buildShopFacets(products: StoreProduct[]) {
   return {
     brands: countFacet(products.map((product) => product.brand)),
-    sizes: countFacet(products.map((product) => product.size)),
-    colors: countFacet(products.map((product) => product.color)),
+    sizes: countFacet(
+      products.flatMap((product) =>
+        product.variantSizes?.length ? product.variantSizes : product.size ? [product.size] : []
+      )
+    ),
+    colors: countFacet(
+      products.flatMap((product) =>
+        product.variantColors?.length ? product.variantColors : product.color ? [product.color] : []
+      )
+    ),
     productTypes: countFacet(products.map((product) => productTypeFromCategory(product.category))),
     genders: countFacet(products.map((product) => genderFromCategory(product.category))),
     availability: {
@@ -242,10 +267,13 @@ export function buildShopFacets(products: StoreProduct[]) {
       out: products.filter((product) => product.stockQuantity <= 0).length,
     },
     priceBounds: products.reduce(
-      (bounds, product) => ({
-        min: Math.min(bounds.min, product.priceCents),
-        max: Math.max(bounds.max, product.priceCents),
-      }),
+      (bounds, product) => {
+        const { min, max } = listingPriceBounds(product);
+        return {
+          min: Math.min(bounds.min, min),
+          max: Math.max(bounds.max, max),
+        };
+      },
       { min: Number.POSITIVE_INFINITY, max: 0 }
     ),
   };
