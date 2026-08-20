@@ -100,10 +100,12 @@ html.jss-a11y-motion *::after {
 
 @media (max-width: 639px) {
   .jss-free-shipping-widget {
-    /* Keep the full triangle on-screen in the first viewport; sit flush
-       against the bottom-left so nothing appears after it. */
-    bottom: 0;
+    /* Stay on the visible bottom as iOS Safari chrome shows/hides.
+       100lvh = large viewport, 100dvh = current visible viewport.
+       JS visualViewport pinning overrides top/bottom after mount. */
     left: 0;
+    bottom: 0;
+    bottom: max(0px, 100lvh - 100dvh);
     width: var(--jss-ribbon-size);
     height: var(--jss-ribbon-size);
   }
