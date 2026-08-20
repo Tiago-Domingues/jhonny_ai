@@ -12,13 +12,14 @@ const pt: InfoContent = {
   title: "Pagamentos e Envios",
   updated: "Última atualização: 2026",
   intro:
-    "Aqui encontras a informação sobre como pagar e como receber o teu material. O checkout online fica preparado para MB WAY, Multibanco, PayPal, Klarna, envio e levantamento em loja.",
+    "Aqui encontras a informação sobre como pagar e como receber o teu material. O checkout online fica preparado para MB WAY, Multibanco, Payshop, PayPal, Klarna, envio e levantamento em loja.",
   sections: [
     {
       heading: "Métodos de pagamento",
       bullets: [
         "MB WAY via Ifthenpay.",
         "Multibanco entidade/referência via Ifthenpay.",
+        "Payshop (agentes e CTT) via Ifthenpay.",
         "PayPal, quando a conta de comerciante estiver ligada.",
         "Klarna, quando o contrato/provider estiver confirmado.",
         "Cartão de débito/crédito (Visa, Mastercard).",
@@ -52,13 +53,14 @@ const en: InfoContent = {
   title: "Payments & Shipping",
   updated: "Last updated: 2026",
   intro:
-    "Here's how to pay and how to get your gear. The online checkout is prepared for MB WAY, Multibanco, PayPal, Klarna, shipping and in-store pickup.",
+    "Here's how to pay and how to get your gear. The online checkout is prepared for MB WAY, Multibanco, Payshop, PayPal, Klarna, shipping and in-store pickup.",
   sections: [
     {
       heading: "Payment methods",
       bullets: [
         "MB WAY through Ifthenpay.",
         "Multibanco entity/reference through Ifthenpay.",
+        "Payshop (agents and CTT) through Ifthenpay.",
         "PayPal once the merchant account is connected.",
         "Klarna once the contract/provider is confirmed.",
         "Debit/credit card (Visa, Mastercard).",

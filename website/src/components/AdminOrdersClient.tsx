@@ -240,7 +240,9 @@ export function AdminOrdersClient() {
                 </p>
                 {selected.payment?.multibancoReference && (
                   <p>
-                    MB: {selected.payment.multibancoEntity} / {selected.payment.multibancoReference}
+                    {selected.payment.method === "PAYSHOP" ? "Payshop" : "MB"}:{" "}
+                    {selected.payment.multibancoEntity ? `${selected.payment.multibancoEntity} / ` : ""}
+                    {selected.payment.multibancoReference}
                   </p>
                 )}
               </div>

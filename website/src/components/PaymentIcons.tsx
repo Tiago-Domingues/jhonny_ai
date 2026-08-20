@@ -94,6 +94,16 @@ export function MbWayBadge() {
   );
 }
 
+export function PayshopBadge() {
+  return (
+    <Card label="Payshop" bg="#e30613">
+      <span className="font-display text-[0.42rem] font-extrabold leading-none text-white">
+        PAYSHOP
+      </span>
+    </Card>
+  );
+}
+
 export function PaymentBadges({ className = "" }: { className?: string }) {
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
@@ -102,6 +112,7 @@ export function PaymentBadges({ className = "" }: { className?: string }) {
       <AmexBadge />
       <MultibancoBadge />
       <MbWayBadge />
+      <PayshopBadge />
       <PaypalBadge />
       <KlarnaBadge />
     </div>
