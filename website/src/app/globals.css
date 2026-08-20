@@ -77,17 +77,18 @@ html.jss-a11y-motion *::after {
   scroll-behavior: auto !important;
 }
 
-/* Firewire-style FREE SHIPPING corner tab: flush to the viewport, right
-   triangle in the bottom-left, copy rotated along the hypotenuse, dismiss
-   control centered on that same diagonal near the lower-right end.
-   On mobile this is the last chrome on the page — pinned to the physical
-   bottom-left with no leftover gap below the triangle. */
+/* Corner tab: last website pixels in the bottom-left. Sit above iOS Safari
+   chrome / home indicator so no page or browser UI shows after the triangle. */
 .jss-free-shipping-widget {
   --jss-ribbon-size: 8.75rem;
+  --jss-chrome-bottom: max(
+    env(safe-area-inset-bottom, 0px),
+    calc(100lvh - 100dvh)
+  );
   position: fixed;
   top: auto;
   right: auto;
-  bottom: 0;
+  bottom: var(--jss-chrome-bottom);
   left: 0;
   z-index: 65;
   width: var(--jss-ribbon-size);
@@ -96,16 +97,12 @@ html.jss-a11y-motion *::after {
   padding: 0;
   overflow: visible;
   pointer-events: none;
+  background: transparent;
 }
 
 @media (max-width: 639px) {
   .jss-free-shipping-widget {
-    /* Stay on the visible bottom as iOS Safari chrome shows/hides.
-       100lvh = large viewport, 100dvh = current visible viewport.
-       JS visualViewport pinning overrides top/bottom after mount. */
     left: 0;
-    bottom: 0;
-    bottom: max(0px, 100lvh - 100dvh);
     width: var(--jss-ribbon-size);
     height: var(--jss-ribbon-size);
   }

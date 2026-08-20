@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -60,22 +60,6 @@ function hasConsentCookie() {
   return typeof document !== "undefined" && document.cookie.includes("jss_consent=");
 }
 
-/** Pin a fixed widget to the visible viewport bottom (iOS Safari toolbar). */
-function pinWidgetToVisualBottom(el: HTMLElement) {
-  const height = el.offsetHeight || el.getBoundingClientRect().height;
-  const vv = window.visualViewport;
-  if (!vv) {
-    el.style.top = "auto";
-    el.style.left = "0px";
-    el.style.bottom = "0px";
-    return;
-  }
-  el.style.left = `${Math.round(vv.offsetLeft)}px`;
-  el.style.top = `${Math.round(vv.offsetTop + vv.height - height)}px`;
-  el.style.right = "auto";
-  el.style.bottom = "auto";
-}
-
 export function FirstPurchaseOffer() {
   const { locale } = useLanguage();
   const t = copy[locale];
@@ -85,7 +69,6 @@ export function FirstPurchaseOffer() {
   const [copied, setCopied] = useState(false);
   const shownThisLoad = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const widgetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -149,27 +132,6 @@ export function FirstPurchaseOffer() {
       setRibbonSlide((current) => (current + 1) % RIBBON_SLIDES.length);
     }, RIBBON_ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [ribbonVisible, open]);
-
-  useLayoutEffect(() => {
-    if (!ribbonVisible || open) return;
-    const el = widgetRef.current;
-    if (!el) return;
-
-    const pin = () => pinWidgetToVisualBottom(el);
-    pin();
-
-    const vv = window.visualViewport;
-    vv?.addEventListener("resize", pin);
-    vv?.addEventListener("scroll", pin);
-    window.addEventListener("resize", pin);
-    window.addEventListener("scroll", pin, { passive: true });
-    return () => {
-      vv?.removeEventListener("resize", pin);
-      vv?.removeEventListener("scroll", pin);
-      window.removeEventListener("resize", pin);
-      window.removeEventListener("scroll", pin);
-    };
   }, [ribbonVisible, open]);
 
   function closeModal({ showRibbon = true }: { showRibbon?: boolean } = {}) {
@@ -282,7 +244,6 @@ export function FirstPurchaseOffer() {
 
       {ribbonVisible && !open && createPortal(
         <div
-          ref={widgetRef}
           className="jss-free-shipping-widget"
           data-testid="free-shipping-widget"
         >

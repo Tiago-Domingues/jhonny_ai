@@ -371,20 +371,18 @@ async function main() {
   await browser.close();
 
   if (videoPath) {
-    const dest = path.join(ARTIFACTS, "ribbon_smaller_larger_type.webm");
+    const dest = path.join(ARTIFACTS, "ribbon_above_safari_chrome.webm");
     fs.copyFileSync(videoPath, dest);
     console.log("video", dest);
   }
   for (const name of [
-    "ribbon_slide_join_the_family.png",
-    "ribbon_slide_get_special_discounts.png",
-    "ribbon_slide_stay_updated.png",
     "free_shipping_ribbon_mobile.png",
-    "free_shipping_ribbon_mobile_closeup.png",
+    "ribbon_flush_mobile_midscroll.png",
+    "ribbon_flush_mobile_scrolled.png",
   ]) {
     const src = path.join(OUT, name);
     if (fs.existsSync(src)) {
-      fs.copyFileSync(src, path.join(ARTIFACTS, `copy_size_${name}`));
+      fs.copyFileSync(src, path.join(ARTIFACTS, `above_safari_${name}`));
     }
   }
   console.log("OK screenshots written to", OUT);
