@@ -58,9 +58,11 @@ You should see these names (already set on Production + Preview):
 - `IFTHENPAY_CALLBACK_SECRET`
 - `IFTHENPAY_CALLBACK_URL`
 
-They are stored as **Sensitive** variables. Vercel shows the **name** but will **never show the value** again (no eye icon / copy). That is expected.
+They are stored as **Sensitive** variables. Vercel shows the **name** but will **never show the value** again. Clicking a row / “Copied” only copies the **name** (for example `IFTHENPAY_MB_KEY`), not the secret. That is expected.
 
-For Ifthenpay callback setup you only need the anti-phishing key (`IFTHENPAY_CALLBACK_SECRET`). If nobody saved that value:
+You do **not** need `IFTHENPAY_MB_KEY` in the Ifthenpay callback screen. Ifthenpay already issued that key. For callbacks you choose an anti-phishing key yourself and store it as `IFTHENPAY_CALLBACK_SECRET`.
+
+If nobody saved that value (you cannot reveal it):
 
 1. Invent a new key (random, max 50 characters).
 2. On that Vercel page → `IFTHENPAY_CALLBACK_SECRET` → ⋯ → **Edit** → paste the new value → Save (keep Production + Preview).
