@@ -79,7 +79,9 @@ html.jss-a11y-motion *::after {
 
 /* Firewire-style FREE SHIPPING corner tab: flush to the viewport, right
    triangle in the bottom-left, copy rotated along the hypotenuse, dismiss
-   control centered on that same diagonal near the lower-right end. */
+   control centered on that same diagonal near the lower-right end.
+   On mobile this is the last chrome on the page — pinned to the physical
+   bottom-left with no leftover gap below the triangle. */
 .jss-free-shipping-widget {
   --jss-ribbon-size: 10.5rem;
   position: fixed;
@@ -94,6 +96,17 @@ html.jss-a11y-motion *::after {
   padding: 0;
   overflow: visible;
   pointer-events: none;
+}
+
+@media (max-width: 639px) {
+  .jss-free-shipping-widget {
+    /* Keep the full triangle on-screen in the first viewport; sit flush
+       against the bottom-left so nothing appears after it. */
+    bottom: 0;
+    left: 0;
+    width: var(--jss-ribbon-size);
+    height: var(--jss-ribbon-size);
+  }
 }
 
 @media (min-width: 640px) {
@@ -119,7 +132,8 @@ html.jss-a11y-motion *::after {
   filter: brightness(1.08);
 }
 
-/* Sit in the triangle centroid, rotated so the two lines run along the hypotenuse. */
+/* Sit in the triangle centroid, rotated clockwise so FREE / SHIPPING run
+   along the hypotenuse (top-left → bottom-right), matching FireWire. */
 .jss-free-shipping-ribbon__text {
   position: absolute;
   top: 66.666%;
@@ -130,7 +144,7 @@ html.jss-a11y-motion *::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transform: translate(-50%, -50%) rotate(-45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
   transform-origin: center center;
   color: #fff;
   font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
@@ -265,29 +279,6 @@ html.jss-a11y-motion *::after {
   transform-origin: bottom center;
 }
 
-/* Mini Jhonny + board pops above the WhatsApp mark every 10s */
-@keyframes jss-wa-toy-pop {
-  0%,
-  68% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(8px) scale(0.55);
-  }
-  74%,
-  90% {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-10px) scale(0.8);
-  }
-}
-
-.jss-wa-toy {
-  animation: jss-wa-toy-pop 10s ease-in-out infinite;
-  transform-origin: center bottom;
-}
-
 .surfer-toy__surfer {
   transform-origin: center bottom;
   animation: toy-bob 4.5s ease-in-out infinite;
@@ -386,12 +377,8 @@ html.jss-a11y-motion *::after {
   .animate-brand {
     animation: none;
   }
-  .jss-wa-toy,
   .surfer-toy__surfer {
     animation: none;
-  }
-  .jss-wa-toy {
-    opacity: 0;
   }
   .shop-loader-wave,
   .shop-skeleton,

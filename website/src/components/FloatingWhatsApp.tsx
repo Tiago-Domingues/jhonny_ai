@@ -2,7 +2,6 @@
 
 import { whatsappHref } from "@/lib/i18n";
 import { WhatsappIcon } from "@/components/icons";
-import { SurferToy } from "@/components/SurferToy";
 
 export function FloatingWhatsApp() {
   return (
@@ -14,10 +13,9 @@ export function FloatingWhatsApp() {
       data-testid="whatsapp-float"
       className="fixed bottom-5 right-5 z-50"
     >
-      <span className="jss-wa-toy pointer-events-none absolute bottom-[108%] left-1/2">
-        <SurferToy />
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white shadow-md ring-2 ring-white transition hover:scale-105">
+        <WhatsappIcon className="h-4 w-4" />
       </span>
-      <WhatsappIcon className="h-12 w-12 text-[#25D366] drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)] transition hover:scale-105" />
     </a>
   );
 }
