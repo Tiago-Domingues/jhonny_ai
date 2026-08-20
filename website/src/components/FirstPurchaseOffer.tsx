@@ -224,14 +224,14 @@ export function FirstPurchaseOffer() {
       )}
 
       {ribbonVisible && !open && (
-        <div className="pointer-events-none fixed bottom-0 left-0 z-[65]">
+        <div className="pointer-events-none fixed bottom-0 left-0 z-[65] h-36 w-36 overflow-visible sm:h-40 sm:w-40">
           <button
             type="button"
             onClick={openFromRibbon}
             aria-label={`${t.ribbon} — ${t.title}`}
-            className="jss-free-shipping-ribbon pointer-events-auto relative block h-[7.5rem] w-[7.5rem] bg-ink text-white shadow-lg transition hover:brightness-110 sm:h-32 sm:w-32"
+            className="jss-free-shipping-ribbon pointer-events-auto absolute bottom-0 left-0 h-full w-full bg-ink text-white shadow-lg transition hover:brightness-110"
           >
-            <span className="absolute left-1/2 top-[42%] w-[7.5rem] -translate-x-1/2 -translate-y-1/2 -rotate-45 text-center text-[0.7rem] font-extrabold uppercase leading-tight tracking-[0.12em] sm:text-xs">
+            <span className="absolute bottom-[28%] left-[18%] w-[5.5rem] -rotate-45 text-center text-[0.68rem] font-extrabold uppercase leading-[1.05] tracking-[0.14em] sm:text-[0.75rem]">
               Free
               <br />
               Shipping
@@ -241,7 +241,7 @@ export function FirstPurchaseOffer() {
             type="button"
             onClick={hideRibbon}
             aria-label="Dismiss"
-            className="pointer-events-auto absolute bottom-[5.6rem] left-[5.6rem] flex h-7 w-7 items-center justify-center rounded-full border border-white bg-ink text-sm font-bold text-white shadow-md transition hover:scale-105 sm:bottom-[6.1rem] sm:left-[6.1rem] sm:h-8 sm:w-8"
+            className="pointer-events-auto absolute bottom-[6.35rem] left-[6.35rem] flex h-7 w-7 items-center justify-center rounded-full border border-white bg-ink text-sm font-bold leading-none text-white shadow-md transition hover:scale-105 sm:bottom-[7.1rem] sm:left-[7.1rem] sm:h-8 sm:w-8"
           >
             ×
           </button>

@@ -208,13 +208,9 @@ export function SearchIcon(props: IconProps) {
 
 export function AccessibilityIcon(props: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <circle cx="12" cy="4.5" r="2" />
-      <path d="M8.2 8.2c1.1-.7 2.4-1 3.8-1s2.7.3 3.8 1l1.4-2.1c-1.6-1-3.4-1.5-5.2-1.5S7.4 5 5.8 6.1L7.2 8.2Z" />
-      <path d="M12 9.2c-2.2 0-4.1.9-5.5 2.3L4.8 9.8C6.7 7.9 9.2 6.8 12 6.8s5.3 1.1 7.2 3l-1.7 1.7C16.1 10.1 14.2 9.2 12 9.2Z" />
-      <path d="M7.5 13.2c.9 1.4 2.5 2.3 4.3 2.5v5.8h1.8v-5.8c1.8-.2 3.4-1.1 4.3-2.5l-1.6-1c-.7 1-1.9 1.7-3.2 1.7h-1c-1.3 0-2.5-.7-3.2-1.7l-1.4 1Z" />
-      <circle cx="6.2" cy="18.5" r="2.2" />
-      <path d="M6.2 16.8v-.8c0-1 .4-1.9 1.1-2.5l-.9-1.4c-1.2.9-2 2.3-2 3.9v.8h1.8Z" />
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <circle cx="12" cy="4" r="2.2" />
+      <path d="M12 7.2c-3.3 0-6 1.2-6 2.7v1.1h2.2V19h2.4v-4.2h2.8V19H15.8V11h2.2V9.9c0-1.5-2.7-2.7-6-2.7Z" />
     </svg>
   );
 }
