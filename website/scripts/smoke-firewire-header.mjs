@@ -120,6 +120,15 @@ async function assertRibbonGeometry(page, label) {
 
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight },
+      visual: window.visualViewport
+        ? {
+            left: window.visualViewport.offsetLeft,
+            top: window.visualViewport.offsetTop,
+            width: window.visualViewport.width,
+            height: window.visualViewport.height,
+            bottom: window.visualViewport.offsetTop + window.visualViewport.height,
+          }
+        : null,
       widget: {
         left: widgetBox.left,
         top: widgetBox.top,
@@ -154,13 +163,18 @@ async function assertRibbonGeometry(page, label) {
   });
 
   assert(geometry, `${label}: ribbon markup missing`);
-  const { viewport, widget, close, text } = geometry;
+  const { viewport, visual, widget, close, text } = geometry;
+  const visibleBottom = visual?.bottom ?? viewport.height;
+  const visibleLeft = visual?.left ?? 0;
 
-  assert(Math.abs(widget.left) <= 1, `${label}: widget left is ${widget.left}, expected 0`);
+  assert(
+    Math.abs(widget.left - visibleLeft) <= 1,
+    `${label}: widget left is ${widget.left}, expected ${visibleLeft}`
+  );
   assert(widget.top >= 0, `${label}: widget is clipped at the top of the viewport (${widget.top})`);
   assert(
-    Math.abs(widget.bottom - viewport.height) <= 2,
-    `${label}: widget bottom is ${widget.bottom}, viewport ${viewport.height} — should be the last element with no gap`
+    Math.abs(widget.bottom - visibleBottom) <= 2,
+    `${label}: widget bottom is ${widget.bottom}, visible bottom ${visibleBottom} — nothing should show under the triangle`
   );
   assert(
     Math.abs(widget.width - widget.height) <= 1,
@@ -339,6 +353,14 @@ async function main() {
   await mobilePage.locator('[data-testid="free-shipping-widget"]').screenshot({
     path: path.join(OUT, "free_shipping_ribbon_mobile_closeup.png"),
   });
+  await mobilePage.evaluate(() => window.scrollTo(0, 900));
+  await mobilePage.waitForTimeout(200);
+  await assertRibbonGeometry(mobilePage, "mobile mid-scroll");
+  await mobilePage.screenshot({ path: path.join(OUT, "ribbon_flush_mobile_midscroll.png") });
+  await mobilePage.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await mobilePage.waitForTimeout(200);
+  await assertRibbonGeometry(mobilePage, "mobile scrolled to end");
+  await mobilePage.screenshot({ path: path.join(OUT, "ribbon_flush_mobile_scrolled.png") });
   await mobile.close();
   await browser.close();
 
