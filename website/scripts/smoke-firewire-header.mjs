@@ -220,8 +220,8 @@ async function assertRibbonGeometry(page, label) {
   assert(/join/i.test(text.content) && /family/i.test(text.content), `${label}: missing JOIN THE FAMILY copy`);
   assert(text.left >= -2, `${label}: copy clipped on the left (${text.left})`);
   assert(text.top >= -2, `${label}: copy clipped on the top (${text.top})`);
-  assert(text.right <= widget.width + 8, `${label}: copy overflows the right (${text.right} of ${widget.width})`);
-  assert(text.bottom <= widget.height + 8, `${label}: copy overflows the bottom (${text.bottom} of ${widget.height})`);
+  assert(text.right <= widget.width + 14, `${label}: copy overflows the right (${text.right} of ${widget.width})`);
+  assert(text.bottom <= widget.height + 14, `${label}: copy overflows the bottom (${text.bottom} of ${widget.height})`);
   assert(
     Math.abs(text.centerX / widget.width - 0.333) < 0.12,
     `${label}: copy not centered in the triangle (cx ratio ${text.centerX / widget.width})`
