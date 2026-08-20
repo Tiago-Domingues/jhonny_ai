@@ -45,6 +45,42 @@ html[lang="zh"] .font-display {
   font-family: var(--font-chinese), var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Accessibility preferences (header panel) */
+html.jss-a11y-lg {
+  font-size: 112.5%;
+}
+
+html.jss-a11y-contrast {
+  --background: #ffffff;
+  --foreground: #000000;
+  --color-ink: #000000;
+  --color-ink-soft: #111111;
+  --color-paper: #ffffff;
+  --color-cream: #f2f2f2;
+  --color-cream-deep: #e5e5e5;
+  --color-muted: #222222;
+  --color-line: #111111;
+  --color-line-dark: #000000;
+}
+
+html.jss-a11y-contrast body {
+  background: #ffffff;
+  color: #000000;
+}
+
+html.jss-a11y-motion *,
+html.jss-a11y-motion *::before,
+html.jss-a11y-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.jss-free-shipping-ribbon {
+  clip-path: polygon(0 100%, 0 0, 100% 100%);
+}
+
 @layer utilities {
   .font-display {
     font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
