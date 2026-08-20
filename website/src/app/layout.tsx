@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Geist, Montserrat, Noto_Sans_SC } from "next/font/google";
 import "./globals.css";
@@ -29,10 +29,6 @@ const notoSansSC = Noto_Sans_SC({
   subsets: ["latin"],
   display: "swap",
 });
-
-export const viewport: Viewport = {
-  viewportFit: "cover",
-};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.jhonnysurfstore.pt"),

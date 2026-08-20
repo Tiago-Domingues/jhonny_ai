@@ -23,6 +23,21 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+/** Keep in sync with pinRibbonToVisibleBottom in FirstPurchaseOffer.tsx */
+function ribbonBottomRaise(layoutHeight, visualOffsetTop, visualHeight) {
+  return Math.max(0, layoutHeight - (visualOffsetTop + visualHeight));
+}
+
+function assertRaiseMath() {
+  // iPhone-like: 50px top chrome + 80px bottom chrome. Raise must be 80, not 130.
+  assert(ribbonBottomRaise(844, 50, 714) === 80, "raise should be bottom chrome only");
+  assert(ribbonBottomRaise(844, 0, 844) === 0, "no chrome → bottom: 0");
+  assert(
+    ribbonBottomRaise(844, 50, 714) !== 844 - 714,
+    "100lvh - 100dvh includes top chrome and must not be used"
+  );
+}
+
 async function assertMobileHeaderLayout(page) {
   const order = await page.evaluate(() => {
     const header = document.querySelector("[data-testid='site-header-bar']");
@@ -119,8 +134,11 @@ async function assertRibbonGeometry(page, label) {
     const relY = closeCy - widgetBox.top;
     const textStyle = getComputedStyle(text);
     const closeStyle = getComputedStyle(close);
+    const widgetStyle = getComputedStyle(widget);
 
     return {
+      chromeVar: widgetStyle.getPropertyValue("--jss-chrome-bottom").trim(),
+      computedBottom: widgetStyle.bottom,
       viewport: { width: window.innerWidth, height: window.innerHeight },
       visual: window.visualViewport
         ? {
@@ -168,15 +186,32 @@ async function assertRibbonGeometry(page, label) {
   const { viewport, visual, widget, close, text } = geometry;
   const visibleBottom = visual?.bottom ?? viewport.height;
   const visibleLeft = visual?.left ?? 0;
+  const expectedRaise = ribbonBottomRaise(
+    viewport.height,
+    visual?.top ?? 0,
+    visual?.height ?? viewport.height
+  );
 
+  assert(
+    !geometry.chromeVar,
+    `${label}: --jss-chrome-bottom must not exist (got ${geometry.chromeVar})`
+  );
+  assert(
+    Math.abs(Number.parseFloat(geometry.computedBottom) - expectedRaise) <= 2,
+    `${label}: computed bottom is ${geometry.computedBottom}, expected raise ${expectedRaise}px`
+  );
   assert(
     Math.abs(widget.left - visibleLeft) <= 1,
     `${label}: widget left is ${widget.left}, expected ${visibleLeft}`
   );
   assert(widget.top >= 0, `${label}: widget is clipped at the top of the viewport (${widget.top})`);
   assert(
+    widget.top >= viewport.height * 0.7,
+    `${label}: triangle is not at the bottom (top=${widget.top.toFixed(1)} of ${viewport.height})`
+  );
+  assert(
     Math.abs(widget.bottom - visibleBottom) <= 2,
-    `${label}: widget bottom is ${widget.bottom}, visible bottom ${visibleBottom} — nothing should show under the triangle`
+    `${label}: widget bottom is ${widget.bottom}, visible bottom ${visibleBottom} — flush with the visible page bottom`
   );
   assert(
     Math.abs(widget.width - widget.height) <= 1,
@@ -240,6 +275,7 @@ async function assertRibbonGeometry(page, label) {
 }
 
 async function main() {
+  assertRaiseMath();
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
@@ -371,7 +407,7 @@ async function main() {
   await browser.close();
 
   if (videoPath) {
-    const dest = path.join(ARTIFACTS, "ribbon_above_safari_chrome.webm");
+    const dest = path.join(ARTIFACTS, "ribbon_flush_bottom_zero.webm");
     fs.copyFileSync(videoPath, dest);
     console.log("video", dest);
   }
@@ -382,7 +418,7 @@ async function main() {
   ]) {
     const src = path.join(OUT, name);
     if (fs.existsSync(src)) {
-      fs.copyFileSync(src, path.join(ARTIFACTS, `above_safari_${name}`));
+      fs.copyFileSync(src, path.join(ARTIFACTS, `flush_bottom_${name}`));
     }
   }
   console.log("OK screenshots written to", OUT);

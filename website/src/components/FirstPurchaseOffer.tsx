@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/components/LanguageProvider";
@@ -60,6 +60,33 @@ function hasConsentCookie() {
   return typeof document !== "undefined" && document.cookie.includes("jss_consent=");
 }
 
+/**
+ * Keep the corner tab flush with the *visible* page bottom.
+ *
+ * `position: fixed; bottom: 0` is relative to the layout viewport. On iOS
+ * Safari that can be the large viewport, so the tab would sit under the
+ * toolbar. Raise by `innerHeight - visualBottom` only — that is the bottom
+ * chrome. Do not set `top` from visualViewport (that painted under Safari
+ * with viewport-fit: cover) and do not use `100lvh - 100dvh` (top + bottom
+ * chrome, which parked the triangle over the product cards).
+ */
+function pinRibbonToVisibleBottom(el: HTMLElement) {
+  const vv = window.visualViewport;
+  el.style.top = "auto";
+  el.style.right = "auto";
+
+  if (!vv) {
+    el.style.left = "0px";
+    el.style.bottom = "0px";
+    return;
+  }
+
+  const visualBottom = vv.offsetTop + vv.height;
+  const raise = Math.max(0, window.innerHeight - visualBottom);
+  el.style.left = `${Math.round(vv.offsetLeft)}px`;
+  el.style.bottom = `${Math.round(raise)}px`;
+}
+
 export function FirstPurchaseOffer() {
   const { locale } = useLanguage();
   const t = copy[locale];
@@ -69,6 +96,7 @@ export function FirstPurchaseOffer() {
   const [copied, setCopied] = useState(false);
   const shownThisLoad = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -122,6 +150,30 @@ export function FirstPurchaseOffer() {
       document.body.style.overflow = "";
     };
   }, []);
+
+  useLayoutEffect(() => {
+    if (!ribbonVisible || open) return;
+    const el = widgetRef.current;
+    if (!el) return;
+
+    const pin = () => pinRibbonToVisibleBottom(el);
+    pin();
+    window.addEventListener("resize", pin);
+    window.addEventListener("scroll", pin, true);
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", pin);
+    vv?.addEventListener("scroll", pin);
+    return () => {
+      window.removeEventListener("resize", pin);
+      window.removeEventListener("scroll", pin, true);
+      vv?.removeEventListener("resize", pin);
+      vv?.removeEventListener("scroll", pin);
+      el.style.top = "";
+      el.style.left = "";
+      el.style.right = "";
+      el.style.bottom = "";
+    };
+  }, [ribbonVisible, open]);
 
   useEffect(() => {
     if (!ribbonVisible || open) return;
@@ -244,6 +296,7 @@ export function FirstPurchaseOffer() {
 
       {ribbonVisible && !open && createPortal(
         <div
+          ref={widgetRef}
           className="jss-free-shipping-widget"
           data-testid="free-shipping-widget"
         >
