@@ -77,18 +77,16 @@ html.jss-a11y-motion *::after {
   scroll-behavior: auto !important;
 }
 
-/* Corner tab: last website pixels in the bottom-left. Sit above iOS Safari
-   chrome / home indicator so no page or browser UI shows after the triangle. */
+/* Corner tab: flush with the visible bottom-left of the page (same
+   containing block as the WhatsApp FAB). JS may raise `bottom` by the
+   Safari *bottom* chrome only. Never use `100lvh - 100dvh` here — that
+   difference is top + bottom chrome and lifts the triangle mid-screen. */
 .jss-free-shipping-widget {
   --jss-ribbon-size: 8.75rem;
-  --jss-chrome-bottom: max(
-    env(safe-area-inset-bottom, 0px),
-    calc(100lvh - 100dvh)
-  );
   position: fixed;
   top: auto;
   right: auto;
-  bottom: var(--jss-chrome-bottom);
+  bottom: 0;
   left: 0;
   z-index: 65;
   width: var(--jss-ribbon-size);
