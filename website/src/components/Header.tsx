@@ -454,7 +454,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             aria-label={headerCopy.a11y}
             className={`${iconButtonClass} hidden min-[1000px]:flex`}
           >
-            <AccessibilityIcon className="h-[1.125rem] w-[1.125rem]" />
+            <AccessibilityIcon className="h-[18px] w-[18px]" />
           </button>
 
           <Link
@@ -470,7 +470,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             aria-label={headerCopy.a11y}
             className={`${iconButtonClass} min-[1000px]:hidden`}
           >
-            <AccessibilityIcon className="h-[1.125rem] w-[1.125rem]" />
+            <AccessibilityIcon className="h-[18px] w-[18px]" />
           </button>
 
           <button

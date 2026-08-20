@@ -132,6 +132,20 @@ async function main() {
   const page = await context.newPage();
 
   await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => {
+    sessionStorage.setItem("jss_welcome_offer_dismissed_v1", "1");
+    sessionStorage.setItem("jss_welcome_ribbon_hidden_v1", "1");
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const desktopA11y = page.locator("header button[aria-label='Accessibility']").filter({ visible: true });
+  await desktopA11y.waitFor({ timeout: 8000 });
+  await page.locator("header").first().screenshot({
+    path: path.join(OUT, "header_accessibility_icon_desktop.png"),
+  });
+  await desktopA11y.screenshot({
+    path: path.join(OUT, "header_accessibility_icon_desktop_closeup.png"),
+  });
+
   await showRibbon(page);
   await assertRibbonGeometry(page, "desktop");
   await page.screenshot({ path: path.join(OUT, "free_shipping_ribbon_desktop.png") });
@@ -165,6 +179,19 @@ async function main() {
   ]);
   const mobilePage = await mobile.newPage();
   await mobilePage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+  await mobilePage.evaluate(() => {
+    sessionStorage.setItem("jss_welcome_offer_dismissed_v1", "1");
+    sessionStorage.setItem("jss_welcome_ribbon_hidden_v1", "1");
+  });
+  await mobilePage.reload({ waitUntil: "domcontentloaded" });
+  const mobileA11y = mobilePage.locator("header button[aria-label='Accessibility']").filter({ visible: true });
+  await mobileA11y.waitFor({ timeout: 8000 });
+  await mobilePage.locator("header").first().screenshot({
+    path: path.join(OUT, "header_accessibility_icon_mobile.png"),
+  });
+  await mobileA11y.screenshot({
+    path: path.join(OUT, "header_accessibility_icon_mobile_closeup.png"),
+  });
   await showRibbon(mobilePage);
   await assertRibbonGeometry(mobilePage, "mobile");
   await mobilePage.screenshot({ path: path.join(OUT, "free_shipping_ribbon_mobile.png") });
