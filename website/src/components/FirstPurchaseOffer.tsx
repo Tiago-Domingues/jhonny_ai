@@ -9,6 +9,12 @@ const SESSION_DISMISSED_KEY = "jss_welcome_offer_dismissed_v1";
 const RIBBON_HIDDEN_KEY = "jss_welcome_ribbon_hidden_v1";
 const COUPON_CODE = "JHONNY10";
 const SHOW_AFTER_MS = 7000;
+const RIBBON_ROTATE_MS = 7000;
+const RIBBON_SLIDES = [
+  ["Join", "the", "family"],
+  ["Receive", "special", "discounts"],
+  ["Get", "JSS", "updates"],
+] as const;
 
 const copy = {
   pt: {
@@ -21,7 +27,7 @@ const copy = {
     cta: "Registar e poupar 10%",
     dismiss: "Agora não",
     fineprint: "Válido para a primeira compra com conta registada. Não acumulável com outras campanhas.",
-    ribbon: "Free Shipping",
+    ribbon: "Join the family",
   },
   en: {
     eyebrow: "Welcome offer",
@@ -33,7 +39,7 @@ const copy = {
     cta: "Register & save 10%",
     dismiss: "Not now",
     fineprint: "Valid for the first purchase with a registered account. Not combinable with other offers.",
-    ribbon: "Free Shipping",
+    ribbon: "Join the family",
   },
   zh: {
     eyebrow: "欢迎优惠",
@@ -45,7 +51,7 @@ const copy = {
     cta: "注册并立省 10%",
     dismiss: "稍后再说",
     fineprint: "仅限注册账户首次购买使用，不可与其他活动叠加。",
-    ribbon: "Free Shipping",
+    ribbon: "Join the family",
   },
 } as const;
 
@@ -58,6 +64,7 @@ export function FirstPurchaseOffer() {
   const t = copy[locale];
   const [open, setOpen] = useState(false);
   const [ribbonVisible, setRibbonVisible] = useState(false);
+  const [ribbonSlide, setRibbonSlide] = useState(0);
   const [copied, setCopied] = useState(false);
   const shownThisLoad = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,6 +121,17 @@ export function FirstPurchaseOffer() {
       document.body.style.overflow = "";
     };
   }, []);
+
+  useEffect(() => {
+    if (!ribbonVisible || open) return;
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const id = window.setInterval(() => {
+      setRibbonSlide((current) => (current + 1) % RIBBON_SLIDES.length);
+    }, RIBBON_ROTATE_MS);
+    return () => window.clearInterval(id);
+  }, [ribbonVisible, open]);
 
   function closeModal({ showRibbon = true }: { showRibbon?: boolean } = {}) {
     setOpen(false);
@@ -228,12 +246,19 @@ export function FirstPurchaseOffer() {
           <button
             type="button"
             onClick={openFromRibbon}
-            aria-label={`${t.ribbon} — ${t.title}`}
+            aria-label={`${RIBBON_SLIDES[ribbonSlide].join(" ")} — ${t.title}`}
             className="jss-free-shipping-ribbon"
           />
-          <span className="jss-free-shipping-ribbon__text" aria-hidden="true">
-            <span>Free</span>
-            <span>Shipping</span>
+          <span
+            key={ribbonSlide}
+            className="jss-free-shipping-ribbon__text"
+            aria-hidden="true"
+            data-testid="ribbon-copy"
+            data-slide={ribbonSlide}
+          >
+            {RIBBON_SLIDES[ribbonSlide].map((word) => (
+              <span key={word}>{word}</span>
+            ))}
           </span>
           <button
             type="button"
