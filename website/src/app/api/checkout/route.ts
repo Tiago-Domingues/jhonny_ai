@@ -18,7 +18,8 @@ export async function POST(request: Request) {
     const guestToken = cookieStore.get(CART_COOKIE)?.value;
     const result = await createCheckout(
       { userId: session?.id, guestToken },
-      await readJson(request)
+      await readJson(request),
+      { requestOrigin: request.headers.get("origin") || new URL(request.url).origin }
     );
     return Response.json({
       order: result.order,

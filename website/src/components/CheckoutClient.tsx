@@ -17,6 +17,7 @@ type CheckoutPayment = {
   multibancoEntity?: string | null;
   multibancoReference?: string | null;
   mbwayPhone?: string | null;
+  providerPaymentUrl?: string | null;
 };
 
 type CheckoutResult = {
@@ -27,6 +28,7 @@ type CheckoutResult = {
 const PAYMENT_METHODS = [
   { id: "MBWAY", label: "MB WAY" },
   { id: "MULTIBANCO", label: "Entidade/ref." },
+  { id: "CARD", label: "Cartão / Google Pay / Revolut / Klarna" },
 ] as const;
 
 export function CheckoutClient() {
@@ -46,6 +48,10 @@ export function CheckoutClient() {
       .then((response) => response.json())
       .then((data) => setCart(data.cart))
       .catch(() => setCart({ itemCount: 0, subtotalCents: 0, items: [] }));
+    const canceled = new URLSearchParams(window.location.search).get("canceled");
+    if (canceled === "1") {
+      setMessage("Pagamento cancelado. Podes escolher outro método e tentar outra vez.");
+    }
   }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -72,11 +78,16 @@ export function CheckoutClient() {
           paymentMethod,
           marketingOptIn: form.get("marketingOptIn") === "on",
           billingSameAsShipping,
+          returnOrigin: window.location.origin,
         }),
       });
       const data = await response.json();
       if (!response.ok) {
         setMessage(data.message || "Não foi possível criar a encomenda.");
+        return;
+      }
+      if (data.payment?.providerPaymentUrl) {
+        window.location.href = data.payment.providerPaymentUrl;
         return;
       }
       setCheckoutResult({
@@ -130,12 +141,14 @@ export function CheckoutClient() {
             </select>
             <input name="phone" required placeholder="Telemóvel" className="rounded-2xl border border-line px-4 py-3" />
           </div>
-          <input
-            name="mbwayPhone"
-            placeholder="Telemóvel MB WAY"
-            required={paymentMethod === "MBWAY"}
-            className="rounded-2xl border border-line px-4 py-3"
-          />
+          {paymentMethod === "MBWAY" && (
+            <input
+              name="mbwayPhone"
+              placeholder="Telemóvel MB WAY"
+              required
+              className="rounded-2xl border border-line px-4 py-3"
+            />
+          )}
 
           <div className="md:col-span-2">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-muted">Entrega</p>
@@ -192,6 +205,11 @@ export function CheckoutClient() {
             )}
             {paymentMethod === "MULTIBANCO" && (
               <p className="mt-2 text-sm text-muted">Depois da encomenda mostramos a entidade e a referência Multibanco.</p>
+            )}
+            {paymentMethod === "CARD" && (
+              <p className="mt-2 text-sm text-muted">
+                Avanças para uma página segura da Stripe para pagar com cartão, Google Pay, Revolut Pay ou Klarna.
+              </p>
             )}
           </div>
 

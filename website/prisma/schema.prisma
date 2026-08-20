@@ -68,6 +68,7 @@ enum PaymentProvider {
   IFTHENPAY
   PAYPAL
   KLARNA
+  STRIPE
   MANUAL
 }
 

@@ -92,6 +92,7 @@ export const checkoutSchema = z.object({
   billingCity: z.string().max(80).optional().or(z.literal("")),
   billingCountry: z.string().length(2).default("PT"),
   couponCode: z.string().max(40).optional().or(z.literal("")),
+  returnOrigin: z.string().url().max(200).optional().or(z.literal("")),
 });
 
 export const couponValidationSchema = z.object({
