@@ -197,6 +197,32 @@ export function UserIcon(props: IconProps) {
   );
 }
 
+export function SearchIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16.5 16.5 4 4" />
+    </svg>
+  );
+}
+
+export function AccessibilityIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
+      <circle cx="12" cy="4" r="2.2" />
+      <path d="M12 7.2c-3.3 0-6 1.2-6 2.7v1.1h2.2V19h2.4v-4.2h2.8V19H15.8V11h2.2V9.9c0-1.5-2.7-2.7-6-2.7Z" />
+    </svg>
+  );
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
 export function FlagPT(props: IconProps) {
   return (
     <svg viewBox="0 0 24 16" {...props}>

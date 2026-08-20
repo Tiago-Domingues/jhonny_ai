@@ -5,14 +5,17 @@ import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { Logo } from "@/components/Logo";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
-import { CartIcon, UserIcon, FlagPT, FlagEN, FlagZH } from "@/components/icons";
+import { CartIcon, UserIcon, FlagPT, FlagEN, FlagZH, SearchIcon, AccessibilityIcon } from "@/components/icons";
 import { LOCALE_META, LOCALES, type Locale } from "@/lib/i18n";
 import { categoryGroupHref, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { DispatchBanner } from "@/components/DispatchBanner";
+import { HeaderSearchOverlay } from "@/components/HeaderSearchOverlay";
+import { CartDrawer } from "@/components/CartDrawer";
+import { AccessibilityPanel } from "@/components/AccessibilityPanel";
 import { VOLUME_CALCULATOR_PATH } from "@/lib/ecommerce/volumeCalculator";
 import { volumeCalculatorCopy } from "@/lib/volumeCalculatorCopy";
 
-type Panel = "cart" | "account" | null;
+type Panel = "account" | null;
 
 type HeaderUser = {
   fullName?: string;
@@ -71,6 +74,9 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
   const [open, setOpen] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [langOpen, setLangOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [a11yOpen, setA11yOpen] = useState(false);
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [desktopCat, setDesktopCat] = useState<NavKey | null>(null);
   const [activeSubPath, setActiveSubPath] = useState<string | null>(null);
@@ -188,6 +194,53 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
   const shopAllLabel =
     locale === "pt" ? "Ver tudo" : locale === "zh" ? "查看全部" : "Shop all";
   const volumeCopy = volumeCalculatorCopy(locale);
+  const headerCopy = {
+    pt: {
+      tryBoard: "Experimentar prancha",
+      search: "Pesquisar produtos",
+      searching: "A procurar...",
+      searchEmpty: "Nenhum produto encontrado.",
+      a11y: "Acessibilidade",
+      a11yLarge: "Texto maior",
+      a11yContrast: "Alto contraste",
+      a11yMotion: "Reduzir movimento",
+      a11yReset: "Repor",
+      continueShopping: "Continuar compras",
+      checkout: "Checkout",
+      subtotal: "Subtotal",
+    },
+    en: {
+      tryBoard: "Try a Board",
+      search: "Search for…",
+      searching: "Searching…",
+      searchEmpty: "No products found.",
+      a11y: "Accessibility",
+      a11yLarge: "Larger text",
+      a11yContrast: "High contrast",
+      a11yMotion: "Reduce motion",
+      a11yReset: "Reset",
+      continueShopping: "Continue shopping",
+      checkout: "Checkout",
+      subtotal: "Subtotal",
+    },
+    zh: {
+      tryBoard: "试板",
+      search: "搜索商品",
+      searching: "正在搜索…",
+      searchEmpty: "未找到商品。",
+      a11y: "无障碍",
+      a11yLarge: "更大字体",
+      a11yContrast: "高对比度",
+      a11yMotion: "减少动效",
+      a11yReset: "重置",
+      continueShopping: "继续购物",
+      checkout: "结算",
+      subtotal: "小计",
+    },
+  }[locale];
+
+  const iconButtonClass =
+    "relative flex h-9 w-9 items-center justify-center text-white transition hover:text-white/80";
 
   return (
     <header
@@ -232,17 +285,18 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3">
           <div className="relative">
             <button
               type="button"
               onClick={() => {
                 setLangOpen((value) => !value);
                 setDesktopCat(null);
+                setPanel(null);
               }}
               aria-label="Change language"
               aria-expanded={langOpen}
-              className="flex items-center gap-1.5 rounded-full border border-white/30 px-2.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:border-white"
+              className="flex items-center gap-1.5 px-1.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:text-white/80"
             >
               {locale === "pt" ? (
                 <FlagPT className="h-3.5 w-5 rounded-[2px]" />
@@ -251,7 +305,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               ) : (
                 <FlagEN className="h-3.5 w-5 rounded-[2px]" />
               )}
-              <span>{LOCALE_META[locale].short}</span>
+              <span className="hidden sm:inline">{LOCALE_META[locale].short}</span>
             </button>
             {langOpen && (
               <div className="absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border border-line bg-paper py-1 text-ink shadow-xl">
@@ -278,131 +332,152 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             )}
           </div>
 
-          <div ref={menuRef} className="flex items-center gap-2 sm:gap-3">
-            <div className="relative">
-              <button
-                onClick={() => {
-                  togglePanel("account");
-                  setDesktopCat(null);
-                }}
-                aria-label={t.account.title}
-                aria-expanded={panel === "account"}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white"
-              >
-                <UserIcon className="h-5 w-5" />
-              </button>
-              {panel === "account" && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">
-                  <p className="px-3 pb-2 pt-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                    {t.account.title}
+          <div ref={menuRef} className="relative hidden sm:block">
+            <button
+              type="button"
+              onClick={() => {
+                togglePanel("account");
+                setDesktopCat(null);
+                setLangOpen(false);
+              }}
+              aria-label={t.account.title}
+              aria-expanded={panel === "account"}
+              className={iconButtonClass}
+            >
+              <UserIcon className="h-[1.375rem] w-[1.375rem]" />
+            </button>
+            {panel === "account" && (
+              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">
+                <p className="px-3 pb-2 pt-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
+                  {t.account.title}
+                </p>
+                {user && (
+                  <p className="px-3 pb-2 text-sm font-semibold text-ink">
+                    {user.fullName || user.username || user.email}
                   </p>
-                  {user && (
-                    <p className="px-3 pb-2 text-sm font-semibold text-ink">
-                      {user.fullName || user.username || user.email}
-                    </p>
-                  )}
+                )}
+                <a
+                  href="/conta"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                >
+                  {user ? t.account.title : t.account.signIn}
+                </a>
+                {!user && (
                   <a
                     href="/conta"
                     className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                   >
-                    {user ? t.account.title : t.account.signIn}
+                    {t.account.register}
                   </a>
-                  {!user && (
+                )}
+                <a
+                  href="/checkout"
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                >
+                  {t.account.orders}
+                </a>
+                {user?.role === "ADMIN" && (
+                  <>
                     <a
-                      href="/conta"
+                      href="/admin/clientes"
                       className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                     >
-                      {t.account.register}
+                      Admin · Clientes
                     </a>
-                  )}
-                  <a
-                    href="/checkout"
+                    <a
+                      href="/admin/encomendas"
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                    >
+                      Admin · Encomendas
+                    </a>
+                    <a
+                      href="/admin/analytics"
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                    >
+                      Admin · Analytics
+                    </a>
+                  </>
+                )}
+                {user && (
+                  <button
+                    type="button"
+                    onClick={logout}
                     className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                   >
-                    {t.account.orders}
-                  </a>
-                  {user?.role === "ADMIN" && (
-                    <>
-                      <a
-                        href="/admin/clientes"
-                        className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                      >
-                        Admin · Clientes
-                      </a>
-                      <a
-                        href="/admin/encomendas"
-                        className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                      >
-                        Admin · Encomendas
-                      </a>
-                      <a
-                        href="/admin/analytics"
-                        className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                      >
-                        Admin · Analytics
-                      </a>
-                    </>
-                  )}
-                  {user && (
-                    <button
-                      type="button"
-                      onClick={logout}
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                    >
-                      Sair
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => {
-                  togglePanel("cart");
-                  setDesktopCat(null);
-                }}
-                aria-label={t.account.cartTitle}
-                aria-expanded={panel === "cart"}
-                className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/30 text-white transition hover:border-white"
-              >
-                <CartIcon className="h-5 w-5" />
-                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[0.6rem] font-bold text-ink">
-                  {cartCount}
-                </span>
-              </button>
-              {panel === "cart" && (
-                <div className="absolute right-0 mt-2 w-60 rounded-xl border border-line bg-paper p-4 text-ink shadow-xl">
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted">
-                    {t.account.cartTitle}
-                  </p>
-                  <p className="mt-2 text-sm text-muted">
-                    {cartCount > 0 ? `${cartCount} item(s) no carrinho.` : t.account.cartEmpty}
-                  </p>
-                  <div className="mt-4 grid gap-2">
-                    <a
-                      href="/loja"
-                      className="rounded-full border border-line px-4 py-2 text-center text-xs font-bold uppercase tracking-wide"
-                    >
-                      Continuar compras
-                    </a>
-                    <a
-                      href="/checkout"
-                      className="rounded-full bg-ink px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-white"
-                    >
-                      Checkout
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
+                    Sair
+                  </button>
+                )}
+              </div>
+            )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSearchOpen(true);
+              setDesktopCat(null);
+              setLangOpen(false);
+              setPanel(null);
+            }}
+            aria-label={headerCopy.search}
+            className={iconButtonClass}
+          >
+            <SearchIcon className="h-[1.375rem] w-[1.375rem]" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setCartOpen(true);
+              setDesktopCat(null);
+              setLangOpen(false);
+              setPanel(null);
+            }}
+            aria-label={t.account.cartTitle}
+            aria-expanded={cartOpen}
+            className={iconButtonClass}
+          >
+            <CartIcon className="h-[1.375rem] w-[1.375rem]" />
+            {cartCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-white" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setA11yOpen(true);
+              setDesktopCat(null);
+              setLangOpen(false);
+              setPanel(null);
+            }}
+            aria-label={headerCopy.a11y}
+            className={`${iconButtonClass} hidden min-[1000px]:flex`}
+          >
+            <AccessibilityIcon className="h-[1.125rem] w-[1.125rem]" />
+          </button>
+
+          <Link
+            href={VOLUME_CALCULATOR_PATH}
+            className="ml-1 hidden items-center rounded-sm bg-white px-3.5 py-2 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-transparent hover:text-white hover:outline hover:outline-1 hover:outline-white lg:inline-flex"
+          >
+            {headerCopy.tryBoard}
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setA11yOpen(true)}
+            aria-label={headerCopy.a11y}
+            className={`${iconButtonClass} min-[1000px]:hidden`}
+          >
+            <AccessibilityIcon className="h-[1.125rem] w-[1.125rem]" />
+          </button>
 
           <button
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
             aria-expanded={open}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/30 text-white xl:hidden"
+            className="flex h-10 w-10 items-center justify-center text-white xl:hidden"
           >
             <span className="relative block h-4 w-5">
               <span
@@ -424,6 +499,32 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
           </button>
         </div>
       </div>
+
+      <HeaderSearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        placeholder={headerCopy.search}
+        emptyLabel={headerCopy.searchEmpty}
+        searchingLabel={headerCopy.searching}
+      />
+      <CartDrawer
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        title={t.account.cartTitle}
+        emptyLabel={t.account.cartEmpty}
+        continueLabel={headerCopy.continueShopping}
+        checkoutLabel={headerCopy.checkout}
+        subtotalLabel={headerCopy.subtotal}
+      />
+      <AccessibilityPanel
+        open={a11yOpen}
+        onClose={() => setA11yOpen(false)}
+        title={headerCopy.a11y}
+        largeTextLabel={headerCopy.a11yLarge}
+        highContrastLabel={headerCopy.a11yContrast}
+        reduceMotionLabel={headerCopy.a11yMotion}
+        resetLabel={headerCopy.a11yReset}
+      />
 
       {/* Full-width mega menu bar (Pukas-style) */}
       <div
@@ -710,6 +811,22 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                 </div>
               );
             })}
+            <div className="border-t border-white/10 py-3">
+              <Link
+                href="/conta"
+                onClick={() => setOpen(false)}
+                className="block px-1 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-white"
+              >
+                {user ? t.account.title : t.account.signIn}
+              </Link>
+              <Link
+                href={VOLUME_CALCULATOR_PATH}
+                onClick={() => setOpen(false)}
+                className="mt-1 inline-flex rounded-sm bg-white px-3.5 py-2 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-ink"
+              >
+                {headerCopy.tryBoard}
+              </Link>
+            </div>
           </nav>
         </div>
       )}
