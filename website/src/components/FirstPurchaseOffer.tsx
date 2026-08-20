@@ -230,13 +230,11 @@ export function FirstPurchaseOffer() {
             onClick={openFromRibbon}
             aria-label={`${t.ribbon} — ${t.title}`}
             className="jss-free-shipping-ribbon"
-          >
-            <span className="jss-free-shipping-ribbon__text">
-              Free
-              <br />
-              Shipping
-            </span>
-          </button>
+          />
+          <span className="jss-free-shipping-ribbon__text" aria-hidden="true">
+            <span>Free</span>
+            <span>Shipping</span>
+          </span>
           <button
             type="button"
             onClick={hideRibbon}

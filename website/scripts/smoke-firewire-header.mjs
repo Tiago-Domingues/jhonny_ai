@@ -134,6 +134,11 @@ async function assertRibbonGeometry(page, label) {
         fontWeight: textStyle.fontWeight,
         textTransform: textStyle.textTransform,
         color: textStyle.color,
+        content: (text.textContent || "").replace(/\s+/g, " ").trim(),
+        left: textBox.left - widgetBox.left,
+        right: textBox.right - widgetBox.left,
+        top: textBox.top - widgetBox.top,
+        bottom: textBox.bottom - widgetBox.top,
         centerX: textBox.left + textBox.width / 2 - widgetBox.left,
         centerY: textBox.top + textBox.height / 2 - widgetBox.top,
       },
@@ -175,11 +180,25 @@ async function assertRibbonGeometry(page, label) {
     text.transform.includes("matrix") || text.transform.includes("rotate"),
     `${label}: copy is not rotated (${text.transform})`
   );
+  assert(/free/i.test(text.content) && /shipping/i.test(text.content), `${label}: missing FREE SHIPPING copy`);
+  assert(text.left >= -2, `${label}: copy clipped on the left (${text.left})`);
+  assert(text.top >= -2, `${label}: copy clipped on the top (${text.top})`);
+  assert(text.right <= widget.width + 4, `${label}: copy overflows the right (${text.right} of ${widget.width})`);
+  assert(text.bottom <= widget.height + 4, `${label}: copy overflows the bottom (${text.bottom} of ${widget.height})`);
+  assert(
+    Math.abs(text.centerX / widget.width - 0.333) < 0.12,
+    `${label}: copy not centered in the triangle (cx ratio ${text.centerX / widget.width})`
+  );
+  assert(
+    Math.abs(text.centerY / widget.height - 0.667) < 0.12,
+    `${label}: copy not centered in the triangle (cy ratio ${text.centerY / widget.height})`
+  );
 
   console.log(`geometry OK [${label}]`, {
     size: `${widget.width.toFixed(1)}x${widget.height.toFixed(1)}`,
     close: `${close.relX.toFixed(1)},${close.relY.toFixed(1)}`,
     textCenter: `${text.centerX.toFixed(1)},${text.centerY.toFixed(1)}`,
+    copy: text.content,
   });
 }
 

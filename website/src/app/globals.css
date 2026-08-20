@@ -81,8 +81,9 @@ html.jss-a11y-motion *::after {
    triangle in the bottom-left, copy rotated along the hypotenuse, dismiss
    control centered on that same diagonal near the lower-right end. */
 .jss-free-shipping-widget {
-  --jss-ribbon-size: 10.75rem;
+  --jss-ribbon-size: 10.5rem;
   position: fixed;
+  top: auto;
   right: auto;
   bottom: 0;
   left: 0;
@@ -118,28 +119,39 @@ html.jss-a11y-motion *::after {
   filter: brightness(1.08);
 }
 
+/* Sit in the triangle centroid, rotated so the two lines run along the hypotenuse. */
 .jss-free-shipping-ribbon__text {
   position: absolute;
-  top: 70%;
-  left: 30%;
+  top: 66.666%;
+  left: 33.333%;
+  z-index: 1;
+  display: flex;
   width: max-content;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   transform: translate(-50%, -50%) rotate(-45deg);
   transform-origin: center center;
   color: #fff;
   font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
-  line-height: 1.08;
+  letter-spacing: 0.14em;
+  line-height: 1.05;
   text-align: center;
   text-transform: uppercase;
   pointer-events: none;
 }
 
+.jss-free-shipping-ribbon__text span {
+  display: block;
+  white-space: nowrap;
+}
+
 @media (min-width: 640px) {
   .jss-free-shipping-ribbon__text {
-    font-size: 0.78rem;
-    letter-spacing: 0.14em;
+    font-size: 0.82rem;
+    letter-spacing: 0.16em;
   }
 }
 
@@ -147,7 +159,7 @@ html.jss-a11y-motion *::after {
   position: absolute;
   top: 82%;
   left: 82%;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   width: 1.25rem;
   height: 1.25rem;
