@@ -58,16 +58,14 @@ You should see these names (already set on Production + Preview):
 - `IFTHENPAY_CALLBACK_SECRET`
 - `IFTHENPAY_CALLBACK_URL`
 
-They are stored as **Sensitive** variables. Vercel shows the **name** but will **never show the value** again. Clicking a row / “Copied” only copies the **name** (for example `IFTHENPAY_MB_KEY`), not the secret. That is expected.
+`IFTHENPAY_MBWAY_KEY`, `IFTHENPAY_MB_KEY`, and `IFTHENPAY_CALLBACK_URL` are **Sensitive**. Clicking those rows / “Copied” only copies the **name**, not the secret. That is expected. You do **not** need those values in the Ifthenpay callback screen.
 
-You do **not** need `IFTHENPAY_MB_KEY` in the Ifthenpay callback screen. Ifthenpay already issued that key. For callbacks you choose an anti-phishing key yourself and store it as `IFTHENPAY_CALLBACK_SECRET`.
+`IFTHENPAY_CALLBACK_SECRET` is the anti-phishing key. It is stored as a normal (encrypted) variable so you **can** reveal it:
 
-If nobody saved that value (you cannot reveal it):
-
-1. Invent a new key (random, max 50 characters).
-2. On that Vercel page → `IFTHENPAY_CALLBACK_SECRET` → ⋯ → **Edit** → paste the new value → Save (keep Production + Preview).
-3. **Redeploy** Production (Deployments → ⋯ → Redeploy) so the running site uses it.
-4. Use that **same new value** in the Ifthenpay backoffice.
+1. Open the [Environment Variables](https://vercel.com/tiagopaixaodomingues-6296s-projects/website/settings/environment-variables) page above.
+2. Search `IFTHENPAY_CALLBACK_SECRET`.
+3. Click the **eye** icon on that row to show the value, then copy it.
+4. Paste that value into Ifthenpay as **chave anti-phishing**.
 
 Do not edit `IFTHENPAY_MBWAY_KEY` / `IFTHENPAY_MB_KEY` unless Ifthenpay gave you new payment keys. The backoffice key Ifthenpay asks for when saving callbacks is **not** in Vercel; it lives in the Ifthenpay admin profile.
 
