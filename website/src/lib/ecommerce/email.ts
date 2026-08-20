@@ -142,7 +142,20 @@ function paymentInstructionsHtml(order: NonNullable<Awaited<ReturnType<typeof lo
     `;
   }
 
-  return `<p><strong>Método de pagamento:</strong> ${escapeHtml(payment.method)}</p>`;
+  if (payment.method === "CARD" || payment.method === "KLARNA") {
+    return `
+      <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:8px">
+        <p><strong>Pagamento Stripe</strong></p>
+        <p>Podes pagar com cartão, Google Pay, Revolut Pay ou Klarna na página segura da Stripe.</p>
+        <p>Valor: <strong>${formatEuro(payment.amountCents)}</strong></p>
+        ${
+          payment.providerPaymentUrl
+            ? `<p><a href="${escapeHtml(payment.providerPaymentUrl)}">Continuar para o pagamento</a></p>`
+            : ""
+        }
+      </div>
+    `;
+  }
 }
 
 function orderHtml(

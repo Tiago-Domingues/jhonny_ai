@@ -56,11 +56,15 @@ export function integrationStatus() {
       environment: process.env.PAYPAL_ENVIRONMENT || "sandbox",
       implementation: "placeholder",
     },
+    stripe: {
+      configured: hasValue(process.env.STRIPE_SECRET_KEY),
+      webhookConfigured: hasValue(process.env.STRIPE_WEBHOOK_SECRET),
+      paymentMethodConfiguration: process.env.STRIPE_PAYMENT_METHOD_CONFIGURATION || "",
+    },
     klarna: {
-      configured:
-        hasValue(process.env.KLARNA_USERNAME) &&
-        hasValue(process.env.KLARNA_PASSWORD),
-      implementation: "placeholder",
+      configured: hasValue(process.env.STRIPE_SECRET_KEY),
+      via: "stripe",
+      implementation: "stripe_checkout",
     },
   };
 }

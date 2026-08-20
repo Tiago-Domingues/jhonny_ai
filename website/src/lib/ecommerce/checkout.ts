@@ -19,7 +19,11 @@ function nextOrderNumber() {
   return `JSS-${stamp}-${suffix}`;
 }
 
-export async function createCheckout(identity: CheckoutIdentity, input: unknown) {
+export async function createCheckout(
+  identity: CheckoutIdentity,
+  input: unknown,
+  options?: { requestOrigin?: string }
+) {
   const data = checkoutSchema.parse(input);
   const cart = await getActiveCart(identity);
   const summary = summarizeCart(cart);
@@ -141,6 +145,11 @@ export async function createCheckout(identity: CheckoutIdentity, input: unknown)
     phone: order.customerPhone ? `${order.customerPhoneCountryCode}${order.customerPhone}` : undefined,
     mbwayPhone: data.mbwayPhone || `${data.phoneCountryCode}${data.phone}`,
     description: `Jhonny Surf Store ${order.orderNumber}`,
+    customerName: order.customerName,
+    fulfillmentMethod: data.fulfillmentMethod,
+    shippingCountry: data.country,
+    returnOrigin: data.returnOrigin,
+    requestOrigin: options?.requestOrigin,
   });
 
   try {

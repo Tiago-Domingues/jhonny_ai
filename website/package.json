@@ -11,6 +11,7 @@
     "enrich:surfboards": "npx tsx scripts/enrich-surfboards.mjs",
     "seed:athlete-coupons": "node scripts/seed-athlete-coupons.mjs",
     "seed:welcome-coupon": "node scripts/seed-welcome-coupon.mjs",
+    "test:stripe": "npx tsx scripts/test-stripe-checkout.ts",
     "lint": "eslint"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.17.1",
+    "stripe": "^22.5.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

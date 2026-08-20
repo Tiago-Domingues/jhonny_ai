@@ -6,6 +6,12 @@ import { recordCouponUsageForPaidOrder } from "@/lib/ecommerce/coupons";
 import { centsToEuros } from "@/lib/ecommerce/money";
 import { finalizeOdooOrderAfterPayment } from "@/lib/ecommerce/odooOrders";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
+import { getStripe, stripePaymentMethodConfiguration } from "@/lib/ecommerce/stripe";
+import {
+  hasStripeSecret,
+  resolveCheckoutOrigin,
+  stripeLineItems,
+} from "@/lib/ecommerce/stripeCheckout";
 
 type PaymentRequest = {
   method: "MBWAY" | "MULTIBANCO" | "PAYPAL" | "KLARNA" | "CARD" | "MANUAL";
@@ -15,10 +21,15 @@ type PaymentRequest = {
   phone?: string;
   mbwayPhone?: string;
   description: string;
+  customerName?: string;
+  fulfillmentMethod?: "PICKUP_IN_STORE" | "SHIP_TO_ADDRESS";
+  shippingCountry?: string;
+  returnOrigin?: string;
+  requestOrigin?: string;
 };
 
 type ProviderResult = {
-  provider: "IFTHENPAY" | "PAYPAL" | "KLARNA" | "MANUAL";
+  provider: "IFTHENPAY" | "PAYPAL" | "KLARNA" | "STRIPE" | "MANUAL";
   status: "PENDING" | "REQUIRES_ACTION";
   providerReference?: string;
   providerRequestId?: string;
@@ -126,9 +137,119 @@ async function createIfthenpayMultibancoPayment(orderNumber: string, request: Pa
   };
 }
 
-async function createProviderPayment(orderNumber: string, request: PaymentRequest): Promise<ProviderResult> {
-  if (request.method === "MBWAY") return createIfthenpayMbwayPayment(orderNumber, request);
-  if (request.method === "MULTIBANCO") return createIfthenpayMultibancoPayment(orderNumber, request);
+async function createStripeCheckoutPayment(
+  order: {
+    id: string;
+    orderNumber: string;
+    totalCents: number;
+    shippingCents: number;
+    discountCents: number;
+    currency: string;
+    customerName: string;
+    fulfillmentMethod: "PICKUP_IN_STORE" | "SHIP_TO_ADDRESS";
+    items: Array<{ name: string; quantity: number; totalCents: number }>;
+  },
+  request: PaymentRequest
+): Promise<ProviderResult> {
+  if (!hasStripeSecret()) {
+    if (isProductionRuntime()) {
+      throw new Error("Stripe is not connected yet. Set STRIPE_SECRET_KEY.");
+    }
+    return {
+      provider: "STRIPE",
+      status: "REQUIRES_ACTION",
+      providerReference: `stripe-pending-${order.orderNumber}`,
+      rawProviderPayload: { mode: "placeholder", reason: "stripe_credentials_not_connected" },
+    };
+  }
+
+  const origin = resolveCheckoutOrigin(request.returnOrigin, request.requestOrigin);
+  const lineItems = stripeLineItems({
+    items: order.items,
+    shippingCents: order.shippingCents,
+    discountCents: order.discountCents,
+    currency: order.currency,
+  });
+  const paymentMethodConfiguration = stripePaymentMethodConfiguration();
+  const session = await getStripe().checkout.sessions.create({
+    mode: "payment",
+    customer_email: request.email,
+    client_reference_id: order.orderNumber,
+    metadata: {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      paymentMethod: request.method,
+    },
+    payment_intent_data: {
+      metadata: {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+      },
+      description: request.description.slice(0, 1000),
+    },
+    line_items: lineItems,
+    success_url: `${origin}/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}/checkout?canceled=1`,
+    locale: "auto",
+    billing_address_collection: "required",
+    phone_number_collection: { enabled: true },
+    ...(order.fulfillmentMethod === "SHIP_TO_ADDRESS"
+      ? {
+          shipping_address_collection: {
+            allowed_countries: [
+              "PT",
+              "ES",
+              "FR",
+              "DE",
+              "GB",
+              "IE",
+              "IT",
+              "NL",
+              "BE",
+              "AT",
+              "CH",
+              "LU",
+              "US",
+              "BR",
+            ],
+          },
+        }
+      : {}),
+    ...(paymentMethodConfiguration
+      ? { payment_method_configuration: paymentMethodConfiguration }
+      : {}),
+  });
+
+  if (!session.url) {
+    throw new Error("Stripe did not return a checkout URL.");
+  }
+
+  return {
+    provider: "STRIPE",
+    status: "REQUIRES_ACTION",
+    providerReference: session.id,
+    providerRequestId: typeof session.payment_intent === "string" ? session.payment_intent : undefined,
+    providerPaymentUrl: session.url,
+    rawProviderPayload: { id: session.id, mode: session.mode, url: session.url },
+  };
+}
+
+async function createProviderPayment(
+  order: {
+    id: string;
+    orderNumber: string;
+    totalCents: number;
+    shippingCents: number;
+    discountCents: number;
+    currency: string;
+    customerName: string;
+    fulfillmentMethod: "PICKUP_IN_STORE" | "SHIP_TO_ADDRESS";
+    items: Array<{ name: string; quantity: number; totalCents: number }>;
+  },
+  request: PaymentRequest
+): Promise<ProviderResult> {
+  if (request.method === "MBWAY") return createIfthenpayMbwayPayment(order.orderNumber, request);
+  if (request.method === "MULTIBANCO") return createIfthenpayMultibancoPayment(order.orderNumber, request);
   if (request.method === "PAYPAL") {
     if (isProductionRuntime()) {
       throw new Error("PayPal is not connected yet.");
@@ -136,31 +257,26 @@ async function createProviderPayment(orderNumber: string, request: PaymentReques
     return {
       provider: "PAYPAL",
       status: "REQUIRES_ACTION",
-      providerReference: `paypal-pending-${orderNumber}`,
+      providerReference: `paypal-pending-${order.orderNumber}`,
       rawProviderPayload: { mode: "placeholder", reason: "paypal_credentials_not_connected" },
     };
   }
-  if (request.method === "KLARNA") {
-    if (isProductionRuntime()) {
-      throw new Error("Klarna is not connected yet.");
-    }
-    return {
-      provider: "KLARNA",
-      status: "REQUIRES_ACTION",
-      providerReference: `klarna-pending-${orderNumber}`,
-      rawProviderPayload: { mode: "placeholder", reason: "klarna_credentials_not_connected" },
-    };
+  if (request.method === "KLARNA" || request.method === "CARD") {
+    return createStripeCheckoutPayment(order, request);
   }
   return {
     provider: "MANUAL",
     status: "PENDING",
-    providerReference: `manual-${orderNumber}`,
+    providerReference: `manual-${order.orderNumber}`,
   };
 }
 
 export async function createPaymentForOrder(orderId: string, request: PaymentRequest) {
-  const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
-  const providerResult = await createProviderPayment(order.orderNumber, request);
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  const providerResult = await createProviderPayment(order, request);
 
   return prisma.payment.create({
     data: {
