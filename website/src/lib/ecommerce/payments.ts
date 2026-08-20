@@ -5,6 +5,13 @@ import { sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
 import { recordCouponUsageForPaidOrder } from "@/lib/ecommerce/coupons";
 import { centsToEuros } from "@/lib/ecommerce/money";
 import { finalizeOdooOrderAfterPayment } from "@/lib/ecommerce/odooOrders";
+import {
+  firstNonEmpty,
+  ifthenpayOrderId,
+  isIfthenpayGatewayAccepted,
+  isPaidCallbackStatus,
+  normalizePaymentReference,
+} from "@/lib/ecommerce/ifthenpay";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 type PaymentRequest = {
@@ -41,6 +48,13 @@ function normalizeMbwayPhone(phone: string) {
   return `351#${digits}`;
 }
 
+function assertIfthenpayGatewayAccepted(payload: Record<string, unknown>, method: string) {
+  const status = firstNonEmpty(payload.Status, payload.status);
+  if (isIfthenpayGatewayAccepted(status)) return;
+  const message = firstNonEmpty(payload.Message, payload.message) || "unknown error";
+  throw new Error(`${method} was rejected by Ifthenpay (${status}: ${message}).`);
+}
+
 async function createIfthenpayMbwayPayment(orderNumber: string, request: PaymentRequest): Promise<ProviderResult> {
   const key = process.env.IFTHENPAY_MBWAY_KEY;
   const phone = request.mbwayPhone || request.phone;
@@ -57,28 +71,30 @@ async function createIfthenpayMbwayPayment(orderNumber: string, request: Payment
     };
   }
 
+  const orderId = ifthenpayOrderId(orderNumber);
   const response = await fetch("https://api.ifthenpay.com/spg/payment/mbway", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       mbWayKey: key,
-      orderId: orderNumber.slice(0, 15),
+      orderId,
       amount: amountString(request.amountCents),
       mobileNumber: normalizeMbwayPhone(phone),
       email: request.email,
       description: request.description.slice(0, 50),
     }),
   });
-  const payload = await response.json();
+  const payload = (await response.json()) as Record<string, unknown>;
   if (!response.ok) {
     throw new Error("Ifthenpay MB WAY request failed.");
   }
+  assertIfthenpayGatewayAccepted(payload, "MB WAY");
 
   return {
     provider: "IFTHENPAY",
     status: "PENDING",
-    providerReference: String(payload.orderId || orderNumber.slice(0, 15)),
-    providerRequestId: payload.RequestId || payload.requestId,
+    providerReference: firstNonEmpty(payload.orderId, payload.OrderId) || orderId,
+    providerRequestId: firstNonEmpty(payload.RequestId, payload.requestId),
     mbwayPhone: phone,
     rawProviderPayload: payload,
   };
@@ -100,28 +116,32 @@ async function createIfthenpayMultibancoPayment(orderNumber: string, request: Pa
     };
   }
 
+  const orderId = ifthenpayOrderId(orderNumber);
   const response = await fetch("https://api.ifthenpay.com/spg/payment/multibanco", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       mbKey: key,
-      orderId: orderNumber.slice(0, 15),
+      orderId,
       amount: amountString(request.amountCents),
       description: request.description.slice(0, 50),
     }),
   });
-  const payload = await response.json();
+  const payload = (await response.json()) as Record<string, unknown>;
   if (!response.ok) {
     throw new Error("Ifthenpay Multibanco request failed.");
   }
+  assertIfthenpayGatewayAccepted(payload, "Multibanco");
+  const entity = firstNonEmpty(payload.Entity, payload.entity);
+  const reference = firstNonEmpty(payload.Reference, payload.reference);
 
   return {
     provider: "IFTHENPAY",
     status: "PENDING",
-    providerReference: String(payload.orderId || orderNumber.slice(0, 15)),
-    providerRequestId: payload.RequestId || payload.requestId || payload.transactionId,
-    multibancoEntity: payload.Entity || payload.entity,
-    multibancoReference: payload.Reference || payload.reference,
+    providerReference: firstNonEmpty(payload.orderId, payload.OrderId) || orderId,
+    providerRequestId: firstNonEmpty(payload.RequestId, payload.requestId, payload.transactionId),
+    multibancoEntity: entity,
+    multibancoReference: reference ? normalizePaymentReference(reference) : undefined,
     rawProviderPayload: payload,
   };
 }
@@ -186,6 +206,7 @@ export async function markPaymentPaid(
   options?: { amountCents?: number | null; status?: string | null }
 ) {
   const reference = providerReference.trim();
+  const compactReference = normalizePaymentReference(reference);
   const payment =
     (await prisma.payment.findFirst({
       where: { providerReference: reference },
@@ -194,18 +215,21 @@ export async function markPaymentPaid(
     (await prisma.payment.findFirst({
       where: { providerRequestId: reference },
       include: { order: true },
+    })) ||
+    (await prisma.payment.findFirst({
+      where: {
+        OR: [
+          { multibancoReference: reference },
+          { multibancoReference: compactReference },
+        ],
+      },
+      include: { order: true },
     }));
   if (!payment) return 0;
   if (payment.status === "PAID") return 1;
 
-  const statusRaw = String(options?.status ?? "").trim().toLowerCase();
-  if (statusRaw) {
-    const ok = ["paid", "success", "ok", "paga", "pago", "confirmed", "completa", "complete"].includes(
-      statusRaw
-    );
-    if (!ok) {
-      throw new Error("invalid_payment_status");
-    }
+  if (!isPaidCallbackStatus(options?.status)) {
+    throw new Error("invalid_payment_status");
   }
 
   if (options?.amountCents != null && Number.isFinite(options.amountCents)) {

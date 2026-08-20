@@ -248,6 +248,7 @@ Until that checklist is green, treat the site as **marketing + catalog preview**
 | Coming-soon + preview unlock | `website/src/proxy.ts`, `website/src/lib/ecommerce/siteAccess.ts`, `/preview-access` |
 | Checkout / shipping threshold | `website/src/lib/ecommerce/checkout.ts` |
 | Payments / mocks / placeholders | `website/src/lib/ecommerce/payments.ts` |
+| Ifthenpay setup (MB WAY + Multibanco callbacks) | `docs/ifthenpay-setup.md` |
 | Ifthenpay callback | `website/src/app/api/payments/ifthenpay/callback/route.ts` |
 | Session / cookies | `website/src/lib/ecommerce/session.ts` |
 | Auth validation | `website/src/lib/ecommerce/security.ts`, `schemas.ts` |

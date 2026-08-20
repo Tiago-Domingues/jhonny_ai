@@ -1,62 +1,17 @@
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { readJson, unavailableError } from "@/lib/ecommerce/api";
+import {
+  extractIfthenpayReference,
+  extractIfthenpaySecret,
+  extractIfthenpayStatus,
+  parseIfthenpayAmountCents,
+} from "@/lib/ecommerce/ifthenpay";
 import { markPaymentPaid } from "@/lib/ecommerce/payments";
 import {
   enforceRateLimit,
   isProductionRuntime,
   secretsEqual,
 } from "@/lib/ecommerce/securityRuntime";
-
-function parseAmountCents(payload: Record<string, unknown>) {
-  const raw =
-    payload.amount ??
-    payload.Amount ??
-    payload.valor ??
-    payload.Valor ??
-    payload.value ??
-    payload.Value;
-  if (raw == null || raw === "") return null;
-  const num = typeof raw === "number" ? raw : Number(String(raw).replace(",", "."));
-  if (!Number.isFinite(num)) return null;
-  // Ifthenpay usually sends euros as decimal string ("12.50").
-  if (Number.isInteger(num) && Math.abs(num) >= 1000) return Math.round(num);
-  return Math.round(num * 100);
-}
-
-function extractSecret(payload: Record<string, unknown>, request: Request) {
-  return String(
-    request.headers.get("x-ifthenpay-secret") ||
-      request.headers.get("x-callback-secret") ||
-      payload.key ||
-      payload.chave ||
-      payload.secret ||
-      payload.antiPhishingKey ||
-      payload.AntiPhishingKey ||
-      payload.anti_phishing_key ||
-      ""
-  );
-}
-
-function extractReference(payload: Record<string, unknown>) {
-  const reference =
-    payload.providerReference ||
-    payload.orderId ||
-    payload.OrderId ||
-    payload.order_id ||
-    payload.id ||
-    payload.referencia ||
-    payload.Reference ||
-    payload.reference ||
-    payload.RequestId ||
-    payload.requestId ||
-    payload.request_id;
-  return reference == null || reference === "" ? null : String(reference);
-}
-
-function extractStatus(payload: Record<string, unknown>) {
-  const status = payload.status ?? payload.Status ?? payload.estado ?? payload.Estado;
-  return status == null || status === "" ? null : String(status);
-}
 
 async function handleIfthenpayCallback(request: Request, payload: Record<string, unknown>) {
   if (!hasDatabaseUrl()) return unavailableError();
@@ -65,7 +20,7 @@ async function handleIfthenpayCallback(request: Request, payload: Record<string,
   if (limited) return limited;
 
   const expectedSecret = process.env.IFTHENPAY_CALLBACK_SECRET?.trim();
-  const suppliedSecret = extractSecret(payload, request);
+  const suppliedSecret = extractIfthenpaySecret(payload, request);
 
   if (isProductionRuntime() && !expectedSecret) {
     return Response.json(
@@ -81,19 +36,22 @@ async function handleIfthenpayCallback(request: Request, payload: Record<string,
     return Response.json({ error: "invalid_callback_secret" }, { status: 401 });
   }
 
-  const reference = extractReference(payload);
+  const reference = extractIfthenpayReference(payload);
   if (!reference) {
     return Response.json({ error: "missing_payment_reference" }, { status: 400 });
   }
 
-  const status = extractStatus(payload);
-  const amountCents = parseAmountCents(payload);
+  const status = extractIfthenpayStatus(payload);
+  const amountCents = parseIfthenpayAmountCents(payload);
 
   try {
     const paid = await markPaymentPaid(reference, {
       amountCents,
       status,
     });
+    if (!paid) {
+      return Response.json({ error: "payment_not_found" }, { status: 404 });
+    }
     return Response.json({ ok: true, updated: paid });
   } catch (error) {
     const message = error instanceof Error ? error.message : "callback_failed";
