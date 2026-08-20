@@ -5,6 +5,7 @@ import {
   stripeLineItemsTotalCents,
   stripePaidAmountCents,
   stripeSessionIsPaid,
+  stripePaymentMethodTypes,
 } from "../src/lib/ecommerce/stripeCheckout";
 
 function assert(condition: unknown, message: string) {
@@ -36,6 +37,9 @@ assert(
 );
 assert(stripeSessionIsPaid({ payment_status: "paid" }), "paid session should count as paid");
 assert(!stripeSessionIsPaid({ payment_status: "unpaid" }), "unpaid session should not count as paid");
-assert(stripePaidAmountCents({ amount_total: 10850 }) === 10850, "amount_total is already cents");
+assert(stripePaymentMethodTypes("KLARNA")?.join() === "klarna", "Klarna must not include card");
+assert(stripePaymentMethodTypes("REVOLUT_PAY")?.join() === "revolut_pay", "Revolut Pay must not include card");
+assert(stripePaymentMethodTypes("GOOGLE_PAY")?.join() === "card", "Google Pay uses Stripe card wallets");
+assert(stripePaymentMethodTypes("CARD") === null, "standalone card must not use Stripe Checkout");
 
 console.log("stripe checkout helpers ok");

@@ -80,6 +80,9 @@ enum PaymentMethod {
   CARD
   MANUAL
   PAYSHOP
+  GOOGLE_PAY
+  APPLE_PAY
+  REVOLUT_PAY
 }
 
 enum PaymentStatus {

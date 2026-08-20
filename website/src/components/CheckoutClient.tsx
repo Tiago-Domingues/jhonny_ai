@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
 import { FREE_SHIPPING_THRESHOLD_EUROS } from "@/lib/ecommerce/shipping";
+import { CHECKOUT_PAYMENT_METHODS, getCheckoutPaymentMethod, isLiveCheckoutPaymentMethod } from "@/lib/ecommerce/paymentMethods";
+import { PaymentMethodMark } from "@/components/PaymentIcons";
 
 type CartSummary = {
   itemCount: number;
@@ -25,11 +27,7 @@ type CheckoutResult = {
   payment: CheckoutPayment | null;
 };
 
-const PAYMENT_METHODS = [
-  { id: "MBWAY", label: "MB WAY" },
-  { id: "MULTIBANCO", label: "Entidade/ref." },
-  { id: "CARD", label: "Cartão / Google Pay / Revolut / Klarna" },
-] as const;
+const PAYMENT_METHODS = CHECKOUT_PAYMENT_METHODS;
 
 export function CheckoutClient() {
   const [cart, setCart] = useState<CartSummary | null>(null);
@@ -65,6 +63,11 @@ export function CheckoutClient() {
     const mbwayPhone = String(payload.mbwayPhone || "").trim();
     if (paymentMethod === "MBWAY" && !mbwayPhone && !phone) {
       setMessage("Indica o telemóvel MB WAY para continuar.");
+      setSubmitting(false);
+      return;
+    }
+    if (!isLiveCheckoutPaymentMethod(paymentMethod)) {
+      setMessage("Este método ainda não está ligado. Escolhe MB WAY, Multibanco, Klarna, Google Pay ou Revolut Pay.");
       setSubmitting(false);
       return;
     }
@@ -188,29 +191,32 @@ export function CheckoutClient() {
 
           <div className="md:col-span-2">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-muted">Pagamento</p>
-            <div className="grid gap-2 md:grid-cols-2">
-              {PAYMENT_METHODS.map((method) => (
-                <button
-                  key={method.id}
-                  type="button"
-                  onClick={() => setPaymentMethod(method.id)}
-                  className={`rounded-2xl border px-4 py-3 text-sm font-bold ${paymentMethod === method.id ? "border-ink bg-ink text-white" : "border-line"}`}
-                >
-                  {method.label}
-                </button>
-              ))}
+            <div className="grid gap-2 sm:grid-cols-2">
+              {PAYMENT_METHODS.map((method) => {
+                const selected = paymentMethod === method.id;
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={`flex items-center justify-between gap-3 rounded-2xl border px-3 py-3 text-left ${
+                      selected ? "border-ink bg-ink text-white" : "border-line bg-white text-ink"
+                    }`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-bold">{method.label}</span>
+                      {!method.live && (
+                        <span className={`block text-[0.65rem] font-semibold uppercase tracking-wide ${selected ? "text-white/70" : "text-muted"}`}>
+                          Em breve
+                        </span>
+                      )}
+                    </span>
+                    <PaymentMethodMark method={method.id} />
+                  </button>
+                );
+              })}
             </div>
-            {paymentMethod === "MBWAY" && (
-              <p className="mt-2 text-sm text-muted">Vais receber um pedido MB WAY no telemóvel para aprovar o pagamento.</p>
-            )}
-            {paymentMethod === "MULTIBANCO" && (
-              <p className="mt-2 text-sm text-muted">Depois da encomenda mostramos a entidade e a referência Multibanco.</p>
-            )}
-            {paymentMethod === "CARD" && (
-              <p className="mt-2 text-sm text-muted">
-                Avanças para uma página segura da Stripe para pagar com cartão, Google Pay, Revolut Pay ou Klarna.
-              </p>
-            )}
+            <p className="mt-2 text-sm text-muted">{getCheckoutPaymentMethod(paymentMethod)?.hint}</p>
           </div>
 
           <div className="grid gap-2 md:col-span-2 md:grid-cols-[1fr_auto]">
@@ -242,10 +248,14 @@ export function CheckoutClient() {
             Aceito receber novidades e lembretes de carrinho da Jhonny Surf Store.
           </label>
           <button
-            disabled={submitting || Boolean(checkoutResult)}
+            disabled={submitting || Boolean(checkoutResult) || !isLiveCheckoutPaymentMethod(paymentMethod)}
             className="rounded-full bg-ink px-5 py-3 font-bold uppercase tracking-wide text-white disabled:opacity-50 md:col-span-2"
           >
-            {submitting ? "A criar encomenda…" : "Confirmar encomenda"}
+            {submitting
+              ? "A criar encomenda…"
+              : isLiveCheckoutPaymentMethod(paymentMethod)
+                ? "Confirmar encomenda"
+                : "Em breve"}
           </button>
           {message && <p className="rounded-xl bg-cream p-3 text-sm text-muted md:col-span-2">{message}</p>}
           {checkoutResult && (

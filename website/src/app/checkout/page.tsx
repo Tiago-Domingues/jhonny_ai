@@ -6,7 +6,7 @@ import { CheckoutClient } from "@/components/CheckoutClient";
 
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Checkout Jhonny Surf Store com convidado, conta, MB WAY, Multibanco, PayPal, Klarna e pickup em loja.",
+  description: "Checkout Jhonny Surf Store com MB WAY, Multibanco, Klarna, Google Pay, Revolut Pay e pickup em loja.",
 };
 
 export default function CheckoutPage() {

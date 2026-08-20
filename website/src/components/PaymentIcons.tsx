@@ -94,6 +94,65 @@ export function MbWayBadge() {
   );
 }
 
+export function GooglePayBadge() {
+  return (
+    <Card label="Google Pay">
+      <span className="flex items-center gap-0.5">
+        <span className="font-display text-[0.7rem] font-extrabold leading-none text-[#4285f4]">G</span>
+        <span className="text-[0.48rem] font-extrabold leading-none text-[#3c4043]">Pay</span>
+      </span>
+    </Card>
+  );
+}
+
+export function RevolutPayBadge() {
+  return (
+    <Card label="Revolut Pay" bg="#191c1f">
+      <span className="font-display text-[0.42rem] font-extrabold leading-none tracking-tight text-white">
+        Revolut
+      </span>
+    </Card>
+  );
+}
+
+export function ApplePayBadge() {
+  return (
+    <Card label="Apple Pay" bg="#111111">
+      <span className="text-[0.5rem] font-semibold leading-none tracking-tight text-white">Pay</span>
+    </Card>
+  );
+}
+
+export function PayshopBadge() {
+  return (
+    <Card label="Payshop" bg="#e30613">
+      <span className="font-display text-[0.42rem] font-extrabold leading-none text-white">
+        Payshop
+      </span>
+    </Card>
+  );
+}
+
+export function PaymentMethodMark({ method }: { method: string }) {
+  if (method === "MBWAY") return <MbWayBadge />;
+  if (method === "MULTIBANCO") return <MultibancoBadge />;
+  if (method === "CARD") {
+    return (
+      <span className="inline-flex items-center gap-0.5" aria-label="Visa Mastercard">
+        <VisaBadge />
+        <MastercardBadge />
+      </span>
+    );
+  }
+  if (method === "PAYPAL") return <PaypalBadge />;
+  if (method === "PAYSHOP") return <PayshopBadge />;
+  if (method === "KLARNA") return <KlarnaBadge />;
+  if (method === "GOOGLE_PAY") return <GooglePayBadge />;
+  if (method === "APPLE_PAY") return <ApplePayBadge />;
+  if (method === "REVOLUT_PAY") return <RevolutPayBadge />;
+  return null;
+}
+
 export function PaymentBadges({ className = "" }: { className?: string }) {
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
@@ -104,6 +163,10 @@ export function PaymentBadges({ className = "" }: { className?: string }) {
       <MbWayBadge />
       <PaypalBadge />
       <KlarnaBadge />
+      <GooglePayBadge />
+      <ApplePayBadge />
+      <RevolutPayBadge />
+      <PayshopBadge />
     </div>
   );
 }

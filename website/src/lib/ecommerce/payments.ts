@@ -11,10 +11,22 @@ import {
   hasStripeSecret,
   resolveCheckoutOrigin,
   stripeLineItems,
+  stripePaymentMethodTypes,
 } from "@/lib/ecommerce/stripeCheckout";
+import { isStripeCheckoutMethod } from "@/lib/ecommerce/paymentMethods";
 
 type PaymentRequest = {
-  method: "MBWAY" | "MULTIBANCO" | "PAYPAL" | "KLARNA" | "CARD" | "MANUAL";
+  method:
+    | "MBWAY"
+    | "MULTIBANCO"
+    | "PAYPAL"
+    | "KLARNA"
+    | "CARD"
+    | "MANUAL"
+    | "PAYSHOP"
+    | "GOOGLE_PAY"
+    | "APPLE_PAY"
+    | "REVOLUT_PAY";
   amountCents: number;
   currency: string;
   email: string;
@@ -171,6 +183,7 @@ async function createStripeCheckoutPayment(
     currency: order.currency,
   });
   const paymentMethodConfiguration = stripePaymentMethodConfiguration();
+  const paymentMethodTypes = stripePaymentMethodTypes(request.method);
   const session = await getStripe().checkout.sessions.create({
     mode: "payment",
     customer_email: request.email,
@@ -184,6 +197,7 @@ async function createStripeCheckoutPayment(
       metadata: {
         orderId: order.id,
         orderNumber: order.orderNumber,
+        paymentMethod: request.method,
       },
       description: request.description.slice(0, 1000),
     },
@@ -215,7 +229,8 @@ async function createStripeCheckoutPayment(
           },
         }
       : {}),
-    ...(paymentMethodConfiguration
+    ...(paymentMethodTypes ? { payment_method_types: paymentMethodTypes } : {}),
+    ...(!paymentMethodTypes && paymentMethodConfiguration
       ? { payment_method_configuration: paymentMethodConfiguration }
       : {}),
   });
@@ -250,18 +265,18 @@ async function createProviderPayment(
 ): Promise<ProviderResult> {
   if (request.method === "MBWAY") return createIfthenpayMbwayPayment(order.orderNumber, request);
   if (request.method === "MULTIBANCO") return createIfthenpayMultibancoPayment(order.orderNumber, request);
-  if (request.method === "PAYPAL") {
+  if (request.method === "PAYPAL" || request.method === "CARD" || request.method === "APPLE_PAY" || request.method === "PAYSHOP") {
     if (isProductionRuntime()) {
-      throw new Error("PayPal is not connected yet.");
+      throw new Error(`${request.method} is not connected yet.`);
     }
     return {
-      provider: "PAYPAL",
+      provider: request.method === "PAYPAL" ? "PAYPAL" : "MANUAL",
       status: "REQUIRES_ACTION",
-      providerReference: `paypal-pending-${order.orderNumber}`,
-      rawProviderPayload: { mode: "placeholder", reason: "paypal_credentials_not_connected" },
+      providerReference: `${request.method.toLowerCase()}-pending-${order.orderNumber}`,
+      rawProviderPayload: { mode: "placeholder", reason: `${request.method.toLowerCase()}_not_connected` },
     };
   }
-  if (request.method === "KLARNA" || request.method === "CARD") {
+  if (isStripeCheckoutMethod(request.method)) {
     return createStripeCheckoutPayment(order, request);
   }
   return {

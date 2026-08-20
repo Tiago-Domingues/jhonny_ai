@@ -119,6 +119,14 @@ export function stripePaidAmountCents(session: { amount_total?: number | null })
   return Math.round(session.amount_total);
 }
 
+export function stripePaymentMethodTypes(method: string): Array<"klarna" | "revolut_pay" | "card"> | null {
+  if (method === "KLARNA") return ["klarna"];
+  if (method === "REVOLUT_PAY") return ["revolut_pay"];
+  // Google Pay is a card wallet on Stripe Checkout; the separate CARD method stays a placeholder.
+  if (method === "GOOGLE_PAY") return ["card"];
+  return null;
+}
+
 export function hasStripeSecret() {
   return Boolean(process.env.STRIPE_SECRET_KEY?.trim());
 }
