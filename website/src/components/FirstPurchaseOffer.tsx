@@ -13,8 +13,8 @@ const SHOW_AFTER_MS = 7000;
 const RIBBON_ROTATE_MS = 7000;
 const RIBBON_SLIDES = [
   ["Join", "the", "family"],
-  ["Receive", "special", "discounts"],
-  ["Get", "JSS", "updates"],
+  ["Get", "special", "discounts"],
+  ["Stay", "updated"],
 ] as const;
 
 const copy = {

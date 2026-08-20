@@ -83,7 +83,7 @@ html.jss-a11y-motion *::after {
    On mobile this is the last chrome on the page — pinned to the physical
    bottom-left with no leftover gap below the triangle. */
 .jss-free-shipping-widget {
-  --jss-ribbon-size: 10.5rem;
+  --jss-ribbon-size: 8.75rem;
   position: fixed;
   top: auto;
   right: auto;
@@ -113,7 +113,7 @@ html.jss-a11y-motion *::after {
 
 @media (min-width: 640px) {
   .jss-free-shipping-widget {
-    --jss-ribbon-size: 12.25rem;
+    --jss-ribbon-size: 10rem;
   }
 }
 
@@ -150,10 +150,10 @@ html.jss-a11y-motion *::after {
   transform-origin: center center;
   color: #fff;
   font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
-  font-size: 0.5rem;
+  font-size: 0.86rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  line-height: 1.1;
+  letter-spacing: 0.02em;
+  line-height: 0.98;
   text-align: center;
   text-transform: uppercase;
   pointer-events: none;
@@ -167,8 +167,8 @@ html.jss-a11y-motion *::after {
 
 @media (min-width: 640px) {
   .jss-free-shipping-ribbon__text {
-    font-size: 0.6rem;
-    letter-spacing: 0.06em;
+    font-size: 1rem;
+    letter-spacing: 0.025em;
   }
 }
 
