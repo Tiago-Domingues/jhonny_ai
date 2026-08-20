@@ -132,8 +132,8 @@ html.jss-a11y-motion *::after {
   filter: brightness(1.08);
 }
 
-/* Sit in the triangle centroid, rotated clockwise so FREE / SHIPPING run
-   along the hypotenuse (top-left → bottom-right), matching FireWire. */
+/* Sit in the triangle centroid, rotated clockwise so the 2–3 word
+   invite lines run along the hypotenuse. */
 .jss-free-shipping-ribbon__text {
   position: absolute;
   top: 66.666%;
@@ -148,13 +148,14 @@ html.jss-a11y-motion *::after {
   transform-origin: center center;
   color: #fff;
   font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.56rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
-  line-height: 1.05;
+  letter-spacing: 0.08em;
+  line-height: 1.08;
   text-align: center;
   text-transform: uppercase;
   pointer-events: none;
+  animation: jss-ribbon-copy-in 0.45s ease;
 }
 
 .jss-free-shipping-ribbon__text span {
@@ -164,8 +165,17 @@ html.jss-a11y-motion *::after {
 
 @media (min-width: 640px) {
   .jss-free-shipping-ribbon__text {
-    font-size: 0.82rem;
-    letter-spacing: 0.16em;
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+  }
+}
+
+@keyframes jss-ribbon-copy-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -378,6 +388,9 @@ html.jss-a11y-motion *::after {
     animation: none;
   }
   .surfer-toy__surfer {
+    animation: none;
+  }
+  .jss-free-shipping-ribbon__text {
     animation: none;
   }
   .shop-loader-wave,

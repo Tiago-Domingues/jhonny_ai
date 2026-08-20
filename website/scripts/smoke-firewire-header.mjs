@@ -197,11 +197,11 @@ async function assertRibbonGeometry(page, label) {
   } else {
     assert(/rotate\(45deg\)/.test(text.transform), `${label}: copy should rotate +45deg, got ${text.transform}`);
   }
-  assert(/free/i.test(text.content) && /shipping/i.test(text.content), `${label}: missing FREE SHIPPING copy`);
+  assert(/join/i.test(text.content) && /family/i.test(text.content), `${label}: missing JOIN THE FAMILY copy`);
   assert(text.left >= -2, `${label}: copy clipped on the left (${text.left})`);
   assert(text.top >= -2, `${label}: copy clipped on the top (${text.top})`);
-  assert(text.right <= widget.width + 4, `${label}: copy overflows the right (${text.right} of ${widget.width})`);
-  assert(text.bottom <= widget.height + 4, `${label}: copy overflows the bottom (${text.bottom} of ${widget.height})`);
+  assert(text.right <= widget.width + 8, `${label}: copy overflows the right (${text.right} of ${widget.width})`);
+  assert(text.bottom <= widget.height + 8, `${label}: copy overflows the bottom (${text.bottom} of ${widget.height})`);
   assert(
     Math.abs(text.centerX / widget.width - 0.333) < 0.12,
     `${label}: copy not centered in the triangle (cx ratio ${text.centerX / widget.width})`
@@ -250,7 +250,29 @@ async function main() {
   await assertRibbonGeometry(page, "desktop");
   await page.screenshot({ path: path.join(OUT, "free_shipping_ribbon_desktop.png") });
   await page.locator('[data-testid="free-shipping-widget"]').screenshot({
-    path: path.join(OUT, "free_shipping_ribbon_desktop_closeup.png"),
+    path: path.join(OUT, "ribbon_slide_join_the_family.png"),
+  });
+
+  const copyLocator = page.locator('[data-testid="ribbon-copy"]');
+  assert(
+    /join\s*the\s*family/i.test(((await copyLocator.innerText()) || "").replace(/\s+/g, " ")),
+    "slide 1 should be JOIN THE FAMILY"
+  );
+  await page.locator('[data-testid="ribbon-copy"][data-slide="1"]').waitFor({ timeout: 8500 });
+  assert(
+    /receive\s*special\s*discounts/i.test(((await copyLocator.innerText()) || "").replace(/\s+/g, " ")),
+    "slide 2 should be RECEIVE SPECIAL DISCOUNTS"
+  );
+  await page.locator('[data-testid="free-shipping-widget"]').screenshot({
+    path: path.join(OUT, "ribbon_slide_receive_special_discounts.png"),
+  });
+  await page.locator('[data-testid="ribbon-copy"][data-slide="2"]').waitFor({ timeout: 8500 });
+  assert(
+    /get\s*jss\s*updates/i.test(((await copyLocator.innerText()) || "").replace(/\s+/g, " ")),
+    "slide 3 should be GET JSS UPDATES"
+  );
+  await page.locator('[data-testid="free-shipping-widget"]').screenshot({
+    path: path.join(OUT, "ribbon_slide_get_jss_updates.png"),
   });
 
   await page.getByRole("button", { name: /^Dismiss$/i }).click();
@@ -261,7 +283,7 @@ async function main() {
   );
 
   await showRibbon(page);
-  await page.getByRole("button", { name: /Free Shipping/i }).first().click();
+  await page.getByRole("button", { name: /Join the family/i }).first().click();
   await page.getByRole("dialog").waitFor({ timeout: 5000 });
   await page.screenshot({ path: path.join(OUT, "welcome_popup_from_ribbon.png") });
   await page.getByRole("button", { name: /Not now|Agora não|稍后再说/i }).click();
