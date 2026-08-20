@@ -157,9 +157,10 @@ async function assertRibbonGeometry(page, label) {
   const { viewport, widget, close, text } = geometry;
 
   assert(Math.abs(widget.left) <= 1, `${label}: widget left is ${widget.left}, expected 0`);
+  assert(widget.top >= 0, `${label}: widget is clipped at the top of the viewport (${widget.top})`);
   assert(
     Math.abs(widget.bottom - viewport.height) <= 2,
-    `${label}: widget bottom is ${widget.bottom}, viewport ${viewport.height}`
+    `${label}: widget bottom is ${widget.bottom}, viewport ${viewport.height} — should be the last element with no gap`
   );
   assert(
     Math.abs(widget.width - widget.height) <= 1,
@@ -188,6 +189,14 @@ async function assertRibbonGeometry(page, label) {
     text.transform.includes("matrix") || text.transform.includes("rotate"),
     `${label}: copy is not rotated (${text.transform})`
   );
+  // rotate(45deg) → matrix(a, b, c, d) with b > 0 (clockwise along the hypotenuse).
+  const matrixMatch = text.transform.match(/matrix\(([-0-9.e]+),\s*([-0-9.e]+)/);
+  if (matrixMatch) {
+    const sin = Number(matrixMatch[2]);
+    assert(sin > 0.5, `${label}: copy should rotate +45deg along the hypotenuse, got ${text.transform}`);
+  } else {
+    assert(/rotate\(45deg\)/.test(text.transform), `${label}: copy should rotate +45deg, got ${text.transform}`);
+  }
   assert(/free/i.test(text.content) && /shipping/i.test(text.content), `${label}: missing FREE SHIPPING copy`);
   assert(text.left >= -2, `${label}: copy clipped on the left (${text.left})`);
   assert(text.top >= -2, `${label}: copy clipped on the top (${text.top})`);
@@ -261,16 +270,19 @@ async function main() {
   const wa = page.locator('[data-testid="whatsapp-float"]');
   await wa.waitFor({ timeout: 5000 });
   assert((await page.locator(".animate-bubble").count()) === 0, "WhatsApp speech bubble should be gone");
+  assert((await page.locator(".jss-wa-toy, .surfer-toy").count()) === 0, "Jhonny toy should not appear on WhatsApp");
   const waBox = await wa.boundingBox();
-  assert(waBox && waBox.width <= 56 && waBox.height <= 56, `WhatsApp icon should be compact, got ${waBox?.width}x${waBox?.height}`);
+  assert(
+    waBox && waBox.width <= 40 && waBox.height <= 40,
+    `WhatsApp badge should match the original 28px mark, got ${waBox?.width}x${waBox?.height}`
+  );
+  const waIcon = await wa.locator("svg").boundingBox();
+  assert(
+    waIcon && waIcon.width <= 18 && waIcon.height <= 18,
+    `WhatsApp glyph should be the original h-4 size, got ${waIcon?.width}x${waIcon?.height}`
+  );
   await wa.screenshot({ path: path.join(OUT, "whatsapp_icon_only.png") });
-  await page.locator(".jss-wa-toy").evaluate((el) => {
-    el.style.animation = "none";
-    el.style.opacity = "1";
-    el.style.transform = "translateX(-50%) translateY(0) scale(1)";
-  });
-  await page.screenshot({ path: path.join(OUT, "whatsapp_jhonny_toy_on_top.png") });
-  await wa.screenshot({ path: path.join(OUT, "whatsapp_jhonny_toy_closeup.png") });
+  await page.screenshot({ path: path.join(OUT, "whatsapp_original_badge.png") });
 
   const videoPath = await page.video()?.path();
   await context.close();
