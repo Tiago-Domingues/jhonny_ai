@@ -182,6 +182,10 @@ async function assertRibbonGeometry(page, label) {
     Math.abs(widget.width - widget.height) <= 1,
     `${label}: widget is not square (${widget.width}x${widget.height})`
   );
+  assert(
+    widget.width <= 176,
+    `${label}: triangle should be smaller (width=${widget.width})`
+  );
 
   const hypotenuseDelta = Math.abs(close.relX - close.relY);
   assert(
@@ -276,19 +280,19 @@ async function main() {
   );
   await page.locator('[data-testid="ribbon-copy"][data-slide="1"]').waitFor({ timeout: 8500 });
   assert(
-    /receive\s*special\s*discounts/i.test(((await copyLocator.innerText()) || "").replace(/\s+/g, " ")),
-    "slide 2 should be RECEIVE SPECIAL DISCOUNTS"
+    /get\s*special\s*discounts/i.test(((await copyLocator.innerText()) || "").replace(/\s+/g, " ")),
+    "slide 2 should be GET SPECIAL DISCOUNTS"
   );
   await page.locator('[data-testid="free-shipping-widget"]').screenshot({
-    path: path.join(OUT, "ribbon_slide_receive_special_discounts.png"),
+    path: path.join(OUT, "ribbon_slide_get_special_discounts.png"),
   });
   await page.locator('[data-testid="ribbon-copy"][data-slide="2"]').waitFor({ timeout: 8500 });
   assert(
-    /get\s*jss\s*updates/i.test(((await copyLocator.innerText()) || "").replace(/\s+/g, " ")),
-    "slide 3 should be GET JSS UPDATES"
+    /stay\s*updated/i.test(((await copyLocator.innerText()) || "").replace(/\s+/g, " ")),
+    "slide 3 should be STAY UPDATED"
   );
   await page.locator('[data-testid="free-shipping-widget"]').screenshot({
-    path: path.join(OUT, "ribbon_slide_get_jss_updates.png"),
+    path: path.join(OUT, "ribbon_slide_stay_updated.png"),
   });
 
   await page.getByRole("button", { name: /^Dismiss$/i }).click();
@@ -367,19 +371,20 @@ async function main() {
   await browser.close();
 
   if (videoPath) {
-    const dest = path.join(ARTIFACTS, "ribbon_flush_to_visible_bottom.webm");
+    const dest = path.join(ARTIFACTS, "ribbon_smaller_larger_type.webm");
     fs.copyFileSync(videoPath, dest);
     console.log("video", dest);
   }
   for (const name of [
-    "ribbon_flush_mobile_midscroll.png",
-    "ribbon_flush_mobile_scrolled.png",
+    "ribbon_slide_join_the_family.png",
+    "ribbon_slide_get_special_discounts.png",
+    "ribbon_slide_stay_updated.png",
     "free_shipping_ribbon_mobile.png",
     "free_shipping_ribbon_mobile_closeup.png",
   ]) {
     const src = path.join(OUT, name);
     if (fs.existsSync(src)) {
-      fs.copyFileSync(src, path.join(ARTIFACTS, `vbottom_${name}`));
+      fs.copyFileSync(src, path.join(ARTIFACTS, `copy_size_${name}`));
     }
   }
   console.log("OK screenshots written to", OUT);
