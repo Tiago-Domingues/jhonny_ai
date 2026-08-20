@@ -77,21 +77,19 @@ Official help: [Configurar ou alterar os dados para CALLBACK](https://helpdesk.i
 
 Use **www.jhonnysurfstore.com** even if the customer checked out on `.pt`. Both domains are the same Vercel app.
 
+The Ifthenpay backoffice **rejects** English placeholders (`[ANTI_PHISHING_KEY]`, `[ORDER_ID]`) and also rejects a URL that already contains the real secret. Use these official Portuguese templates. Leave every `[PLACEHOLDER]` as written. Put the secret only in **Chave anti-phishing**.
+
 ### Multibanco account
 
 ```
-https://www.jhonnysurfstore.com/api/payments/ifthenpay/callback?key=[ANTI_PHISHING_KEY]&orderId=[ORDER_ID]&amount=[AMOUNT]&requestId=[REQUEST_ID]&entity=[ENTITY]&reference=[REFERENCE]&payment_datetime=[PAYMENT_DATETIME]
+https://www.jhonnysurfstore.com/api/payments/ifthenpay/callback?chave=[CHAVE_ANTI_PHISHING]&entidade=[ENTIDADE]&referencia=[REFERENCIA]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]&terminal=[TERMINAL]
 ```
 
 ### MB WAY account
 
 ```
-https://www.jhonnysurfstore.com/api/payments/ifthenpay/callback?key=[ANTI_PHISHING_KEY]&orderId=[ORDER_ID]&amount=[AMOUNT]&requestId=[REQUEST_ID]&payment_datetime=[PAYMENT_DATETIME]
+https://www.jhonnysurfstore.com/api/payments/ifthenpay/callback?chave=[CHAVE_ANTI_PHISHING]&referencia=[REFERENCIA]&idpedido=[ID_TRANSACAO]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]&estado=[ESTADO]
 ```
-
-Leave the `[PLACEHOLDERS]` as written. Ifthenpay replaces them when it calls us. Do not substitute the anti-phishing key into the URL yourself — Ifthenpay injects it as `key=...`.
-
-If their form asks for **URL** and **chave anti-phishing** as separate fields, paste the URL above and put the Vercel secret in the anti-phishing field.
 
 ---
 
@@ -109,7 +107,7 @@ Admin profile required. Login: [backoffice.ifthenpay.com](https://backoffice.ift
 
    | Field in Ifthenpay | What to paste |
    |--------------------|----------------|
-   | **URL de callback** | The **Multibanco** URL from §2 (the long one with `[ANTI_PHISHING_KEY]`, `[ORDER_ID]`, …). Leave the `[PLACEHOLDERS]` as written. |
+   | **URL de callback** | The matching URL from §2 (the long one with `[CHAVE_ANTI_PHISHING]`, `[REFERENCIA]`, …). Leave the `[PLACEHOLDERS]` as written. |
    | **Chave anti-phishing** | The value you copied from Vercel **`IFTHENPAY_CALLBACK_SECRET`**. Max 50 characters. |
    | **Chave de backoffice** | **Not** a Vercel variable. It is Ifthenpay’s own admin key (on the original Ifthenpay PDF, or shown on this Contrato page). |
 

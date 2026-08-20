@@ -68,7 +68,7 @@ assert(normalizePaymentReference("000 000 291") === "000000291", "strip MB space
 
 const urls = ifthenpayCallbackUrlTemplates();
 assert(urls.mbway.includes("/api/payments/ifthenpay/callback"), "callback path");
-assert(urls.mbway.includes("key=[ANTI_PHISHING_KEY]"), "anti-phishing placeholder");
-assert(urls.multibanco.includes("reference=[REFERENCE]"), "MB reference placeholder");
+assert(urls.mbway.includes("chave=[CHAVE_ANTI_PHISHING]"), "anti-phishing placeholder");
+assert(urls.multibanco.includes("referencia=[REFERENCIA]"), "MB reference placeholder");
 
 console.log("ifthenpay helpers OK:", { orderNumber, orderId, urls });

@@ -109,7 +109,7 @@ export function extractIfthenpayStatus(payload: Record<string, unknown>) {
 export function ifthenpayCallbackUrlTemplates(origin = "https://www.jhonnysurfstore.com") {
   const base = `${origin.replace(/\/$/, "")}/api/payments/ifthenpay/callback`;
   return {
-    multibanco: `${base}?key=[ANTI_PHISHING_KEY]&orderId=[ORDER_ID]&amount=[AMOUNT]&requestId=[REQUEST_ID]&entity=[ENTITY]&reference=[REFERENCE]&payment_datetime=[PAYMENT_DATETIME]`,
-    mbway: `${base}?key=[ANTI_PHISHING_KEY]&orderId=[ORDER_ID]&amount=[AMOUNT]&requestId=[REQUEST_ID]&payment_datetime=[PAYMENT_DATETIME]`,
+    multibanco: `${base}?chave=[CHAVE_ANTI_PHISHING]&entidade=[ENTIDADE]&referencia=[REFERENCIA]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]&terminal=[TERMINAL]`,
+    mbway: `${base}?chave=[CHAVE_ANTI_PHISHING]&referencia=[REFERENCIA]&idpedido=[ID_TRANSACAO]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]&estado=[ESTADO]`,
   };
 }
