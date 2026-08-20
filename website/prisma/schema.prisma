@@ -79,6 +79,7 @@ enum PaymentMethod {
   KLARNA
   CARD
   MANUAL
+  PAYSHOP
 }
 
 enum PaymentStatus {
