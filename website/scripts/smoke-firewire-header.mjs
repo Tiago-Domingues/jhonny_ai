@@ -258,6 +258,20 @@ async function main() {
   await page.getByRole("button", { name: /Not now|Agora não|稍后再说/i }).click();
   await page.locator('[data-testid="free-shipping-widget"]').waitFor({ timeout: 5000 });
 
+  const wa = page.locator('[data-testid="whatsapp-float"]');
+  await wa.waitFor({ timeout: 5000 });
+  assert((await page.locator(".animate-bubble").count()) === 0, "WhatsApp speech bubble should be gone");
+  const waBox = await wa.boundingBox();
+  assert(waBox && waBox.width <= 56 && waBox.height <= 56, `WhatsApp icon should be compact, got ${waBox?.width}x${waBox?.height}`);
+  await wa.screenshot({ path: path.join(OUT, "whatsapp_icon_only.png") });
+  await page.locator(".jss-wa-toy").evaluate((el) => {
+    el.style.animation = "none";
+    el.style.opacity = "1";
+    el.style.transform = "translateX(-50%) translateY(0) scale(1)";
+  });
+  await page.screenshot({ path: path.join(OUT, "whatsapp_jhonny_toy_on_top.png") });
+  await wa.screenshot({ path: path.join(OUT, "whatsapp_jhonny_toy_closeup.png") });
+
   const videoPath = await page.video()?.path();
   await context.close();
 
