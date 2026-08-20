@@ -34,6 +34,7 @@ From the Ifthenpay contract / backoffice (and already stored on Vercel Productio
 |------|----------------|----------|
 | **MB WAY key** | Ifthenpay → MB WAY account | `IFTHENPAY_MBWAY_KEY` |
 | **MB key** (dynamic Multibanco) | Ifthenpay → Multibanco account | `IFTHENPAY_MB_KEY` |
+| **Payshop key** | Ifthenpay → Payshop account (format `XXX-000000`) | `IFTHENPAY_PAYSHOP_KEY` |
 | **Backoffice key** | Ifthenpay (admin profile) | Saving callback settings in their UI, or API activation. Not called by the website at runtime. |
 | **Anti-phishing key** | You choose it (max **50** characters) | `IFTHENPAY_CALLBACK_SECRET` **and** Ifthenpay callback config. Must be identical. |
 
@@ -55,6 +56,7 @@ You should see these names (already set on Production + Preview):
 
 - `IFTHENPAY_MBWAY_KEY`
 - `IFTHENPAY_MB_KEY`
+- `IFTHENPAY_PAYSHOP_KEY` (add this from the Ifthenpay Payshop account; it is not set yet)
 - `IFTHENPAY_CALLBACK_SECRET`
 - `IFTHENPAY_CALLBACK_URL`
 
@@ -91,6 +93,12 @@ https://www.jhonnysurfstore.com/api/payments/ifthenpay/callback?chave=[CHAVE_ANT
 https://www.jhonnysurfstore.com/api/payments/ifthenpay/callback?chave=[CHAVE_ANTI_PHISHING]&referencia=[REFERENCIA]&idpedido=[ID_TRANSACAO]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]&estado=[ESTADO]
 ```
 
+### Payshop account
+
+```
+https://www.jhonnysurfstore.com/api/payments/ifthenpay/callback?chave=[CHAVE_ANTI_PHISHING]&id_cliente=[ID_CLIENTE]&referencia=[REFERENCIA]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]
+```
+
 ---
 
 ## 3. Steps in the Ifthenpay backoffice
@@ -112,7 +120,7 @@ Admin profile required. Login: [backoffice.ifthenpay.com](https://backoffice.ift
    | **Chave de backoffice** | **Not** a Vercel variable. It is Ifthenpay’s own admin key (on the original Ifthenpay PDF, or shown on this Contrato page). |
 
 6. Click **ATIVAR** (or Guardar). Ifthenpay may ask again for the **chave de backoffice** → paste it → **Confirmar**.
-7. Close the window. Repeat steps 4–6 on the **MB WAY** row, using the **MB WAY** URL from §2 and the **same** anti-phishing key.
+7. Close the window. Repeat steps 4–6 on the **MB WAY** row with the MB WAY URL, then on the **Payshop** row with the Payshop URL. Use the **same** anti-phishing key.
 
 If there is no **?** icon and no callback fields, the login is not an administrator. Use an admin user, or email Ifthenpay (below) instead of fighting the UI.
 
@@ -135,7 +143,8 @@ See the dashboard link in §1. On Production (and Preview if you test there) the
 
 - `IFTHENPAY_MBWAY_KEY`
 - `IFTHENPAY_MB_KEY`
-- `IFTHENPAY_CALLBACK_SECRET` (anti-phishing key; value is hidden because it is Sensitive)
+- `IFTHENPAY_PAYSHOP_KEY`
+- `IFTHENPAY_CALLBACK_SECRET` (anti-phishing key; reveal with the eye icon)
 - `IFTHENPAY_CALLBACK_URL` (documentation only; the live path is always `/api/payments/ifthenpay/callback`)
 
 If you change any of these, **redeploy** Production. Env edits do not apply to the current deployment.

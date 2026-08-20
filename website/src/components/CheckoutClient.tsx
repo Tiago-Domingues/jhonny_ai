@@ -27,6 +27,7 @@ type CheckoutResult = {
 const PAYMENT_METHODS = [
   { id: "MBWAY", label: "MB WAY" },
   { id: "MULTIBANCO", label: "Entidade/ref." },
+  { id: "PAYSHOP", label: "Payshop" },
 ] as const;
 
 export function CheckoutClient() {
@@ -175,7 +176,7 @@ export function CheckoutClient() {
 
           <div className="md:col-span-2">
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-muted">Pagamento</p>
-            <div className="grid gap-2 md:grid-cols-2">
+            <div className="grid gap-2 md:grid-cols-3">
               {PAYMENT_METHODS.map((method) => (
                 <button
                   key={method.id}
@@ -192,6 +193,9 @@ export function CheckoutClient() {
             )}
             {paymentMethod === "MULTIBANCO" && (
               <p className="mt-2 text-sm text-muted">Depois da encomenda mostramos a entidade e a referência Multibanco.</p>
+            )}
+            {paymentMethod === "PAYSHOP" && (
+              <p className="mt-2 text-sm text-muted">Depois da encomenda mostramos a referência Payshop para pagar num agente ou CTT.</p>
             )}
           </div>
 
@@ -241,6 +245,19 @@ export function CheckoutClient() {
                   </p>
                   <p>
                     <strong>Referência:</strong> {payment.multibancoReference || "—"}
+                  </p>
+                  {typeof payment.amountCents === "number" && (
+                    <p>
+                      <strong>Valor:</strong> <CurrencyPrice cents={payment.amountCents} />
+                    </p>
+                  )}
+                </div>
+              )}
+              {payment?.method === "PAYSHOP" && (
+                <div className="mt-3 space-y-1">
+                  <p>Paga em numerário num agente Payshop ou CTT com esta referência:</p>
+                  <p>
+                    <strong>Referência Payshop:</strong> {payment.multibancoReference || "—"}
                   </p>
                   {typeof payment.amountCents === "number" && (
                     <p>

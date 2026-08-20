@@ -86,6 +86,9 @@ export function extractIfthenpayReference(payload: Record<string, unknown>) {
     payload.orderId,
     payload.OrderId,
     payload.order_id,
+    payload.id_cliente,
+    payload.IdCliente,
+    payload.idCliente,
     payload.idpedido,
     payload.IdPedido,
     payload.idPedido,
@@ -111,5 +114,6 @@ export function ifthenpayCallbackUrlTemplates(origin = "https://www.jhonnysurfst
   return {
     multibanco: `${base}?chave=[CHAVE_ANTI_PHISHING]&entidade=[ENTIDADE]&referencia=[REFERENCIA]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]&terminal=[TERMINAL]`,
     mbway: `${base}?chave=[CHAVE_ANTI_PHISHING]&referencia=[REFERENCIA]&idpedido=[ID_TRANSACAO]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]&estado=[ESTADO]`,
+    payshop: `${base}?chave=[CHAVE_ANTI_PHISHING]&id_cliente=[ID_CLIENTE]&referencia=[REFERENCIA]&valor=[VALOR]&datahorapag=[DATA_HORA_PAGAMENTO]`,
   };
 }

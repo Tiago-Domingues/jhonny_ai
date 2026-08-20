@@ -15,7 +15,7 @@ import {
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 type PaymentRequest = {
-  method: "MBWAY" | "MULTIBANCO" | "PAYPAL" | "KLARNA" | "CARD" | "MANUAL";
+  method: "MBWAY" | "MULTIBANCO" | "PAYSHOP" | "PAYPAL" | "KLARNA" | "CARD" | "MANUAL";
   amountCents: number;
   currency: string;
   email: string;
@@ -49,7 +49,7 @@ function normalizeMbwayPhone(phone: string) {
 }
 
 function assertIfthenpayGatewayAccepted(payload: Record<string, unknown>, method: string) {
-  const status = firstNonEmpty(payload.Status, payload.status);
+  const status = firstNonEmpty(payload.Status, payload.status, payload.Code, payload.code);
   if (isIfthenpayGatewayAccepted(status)) return;
   const message = firstNonEmpty(payload.Message, payload.message) || "unknown error";
   throw new Error(`${method} was rejected by Ifthenpay (${status}: ${message}).`);
@@ -146,9 +146,53 @@ async function createIfthenpayMultibancoPayment(orderNumber: string, request: Pa
   };
 }
 
+async function createIfthenpayPayshopPayment(orderNumber: string, request: PaymentRequest): Promise<ProviderResult> {
+  const key = process.env.IFTHENPAY_PAYSHOP_KEY;
+  if (!key) {
+    if (isProductionRuntime()) {
+      throw new Error("Payshop is not configured. Set IFTHENPAY_PAYSHOP_KEY before checkout.");
+    }
+    return {
+      provider: "IFTHENPAY",
+      status: "PENDING",
+      providerReference: `mock-payshop-${orderNumber}`,
+      multibancoReference: "0000000000000",
+      rawProviderPayload: { mode: "mock", reason: "missing_ifthenpay_payshop_key" },
+    };
+  }
+
+  const orderId = ifthenpayOrderId(orderNumber, 25);
+  const response = await fetch("https://api.ifthenpay.com/payshop/reference", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      payshopkey: key,
+      id: orderId,
+      valor: amountString(request.amountCents),
+      validade: "",
+    }),
+  });
+  const payload = (await response.json()) as Record<string, unknown>;
+  if (!response.ok) {
+    throw new Error("Ifthenpay Payshop request failed.");
+  }
+  assertIfthenpayGatewayAccepted(payload, "Payshop");
+  const reference = firstNonEmpty(payload.Reference, payload.reference);
+
+  return {
+    provider: "IFTHENPAY",
+    status: "PENDING",
+    providerReference: firstNonEmpty(payload.id, payload.Id, payload.orderId, payload.OrderId) || orderId,
+    providerRequestId: firstNonEmpty(payload.RequestId, payload.requestId),
+    multibancoReference: reference ? normalizePaymentReference(reference) : undefined,
+    rawProviderPayload: payload,
+  };
+}
+
 async function createProviderPayment(orderNumber: string, request: PaymentRequest): Promise<ProviderResult> {
   if (request.method === "MBWAY") return createIfthenpayMbwayPayment(orderNumber, request);
   if (request.method === "MULTIBANCO") return createIfthenpayMultibancoPayment(orderNumber, request);
+  if (request.method === "PAYSHOP") return createIfthenpayPayshopPayment(orderNumber, request);
   if (request.method === "PAYPAL") {
     if (isProductionRuntime()) {
       throw new Error("PayPal is not connected yet.");

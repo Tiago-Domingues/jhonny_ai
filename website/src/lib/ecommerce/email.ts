@@ -132,6 +132,17 @@ function paymentInstructionsHtml(order: NonNullable<Awaited<ReturnType<typeof lo
     `;
   }
 
+  if (payment.method === "PAYSHOP") {
+    return `
+      <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:8px">
+        <p><strong>Pagamento Payshop</strong></p>
+        <p>Referência: <strong>${escapeHtml(payment.multibancoReference || "—")}</strong></p>
+        <p>Valor: <strong>${formatEuro(payment.amountCents)}</strong></p>
+        <p>Paga em numerário num agente Payshop ou CTT.</p>
+      </div>
+    `;
+  }
+
   if (payment.method === "MBWAY") {
     return `
       <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:8px">

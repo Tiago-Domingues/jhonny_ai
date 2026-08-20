@@ -67,8 +67,16 @@ assert(normalizePaymentReference(extractIfthenpayReference(classicMb)) === "0000
 assert(normalizePaymentReference("000 000 291") === "000000291", "strip MB spaces");
 
 const urls = ifthenpayCallbackUrlTemplates();
+const payshopCb = {
+  chave: "anti-phish",
+  id_cliente: orderId,
+  referencia: "1021600051424",
+  valor: "5.00",
+};
+assert(extractIfthenpayReference(payshopCb) === orderId, "Payshop prefers id_cliente over reference");
 assert(urls.mbway.includes("/api/payments/ifthenpay/callback"), "callback path");
 assert(urls.mbway.includes("chave=[CHAVE_ANTI_PHISHING]"), "anti-phishing placeholder");
 assert(urls.multibanco.includes("referencia=[REFERENCIA]"), "MB reference placeholder");
+assert(urls.payshop.includes("id_cliente=[ID_CLIENTE]"), "Payshop placeholder");
 
 console.log("ifthenpay helpers OK:", { orderNumber, orderId, urls });

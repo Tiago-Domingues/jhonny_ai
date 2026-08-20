@@ -44,6 +44,7 @@ export function integrationStatus() {
     ifthenpay: {
       mbwayConfigured: hasValue(process.env.IFTHENPAY_MBWAY_KEY),
       multibancoConfigured: hasValue(process.env.IFTHENPAY_MB_KEY),
+      payshopConfigured: hasValue(process.env.IFTHENPAY_PAYSHOP_KEY),
       callbackConfigured:
         hasValue(process.env.IFTHENPAY_CALLBACK_URL) &&
         hasValue(process.env.IFTHENPAY_CALLBACK_SECRET),

@@ -74,6 +74,7 @@ enum PaymentProvider {
 enum PaymentMethod {
   MBWAY
   MULTIBANCO
+  PAYSHOP
   PAYPAL
   KLARNA
   CARD
