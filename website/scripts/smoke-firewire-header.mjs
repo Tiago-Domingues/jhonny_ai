@@ -7,8 +7,10 @@ import fs from "fs";
 import path from "path";
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
-const OUT = "/opt/cursor/artifacts";
+const OUT = "/tmp/ribbon-smoke";
 fs.mkdirSync(OUT, { recursive: true });
+const ARTIFACTS = "/opt/cursor/artifacts";
+fs.mkdirSync(ARTIFACTS, { recursive: true });
 
 const consentValue = encodeURIComponent(
   JSON.stringify({
@@ -365,9 +367,20 @@ async function main() {
   await browser.close();
 
   if (videoPath) {
-    const dest = path.join(OUT, "firewire_free_shipping_ribbon_demo.webm");
-    fs.renameSync(videoPath, dest);
+    const dest = path.join(ARTIFACTS, "ribbon_flush_to_visible_bottom.webm");
+    fs.copyFileSync(videoPath, dest);
     console.log("video", dest);
+  }
+  for (const name of [
+    "ribbon_flush_mobile_midscroll.png",
+    "ribbon_flush_mobile_scrolled.png",
+    "free_shipping_ribbon_mobile.png",
+    "free_shipping_ribbon_mobile_closeup.png",
+  ]) {
+    const src = path.join(OUT, name);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, path.join(ARTIFACTS, `vbottom_${name}`));
+    }
   }
   console.log("OK screenshots written to", OUT);
 }
