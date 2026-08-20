@@ -83,6 +83,8 @@ async function assertMobileHeaderLayout(page) {
     right: `${order.lang.x.toFixed(0)} lang → ${order.search.x.toFixed(0)} search → ${order.cart.x.toFixed(0)} cart`,
   });
 }
+
+async function showRibbon(page) {
   await page.evaluate(() => {
     sessionStorage.setItem("jss_welcome_offer_dismissed_v1", "1");
     sessionStorage.removeItem("jss_welcome_ribbon_hidden_v1");
