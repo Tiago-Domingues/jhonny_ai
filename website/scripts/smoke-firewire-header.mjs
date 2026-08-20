@@ -21,7 +21,68 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-async function showRibbon(page) {
+async function assertMobileHeaderLayout(page) {
+  const order = await page.evaluate(() => {
+    const header = document.querySelector("[data-testid='site-header-bar']");
+    if (!header) return null;
+    const box = (el) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.left, cx: r.left + r.width / 2, right: r.right, y: r.top };
+    };
+    const menu = header.querySelector("button[aria-label='Menu']");
+    const a11y = [...header.querySelectorAll("button[aria-label='Accessibility']")].find(
+      (el) => el.getClientRects().length
+    );
+    const logo = [...header.querySelectorAll("a[aria-label='Jhonny Surf Store']")].find(
+      (el) => el.getClientRects().length
+    );
+    const lang = header.querySelector("button[aria-label='Change language']");
+    const search = header.querySelector("button[aria-label='Search for…']");
+    const cart = header.querySelector("button[aria-label='Cart']");
+    if (!menu || !a11y || !logo || !lang || !search || !cart) {
+      return {
+        missing: {
+          menu: !menu,
+          a11y: !a11y,
+          logo: !logo,
+          lang: !lang,
+          search: !search,
+          cart: !cart,
+        },
+      };
+    }
+    return {
+      viewport: window.innerWidth,
+      menu: box(menu),
+      a11y: box(a11y),
+      logo: box(logo),
+      lang: box(lang),
+      search: box(search),
+      cart: box(cart),
+    };
+  });
+
+  assert(order && !order.missing, `mobile header missing controls: ${JSON.stringify(order)}`);
+  assert(order.menu.x < order.a11y.x, "menu should be left of accessibility");
+  assert(order.a11y.x < order.logo.x, "accessibility should be left of the logo");
+  assert(order.logo.right < order.lang.x, "logo should be left of language");
+  assert(order.lang.x < order.search.x, "language should be left of search");
+  assert(order.search.x < order.cart.x, "search should be left of cart");
+  assert(order.menu.x < 24, `menu should sit on the left edge (x=${order.menu.x})`);
+  assert(
+    Math.abs(order.logo.cx - order.viewport / 2) < 28,
+    `logo should be centered (cx=${order.logo.cx}, vw=${order.viewport})`
+  );
+  assert(
+    order.viewport - order.cart.right < 28,
+    `cart should sit on the right edge (right=${order.cart.right}, vw=${order.viewport})`
+  );
+  console.log("mobile header layout OK", {
+    left: `${order.menu.x.toFixed(0)} menu → ${order.a11y.x.toFixed(0)} a11y`,
+    center: `logo ${order.logo.cx.toFixed(0)}`,
+    right: `${order.lang.x.toFixed(0)} lang → ${order.search.x.toFixed(0)} search → ${order.cart.x.toFixed(0)} cart`,
+  });
+}
   await page.evaluate(() => {
     sessionStorage.setItem("jss_welcome_offer_dismissed_v1", "1");
     sessionStorage.removeItem("jss_welcome_ribbon_hidden_v1");
@@ -186,11 +247,12 @@ async function main() {
   await mobilePage.reload({ waitUntil: "domcontentloaded" });
   const mobileA11y = mobilePage.locator("header button[aria-label='Accessibility']").filter({ visible: true });
   await mobileA11y.waitFor({ timeout: 8000 });
-  await mobilePage.locator("header").first().screenshot({
-    path: path.join(OUT, "header_accessibility_icon_mobile.png"),
+  await assertMobileHeaderLayout(mobilePage);
+  await mobilePage.locator("[data-testid='site-header-bar']").screenshot({
+    path: path.join(OUT, "header_mobile_firewire_layout.png"),
   });
-  await mobileA11y.screenshot({
-    path: path.join(OUT, "header_accessibility_icon_mobile_closeup.png"),
+  await mobilePage.screenshot({
+    path: path.join(OUT, "header_mobile_firewire_full.png"),
   });
   await showRibbon(mobilePage);
   await assertRibbonGeometry(mobilePage, "mobile");
