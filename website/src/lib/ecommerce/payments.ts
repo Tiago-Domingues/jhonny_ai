@@ -55,6 +55,21 @@ function assertIfthenpayGatewayAccepted(payload: Record<string, unknown>, method
   throw new Error(`${method} was rejected by Ifthenpay (${status}: ${message}).`);
 }
 
+async function readIfthenpayJson(response: Response, method: string) {
+  const text = await response.text();
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.startsWith("<")) {
+    throw new Error(
+      `${method} is not available from Ifthenpay right now. Check the account key and try again.`
+    );
+  }
+  try {
+    return JSON.parse(trimmed) as Record<string, unknown>;
+  } catch {
+    throw new Error(`${method} returned an invalid response from Ifthenpay.`);
+  }
+}
+
 async function createIfthenpayMbwayPayment(orderNumber: string, request: PaymentRequest): Promise<ProviderResult> {
   const key = process.env.IFTHENPAY_MBWAY_KEY;
   const phone = request.mbwayPhone || request.phone;
@@ -84,7 +99,7 @@ async function createIfthenpayMbwayPayment(orderNumber: string, request: Payment
       description: request.description.slice(0, 50),
     }),
   });
-  const payload = (await response.json()) as Record<string, unknown>;
+  const payload = await readIfthenpayJson(response, "MB WAY");
   if (!response.ok) {
     throw new Error("Ifthenpay MB WAY request failed.");
   }
@@ -117,7 +132,7 @@ async function createIfthenpayMultibancoPayment(orderNumber: string, request: Pa
   }
 
   const orderId = ifthenpayOrderId(orderNumber);
-  const response = await fetch("https://api.ifthenpay.com/spg/payment/multibanco", {
+  const response = await fetch("https://api.ifthenpay.com/multibanco/reference/init", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -127,7 +142,7 @@ async function createIfthenpayMultibancoPayment(orderNumber: string, request: Pa
       description: request.description.slice(0, 50),
     }),
   });
-  const payload = (await response.json()) as Record<string, unknown>;
+  const payload = await readIfthenpayJson(response, "Multibanco");
   if (!response.ok) {
     throw new Error("Ifthenpay Multibanco request failed.");
   }
@@ -162,7 +177,7 @@ async function createIfthenpayPayshopPayment(orderNumber: string, request: Payme
   }
 
   const orderId = ifthenpayOrderId(orderNumber, 25);
-  const response = await fetch("https://api.ifthenpay.com/payshop/reference", {
+  const response = await fetch("https://api.ifthenpay.com/payshop/reference/", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -172,7 +187,7 @@ async function createIfthenpayPayshopPayment(orderNumber: string, request: Payme
       validade: "",
     }),
   });
-  const payload = (await response.json()) as Record<string, unknown>;
+  const payload = await readIfthenpayJson(response, "Payshop");
   if (!response.ok) {
     throw new Error("Ifthenpay Payshop request failed.");
   }
