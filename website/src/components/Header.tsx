@@ -249,9 +249,60 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       }`}
       onMouseLeave={scheduleCloseMega}
     >
-      <div className="mx-auto flex max-w-[96rem] items-center justify-between gap-3 px-4 py-3.5 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="Jhonny Surf Store" className="shrink-0">
-          <Logo type="horizontal" variant="dark" priority className="h-9 sm:h-10" />
+      <div
+        data-testid="site-header-bar"
+        className="mx-auto grid max-w-[96rem] grid-cols-[1fr_auto_1fr] items-center px-3 py-3 sm:px-5 xl:flex xl:justify-between xl:gap-3 xl:px-6 xl:py-3.5 2xl:px-8"
+      >
+        <div className="flex min-w-0 items-center justify-start gap-0.5">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Menu"
+            aria-expanded={open}
+            className="flex h-10 w-10 items-center justify-center text-white xl:hidden"
+          >
+            <span className="relative block h-[14px] w-[22px]">
+              <span
+                className={`absolute left-0 top-0 h-[1.2px] w-[22px] bg-current transition-transform ${
+                  open ? "translate-y-[6.4px] rotate-45" : ""
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-[6.4px] h-[1.2px] w-[22px] bg-current transition-opacity ${
+                  open ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-[12.8px] h-[1.2px] w-[22px] bg-current transition-transform ${
+                  open ? "-translate-y-[6.4px] -rotate-45" : ""
+                }`}
+              />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setA11yOpen(true);
+              setDesktopCat(null);
+              setLangOpen(false);
+              setPanel(null);
+            }}
+            aria-label={headerCopy.a11y}
+            className={`${iconButtonClass} xl:hidden`}
+          >
+            <AccessibilityIcon className="h-[18px] w-[18px]" />
+          </button>
+          <Link href="/" aria-label="Jhonny Surf Store" className="hidden shrink-0 xl:block">
+            <Logo type="horizontal" variant="dark" priority className="h-9 sm:h-10" />
+          </Link>
+        </div>
+
+        <Link
+          href="/"
+          aria-label="Jhonny Surf Store"
+          className="justify-self-center xl:hidden"
+        >
+          <Logo type="horizontal" variant="dark" priority className="h-8 max-w-[42vw] sm:h-9" />
         </Link>
 
         <nav className="hidden items-center gap-1 xl:flex 2xl:gap-2" onMouseEnter={() => {
@@ -285,7 +336,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
           })}
         </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3">
+        <div className="flex min-w-0 items-center justify-end gap-0.5 sm:gap-1.5 lg:gap-3">
           <div className="relative">
             <button
               type="button"
@@ -305,7 +356,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               ) : (
                 <FlagEN className="h-3.5 w-5 rounded-[2px]" />
               )}
-              <span className="hidden sm:inline">{LOCALE_META[locale].short}</span>
+              <span className="hidden xl:inline">{LOCALE_META[locale].short}</span>
             </button>
             {langOpen && (
               <div className="absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border border-line bg-paper py-1 text-ink shadow-xl">
@@ -332,7 +383,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             )}
           </div>
 
-          <div ref={menuRef} className="relative hidden sm:block">
+          <div ref={menuRef} className="relative hidden xl:block">
             <button
               type="button"
               onClick={() => {
@@ -452,51 +503,17 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               setPanel(null);
             }}
             aria-label={headerCopy.a11y}
-            className={`${iconButtonClass} hidden min-[1000px]:flex`}
+            className={`${iconButtonClass} hidden xl:flex`}
           >
-            <AccessibilityIcon className="h-[1.125rem] w-[1.125rem]" />
+            <AccessibilityIcon className="h-[18px] w-[18px]" />
           </button>
 
           <Link
             href={VOLUME_CALCULATOR_PATH}
-            className="ml-1 hidden items-center rounded-sm bg-white px-3.5 py-2 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-transparent hover:text-white hover:outline hover:outline-1 hover:outline-white lg:inline-flex"
+            className="ml-1 hidden items-center rounded-sm bg-white px-3.5 py-2 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-ink transition hover:bg-transparent hover:text-white hover:outline hover:outline-1 hover:outline-white xl:inline-flex"
           >
             {headerCopy.tryBoard}
           </Link>
-
-          <button
-            type="button"
-            onClick={() => setA11yOpen(true)}
-            aria-label={headerCopy.a11y}
-            className={`${iconButtonClass} min-[1000px]:hidden`}
-          >
-            <AccessibilityIcon className="h-[1.125rem] w-[1.125rem]" />
-          </button>
-
-          <button
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
-            aria-expanded={open}
-            className="flex h-10 w-10 items-center justify-center text-white xl:hidden"
-          >
-            <span className="relative block h-4 w-5">
-              <span
-                className={`absolute left-0 top-0 h-0.5 w-5 bg-current transition-transform ${
-                  open ? "translate-y-[7px] rotate-45" : ""
-                }`}
-              />
-              <span
-                className={`absolute left-0 top-[7px] h-0.5 w-5 bg-current transition-opacity ${
-                  open ? "opacity-0" : ""
-                }`}
-              />
-              <span
-                className={`absolute left-0 top-[14px] h-0.5 w-5 bg-current transition-transform ${
-                  open ? "-translate-y-[7px] -rotate-45" : ""
-                }`}
-              />
-            </span>
-          </button>
         </div>
       </div>
 
