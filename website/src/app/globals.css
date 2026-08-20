@@ -77,8 +77,109 @@ html.jss-a11y-motion *::after {
   scroll-behavior: auto !important;
 }
 
+/* Firewire-style FREE SHIPPING corner tab: flush to the viewport, right
+   triangle in the bottom-left, copy rotated along the hypotenuse, dismiss
+   control centered on that same diagonal near the lower-right end. */
+.jss-free-shipping-widget {
+  --jss-ribbon-size: 10.75rem;
+  position: fixed;
+  right: auto;
+  bottom: 0;
+  left: 0;
+  z-index: 65;
+  width: var(--jss-ribbon-size);
+  height: var(--jss-ribbon-size);
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .jss-free-shipping-widget {
+    --jss-ribbon-size: 12.25rem;
+  }
+}
+
 .jss-free-shipping-ribbon {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
   clip-path: polygon(0 100%, 0 0, 100% 100%);
+}
+
+.jss-free-shipping-ribbon:hover {
+  filter: brightness(1.08);
+}
+
+.jss-free-shipping-ribbon__text {
+  position: absolute;
+  top: 66.666%;
+  left: 33.333%;
+  width: max-content;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  transform-origin: center center;
+  color: #fff;
+  font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .jss-free-shipping-ribbon__text {
+    font-size: 0.82rem;
+    letter-spacing: 0.16em;
+  }
+}
+
+.jss-free-shipping-close {
+  position: absolute;
+  top: 82%;
+  left: 82%;
+  z-index: 1;
+  display: flex;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: none;
+}
+
+.jss-free-shipping-close:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.jss-free-shipping-close svg {
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .jss-free-shipping-close {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
 }
 
 @layer utilities {

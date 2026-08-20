@@ -224,14 +224,14 @@ export function FirstPurchaseOffer() {
       )}
 
       {ribbonVisible && !open && (
-        <div className="pointer-events-none fixed bottom-0 left-0 z-[65] h-36 w-36 overflow-visible sm:h-40 sm:w-40">
+        <div className="jss-free-shipping-widget" data-testid="free-shipping-widget">
           <button
             type="button"
             onClick={openFromRibbon}
             aria-label={`${t.ribbon} — ${t.title}`}
-            className="jss-free-shipping-ribbon pointer-events-auto absolute bottom-0 left-0 h-full w-full bg-ink text-white shadow-lg transition hover:brightness-110"
+            className="jss-free-shipping-ribbon"
           >
-            <span className="absolute bottom-[28%] left-[18%] w-[5.5rem] -rotate-45 text-center text-[0.68rem] font-extrabold uppercase leading-[1.05] tracking-[0.14em] sm:text-[0.75rem]">
+            <span className="jss-free-shipping-ribbon__text">
               Free
               <br />
               Shipping
@@ -241,9 +241,17 @@ export function FirstPurchaseOffer() {
             type="button"
             onClick={hideRibbon}
             aria-label="Dismiss"
-            className="pointer-events-auto absolute bottom-[6.35rem] left-[6.35rem] flex h-7 w-7 items-center justify-center rounded-full border border-white bg-ink text-sm font-bold leading-none text-white shadow-md transition hover:scale-105 sm:bottom-[7.1rem] sm:left-[7.1rem] sm:h-8 sm:w-8"
+            className="jss-free-shipping-close"
           >
-            ×
+            <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+              <path
+                d="M2.2 2.2 L9.8 9.8 M9.8 2.2 L2.2 9.8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.35"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         </div>
       )}
