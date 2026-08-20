@@ -148,10 +148,10 @@ html.jss-a11y-motion *::after {
   transform-origin: center center;
   color: #fff;
   font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
-  font-size: 0.56rem;
+  font-size: 0.5rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1.08;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
   text-align: center;
   text-transform: uppercase;
   pointer-events: none;
@@ -165,8 +165,8 @@ html.jss-a11y-motion *::after {
 
 @media (min-width: 640px) {
   .jss-free-shipping-ribbon__text {
-    font-size: 0.66rem;
-    letter-spacing: 0.09em;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
   }
 }
 
