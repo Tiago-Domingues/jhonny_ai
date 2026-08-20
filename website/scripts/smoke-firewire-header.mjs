@@ -84,12 +84,20 @@ async function assertMobileHeaderLayout(page) {
   });
 }
 
+async function hideDevOverlays(page) {
+  await page.addStyleTag({
+    content:
+      "nextjs-portal, [data-next-badge-root], [data-nextjs-dev-indicator] { display: none !important; }",
+  });
+}
+
 async function showRibbon(page) {
   await page.evaluate(() => {
     sessionStorage.setItem("jss_welcome_offer_dismissed_v1", "1");
     sessionStorage.removeItem("jss_welcome_ribbon_hidden_v1");
   });
   await page.reload({ waitUntil: "domcontentloaded" });
+  await hideDevOverlays(page);
   await page.locator('[data-testid="free-shipping-widget"]').waitFor({ timeout: 8000 });
 }
 
@@ -219,6 +227,7 @@ async function main() {
     sessionStorage.setItem("jss_welcome_ribbon_hidden_v1", "1");
   });
   await page.reload({ waitUntil: "domcontentloaded" });
+  await hideDevOverlays(page);
   const desktopA11y = page.locator("header button[aria-label='Accessibility']").filter({ visible: true });
   await desktopA11y.waitFor({ timeout: 8000 });
   await page.locator("header").first().screenshot({
@@ -266,6 +275,7 @@ async function main() {
     sessionStorage.setItem("jss_welcome_ribbon_hidden_v1", "1");
   });
   await mobilePage.reload({ waitUntil: "domcontentloaded" });
+  await hideDevOverlays(mobilePage);
   const mobileA11y = mobilePage.locator("header button[aria-label='Accessibility']").filter({ visible: true });
   await mobileA11y.waitFor({ timeout: 8000 });
   await assertMobileHeaderLayout(mobilePage);
