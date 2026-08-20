@@ -97,19 +97,26 @@ If their form asks for **URL** and **chave anti-phishing** as separate fields, p
 
 ## 3. Steps in the Ifthenpay backoffice
 
-Admin profile required.
+Do **not** paste `IFTHENPAY_CALLBACK_SECRET` back into Vercel. Paste it into Ifthenpay, in **chave anti-phishing**. You also paste a **different** value into **URL de callback** (the long URL from §2, not the short Vercel `IFTHENPAY_CALLBACK_URL`).
 
-1. Sign in at [ifthenpay.com](https://www.ifthenpay.com) (backoffice / área de cliente).
-2. Open **Administração → Contrato**.
-3. Select the **Multibanco** account.
-4. Open callback settings (the **?** / configuration icon on that account).
-5. Paste the **Multibanco** URL from §2.
-6. Paste the anti-phishing key (same as Vercel `IFTHENPAY_CALLBACK_SECRET`).
-7. Confirm with the **chave de backoffice** when the form asks for it.
-8. Save.
-9. Repeat steps 3–8 for the **MB WAY** account with the **MB WAY** URL.
+Admin profile required. Login: [backoffice.ifthenpay.com](https://backoffice.ifthenpay.com/).
 
-If the callback fields are missing, the logged-in user is not an administrator. Use an admin login, or email Ifthenpay (below).
+1. Sign in (utilizador + password of the store Ifthenpay contract).
+2. Left menu: **Administração** → **Contrato** (sometimes **Dados de Contrato**).
+3. You will see a list of payment accounts (Multibanco, MB WAY, …).
+4. On the **Multibanco** row, open the options and click the **?** icon (callback / configuration). This only shows for administrator users.
+5. A configuration window opens with three different fields:
+
+   | Field in Ifthenpay | What to paste |
+   |--------------------|----------------|
+   | **URL de callback** | The **Multibanco** URL from §2 (the long one with `[ANTI_PHISHING_KEY]`, `[ORDER_ID]`, …). Leave the `[PLACEHOLDERS]` as written. |
+   | **Chave anti-phishing** | The value you copied from Vercel **`IFTHENPAY_CALLBACK_SECRET`**. Max 50 characters. |
+   | **Chave de backoffice** | **Not** a Vercel variable. It is Ifthenpay’s own admin key (on the original Ifthenpay PDF, or shown on this Contrato page). |
+
+6. Click **ATIVAR** (or Guardar). Ifthenpay may ask again for the **chave de backoffice** → paste it → **Confirmar**.
+7. Close the window. Repeat steps 4–6 on the **MB WAY** row, using the **MB WAY** URL from §2 and the **same** anti-phishing key.
+
+If there is no **?** icon and no callback fields, the login is not an administrator. Use an admin user, or email Ifthenpay (below) instead of fighting the UI.
 
 ### Alternative: ask Ifthenpay to configure it
 
