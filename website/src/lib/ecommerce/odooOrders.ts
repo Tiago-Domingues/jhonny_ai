@@ -11,6 +11,7 @@ import {
   type OdooRpcClient,
 } from "@/lib/ecommerce/odooStock";
 
+
 function asArray<T>(value: T | T[] | undefined | null): T[] {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
@@ -28,7 +29,7 @@ function partnerPayload(order: Awaited<ReturnType<typeof loadOrder>>) {
     typeof order.shippingAddressJson === "object" && order.shippingAddressJson
       ? (order.shippingAddressJson as Record<string, string>)
       : {};
-  return {
+  const payload: Record<string, string | number> = {
     name: order.customerName,
     email: order.customerEmail,
     phone: order.customerPhone || "",
@@ -38,6 +39,8 @@ function partnerPayload(order: Awaited<ReturnType<typeof loadOrder>>) {
     city: address.city || "",
     customer_rank: 1,
   };
+  if (order.customerVat) payload.vat = order.customerVat;
+  return payload;
 }
 
 async function loadOrder(orderId: string) {
@@ -48,8 +51,12 @@ async function loadOrder(orderId: string) {
 }
 
 async function findOrCreatePartner(client: OdooClient, order: NonNullable<Awaited<ReturnType<typeof loadOrder>>>) {
+  const payload = partnerPayload(order);
   const existingPartnerId = order.user?.profile?.odooPartnerId;
-  if (existingPartnerId) return existingPartnerId;
+  if (existingPartnerId) {
+    await client.executeKw("res.partner", "write", [[existingPartnerId], payload]);
+    return existingPartnerId;
+  }
 
   const matches = await client.searchRead(
     "res.partner",
@@ -59,7 +66,10 @@ async function findOrCreatePartner(client: OdooClient, order: NonNullable<Awaite
   );
   const partnerId = matches[0]?.id
     ? Number(matches[0].id)
-    : Number(await client.executeKw("res.partner", "create", [partnerPayload(order)]));
+    : Number(await client.executeKw("res.partner", "create", [payload]));
+  if (matches[0]?.id) {
+    await client.executeKw("res.partner", "write", [[partnerId], payload]);
+  }
 
   if (order.user?.profile) {
     await prisma.customerProfile.update({

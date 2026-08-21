@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useState, type ReactNode } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
+import { storefrontText } from "@/lib/storefrontCopy";
 
 type SessionUser = {
   id: string;
@@ -60,6 +62,8 @@ function Field({
 }
 
 export function AccountClient() {
+  const { locale } = useLanguage();
+  const copy = storefrontText(locale).account;
   const [user, setUser] = useState<SessionUser>(null);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [message, setMessage] = useState<string | null>(null);
@@ -117,12 +121,12 @@ export function AccountClient() {
     const data = await response.json();
     if (!response.ok) {
       setMessageTone("error");
-      setMessage(data.message || "Não foi possível concluir o pedido.");
+      setMessage(data.message || copy.submitFailed);
       return;
     }
     setUser(data.user);
     setMessageTone("success");
-    setMessage("Conta pronta.");
+    setMessage(copy.ready);
     window.dispatchEvent(new Event("jss-cart-updated"));
   }
 
@@ -147,18 +151,18 @@ export function AccountClient() {
       if (!response.ok) {
         setSaveStatus("error");
         setMessageTone("error");
-        setMessage(data.message || "Could not save your profile.");
+        setMessage(data.message || copy.saveFailed);
         return;
       }
       setProfile(data.profile);
       setUser(user ? { ...user, fullName: data.profile.fullName } : user);
       setSaveStatus("success");
       setMessageTone("success");
-      setMessage("Profile saved.");
+      setMessage(copy.saved);
     } catch {
       setSaveStatus("error");
       setMessageTone("error");
-      setMessage("Could not save your profile.");
+      setMessage(copy.saveFailed);
     } finally {
       setSaving(false);
     }
@@ -176,9 +180,9 @@ export function AccountClient() {
     return (
       <div className="grid gap-6 lg:grid-cols-[minmax(240px,0.75fr)_minmax(0,1.25fr)]">
         <aside className="h-fit rounded-3xl border border-line bg-white p-6 shadow-sm">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Active session</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.kicker}</p>
           <h2 className="font-display mt-2 text-3xl font-extrabold uppercase leading-tight">
-            Hi, {profile?.fullName || user.fullName || user.username}
+            {copy.hello}, {profile?.fullName || user.fullName || user.username}
           </h2>
           <p className="mt-2 break-all text-muted">{user.email}</p>
           <div className="mt-6 grid gap-3">
@@ -186,13 +190,13 @@ export function AccountClient() {
               href="/checkout"
               className="rounded-2xl bg-ink px-5 py-4 text-center text-sm font-bold uppercase tracking-wide text-white transition hover:bg-ink/90 active:scale-[0.98]"
             >
-              Go to checkout
+              {copy.shopNow}
             </a>
             <button
               onClick={logout}
               className="rounded-2xl border border-line px-5 py-4 text-sm font-bold uppercase tracking-wide transition hover:bg-cream active:scale-[0.98]"
             >
-              Sign out
+              {copy.signOut}
             </button>
           </div>
         </aside>
@@ -203,10 +207,8 @@ export function AccountClient() {
           className="min-w-0 rounded-3xl border border-line bg-white p-6 shadow-sm"
         >
           <div className="mb-6">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Profile</p>
-            <p className="mt-2 text-sm text-muted">
-              Keep your details ready for faster checkouts and Odoo customer sync.
-            </p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.profileKicker}</p>
+            <p className="mt-2 text-sm text-muted">{copy.profileIntro}</p>
           </div>
 
           {profileLoading ? (
@@ -217,17 +219,17 @@ export function AccountClient() {
             </div>
           ) : (
             <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Full name" htmlFor="fullName">
+              <Field label={copy.fullName} htmlFor="fullName">
                 <input
                   id="fullName"
                   name="fullName"
                   required
                   defaultValue={String(profile?.fullName || user.fullName || "")}
-                  placeholder="Full name"
+                  placeholder={copy.fullName}
                   className={fieldClass}
                 />
               </Field>
-              <Field label="Birth date" htmlFor="birthDate">
+              <Field label={copy.birthDate} htmlFor="birthDate">
                 <input
                   id="birthDate"
                   name="birthDate"
@@ -236,7 +238,7 @@ export function AccountClient() {
                   className={fieldClass}
                 />
               </Field>
-              <Field label="Gender" htmlFor="gender">
+              <Field label={copy.gender} htmlFor="gender">
                 <select
                   id="gender"
                   name="gender"
@@ -244,14 +246,14 @@ export function AccountClient() {
                   className={selectClass}
                   style={{ backgroundImage: selectChevron }}
                 >
-                  <option value="">Prefer not to say</option>
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                  <option value="NON_BINARY">Non-binary</option>
-                  <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                  <option value="">{copy.preferNot}</option>
+                  <option value="MALE">{copy.male}</option>
+                  <option value="FEMALE">{copy.female}</option>
+                  <option value="NON_BINARY">{copy.nonBinary}</option>
+                  <option value="PREFER_NOT_TO_SAY">{copy.preferNot}</option>
                 </select>
               </Field>
-              <Field label="Customer type" htmlFor="customerType">
+              <Field label={copy.customerType} htmlFor="customerType">
                 <select
                   id="customerType"
                   name="customerType"
@@ -267,7 +269,7 @@ export function AccountClient() {
                 </select>
               </Field>
 
-              <Field label="Mobile" className="md:col-span-2">
+              <Field label={copy.mobile} className="md:col-span-2">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(7.5rem,9rem)_minmax(0,1fr)]">
                   <select
                     name="phoneCountryCode"
@@ -285,14 +287,14 @@ export function AccountClient() {
                   <input
                     name="phone"
                     defaultValue={String(profile?.phone || "")}
-                    placeholder="Mobile number"
+                    placeholder={copy.mobile}
                     inputMode="tel"
                     className={fieldClass}
                   />
                 </div>
               </Field>
 
-              <Field label="Preferred language" htmlFor="preferredLanguage">
+              <Field label={copy.preferredLanguage} htmlFor="preferredLanguage">
                 <select
                   id="preferredLanguage"
                   name="preferredLanguage"
@@ -305,7 +307,7 @@ export function AccountClient() {
                   <option value="zh">中文</option>
                 </select>
               </Field>
-              <Field label="Country" htmlFor="country">
+              <Field label={copy.country} htmlFor="country">
                 <input
                   id="country"
                   name="country"
@@ -315,43 +317,53 @@ export function AccountClient() {
                   className={fieldClass}
                 />
               </Field>
+              <Field label={copy.nif} htmlFor="nif" className="md:col-span-2">
+                <input
+                  id="nif"
+                  name="nif"
+                  defaultValue={String(profile?.nif || "").replace(/^PT/, "")}
+                  placeholder={copy.nif}
+                  className={fieldClass}
+                />
+                <span className="mt-1 text-xs font-medium normal-case tracking-normal text-muted">{copy.nifHelp}</span>
+              </Field>
 
               <div className="md:col-span-2">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Shipping address</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.shippingAddress}</p>
               </div>
-              <Field label="Address" htmlFor="addressLine1" className="md:col-span-2">
+              <Field label={copy.address} htmlFor="addressLine1" className="md:col-span-2">
                 <input
                   id="addressLine1"
                   name="addressLine1"
                   defaultValue={String(profile?.addressLine1 || "")}
-                  placeholder="Street and number"
+                  placeholder={copy.address}
                   className={fieldClass}
                 />
               </Field>
-              <Field label="Apartment, floor, notes" htmlFor="addressLine2" className="md:col-span-2">
+              <Field label={copy.addressDetails} htmlFor="addressLine2" className="md:col-span-2">
                 <input
                   id="addressLine2"
                   name="addressLine2"
                   defaultValue={String(profile?.addressLine2 || "")}
-                  placeholder="Apartment, floor, notes"
+                  placeholder={copy.addressDetails}
                   className={fieldClass}
                 />
               </Field>
-              <Field label="Postal code" htmlFor="postalCode">
+              <Field label={copy.postalCode} htmlFor="postalCode">
                 <input
                   id="postalCode"
                   name="postalCode"
                   defaultValue={String(profile?.postalCode || "")}
-                  placeholder="Postal code"
+                  placeholder={copy.postalCode}
                   className={fieldClass}
                 />
               </Field>
-              <Field label="City" htmlFor="city">
+              <Field label={copy.city} htmlFor="city">
                 <input
                   id="city"
                   name="city"
                   defaultValue={String(profile?.city || "")}
-                  placeholder="City"
+                  placeholder={copy.city}
                   className={fieldClass}
                 />
               </Field>
@@ -363,51 +375,51 @@ export function AccountClient() {
                   type="checkbox"
                   className="mt-1 size-4 shrink-0 accent-ink"
                 />
-                <span>Billing address is the same as shipping address</span>
+                <span>{copy.billingSame}</span>
               </label>
 
               {!billingSameAsShipping && (
                 <>
                   <div className="md:col-span-2">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Billing address</p>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.billingAddress}</p>
                   </div>
-                  <Field label="Billing address" htmlFor="billingAddressLine1" className="md:col-span-2">
+                  <Field label={copy.billingAddress} htmlFor="billingAddressLine1" className="md:col-span-2">
                     <input
                       id="billingAddressLine1"
                       name="billingAddressLine1"
                       defaultValue={String(profile?.billingAddressLine1 || "")}
-                      placeholder="Billing address"
+                      placeholder={copy.billingAddress}
                       className={fieldClass}
                     />
                   </Field>
-                  <Field label="Billing address details" htmlFor="billingAddressLine2" className="md:col-span-2">
+                  <Field label={copy.billingDetails} htmlFor="billingAddressLine2" className="md:col-span-2">
                     <input
                       id="billingAddressLine2"
                       name="billingAddressLine2"
                       defaultValue={String(profile?.billingAddressLine2 || "")}
-                      placeholder="Billing address details"
+                      placeholder={copy.billingDetails}
                       className={fieldClass}
                     />
                   </Field>
-                  <Field label="Billing postal code" htmlFor="billingPostalCode">
+                  <Field label={copy.billingPostal} htmlFor="billingPostalCode">
                     <input
                       id="billingPostalCode"
                       name="billingPostalCode"
                       defaultValue={String(profile?.billingPostalCode || "")}
-                      placeholder="Billing postal code"
+                      placeholder={copy.billingPostal}
                       className={fieldClass}
                     />
                   </Field>
-                  <Field label="Billing city" htmlFor="billingCity">
+                  <Field label={copy.billingCity} htmlFor="billingCity">
                     <input
                       id="billingCity"
                       name="billingCity"
                       defaultValue={String(profile?.billingCity || "")}
-                      placeholder="Billing city"
+                      placeholder={copy.billingCity}
                       className={fieldClass}
                     />
                   </Field>
-                  <Field label="Billing country" htmlFor="billingCountry" className="md:col-span-2">
+                  <Field label={copy.billingCountry} htmlFor="billingCountry" className="md:col-span-2">
                     <input
                       id="billingCountry"
                       name="billingCountry"
@@ -427,7 +439,7 @@ export function AccountClient() {
                   type="checkbox"
                   className="mt-1 size-4 shrink-0 accent-ink"
                 />
-                <span>I want to receive Jhonny drops, campaigns, and cart reminders.</span>
+                <span>{copy.marketing}</span>
               </label>
 
               <div className="grid gap-3 md:col-span-2">
@@ -436,19 +448,19 @@ export function AccountClient() {
                   disabled={saving}
                   className="rounded-2xl bg-ink px-5 py-4 text-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {saving ? "Saving profile…" : "Save profile"}
+                  {saving ? copy.saving : copy.save}
                 </button>
                 {(saveStatus === "success" || (message && messageTone === "success")) && (
                   <p
                     role="status"
                     className="rounded-2xl border border-line bg-cream px-4 py-3 text-sm font-semibold text-ink"
                   >
-                    Profile saved. Your details are ready for checkout.
+                    {copy.saved}
                   </p>
                 )}
                 {(saveStatus === "error" || (message && messageTone === "error")) && (
                   <p role="alert" className="rounded-2xl border border-line bg-cream px-4 py-3 text-sm text-muted">
-                    {message || "Could not save your profile."}
+                    {message || copy.saveFailed}
                   </p>
                 )}
               </div>
@@ -462,23 +474,21 @@ export function AccountClient() {
   return (
     <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
       <aside className="rounded-3xl border border-line bg-white p-6 shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Jhonny account</p>
-        <h2 className="font-display mt-2 text-3xl font-extrabold uppercase">Join the family</h2>
-        <p className="mt-3 text-sm leading-relaxed text-muted">
-          Create an account to save your profile, addresses, preferences, and order history. You can still shop as a guest at checkout.
-        </p>
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.joinKicker}</p>
+        <h2 className="font-display mt-2 text-3xl font-extrabold uppercase">{copy.joinTitle}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-muted">{copy.joinIntro}</p>
         <div className="mt-5 flex gap-2">
           <button
             onClick={() => setMode("login")}
             className={`rounded-full px-4 py-2 text-sm font-bold transition ${mode === "login" ? "bg-ink text-white" : "border border-line hover:bg-cream"}`}
           >
-            Sign in
+            {copy.signIn}
           </button>
           <button
             onClick={() => setMode("register")}
             className={`rounded-full px-4 py-2 text-sm font-bold transition ${mode === "register" ? "bg-ink text-white" : "border border-line hover:bg-cream"}`}
           >
-            Create account
+            {copy.register}
           </button>
         </div>
         {message && (
@@ -498,17 +508,17 @@ export function AccountClient() {
               className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream"
             >
               <GoogleMark />
-              Continuar com Google
+              {copy.continueGoogle}
             </a>
             <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">
               <span className="h-px flex-1 bg-line" />
-              ou
+              {copy.or}
               <span className="h-px flex-1 bg-line" />
             </div>
-            <input name="emailOrUsername" required placeholder="Email or username" className={fieldClass} />
-            <input name="password" required type="password" placeholder="Password" className={fieldClass} />
+            <input name="emailOrUsername" required placeholder={copy.emailOrUsername} className={fieldClass} />
+            <input name="password" required type="password" placeholder={copy.password} className={fieldClass} />
             <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98]">
-              Sign in
+              {copy.signIn}
             </button>
           </div>
         </form>
@@ -520,15 +530,15 @@ export function AccountClient() {
               className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream md:col-span-2"
             >
               <GoogleMark />
-              Criar conta com Google
+              {copy.createGoogle}
             </a>
             <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted md:col-span-2">
               <span className="h-px flex-1 bg-line" />
-              ou
+              {copy.or}
               <span className="h-px flex-1 bg-line" />
             </div>
-            <input name="fullName" required placeholder="Full name" className={fieldClass} />
-            <input name="username" required placeholder="Username" className={fieldClass} />
+            <input name="fullName" required placeholder={copy.fullName} className={fieldClass} />
+            <input name="username" required placeholder={copy.username} className={fieldClass} />
             <input name="email" required type="email" placeholder="Email" className={fieldClass} />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(7.5rem,9rem)_minmax(0,1fr)]">
               <select name="phoneCountryCode" defaultValue="+351" className={selectClass} style={{ backgroundImage: selectChevron }}>
@@ -538,9 +548,9 @@ export function AccountClient() {
                   </option>
                 ))}
               </select>
-              <input name="phone" placeholder="Mobile" className={fieldClass} />
+              <input name="phone" placeholder={copy.mobile} className={fieldClass} />
             </div>
-            <input name="password" required type="password" placeholder="Password" className={fieldClass} />
+            <input name="password" required type="password" placeholder={copy.password} className={fieldClass} />
             <select name="customerType" defaultValue="SURFER" className={selectClass} style={{ backgroundImage: selectChevron }}>
               {customerTypes.map(([value, label]) => (
                 <option key={value} value={value}>
@@ -550,10 +560,10 @@ export function AccountClient() {
             </select>
             <label className="flex items-start gap-3 text-sm text-muted md:col-span-2">
               <input name="marketingOptIn" type="checkbox" className="mt-1 size-4 shrink-0 accent-ink" />
-              <span>I want to receive Jhonny drops, cart reminders, and campaigns.</span>
+              <span>{copy.marketing}</span>
             </label>
             <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98] md:col-span-2">
-              Create account
+              {copy.register}
             </button>
           </div>
         </form>

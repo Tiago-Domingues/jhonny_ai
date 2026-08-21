@@ -175,7 +175,17 @@ export async function sendPaymentConfirmedSms(orderId: string) {
     order.customerPhoneCountryCode && order.customerPhone
       ? toE164(order.customerPhoneCountryCode, order.customerPhone)
       : null;
-  const customerBody = customerPaidSmsBody(order.orderNumber, order.totalCents);
+  const customerBody = customerPaidSmsBody({
+    orderNumber: order.orderNumber,
+    totalCents: order.totalCents,
+    paidAt,
+    paymentMethod: payment?.method ?? null,
+    items: order.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      totalCents: item.totalCents,
+    })),
+  });
 
   await recordSmsEvent({
     userId: order.userId,

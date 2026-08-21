@@ -24,6 +24,12 @@ export const STORE = {
 
 export const WHATSAPP_DEFAULT_MESSAGE = "Hi Jhonny. Please help me becoming a legend.";
 
+export const WHATSAPP_MESSAGES: Record<Locale, string> = {
+  en: WHATSAPP_DEFAULT_MESSAGE,
+  pt: "Olá Jhonny. Ajuda-me a tornar-me uma lenda.",
+  zh: "你好 Jhonny。请帮我成为传奇。",
+};
+
 export function whatsappHref(message = WHATSAPP_DEFAULT_MESSAGE) {
   return `https://wa.me/${STORE.phoneRaw}?text=${encodeURIComponent(message)}`;
 }
@@ -575,7 +581,7 @@ export const translations: Record<Locale, Dict> = {
       payments: "Pagamentos seguros",
     },
     whatsapp: {
-      bubble: "Hi Legend. How can I help you?",
+      bubble: "Olá Legend. Como posso ajudar?",
     },
     account: {
       title: "A minha conta",

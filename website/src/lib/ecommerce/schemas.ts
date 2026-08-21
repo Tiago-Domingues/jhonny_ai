@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidOptionalNif } from "@/lib/ecommerce/nif";
 
 export const customerTypes = [
   "PROFESSIONAL",
@@ -57,7 +58,12 @@ export const profileSchema = z.object({
   billingPostalCode: z.string().max(20).optional().or(z.literal("")),
   billingCity: z.string().max(80).optional().or(z.literal("")),
   billingCountry: z.string().length(2).default("PT"),
+  nif: z.string().max(20).optional().or(z.literal("")),
   marketingOptIn: z.boolean().default(false),
+}).superRefine((data, ctx) => {
+  if (!isValidOptionalNif(data.nif)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["nif"], message: "Invalid NIF / VAT." });
+  }
 });
 
 export const cartAddSchema = z.object({
@@ -124,6 +130,7 @@ export const checkoutSchema = z
     billingCountry: countryCode.default("PT"),
     couponCode: z.string().max(40).optional().or(z.literal("")),
     returnOrigin: z.string().url().max(200).optional().or(z.literal("")),
+    nif: z.string().max(20).optional().or(z.literal("")),
   })
   .superRefine((data, ctx) => {
     if (data.fulfillmentMethod === "SHIP_TO_ADDRESS") {
@@ -135,6 +142,9 @@ export const checkoutSchema = z
       requireTrimmed(ctx, "billingAddressLine1", data.billingAddressLine1, 3, "Billing address is required.");
       requireTrimmed(ctx, "billingPostalCode", data.billingPostalCode, 3, "Billing postal code is required.");
       requireTrimmed(ctx, "billingCity", data.billingCity, 2, "Billing city is required.");
+    }
+    if (!isValidOptionalNif(data.nif)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["nif"], message: "Invalid NIF / VAT." });
     }
   });
 

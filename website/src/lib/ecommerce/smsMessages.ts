@@ -32,8 +32,31 @@ export function formatPaidAtLisbon(date: Date) {
   }).format(date);
 }
 
-export function customerPaidSmsBody(orderNumber: string, totalCents: number) {
-  return `Jhonny Surf Store: pagamento confirmado. Encomenda ${orderNumber}. Total ${formatEuro(totalCents)}. Obrigado!`;
+export function paymentMethodLabel(method?: string | null) {
+  if (!method) return null;
+  return PAYMENT_METHOD_LABELS[method] || method;
+}
+
+export function customerPaidSmsBody(input: {
+  orderNumber: string;
+  totalCents: number;
+  paidAt: Date;
+  paymentMethod?: string | null;
+  items: Array<{ name: string; quantity: number; totalCents: number }>;
+}) {
+  const when = formatPaidAtLisbon(input.paidAt);
+  const method = paymentMethodLabel(input.paymentMethod);
+  const lines = [
+    `Jhonny Surf Store: pagamento confirmado ${when}`,
+    `Encomenda ${input.orderNumber}`,
+  ];
+  for (const item of input.items) {
+    lines.push(`${item.quantity}x ${item.name} (${formatEuro(item.totalCents)})`);
+  }
+  lines.push(`Total ${formatEuro(input.totalCents)}`);
+  if (method) lines.push(method);
+  lines.push("Obrigado!");
+  return truncateSms(lines.join("\n"));
 }
 
 export function ownerPaidSmsBody(input: {
@@ -46,9 +69,7 @@ export function ownerPaidSmsBody(input: {
   items: Array<{ name: string; quantity: number; totalCents: number }>;
 }) {
   const when = formatPaidAtLisbon(input.paidAt);
-  const method = input.paymentMethod
-    ? PAYMENT_METHOD_LABELS[input.paymentMethod] || input.paymentMethod
-    : null;
+  const method = paymentMethodLabel(input.paymentMethod);
   const lines = [
     `Nova venda ${when}`,
     `Encomenda ${input.orderNumber}`,

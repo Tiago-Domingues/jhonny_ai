@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/ecommerce/db";
 import type { GoogleUserInfo } from "@/lib/ecommerce/googleOAuth";
 import { registerSchema, loginSchema, profileSchema } from "@/lib/ecommerce/schemas";
+import { normalizeNif } from "@/lib/ecommerce/nif";
 import { hashPassword, normalizeEmail, randomToken, verifyPassword } from "@/lib/ecommerce/security";
 import { isAdminEmail } from "@/lib/ecommerce/admin";
 
@@ -187,6 +188,7 @@ export async function updateProfile(userId: string, input: unknown) {
       billingPostalCode: data.billingSameAsShipping ? data.postalCode || null : data.billingPostalCode || null,
       billingCity: data.billingSameAsShipping ? data.city || null : data.billingCity || null,
       billingCountry: data.billingSameAsShipping ? data.country : data.billingCountry,
+      nif: normalizeNif(data.nif) || null,
       marketingOptIn: data.marketingOptIn,
       odooSyncStatus: "PENDING_SYNC",
     },
@@ -210,6 +212,7 @@ export async function updateProfile(userId: string, input: unknown) {
       billingPostalCode: data.billingSameAsShipping ? data.postalCode || null : data.billingPostalCode || null,
       billingCity: data.billingSameAsShipping ? data.city || null : data.billingCity || null,
       billingCountry: data.billingSameAsShipping ? data.country : data.billingCountry,
+      nif: normalizeNif(data.nif) || null,
       marketingOptIn: data.marketingOptIn,
       odooSyncStatus: "PENDING_SYNC",
     },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/components/LanguageProvider";
-import { STORE, whatsappHref } from "@/lib/i18n";
+import { STORE, whatsappHref, WHATSAPP_MESSAGES } from "@/lib/i18n";
 import {
   WhatsappIcon,
   MailIcon,
@@ -11,14 +11,14 @@ import {
 } from "@/components/icons";
 
 export function Contact() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   const cards = [
     {
       icon: WhatsappIcon,
       label: t.contact.whatsapp,
       value: STORE.phoneDisplay,
-      href: whatsappHref(),
+      href: whatsappHref(WHATSAPP_MESSAGES[locale]),
     },
     {
       icon: MailIcon,
