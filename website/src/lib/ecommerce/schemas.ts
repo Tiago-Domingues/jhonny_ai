@@ -70,42 +70,73 @@ export const cartUpdateSchema = z.object({
   quantity: z.number().int().min(0).max(20),
 });
 
-export const checkoutSchema = z.object({
-  email: z.string().email(),
-  fullName: z.string().min(2).max(120),
-  phoneCountryCode: z.string().min(2).max(8).default("+351"),
-  phone: z.string().min(6).max(40),
-  fulfillmentMethod: z.enum(["PICKUP_IN_STORE", "SHIP_TO_ADDRESS"]),
-  paymentMethod: z.enum([
-    "MBWAY",
-    "MULTIBANCO",
-    "PAYPAL",
-    "KLARNA",
-    "CARD",
-    "MANUAL",
-    "PAYSHOP",
-    "GOOGLE_PAY",
-    "APPLE_PAY",
-    "REVOLUT_PAY",
-    "PIX",
-  ]),
-  mbwayPhone: z.string().max(40).optional().or(z.literal("")),
-  marketingOptIn: z.boolean().default(false),
-  notes: z.string().max(1000).optional().or(z.literal("")),
-  addressLine1: z.string().max(160).optional().or(z.literal("")),
-  addressLine2: z.string().max(160).optional().or(z.literal("")),
-  postalCode: z.string().max(20).optional().or(z.literal("")),
-  city: z.string().max(80).optional().or(z.literal("")),
-  country: z.string().length(2).default("PT"),
-  billingSameAsShipping: z.boolean().default(true),
-  billingAddressLine1: z.string().max(160).optional().or(z.literal("")),
-  billingAddressLine2: z.string().max(160).optional().or(z.literal("")),
-  billingPostalCode: z.string().max(20).optional().or(z.literal("")),
-  billingCity: z.string().max(80).optional().or(z.literal("")),
-  billingCountry: z.string().length(2).default("PT"),
-  couponCode: z.string().max(40).optional().or(z.literal("")),
-  returnOrigin: z.string().url().max(200).optional().or(z.literal("")),
-});
+const countryCode = z
+  .string()
+  .trim()
+  .transform((value) => (value ? value.toUpperCase() : "PT"))
+  .refine((value) => /^[A-Z]{2}$/.test(value), "Country must be a 2-letter code.");
+
+function requireTrimmed(
+  ctx: z.RefinementCtx,
+  field: string,
+  value: unknown,
+  min: number,
+  message: string
+) {
+  if (String(value || "").trim().length < min) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message });
+  }
+}
+
+export const checkoutSchema = z
+  .object({
+    email: z.string().email(),
+    fullName: z.string().min(2).max(120),
+    phoneCountryCode: z.string().min(2).max(8).default("+351"),
+    phone: z.string().min(6).max(40),
+    fulfillmentMethod: z.enum(["PICKUP_IN_STORE", "SHIP_TO_ADDRESS"]),
+    paymentMethod: z.enum([
+      "MBWAY",
+      "MULTIBANCO",
+      "PAYPAL",
+      "KLARNA",
+      "CARD",
+      "MANUAL",
+      "PAYSHOP",
+      "GOOGLE_PAY",
+      "APPLE_PAY",
+      "REVOLUT_PAY",
+      "PIX",
+    ]),
+    mbwayPhone: z.string().max(40).optional().or(z.literal("")),
+    marketingOptIn: z.boolean().default(false),
+    notes: z.string().max(1000).optional().or(z.literal("")),
+    addressLine1: z.string().max(160).optional().or(z.literal("")),
+    addressLine2: z.string().max(160).optional().or(z.literal("")),
+    postalCode: z.string().max(20).optional().or(z.literal("")),
+    city: z.string().max(80).optional().or(z.literal("")),
+    country: countryCode.default("PT"),
+    billingSameAsShipping: z.boolean().default(true),
+    billingAddressLine1: z.string().max(160).optional().or(z.literal("")),
+    billingAddressLine2: z.string().max(160).optional().or(z.literal("")),
+    billingPostalCode: z.string().max(20).optional().or(z.literal("")),
+    billingCity: z.string().max(80).optional().or(z.literal("")),
+    billingCountry: countryCode.default("PT"),
+    couponCode: z.string().max(40).optional().or(z.literal("")),
+    returnOrigin: z.string().url().max(200).optional().or(z.literal("")),
+  })
+  .superRefine((data, ctx) => {
+    if (data.fulfillmentMethod === "SHIP_TO_ADDRESS") {
+      requireTrimmed(ctx, "addressLine1", data.addressLine1, 3, "Morada is required for delivery.");
+      requireTrimmed(ctx, "postalCode", data.postalCode, 3, "Postal code is required for delivery.");
+      requireTrimmed(ctx, "city", data.city, 2, "City is required for delivery.");
+    }
+    if (!data.billingSameAsShipping) {
+      requireTrimmed(ctx, "billingAddressLine1", data.billingAddressLine1, 3, "Billing address is required.");
+      requireTrimmed(ctx, "billingPostalCode", data.billingPostalCode, 3, "Billing postal code is required.");
+      requireTrimmed(ctx, "billingCity", data.billingCity, 2, "Billing city is required.");
+    }
+  });
 
 export const couponValidationSchema = z.object({
   code: z.string().min(2).max(40),

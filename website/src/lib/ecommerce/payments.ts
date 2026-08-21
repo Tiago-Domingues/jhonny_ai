@@ -5,7 +5,7 @@ import { sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
 import { sendPaymentConfirmedSms } from "@/lib/ecommerce/sms";
 import { recordCouponUsageForPaidOrder } from "@/lib/ecommerce/coupons";
 import { centsToEuros } from "@/lib/ecommerce/money";
-import { finalizeOdooOrderAfterPayment } from "@/lib/ecommerce/odooOrders";
+import { finalizeOdooOrderAfterPayment, decrementLocalStockForPaidOrder } from "@/lib/ecommerce/odooOrders";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 import { getStripe, stripePaymentMethodConfiguration } from "@/lib/ecommerce/stripe";
 import {
@@ -329,7 +329,16 @@ export async function markPaymentPaid(
       include: { order: true },
     }));
   if (!payment) return 0;
-  if (payment.status === "PAID") return 1;
+  if (payment.status === "PAID") {
+    if (payment.order.odooSyncStatus !== "SYNCED") {
+      try {
+        await finalizeOdooOrderAfterPayment(payment.orderId);
+      } catch {
+        // Payment already succeeded; Odoo sync can be retried on the next callback.
+      }
+    }
+    return 1;
+  }
 
   const statusRaw = String(options?.status ?? "").trim().toLowerCase();
   if (statusRaw) {
@@ -363,9 +372,16 @@ export async function markPaymentPaid(
   }
 
   try {
-    await finalizeOdooOrderAfterPayment(payment.orderId);
+    const result = await finalizeOdooOrderAfterPayment(payment.orderId);
+    if (!result.stockRefreshed) {
+      await decrementLocalStockForPaidOrder(payment.orderId);
+    }
   } catch {
-    // Payment is already marked paid; Odoo sync can be retried separately.
+    try {
+      await decrementLocalStockForPaidOrder(payment.orderId);
+    } catch {
+      // Payment is already marked paid; stock can be reconciled from Odoo later.
+    }
   }
 
   try {

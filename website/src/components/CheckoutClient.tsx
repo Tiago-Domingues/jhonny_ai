@@ -71,6 +71,26 @@ export function CheckoutClient() {
       setSubmitting(false);
       return;
     }
+    if (fulfillmentMethod === "SHIP_TO_ADDRESS") {
+      const addressLine1 = String(payload.addressLine1 || "").trim();
+      const postalCode = String(payload.postalCode || "").trim();
+      const city = String(payload.city || "").trim();
+      if (addressLine1.length < 3 || postalCode.length < 3 || city.length < 2) {
+        setMessage("Indica a morada completa para envio: rua, código postal e cidade.");
+        setSubmitting(false);
+        return;
+      }
+    }
+    if (!billingSameAsShipping) {
+      const billingAddressLine1 = String(payload.billingAddressLine1 || "").trim();
+      const billingPostalCode = String(payload.billingPostalCode || "").trim();
+      const billingCity = String(payload.billingCity || "").trim();
+      if (billingAddressLine1.length < 3 || billingPostalCode.length < 3 || billingCity.length < 2) {
+        setMessage("Indica a morada de faturação completa: rua, código postal e cidade.");
+        setSubmitting(false);
+        return;
+      }
+    }
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -80,13 +100,18 @@ export function CheckoutClient() {
           fulfillmentMethod,
           paymentMethod,
           marketingOptIn: form.get("marketingOptIn") === "on",
-          billingSameAsShipping,
+          billingSameAsShipping: fulfillmentMethod === "PICKUP_IN_STORE" ? true : billingSameAsShipping,
           returnOrigin: window.location.origin,
         }),
       });
       const data = await response.json();
       if (!response.ok) {
-        setMessage(data.message || "Não foi possível criar a encomenda.");
+        const fieldError = data.fields
+          ? Object.values(data.fields)
+              .flat()
+              .find((value) => typeof value === "string" && value.trim())
+          : null;
+        setMessage(fieldError || data.message || "Não foi possível criar a encomenda.");
         return;
       }
       if (data.payment?.providerPaymentUrl) {
@@ -158,7 +183,7 @@ export function CheckoutClient() {
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-muted">Entrega</p>
             <div className="grid gap-2 md:grid-cols-2">
-              <button type="button" onClick={() => setFulfillmentMethod("PICKUP_IN_STORE")} className={`rounded-2xl border px-4 py-3 text-left font-semibold ${fulfillmentMethod === "PICKUP_IN_STORE" ? "border-ink bg-ink text-white" : "border-line"}`}>
+              <button type="button" onClick={() => { setFulfillmentMethod("PICKUP_IN_STORE"); setBillingSameAsShipping(true); }} className={`rounded-2xl border px-4 py-3 text-left font-semibold ${fulfillmentMethod === "PICKUP_IN_STORE" ? "border-ink bg-ink text-white" : "border-line"}`}>
                 Pagar online e levantar na loja
               </button>
               <button type="button" onClick={() => setFulfillmentMethod("SHIP_TO_ADDRESS")} className={`rounded-2xl border px-4 py-3 text-left font-semibold ${fulfillmentMethod === "SHIP_TO_ADDRESS" ? "border-ink bg-ink text-white" : "border-line"}`}>
@@ -169,25 +194,46 @@ export function CheckoutClient() {
 
           {fulfillmentMethod === "SHIP_TO_ADDRESS" && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <input name="addressLine1" placeholder="Morada" className="w-full rounded-2xl border border-line px-4 py-3 sm:col-span-2" />
+              <input name="addressLine1" required placeholder="Morada" className="w-full rounded-2xl border border-line px-4 py-3 sm:col-span-2" />
               <input name="addressLine2" placeholder="Detalhes morada" className="w-full rounded-2xl border border-line px-4 py-3 sm:col-span-2" />
-              <input name="postalCode" placeholder="Código postal" className="w-full rounded-2xl border border-line px-4 py-3" />
-              <input name="city" placeholder="Cidade" className="w-full rounded-2xl border border-line px-4 py-3" />
+              <input name="postalCode" required placeholder="Código postal" className="w-full rounded-2xl border border-line px-4 py-3" />
+              <input name="city" required placeholder="Cidade" className="w-full rounded-2xl border border-line px-4 py-3" />
+              <select name="country" defaultValue="PT" className="w-full rounded-2xl border border-line px-4 py-3">
+                <option value="PT">Portugal</option>
+                <option value="ES">Espanha</option>
+                <option value="FR">França</option>
+                <option value="GB">Reino Unido</option>
+                <option value="DE">Alemanha</option>
+                <option value="US">Estados Unidos</option>
+                <option value="BR">Brasil</option>
+                <option value="CH">Suíça</option>
+              </select>
             </div>
           )}
 
-          <label className="flex items-center gap-2 text-sm text-muted">
-            <input checked={billingSameAsShipping} onChange={(event) => setBillingSameAsShipping(event.currentTarget.checked)} type="checkbox" className="mt-1" />
-            Morada de faturação igual à morada de entrega
-          </label>
+          {fulfillmentMethod === "SHIP_TO_ADDRESS" && (
+            <label className="flex items-center gap-2 text-sm text-muted">
+              <input checked={billingSameAsShipping} onChange={(event) => setBillingSameAsShipping(event.currentTarget.checked)} type="checkbox" className="mt-1" />
+              Morada de faturação igual à morada de entrega
+            </label>
+          )}
 
-          {!billingSameAsShipping && (
+          {fulfillmentMethod === "SHIP_TO_ADDRESS" && !billingSameAsShipping && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <input name="billingAddressLine1" placeholder="Morada de faturação" className="w-full rounded-2xl border border-line px-4 py-3 sm:col-span-2" />
+              <input name="billingAddressLine1" required placeholder="Morada de faturação" className="w-full rounded-2xl border border-line px-4 py-3 sm:col-span-2" />
               <input name="billingAddressLine2" placeholder="Detalhes morada de faturação" className="w-full rounded-2xl border border-line px-4 py-3 sm:col-span-2" />
-              <input name="billingPostalCode" placeholder="Código postal faturação" className="w-full rounded-2xl border border-line px-4 py-3" />
-              <input name="billingCity" placeholder="Cidade faturação" className="w-full rounded-2xl border border-line px-4 py-3" />
-              <input name="billingCountry" maxLength={2} defaultValue="PT" placeholder="País faturação" className="w-full rounded-2xl border border-line px-4 py-3" />
+              <input name="billingPostalCode" required placeholder="Código postal faturação" className="w-full rounded-2xl border border-line px-4 py-3" />
+              <input name="billingCity" required placeholder="Cidade faturação" className="w-full rounded-2xl border border-line px-4 py-3" />
+              <select name="billingCountry" defaultValue="PT" className="w-full rounded-2xl border border-line px-4 py-3">
+                <option value="PT">Portugal</option>
+                <option value="ES">Espanha</option>
+                <option value="FR">França</option>
+                <option value="GB">Reino Unido</option>
+                <option value="DE">Alemanha</option>
+                <option value="US">Estados Unidos</option>
+                <option value="BR">Brasil</option>
+                <option value="CH">Suíça</option>
+              </select>
             </div>
           )}
 

@@ -13,6 +13,8 @@
     "seed:welcome-coupon": "node scripts/seed-welcome-coupon.mjs",
     "test:stripe": "npx tsx scripts/test-stripe-checkout.ts",
     "test:sms": "npx tsx scripts/test-sms.ts",
+    "test:odoo-stock": "npx tsx scripts/test-odoo-stock.ts",
+    "test:checkout": "npx tsx scripts/test-checkout-schema.ts",
     "lint": "eslint"
   },
   "dependencies": {

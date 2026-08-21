@@ -1,7 +1,7 @@
 # Jhonny Surf Store — Website Launch Status
 
 **Audience:** owner + shop/ops + technical team  
-**Last updated:** 23 July 2026  
+**Last updated:** 21 August 2026  
 **Live sites:** [jhonnysurfstore.com](https://www.jhonnysurfstore.com) · [jhonnysurfstore.pt](https://www.jhonnysurfstore.pt)  
 **HTML version:** [website-launch-status.html](./website-launch-status.html)  
 **PDF version:** [website-launch-status.pdf](./website-launch-status.pdf)
@@ -18,7 +18,7 @@ This document states whether the website is ready for **public online purchases*
 
 **Not ready for public purchases yet.**
 
-The marketing site, product catalog, and shopping foundations are largely in place. What still blocks selling online is **real payment processing**, **post-checkout payment instructions**, **stock/coupon correctness**, **order emails**, **opening the .pt domain**, and **security controls** so payment callbacks and store APIs cannot be abused.
+The marketing site, product catalog, and shopping foundations are largely in place. What still blocks selling online is **real payment processing**, **post-checkout payment instructions**, **stock/coupon correctness**, **opening the .pt domain**, and **security controls** so payment callbacks and store APIs cannot be abused.
 
 | Area | Status |
 |------|--------|
@@ -28,7 +28,7 @@ The marketing site, product catalog, and shopping foundations are largely in pla
 | Cart + guest/account checkout skeleton | Built, not production-safe |
 | Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** |
 | Security / abuse protection | **Partial — harden before open checkout** |
-| Order email + ops admin | **Not ready** |
+| Order email + ops admin | Emails **sending**; ops admin still limited |
 | Public go-live (.com + .pt) | **Blocked** |
 
 ---
@@ -42,6 +42,7 @@ The marketing site, product catalog, and shopping foundations are largely in pla
 - Coupon validation plumbing (including welcome / athlete codes when seeded in DB).
 - Pickup vs ship-to-address pricing logic on the server.
 - Legal pages in Portuguese and English.
+- Order + payment-confirmation emails send (SMTP) to the customer and Jhonny.
 - **.com** is publicly browsable (home, shop, checkout pages load).
 - **Odoo** is connected in production (catalog sync / auth OK as of last scan).
 - Baseline app security: httpOnly session cookies, bcrypt passwords, Zod validation on APIs, Prisma (no raw SQL), React-escaped UI (no `dangerouslySetInnerHTML`).
@@ -71,7 +72,7 @@ From production integration status and code review:
 | Integration | Production status |
 |-------------|-------------------|
 | Odoo | Configured and authenticated — catalog sync exists but is **not a reliable near-real-time pipeline** yet |
-| Email (Resend) | **Not configured** — order emails skipped |
+| Email (SMTP) | **Done** — order + payment emails send (P0.6) |
 | Ifthenpay MB WAY | **Not configured** — would fall back to mocks |
 | Ifthenpay Multibanco | **Not configured** — would fall back to mocks |
 | Ifthenpay callback secret | **Not configured** |
@@ -82,9 +83,8 @@ Other important mismatches / risks:
 
 - Banner already says free shipping over **€100**; checkout + legal still use **€50**.
 - After checkout, customers do **not** see Multibanco entity/reference or MB WAY next steps.
-- Stock is checked but **not reserved/decremented** → oversell risk.
+- Stock is checked at cart/checkout; **paid orders decrement Odoo on-hand and website qty immediately** (P0.7). Unpaid pending orders are not reserved.
 - Coupons can be consumed when the order is created, even if payment never completes.
-- Ship-to-address fields are not strictly required in the UI.
 - Until `SITE_PUBLIC_LAUNCH=true`, **both .com and .pt** show coming-soon to the public; staff unlock via `/preview-access` + `SITE_PREVIEW_PASSWORD`.
 - If catalog/DB fails, mock demo products must not become sellable.
 - No simple admin screen to process orders; no customer “My orders” history.
@@ -140,10 +140,10 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 | P0.3 | Implement and connect **Klarna** for real checkout | Required for day-1 payment set | L |
 | P0.4 | Harden payment **callback** (secret **always** required in prod, constant-time compare, **amount + status** checks) | Prevents forged “paid” states | S–M |
 | P0.5 | Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps | Customer must know how to pay | M |
-| P0.6 | Configure **transactional email** (Resend or SMTP) and send order + payment instructions | No email = broken ops and trust | S (config) + S–M (content) |
-| P0.7 | **Reserve/decrement stock** on order (release on cancel/expiry) | Stops overselling | M |
+| P0.6 | Configure **transactional email** (Resend or SMTP) and send order + payment instructions | **Done** — SMTP order + payment emails confirmed in production | S (config) + S–M (content) |
+| P0.7 | **Reserve/decrement stock** on order (release on cancel/expiry) | **Done** — paid orders validate Odoo delivery and update website qty immediately | M |
 | P0.8 | Apply **coupon usage only after payment** (or roll back if unpaid) | Stops burned coupons | S–M |
-| P0.9 | Require full **shipping address** when ship-to-home is selected | Avoid undeliverable orders | S |
+| P0.9 | Require full **shipping address** when ship-to-home is selected | **Done** — street, postal code, city, country required for delivery | S |
 | P0.10 | Align **€100 free shipping** in checkout logic + legal pages | Matches banner and launch decision | S |
 | P0.11 | Show **shipping cost in checkout total** UI | Total currently can understate amount due | S |
 | P0.12 | Open public domains: set **`SITE_PUBLIC_LAUNCH=true`** (removes coming-soon on .com + .pt) when checkout is ready | Needed for joint .com/.pt launch; until then public sees coming-soon and staff use `/preview-access` | S |
@@ -229,7 +229,7 @@ All of the following must be true:
 - [ ] Paid orders update correctly via **secure callback** (secret required; amount/status verified).  
 - [ ] Stock cannot oversell; coupons only stick on paid orders.  
 - [ ] Free shipping threshold is **€100** in banner, checkout, and legal text.  
-- [ ] Order emails send reliably.  
+- [x] Order emails send reliably.  
 - [ ] Staff can see and update orders.  
 - [ ] **jhonnysurfstore.com** and **jhonnysurfstore.pt** both serve the full shop (`SITE_PUBLIC_LAUNCH=true`).  
 - [ ] Auth/checkout/callback are **rate-limited**; Odoo sync is **not** anonymously callable.  

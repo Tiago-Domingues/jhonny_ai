@@ -25,7 +25,7 @@ export function integrationStatus() {
       liveCatalog: process.env.ODOO_LIVE_CATALOG === "true",
       autoConfirmSaleOrder: process.env.ODOO_AUTO_CONFIRM_SALE_ORDER === "true",
       createInvoiceAfterPayment: process.env.ODOO_CREATE_INVOICE_AFTER_PAYMENT === "true",
-      autoValidateDelivery: process.env.ODOO_AUTO_VALIDATE_DELIVERY === "true",
+      autoValidateDelivery: process.env.ODOO_AUTO_VALIDATE_DELIVERY !== "false",
     },
     email: {
       provider: emailProvider,
