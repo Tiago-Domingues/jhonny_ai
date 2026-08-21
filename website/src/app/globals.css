@@ -118,15 +118,24 @@ html.jss-a11y-motion *::after {
   margin: 0;
   padding: 0;
   border: 0;
-  background: #000;
+  background-color: #000;
   color: #fff;
   cursor: pointer;
   pointer-events: auto;
   clip-path: polygon(0 100%, 0 0, 100% 100%);
+  transition: background-color 0.45s ease, color 0.45s ease;
 }
 
 .jss-free-shipping-ribbon:hover {
   filter: brightness(1.08);
+}
+
+.jss-free-shipping-widget[data-theme="light"] .jss-free-shipping-ribbon {
+  filter: drop-shadow(0 0 0.6px rgba(0, 0, 0, 0.45));
+}
+
+.jss-free-shipping-widget[data-theme="light"] .jss-free-shipping-ribbon:hover {
+  filter: brightness(0.97) drop-shadow(0 0 0.6px rgba(0, 0, 0, 0.45));
 }
 
 /* Sit in the triangle centroid, rotated clockwise so the 2–3 word
@@ -153,6 +162,7 @@ html.jss-a11y-motion *::after {
   text-transform: uppercase;
   pointer-events: none;
   animation: jss-ribbon-copy-in 0.45s ease;
+  transition: color 0.45s ease;
 }
 
 .jss-free-shipping-ribbon__text span {
@@ -191,11 +201,14 @@ html.jss-a11y-motion *::after {
   justify-content: center;
   border: 1px solid #fff;
   border-radius: 999px;
-  background: #000;
+  background-color: #000;
   color: #fff;
   cursor: pointer;
   pointer-events: auto;
-  box-shadow: none;
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    border-color 0.45s ease;
 }
 
 .jss-free-shipping-close:hover {

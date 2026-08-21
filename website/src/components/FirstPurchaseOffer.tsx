@@ -216,6 +216,10 @@ export function FirstPurchaseOffer() {
     }
   }
 
+  const ribbonTheme = ribbonSlide % 2 === 0 ? "dark" : "light";
+  const ribbonBg = ribbonTheme === "dark" ? "#000000" : "#ffffff";
+  const ribbonFg = ribbonTheme === "dark" ? "#ffffff" : "#000000";
+
   return (
     <>
       {open && (
@@ -299,12 +303,14 @@ export function FirstPurchaseOffer() {
           ref={widgetRef}
           className="jss-free-shipping-widget"
           data-testid="free-shipping-widget"
+          data-theme={ribbonTheme}
         >
           <button
             type="button"
             onClick={openFromRibbon}
             aria-label={`${RIBBON_SLIDES[ribbonSlide].join(" ")} — ${t.title}`}
             className="jss-free-shipping-ribbon"
+            style={{ backgroundColor: ribbonBg, color: ribbonFg }}
           />
           <span
             key={ribbonSlide}
@@ -312,6 +318,7 @@ export function FirstPurchaseOffer() {
             aria-hidden="true"
             data-testid="ribbon-copy"
             data-slide={ribbonSlide}
+            style={{ color: ribbonFg }}
           >
             {RIBBON_SLIDES[ribbonSlide].map((word) => (
               <span key={word}>{word}</span>
@@ -322,6 +329,11 @@ export function FirstPurchaseOffer() {
             onClick={hideRibbon}
             aria-label="Dismiss"
             className="jss-free-shipping-close"
+            style={{
+              backgroundColor: ribbonBg,
+              color: ribbonFg,
+              borderColor: ribbonFg,
+            }}
           >
             <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
               <path
