@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
+import { NotifyWhenAvailable } from "@/components/NotifyWhenAvailable";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { StoreProduct } from "@/lib/ecommerce/catalog";
 import { ODOO_CATEGORY_GROUPS, displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
@@ -569,24 +570,6 @@ export function ShopClient({
     window.dispatchEvent(new Event("jss-cart-updated"));
   }
 
-  async function askWhenAvailable(product: StoreProduct, event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const response = await fetch("/api/availability", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productId: product.id,
-        email: form.get("email"),
-        name: form.get("name"),
-        phoneCountryCode: form.get("phoneCountryCode"),
-        phone: form.get("phone"),
-        message: `Notify me when ${product.name} is available.`,
-      }),
-    });
-    setMessage(response.ok ? productCopy.notifyOk : productCopy.notifyFailed);
-  }
-
   const filterPanel = (
     <div className="flex h-full flex-col">
       <div className="mb-4 flex items-center justify-between gap-3 border-b border-line pb-3 lg:border-0 lg:pb-0">
@@ -1070,9 +1053,7 @@ export function ShopClient({
                               )}
                             </p>
                             <p className="text-[0.7rem] text-muted">
-                              {product.stockQuantity > 0
-                                ? product.stockState || t.inStock
-                                : t.outOfStock}
+                              {product.stockQuantity > 0 ? t.inStock : t.outOfStock}
                             </p>
                           </div>
                           {product.availableForSale ? (
@@ -1095,60 +1076,16 @@ export function ShopClient({
                               ) : null}
                             </div>
                           ) : (
-                            <Link
-                              href={`/loja/${product.slug}`}
-                              className="rounded-full border border-dashed border-ink/30 px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-muted transition hover:bg-cream"
-                            >
-                              {t.outOfStock}
-                            </Link>
+                            <NotifyWhenAvailable
+                              productId={product.id}
+                              productName={product.name}
+                              variant="card"
+                              onResult={(ok) =>
+                                setMessage(ok ? productCopy.notifyOk : productCopy.notifyFailed)
+                              }
+                            />
                           )}
                         </div>
-                        {!product.availableForSale && (
-                          <form
-                            onSubmit={(event) => askWhenAvailable(product, event)}
-                            className="mt-4 grid gap-2 rounded-2xl bg-cream p-3"
-                          >
-                            <p className="text-[0.65rem] font-bold uppercase tracking-wide text-muted">
-                              {t.notify}
-                            </p>
-                            <input
-                              name="email"
-                              required
-                              type="email"
-                              placeholder="Email"
-                              className="rounded-xl border border-line px-3 py-2 text-sm"
-                            />
-                            <div className="grid gap-2">
-                              <input
-                                name="name"
-                                placeholder="Nome"
-                                className="rounded-xl border border-line px-3 py-2 text-sm"
-                              />
-                              <div className="grid grid-cols-[0.5fr_1fr] gap-2">
-                                <select
-                                  name="phoneCountryCode"
-                                  defaultValue="+351"
-                                  className="rounded-xl border border-line px-2 py-2 text-sm"
-                                >
-                                  <option value="+351">+351</option>
-                                  <option value="+34">+34</option>
-                                  <option value="+33">+33</option>
-                                  <option value="+44">+44</option>
-                                  <option value="+49">+49</option>
-                                  <option value="+1">+1</option>
-                                </select>
-                                <input
-                                  name="phone"
-                                  placeholder="Telefone"
-                                  className="rounded-xl border border-line px-3 py-2 text-sm"
-                                />
-                              </div>
-                            </div>
-                            <button className="rounded-full bg-ink px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wide text-white">
-                              {productCopy.notifyCta}
-                            </button>
-                          </form>
-                        )}
                       </div>
                     </article>
                     );
