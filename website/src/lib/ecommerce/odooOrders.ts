@@ -3,6 +3,13 @@ import "server-only";
 import { prisma } from "@/lib/ecommerce/db";
 import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { centsToEuros } from "@/lib/ecommerce/money";
+import {
+  localStockAfterSale,
+  odooQtyByProductId,
+  stockFieldsFromQty,
+  validateOpenPickings,
+  type OdooRpcClient,
+} from "@/lib/ecommerce/odooStock";
 
 function asArray<T>(value: T | T[] | undefined | null): T[] {
   if (!value) return [];
@@ -111,39 +118,97 @@ async function createAndPostInvoice(client: OdooClient, saleOrderId: number) {
 }
 
 async function maybeValidateDelivery(client: OdooClient, saleOrderId: number) {
-  if (process.env.ODOO_AUTO_VALIDATE_DELIVERY !== "true") return;
-  const pickings = await client.searchRead(
-    "stock.picking",
-    [["sale_id", "=", saleOrderId]],
-    ["id", "state"],
-    { limit: 10 }
-  );
-  const pickingIds = pickings
-    .filter((picking) => !["done", "cancel"].includes(String(picking.state)))
-    .map((picking) => Number(picking.id));
-  if (pickingIds.length) {
-    await client.executeKw("stock.picking", "button_validate", [pickingIds]);
+  return validateOpenPickings(client as unknown as OdooRpcClient, saleOrderId);
+}
+
+async function refreshLocalStockFromOdoo(
+  client: OdooClient,
+  items: Array<{ odooProductId: number | null; productId: string | null }>
+) {
+  const odooIds = [...new Set(items.map((item) => Number(item.odooProductId)).filter((id) => Number.isFinite(id) && id > 0))];
+  if (!odooIds.length) return false;
+
+  const rows = await client.searchRead("product.product", [["id", "in", odooIds]], ["id", "qty_available", "sale_ok"], {
+    limit: odooIds.length,
+  });
+  const qtyById = odooQtyByProductId(rows);
+  const saleableById = new Map<number, boolean>();
+  for (const row of rows) {
+    saleableById.set(Number(row.id), row.sale_ok !== false);
   }
+
+  for (const item of items) {
+    const odooId = Number(item.odooProductId);
+    if (!qtyById.has(odooId)) continue;
+    const fields = stockFieldsFromQty(qtyById.get(odooId) || 0, saleableById.get(odooId) ?? true);
+    if (item.productId) {
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: fields,
+      });
+    } else {
+      await prisma.product.updateMany({
+        where: { odooProductId: odooId },
+        data: fields,
+      });
+    }
+  }
+  return true;
+}
+
+export async function decrementLocalStockForPaidOrder(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  if (!order) return 0;
+
+  let updated = 0;
+  for (const item of order.items) {
+    if (!item.productId) continue;
+    const product = await prisma.product.findUnique({ where: { id: item.productId } });
+    if (!product) continue;
+    const fields = localStockAfterSale(product.stockQuantity, item.quantity, product.saleable);
+    await prisma.product.update({
+      where: { id: product.id },
+      data: fields,
+    });
+    updated += 1;
+  }
+  return updated;
 }
 
 export async function finalizeOdooOrderAfterPayment(orderId: string) {
   if (!hasOdooConfig()) {
-    return { configured: false, skipped: true };
+    return { configured: false, skipped: true, stockRefreshed: false };
   }
 
   const order = await loadOrder(orderId);
   if (!order) throw new Error("Order not found.");
-  if (order.odooSaleOrderId && order.odooInvoiceId) {
-    return { configured: true, skipped: true, saleOrderId: order.odooSaleOrderId, invoiceId: order.odooInvoiceId };
+  if (order.odooSyncStatus === "SYNCED" && order.odooSaleOrderId) {
+    return {
+      configured: true,
+      skipped: true,
+      saleOrderId: order.odooSaleOrderId,
+      invoiceId: order.odooInvoiceId,
+      stockRefreshed: false,
+    };
   }
 
   const client = new OdooClient();
   try {
     const partnerId = await findOrCreatePartner(client, order);
     const saleOrderId = order.odooSaleOrderId || (await createSaleOrder(client, order, partnerId));
+    if (!order.odooSaleOrderId) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { odooSaleOrderId: saleOrderId },
+      });
+    }
     await confirmSaleOrder(client, saleOrderId);
-    const invoiceId = await createAndPostInvoice(client, saleOrderId);
-    await maybeValidateDelivery(client, saleOrderId);
+    const invoiceId = order.odooInvoiceId || (await createAndPostInvoice(client, saleOrderId));
+    const delivery = await maybeValidateDelivery(client, saleOrderId);
+    const stockRefreshed = delivery.skipped ? false : await refreshLocalStockFromOdoo(client, order.items);
 
     await prisma.order.update({
       where: { id: order.id },
@@ -157,7 +222,7 @@ export async function finalizeOdooOrderAfterPayment(orderId: string) {
       },
     });
 
-    return { configured: true, saleOrderId, invoiceId };
+    return { configured: true, skipped: false, saleOrderId, invoiceId, stockRefreshed };
   } catch (error) {
     await prisma.order.update({
       where: { id: order.id },
