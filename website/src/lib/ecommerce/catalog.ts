@@ -7,6 +7,7 @@ import { eurosToCents } from "@/lib/ecommerce/money";
 import { fetchOdooProducts, syncOdooProducts } from "@/lib/ecommerce/odooCatalog";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { productMatchesCategoryGroup, productMatchesSubcategory } from "@/lib/ecommerce/categoryGroups";
+import { applySurfboardReviewVideo } from "@/lib/ecommerce/surfboardEnrichment";
 import { groupStoreProductsForListing, type StoreProductListing } from "@/lib/ecommerce/productVariants";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
@@ -248,7 +249,7 @@ function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boo
         : String(product.createdAt)
       : null;
 
-  return {
+  const mapped: StoreProduct = {
     id: product.id,
     slug: product.slug,
     sku: product.sku,
@@ -284,6 +285,8 @@ function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boo
     odooProductTemplateId: product.odooProductTemplateId,
     createdAt,
   };
+
+  return lean ? mapped : applySurfboardReviewVideo(mapped);
 }
 
 /**

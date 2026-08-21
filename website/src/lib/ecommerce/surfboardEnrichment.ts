@@ -72,3 +72,24 @@ export function buildSurfboardEnrichment(product: SurfboardProduct) {
     contentSyncStatus: "CATALOG_ENRICHED",
   };
 }
+
+export function applySurfboardReviewVideo<T extends {
+  id?: string | null;
+  slug?: string | null;
+  name: string;
+  brand?: string | null;
+  category: string;
+  videoUrl?: string | null;
+  contentSourceName?: string | null;
+  contentSourceUrl?: string | null;
+}>(product: T): T {
+  if (!productMatchesCategoryGroup(product.category, "surfboards")) return product;
+  const review = matchSurfboardReviewVideo(product);
+  const meta = review ? SURFBOARD_REVIEW_CHANNEL_META[review.channel] : null;
+  return {
+    ...product,
+    videoUrl: surfboardReviewWatchUrl(review),
+    contentSourceName: meta?.name ?? product.contentSourceName,
+    contentSourceUrl: meta?.url ?? product.contentSourceUrl,
+  };
+}

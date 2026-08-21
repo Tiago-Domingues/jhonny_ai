@@ -3,7 +3,7 @@
  * is clearly in a BoardshopUK / Surf n Show / REAL Watersports title.
  * Run: cd website && npm run test:surfboard-videos
  */
-import { buildSurfboardEnrichment } from "../src/lib/ecommerce/surfboardEnrichment.ts";
+import { applySurfboardReviewVideo, buildSurfboardEnrichment } from "../src/lib/ecommerce/surfboardEnrichment.ts";
 import {
   distinctiveSurfboardModelTokens,
   matchSurfboardReviewVideo,
@@ -148,5 +148,14 @@ assert(
   !String(enrichmentMiss!.videoUrl || "").includes("youtube.com/results"),
   "search URLs are never written"
 );
+
+const overlaid = applySurfboardReviewVideo({
+  id: "stored-wrong",
+  name: "Completely Fictional Model 5'10",
+  brand: "NoSuchShaper",
+  category: "SURFBOARDS",
+  videoUrl: "https://www.youtube.com/watch?v=brandDefaultClip",
+});
+assert(overlaid.videoUrl === null, "stored brand-default clips are cleared without a confident title match");
 
 console.log("surfboard review video matcher: ok");
