@@ -1,12 +1,14 @@
 "use client";
 
-import { whatsappHref } from "@/lib/i18n";
+import { whatsappHref, WHATSAPP_MESSAGES } from "@/lib/i18n";
 import { WhatsappIcon } from "@/components/icons";
+import { useLanguage } from "@/components/LanguageProvider";
 
 export function FloatingWhatsApp() {
+  const { locale } = useLanguage();
   return (
     <a
-      href={whatsappHref()}
+      href={whatsappHref(WHATSAPP_MESSAGES[locale])}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WhatsApp"

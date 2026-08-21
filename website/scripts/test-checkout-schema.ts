@@ -1,4 +1,4 @@
-import { checkoutSchema } from "../src/lib/ecommerce/schemas";
+import { checkoutSchema, cartUpdateSchema } from "../src/lib/ecommerce/schemas";
 
 function assert(condition: unknown, message: string) {
   if (!condition) {
@@ -60,5 +60,46 @@ const billingOk = checkoutSchema.parse({
   billingCountry: "PT",
 });
 assert(billingOk.billingCity === "Lisboa", "separate billing address is accepted");
+
+const pickupNoNif = checkoutSchema.parse({
+  ...base,
+  fulfillmentMethod: "PICKUP_IN_STORE",
+});
+assert(!pickupNoNif.nif, "NIF is optional on pickup");
+
+const nifDigits = checkoutSchema.parse({
+  ...base,
+  fulfillmentMethod: "PICKUP_IN_STORE",
+  nif: "123456789",
+});
+assert(nifDigits.nif === "123456789", "9-digit NIF is accepted");
+
+const nifVat = checkoutSchema.parse({
+  ...base,
+  fulfillmentMethod: "PICKUP_IN_STORE",
+  nif: "pt 123 456 789",
+});
+assert(nifVat.nif === "pt 123 456 789", "formatted NIF is accepted at schema level");
+
+const badNif = checkoutSchema.safeParse({
+  ...base,
+  fulfillmentMethod: "PICKUP_IN_STORE",
+  nif: "ABC",
+});
+assert(!badNif.success, "invalid NIF is rejected");
+
+const shortNif = checkoutSchema.safeParse({
+  ...base,
+  fulfillmentMethod: "PICKUP_IN_STORE",
+  nif: "12345678",
+});
+assert(!shortNif.success, "8-digit NIF is rejected");
+
+const qtyUpdate = cartUpdateSchema.parse({ itemId: "item_1", quantity: 2 });
+assert(qtyUpdate.quantity === 2, "cart PATCH accepts a new quantity");
+const qtyRemove = cartUpdateSchema.parse({ itemId: "item_1", quantity: 0 });
+assert(qtyRemove.quantity === 0, "cart PATCH quantity 0 deletes the line");
+const qtyOver = cartUpdateSchema.safeParse({ itemId: "item_1", quantity: 21 });
+assert(!qtyOver.success, "cart PATCH rejects quantity over 20");
 
 console.log("checkout address schema ok");

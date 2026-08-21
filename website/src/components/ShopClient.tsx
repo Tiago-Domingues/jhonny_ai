@@ -23,6 +23,7 @@ import {
   type ShopSortOption,
 } from "@/lib/ecommerce/shopFilters";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
+import { storefrontText } from "@/lib/storefrontCopy";
 
 type MenuSubcategory = {
   path: string;
@@ -98,6 +99,11 @@ const copy = {
     selected: "selecionados",
     variants: "variantes",
     chooseOptions: "Escolher opções",
+    add: "Adicionar",
+    details: "Detalhes",
+    notify: "Avisar quando disponível",
+    notifyOk: "Pedido registado. Avisamos-te quando voltar a estar disponível.",
+    notifyFailed: "Não foi possível registar o pedido.",
     sort: {
       featured: "Em destaque",
       relevance: "Mais relevantes",
@@ -141,6 +147,11 @@ const copy = {
     selected: "selected",
     variants: "variants",
     chooseOptions: "Choose options",
+    add: "Add",
+    details: "Details",
+    notify: "Notify me when available",
+    notifyOk: "Request saved. We’ll email you when it’s back.",
+    notifyFailed: "Could not save the request.",
     sort: {
       featured: "Featured",
       relevance: "Most relevant",
@@ -184,6 +195,11 @@ const copy = {
     selected: "已选",
     variants: "款可选",
     chooseOptions: "选择规格",
+    add: "加入",
+    details: "详情",
+    notify: "有货时通知我",
+    notifyOk: "已登记。到货后我们会通知你。",
+    notifyFailed: "无法登记请求。",
     sort: {
       featured: "精选",
       relevance: "最相关",
@@ -374,6 +390,7 @@ export function ShopClient({
 }) {
   const { locale, t: i18n } = useLanguage();
   const t = copy[locale];
+  const productCopy = storefrontText(locale).product;
   const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<StoreProduct[]>(initialProducts);
@@ -545,10 +562,10 @@ export function ShopClient({
     const data = await response.json();
     setAdding(null);
     if (!response.ok) {
-      setMessage(data.message || "Configura a base de dados para ativar o carrinho.");
+      setMessage(data.message || productCopy.addFailed);
       return;
     }
-    setMessage("Produto adicionado ao carrinho.");
+    setMessage(productCopy.added);
     window.dispatchEvent(new Event("jss-cart-updated"));
   }
 
@@ -567,11 +584,7 @@ export function ShopClient({
         message: `Notify me when ${product.name} is available.`,
       }),
     });
-    setMessage(
-      response.ok
-        ? "Pedido registado. Avisamos quando voltar a estar disponível."
-        : "Não foi possível registar o pedido."
-    );
+    setMessage(response.ok ? productCopy.notifyOk : productCopy.notifyFailed);
   }
 
   const filterPanel = (
@@ -1068,7 +1081,7 @@ export function ShopClient({
                                 href={`/loja/${product.slug}`}
                                 className="rounded-full border border-line px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-cream"
                               >
-                                {hasVariants ? t.chooseOptions : "Detalhes"}
+                                {hasVariants ? t.chooseOptions : t.details}
                               </Link>
                               {!hasVariants ? (
                                 <button
@@ -1077,7 +1090,7 @@ export function ShopClient({
                                   disabled={adding === product.id}
                                   className="rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white transition hover:bg-ink-soft disabled:opacity-60"
                                 >
-                                  {adding === product.id ? "..." : "Adicionar"}
+                                  {adding === product.id ? "..." : t.add}
                                 </button>
                               ) : null}
                             </div>
@@ -1096,7 +1109,7 @@ export function ShopClient({
                             className="mt-4 grid gap-2 rounded-2xl bg-cream p-3"
                           >
                             <p className="text-[0.65rem] font-bold uppercase tracking-wide text-muted">
-                              Avisar quando disponível
+                              {t.notify}
                             </p>
                             <input
                               name="email"
@@ -1132,7 +1145,7 @@ export function ShopClient({
                               </div>
                             </div>
                             <button className="rounded-full bg-ink px-3 py-2 text-[0.65rem] font-bold uppercase tracking-wide text-white">
-                              Pedir aviso
+                              {productCopy.notifyCta}
                             </button>
                           </form>
                         )}

@@ -13,13 +13,28 @@ function assert(condition: unknown, message: string) {
   }
 }
 
-const customer = customerPaidSmsBody("JSS-1042", 12990);
+const paidAt = new Date("2026-08-21T12:00:00.000Z");
+const customerItems = [
+  { name: "Wetsuit", quantity: 1, totalCents: 12000 },
+  { name: "Wax", quantity: 2, totalCents: 990 },
+];
+const customer = customerPaidSmsBody({
+  orderNumber: "JSS-1042",
+  totalCents: 12990,
+  paidAt,
+  paymentMethod: "MBWAY",
+  items: customerItems,
+});
 assert(customer.includes("pagamento confirmado"), "customer SMS must mention payment confirmation");
 assert(customer.includes("Encomenda JSS-1042"), "customer SMS must include the order number");
 assert(customer.includes("Obrigado!"), "customer SMS must thank the customer");
 assert(customer.includes("129,90"), "customer SMS must include the formatted total");
+assert(customer.includes("1x Wetsuit"), "customer SMS must list items");
+assert(customer.includes("2x Wax"), "customer SMS must list the second item");
+assert(customer.includes("MB WAY"), "customer SMS must include the payment method");
+assert(!customer.includes("Nome:"), "customer SMS must not repeat the customer name");
+assert(!customer.includes("Nova venda"), "customer SMS must not use the owner sale heading");
 
-const paidAt = new Date("2026-08-21T12:00:00.000Z");
 const lisbon = formatPaidAtLisbon(paidAt);
 assert(lisbon.includes("21"), "Lisbon date must include the day");
 assert(lisbon.includes("08") || lisbon.includes("8"), "Lisbon date must include August");
@@ -67,6 +82,21 @@ const longOwner = ownerPaidSmsBody({
 });
 assert(longOwner.length <= SMS_MAX_CHARS, "long owner SMS must be truncated to SMS_MAX_CHARS");
 assert(longOwner.endsWith("…"), "long owner SMS must end with an ellipsis");
+
+const longCustomer = customerPaidSmsBody({
+  orderNumber: "JSS-9999",
+  totalCents: 100,
+  paidAt,
+  paymentMethod: "CARD",
+  items: Array.from({ length: 80 }, (_, index) => ({
+    name: `Produto muito comprido número ${index + 1} para forçar truncagem`,
+    quantity: 3,
+    totalCents: 1999,
+  })),
+});
+assert(longCustomer.length <= SMS_MAX_CHARS, "long customer SMS must be truncated to SMS_MAX_CHARS");
+assert(longCustomer.endsWith("…"), "long customer SMS must end with an ellipsis");
+assert(longCustomer.includes("pagamento confirmado"), "truncated customer SMS keeps the intro");
 
 const previousJhonny = process.env.JHONNY_SMS_PHONE;
 process.env.JHONNY_SMS_PHONE = " +351910000000 ";

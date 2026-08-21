@@ -53,16 +53,22 @@ async function assertMobileHeaderLayout(page) {
     const logo = [...header.querySelectorAll("a[aria-label='Jhonny Surf Store']")].find(
       (el) => el.getClientRects().length
     );
-    const lang = header.querySelector("button[aria-label='Change language']");
+    const lang = [...header.querySelectorAll("button[aria-label='Change language']")].find(
+      (el) => el.getClientRects().length
+    );
+    const profile = [...header.querySelectorAll("button[aria-label='My account'], button[aria-label='A minha conta'], button[aria-label='我的账户']")].find(
+      (el) => el.getClientRects().length
+    );
     const search = header.querySelector("button[aria-label='Search for…']");
     const cart = header.querySelector("button[aria-label='Cart']");
-    if (!menu || !a11y || !logo || !lang || !search || !cart) {
+    if (!menu || !a11y || !logo || !lang || !profile || !search || !cart) {
       return {
         missing: {
           menu: !menu,
           a11y: !a11y,
           logo: !logo,
           lang: !lang,
+          profile: !profile,
           search: !search,
           cart: !cart,
         },
@@ -72,8 +78,9 @@ async function assertMobileHeaderLayout(page) {
       viewport: window.innerWidth,
       menu: box(menu),
       a11y: box(a11y),
-      logo: box(logo),
       lang: box(lang),
+      logo: box(logo),
+      profile: box(profile),
       search: box(search),
       cart: box(cart),
     };
@@ -81,9 +88,10 @@ async function assertMobileHeaderLayout(page) {
 
   assert(order && !order.missing, `mobile header missing controls: ${JSON.stringify(order)}`);
   assert(order.menu.x < order.a11y.x, "menu should be left of accessibility");
-  assert(order.a11y.x < order.logo.x, "accessibility should be left of the logo");
-  assert(order.logo.right < order.lang.x, "logo should be left of language");
-  assert(order.lang.x < order.search.x, "language should be left of search");
+  assert(order.a11y.x < order.lang.x, "accessibility should be left of language");
+  assert(order.lang.x < order.logo.x, "language should be left of the logo");
+  assert(order.logo.right < order.profile.x, "logo should be left of profile");
+  assert(order.profile.x < order.search.x, "profile should be left of search");
   assert(order.search.x < order.cart.x, "search should be left of cart");
   assert(order.menu.x < 24, `menu should sit on the left edge (x=${order.menu.x})`);
   assert(
@@ -95,9 +103,9 @@ async function assertMobileHeaderLayout(page) {
     `cart should sit on the right edge (right=${order.cart.right}, vw=${order.viewport})`
   );
   console.log("mobile header layout OK", {
-    left: `${order.menu.x.toFixed(0)} menu → ${order.a11y.x.toFixed(0)} a11y`,
+    left: `${order.menu.x.toFixed(0)} menu → ${order.a11y.x.toFixed(0)} a11y → ${order.lang.x.toFixed(0)} lang`,
     center: `logo ${order.logo.cx.toFixed(0)}`,
-    right: `${order.lang.x.toFixed(0)} lang → ${order.search.x.toFixed(0)} search → ${order.cart.x.toFixed(0)} cart`,
+    right: `${order.profile.x.toFixed(0)} profile → ${order.search.x.toFixed(0)} search → ${order.cart.x.toFixed(0)} cart`,
   });
 }
 

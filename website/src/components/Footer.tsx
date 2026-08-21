@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/components/LanguageProvider";
-import { STORE, whatsappHref } from "@/lib/i18n";
+import { STORE, whatsappHref, WHATSAPP_MESSAGES } from "@/lib/i18n";
 import { Logo } from "@/components/Logo";
 import {
   InstagramIcon,
@@ -38,11 +38,11 @@ function FooterColumn({ title, links }: { title: string; links: FLink[] }) {
 }
 
 export function Footer() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const year = new Date().getFullYear();
 
   const socials = [
-    { icon: WhatsappIcon, href: whatsappHref(), label: "WhatsApp" },
+    { icon: WhatsappIcon, href: whatsappHref(WHATSAPP_MESSAGES[locale]), label: "WhatsApp" },
     { icon: InstagramIcon, href: STORE.instagram, label: "Instagram" },
     { icon: FacebookIcon, href: STORE.facebook, label: "Facebook" },
     { icon: MailIcon, href: `mailto:${STORE.email}`, label: "Email" },

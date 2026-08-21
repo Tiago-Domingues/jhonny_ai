@@ -183,6 +183,7 @@ model CustomerProfile {
   billingPostalCode  String?
   billingCity        String?
   billingCountry     String       @default("PT")
+  nif                String?
   marketingOptIn     Boolean      @default(false)
   odooPartnerId      Int?
   odooSyncStatus     SyncStatus   @default(NOT_SYNCED)
@@ -207,6 +208,7 @@ model GuestCheckout {
   country           String   @default("PT")
   billingSameAsShipping Boolean @default(true)
   billingAddressJson Json?
+  nif               String?
   marketingOptIn    Boolean  @default(false)
   createdAt         DateTime @default(now())
   orders            Order[]
@@ -338,6 +340,7 @@ model Order {
   customerPhoneCountryCode String     @default("+351")
   customerPhone       String?
   customerName        String
+  customerVat         String?
   shippingAddressJson Json?
   billingAddressJson  Json?
   subtotalCents       Int

@@ -68,6 +68,72 @@ function Chevron({ className = "", direction = "down" }: { className?: string; d
   );
 }
 
+function LanguageSwitcher({
+  locale,
+  setLocale,
+  open,
+  onToggle,
+  onPick,
+  align,
+  className = "",
+}: {
+  locale: Locale;
+  setLocale: (code: Locale) => void;
+  open: boolean;
+  onToggle: () => void;
+  onPick: (code: Locale) => void;
+  align: "left" | "right";
+  className?: string;
+}) {
+  return (
+    <div className={`relative ${className}`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label="Change language"
+        aria-expanded={open}
+        className="flex items-center gap-1.5 px-1.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:text-white/80"
+      >
+        {locale === "pt" ? (
+          <FlagPT className="h-3.5 w-5 rounded-[2px]" />
+        ) : locale === "zh" ? (
+          <FlagZH className="h-3.5 w-5 rounded-[2px]" />
+        ) : (
+          <FlagEN className="h-3.5 w-5 rounded-[2px]" />
+        )}
+        <span className="hidden xl:inline">{LOCALE_META[locale].short}</span>
+      </button>
+      {open && (
+        <div
+          className={`absolute mt-2 w-36 overflow-hidden rounded-xl border border-line bg-paper py-1 text-ink shadow-xl ${
+            align === "right" ? "right-0" : "left-0"
+          }`}
+        >
+          {LOCALES.map((code) => {
+            const Flag = code === "pt" ? FlagPT : code === "zh" ? FlagZH : FlagEN;
+            return (
+              <button
+                key={code}
+                type="button"
+                onClick={() => {
+                  setLocale(code);
+                  onPick(code);
+                }}
+                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-wide transition hover:bg-cream ${
+                  locale === code ? "bg-cream text-ink" : "text-muted"
+                }`}
+              >
+                <Flag className="h-3.5 w-5 rounded-[2px]" />
+                <span>{LOCALE_META[code].label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Header({ categories }: { categories?: MenuCategory[] }) {
   const { t, locale, setLocale } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
@@ -208,6 +274,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       continueShopping: "Continuar compras",
       checkout: "Checkout",
       subtotal: "Subtotal",
+      signOut: "Sair",
     },
     en: {
       tryBoard: "Try a Board",
@@ -222,6 +289,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       continueShopping: "Continue shopping",
       checkout: "Checkout",
       subtotal: "Subtotal",
+      signOut: "Sign out",
     },
     zh: {
       tryBoard: "试板",
@@ -236,6 +304,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       continueShopping: "继续购物",
       checkout: "结算",
       subtotal: "小计",
+      signOut: "退出",
     },
   }[locale];
 
@@ -292,6 +361,19 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
           >
             <AccessibilityIcon className="h-[18px] w-[18px]" />
           </button>
+          <LanguageSwitcher
+            locale={locale}
+            setLocale={setLocale}
+            open={langOpen}
+            align="left"
+            className="xl:hidden"
+            onToggle={() => {
+              setLangOpen((value) => !value);
+              setDesktopCat(null);
+              setPanel(null);
+            }}
+            onPick={() => setLangOpen(false)}
+          />
           <Link href="/" aria-label="Jhonny Surf Store" className="hidden shrink-0 xl:block">
             <Logo type="horizontal" variant="dark" priority className="h-9 sm:h-10" />
           </Link>
@@ -337,53 +419,21 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
         </nav>
 
         <div className="flex min-w-0 items-center justify-end gap-0.5 sm:gap-1.5 lg:gap-3">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setLangOpen((value) => !value);
-                setDesktopCat(null);
-                setPanel(null);
-              }}
-              aria-label="Change language"
-              aria-expanded={langOpen}
-              className="flex items-center gap-1.5 px-1.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:text-white/80"
-            >
-              {locale === "pt" ? (
-                <FlagPT className="h-3.5 w-5 rounded-[2px]" />
-              ) : locale === "zh" ? (
-                <FlagZH className="h-3.5 w-5 rounded-[2px]" />
-              ) : (
-                <FlagEN className="h-3.5 w-5 rounded-[2px]" />
-              )}
-              <span className="hidden xl:inline">{LOCALE_META[locale].short}</span>
-            </button>
-            {langOpen && (
-              <div className="absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border border-line bg-paper py-1 text-ink shadow-xl">
-                {LOCALES.map((code) => {
-                  const Flag = code === "pt" ? FlagPT : code === "zh" ? FlagZH : FlagEN;
-                  return (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => {
-                        setLocale(code as Locale);
-                        setLangOpen(false);
-                      }}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold uppercase tracking-wide transition hover:bg-cream ${
-                        locale === code ? "bg-cream text-ink" : "text-muted"
-                      }`}
-                    >
-                      <Flag className="h-3.5 w-5 rounded-[2px]" />
-                      <span>{LOCALE_META[code].label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <LanguageSwitcher
+            locale={locale}
+            setLocale={setLocale}
+            open={langOpen}
+            align="right"
+            className="hidden xl:block"
+            onToggle={() => {
+              setLangOpen((value) => !value);
+              setDesktopCat(null);
+              setPanel(null);
+            }}
+            onPick={() => setLangOpen(false)}
+          />
 
-          <div ref={menuRef} className="relative hidden xl:block">
+          <div ref={menuRef} className="relative">
             <button
               type="button"
               onClick={() => {
@@ -455,7 +505,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                     onClick={logout}
                     className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                   >
-                    Sair
+                    {headerCopy.signOut}
                   </button>
                 )}
               </div>
@@ -527,11 +577,6 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       <CartDrawer
         open={cartOpen}
         onClose={() => setCartOpen(false)}
-        title={t.account.cartTitle}
-        emptyLabel={t.account.cartEmpty}
-        continueLabel={headerCopy.continueShopping}
-        checkoutLabel={headerCopy.checkout}
-        subtotalLabel={headerCopy.subtotal}
       />
       <AccessibilityPanel
         open={a11yOpen}

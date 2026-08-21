@@ -4,6 +4,8 @@ import nodemailer from "nodemailer";
 import { Resend } from "resend";
 import { prisma } from "@/lib/ecommerce/db";
 import { formatEuro } from "@/lib/ecommerce/money";
+import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
+import { fetchOdooInvoicePdf } from "@/lib/ecommerce/odooInvoice";
 
 function emailFrom() {
   return process.env.EMAIL_FROM || "Jhonny Surf Store <orders@jhonnysurfstore.com>";
@@ -28,13 +30,19 @@ function jhonnyToyImageUrl() {
   return `${publicSiteOrigin()}/brand/jhonny-character-cut.png`;
 }
 
+type EmailAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+};
+
 type SendResult = {
   status: "SENT" | "FAILED" | "SKIPPED";
   providerId: string | null;
   error: string | null;
 };
 
-async function sendSmtpEmail(to: string, subject: string, html: string): Promise<SendResult> {
+async function sendSmtpEmail(to: string, subject: string, html: string, attachments?: EmailAttachment[]): Promise<SendResult> {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 465);
   const user = process.env.SMTP_USER;
@@ -61,6 +69,11 @@ async function sendSmtpEmail(to: string, subject: string, html: string): Promise
       to,
       subject,
       html,
+      attachments: attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content,
+        contentType: attachment.contentType || "application/pdf",
+      })),
     });
 
     return { status: "SENT", providerId: result.messageId, error: null };
@@ -73,7 +86,7 @@ async function sendSmtpEmail(to: string, subject: string, html: string): Promise
   }
 }
 
-async function sendResendEmail(to: string, subject: string, html: string): Promise<SendResult> {
+async function sendResendEmail(to: string, subject: string, html: string, attachments?: EmailAttachment[]): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     return { status: "SKIPPED", providerId: null, error: "RESEND_API_KEY is not configured." };
@@ -86,6 +99,10 @@ async function sendResendEmail(to: string, subject: string, html: string): Promi
       to,
       subject,
       html,
+      attachments: attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content.toString("base64"),
+      })),
     });
 
     if (response.error) {
@@ -102,11 +119,11 @@ async function sendResendEmail(to: string, subject: string, html: string): Promi
   }
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<SendResult> {
+async function sendEmail(to: string, subject: string, html: string, attachments?: EmailAttachment[]): Promise<SendResult> {
   if (emailProvider() === "smtp") {
-    return sendSmtpEmail(to, subject, html);
+    return sendSmtpEmail(to, subject, html, attachments);
   }
-  return sendResendEmail(to, subject, html);
+  return sendResendEmail(to, subject, html, attachments);
 }
 
 function escapeHtml(value: string) {
@@ -210,7 +227,7 @@ function orderHtml(
 
   const paidNote =
     variant === "paid"
-      ? "<p>O pagamento desta encomenda foi confirmado.</p>"
+      ? `<p>O pagamento desta encomenda foi confirmado.${order.customerVat ? ` NIF: ${escapeHtml(order.customerVat)}.` : ""}</p>`
       : paymentInstructionsHtml(order);
 
   return `
@@ -232,6 +249,22 @@ async function loadOrderForEmail(orderId: string) {
     where: { id: orderId },
     include: { items: true, payments: { orderBy: { createdAt: "desc" } } },
   });
+}
+
+async function loadPaidInvoicePdf(order: NonNullable<Awaited<ReturnType<typeof loadOrderForEmail>>>) {
+  if (!order.odooInvoiceId || !hasOdooConfig()) return null;
+  try {
+    const client = new OdooClient();
+    const pdf = await fetchOdooInvoicePdf(client, order.odooInvoiceId);
+    if (!pdf) return null;
+    return {
+      filename: `fatura-${order.orderNumber}.pdf`,
+      content: pdf,
+      contentType: "application/pdf",
+    } satisfies EmailAttachment;
+  } catch {
+    return null;
+  }
 }
 
 async function recordEmailEvent(input: {
@@ -351,13 +384,16 @@ export async function sendOrderEmails(orderId: string) {
 export async function sendPaymentConfirmedEmails(orderId: string) {
   const order = await loadOrderForEmail(orderId);
   if (!order) return;
+  const invoice = await loadPaidInvoicePdf(order);
+  const attachments = invoice ? [invoice] : undefined;
 
   try {
     const customerSubject = `Pagamento confirmado — ${order.orderNumber}`;
     const customer = await sendEmail(
       order.customerEmail,
       customerSubject,
-      orderHtml(order, "customer", "paid")
+      orderHtml(order, "customer", "paid"),
+      attachments
     );
     await recordEmailEvent({
       orderId,
@@ -371,7 +407,12 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
     });
 
     const ownerSubject = `Pagamento recebido — ${order.orderNumber}`;
-    const owner = await sendEmail(jhonnyEmail(), ownerSubject, orderHtml(order, "jhonny", "paid"));
+    const owner = await sendEmail(
+      jhonnyEmail(),
+      ownerSubject,
+      orderHtml(order, "jhonny", "paid"),
+      attachments
+    );
     await recordEmailEvent({
       orderId,
       userId: order.userId,

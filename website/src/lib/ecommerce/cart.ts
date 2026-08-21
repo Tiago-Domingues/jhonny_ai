@@ -144,6 +144,7 @@ export function summarizeCart(cart: Awaited<ReturnType<typeof getActiveCart>>) {
       quantity: item.quantity,
       unitPriceCents: item.unitPriceCents,
       totalCents: item.unitPriceCents * item.quantity,
+      stockQuantity: item.product.stockQuantity,
       currency: item.currency,
     })) || [];
   const subtotalCents = items.reduce((sum, item) => sum + item.totalCents, 0);

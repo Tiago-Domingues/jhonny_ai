@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
+import { storefrontText } from "@/lib/storefrontCopy";
 
 export function ProductDetailActions({
   productId,
@@ -11,6 +13,8 @@ export function ProductDetailActions({
   productName: string;
   availableForSale: boolean;
 }) {
+  const { locale } = useLanguage();
+  const copy = storefrontText(locale).product;
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -25,10 +29,10 @@ export function ProductDetailActions({
     const data = await response.json();
     setAdding(false);
     if (!response.ok) {
-      setMessage(data.message || "Não foi possível adicionar ao carrinho.");
+      setMessage(data.message || copy.addFailed);
       return;
     }
-    setMessage("Produto adicionado ao carrinho.");
+    setMessage(copy.added);
     window.dispatchEvent(new Event("jss-cart-updated"));
   }
 
@@ -47,11 +51,7 @@ export function ProductDetailActions({
         message: `Notify me when ${productName} is available.`,
       }),
     });
-    setMessage(
-      response.ok
-        ? "Pedido registado. Avisamos quando voltar a estar disponível."
-        : "Não foi possível registar o pedido."
-    );
+    setMessage(response.ok ? copy.notifyOk : copy.notifyFailed);
   }
 
   return (
@@ -63,16 +63,14 @@ export function ProductDetailActions({
           disabled={adding}
           className="w-full rounded-full bg-ink px-6 py-4 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-ink-soft disabled:opacity-60 sm:w-auto"
         >
-          {adding ? "A adicionar..." : "Adicionar ao carrinho"}
+          {adding ? copy.adding : copy.add}
         </button>
       ) : (
         <form onSubmit={askWhenAvailable} className="grid max-w-xl gap-3 rounded-3xl bg-white p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
-            Avisar quando disponível
-          </p>
-          <input name="email" required type="email" placeholder="Email" className="rounded-2xl border border-line px-4 py-3" />
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.notify}</p>
+          <input name="email" required type="email" placeholder={copy.email} className="rounded-2xl border border-line px-4 py-3" />
           <div className="grid gap-3 sm:grid-cols-2">
-            <input name="name" placeholder="Nome" className="rounded-2xl border border-line px-4 py-3" />
+            <input name="name" placeholder={copy.name} className="rounded-2xl border border-line px-4 py-3" />
             <div className="grid grid-cols-[0.45fr_1fr] gap-2">
               <select name="phoneCountryCode" defaultValue="+351" className="rounded-2xl border border-line px-4 py-3">
                 <option value="+351">+351</option>
@@ -82,11 +80,11 @@ export function ProductDetailActions({
                 <option value="+49">+49</option>
                 <option value="+1">+1</option>
               </select>
-              <input name="phone" placeholder="Telefone" className="rounded-2xl border border-line px-4 py-3" />
+              <input name="phone" placeholder={copy.phone} className="rounded-2xl border border-line px-4 py-3" />
             </div>
           </div>
           <button className="rounded-full bg-ink px-5 py-3 text-sm font-bold uppercase tracking-wide text-white">
-            Pedir aviso
+            {copy.notifyCta}
           </button>
         </form>
       )}

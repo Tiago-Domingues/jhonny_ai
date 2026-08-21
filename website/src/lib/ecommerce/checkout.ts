@@ -7,6 +7,7 @@ import { createPaymentForOrder } from "@/lib/ecommerce/payments";
 import { sendOrderEmails } from "@/lib/ecommerce/email";
 import { validateCoupon } from "@/lib/ecommerce/coupons";
 import { shippingCentsFor } from "@/lib/ecommerce/shipping";
+import { normalizeNif } from "@/lib/ecommerce/nif";
 
 type CheckoutIdentity = {
   userId?: string;
@@ -50,6 +51,13 @@ export async function createCheckout(
     amountAfterDiscountCents: amountForShippingCents,
   });
   const totalCents = Math.max(0, summary.subtotalCents + shippingCents - discountCents);
+  const customerVat = normalizeNif(data.nif) || null;
+  if (identity.userId && customerVat) {
+    await prisma.customerProfile.updateMany({
+      where: { userId: identity.userId },
+      data: { nif: customerVat },
+    });
+  }
   const guestCheckoutId = identity.userId
     ? null
     : (
@@ -74,6 +82,7 @@ export async function createCheckout(
                   city: data.billingCity,
                   country: data.billingCountry,
                 },
+            nif: customerVat,
             marketingOptIn: data.marketingOptIn,
           },
         })
@@ -89,6 +98,7 @@ export async function createCheckout(
       customerPhoneCountryCode: data.phoneCountryCode,
       customerPhone: data.phone,
       customerName: data.fullName,
+      customerVat,
       fulfillmentMethod: data.fulfillmentMethod,
       shippingAddressJson:
         data.fulfillmentMethod === "SHIP_TO_ADDRESS"
