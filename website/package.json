@@ -9,6 +9,8 @@
     "postinstall": "prisma generate",
     "exclude:food": "node scripts/exclude-food-beverages.mjs",
     "enrich:surfboards": "npx tsx scripts/enrich-surfboards.mjs",
+    "sync:surfboard-videos": "node scripts/sync-surfboard-review-videos.mjs",
+    "test:surfboard-videos": "npx tsx scripts/test-surfboard-review-videos.ts",
     "seed:athlete-coupons": "node scripts/seed-athlete-coupons.mjs",
     "seed:welcome-coupon": "node scripts/seed-welcome-coupon.mjs",
     "test:stripe": "npx tsx scripts/test-stripe-checkout.ts",

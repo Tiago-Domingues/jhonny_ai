@@ -12,19 +12,7 @@ export function ProductVideoPreview({
   if (!videoUrl) return null;
 
   const id = youtubeVideoId(videoUrl);
-
-  if (!id) {
-    return (
-      <a
-        href={videoUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-5 inline-flex rounded-full border border-line bg-white px-5 py-3 text-sm font-bold uppercase tracking-wide text-ink transition hover:bg-cream"
-      >
-        Watch product video
-      </a>
-    );
-  }
+  if (!id) return null;
 
   return (
     <div className="mt-6 overflow-hidden rounded-3xl border border-line bg-ink shadow-sm">

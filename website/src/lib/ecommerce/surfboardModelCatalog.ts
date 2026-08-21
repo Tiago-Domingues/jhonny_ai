@@ -1017,7 +1017,7 @@ export function normalizeSurfboardHaystack(brand?: string | null, name?: string 
     .trim();
 }
 
-function haystackHasToken(haystack: string, token: string) {
+export function haystackHasToken(haystack: string, token: string) {
   const normalized = token.toLowerCase().trim();
   if (!normalized) return false;
   if (normalized.includes(" ")) return haystack.includes(normalized);
