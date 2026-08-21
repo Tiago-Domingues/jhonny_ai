@@ -49,12 +49,11 @@ export function integrationStatus() {
         hasValue(process.env.IFTHENPAY_CALLBACK_SECRET),
     },
     paypal: {
-      configured:
-        hasValue(process.env.PAYPAL_CLIENT_ID) &&
-        hasValue(process.env.PAYPAL_CLIENT_SECRET),
-      webhookConfigured: hasValue(process.env.PAYPAL_WEBHOOK_ID),
-      environment: process.env.PAYPAL_ENVIRONMENT || "sandbox",
-      implementation: "placeholder",
+      configured: hasValue(process.env.STRIPE_SECRET_KEY),
+      webhookConfigured: hasValue(process.env.STRIPE_WEBHOOK_SECRET),
+      environment: process.env.PAYPAL_ENVIRONMENT || "live",
+      implementation: "stripe_checkout",
+      via: "stripe",
     },
     stripe: {
       configured: hasValue(process.env.STRIPE_SECRET_KEY),

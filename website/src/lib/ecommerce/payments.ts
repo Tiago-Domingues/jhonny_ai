@@ -265,15 +265,15 @@ async function createProviderPayment(
 ): Promise<ProviderResult> {
   if (request.method === "MBWAY") return createIfthenpayMbwayPayment(order.orderNumber, request);
   if (request.method === "MULTIBANCO") return createIfthenpayMultibancoPayment(order.orderNumber, request);
-  if (request.method === "PAYPAL" || request.method === "CARD" || request.method === "APPLE_PAY" || request.method === "PAYSHOP") {
+  if (request.method === "PAYSHOP") {
     if (isProductionRuntime()) {
-      throw new Error(`${request.method} is not connected yet.`);
+      throw new Error("PAYSHOP is not connected yet.");
     }
     return {
-      provider: request.method === "PAYPAL" ? "PAYPAL" : "MANUAL",
+      provider: "MANUAL",
       status: "REQUIRES_ACTION",
-      providerReference: `${request.method.toLowerCase()}-pending-${order.orderNumber}`,
-      rawProviderPayload: { mode: "placeholder", reason: `${request.method.toLowerCase()}_not_connected` },
+      providerReference: `payshop-pending-${order.orderNumber}`,
+      rawProviderPayload: { mode: "placeholder", reason: "payshop_not_connected" },
     };
   }
   if (isStripeCheckoutMethod(request.method)) {
