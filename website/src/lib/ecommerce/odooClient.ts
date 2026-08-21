@@ -191,6 +191,51 @@ export class OdooClient {
     throw lastError;
   }
 
+  async downloadReportPdf(reportXmlId: string, recordIds: number[]) {
+    const ids = recordIds.filter((id) => Number.isFinite(id) && id > 0);
+    if (!ids.length || !reportXmlId) return null;
+
+    const authResponse = await fetch(`${this.config.url}/web/session/authenticate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        params: {
+          db: this.config.db,
+          login: this.config.username,
+          password: this.config.apiKey,
+        },
+      }),
+    });
+    if (!authResponse.ok) return null;
+
+    const authPayload = (await authResponse.json().catch(() => null)) as
+      | { result?: { uid?: unknown; session_id?: unknown } }
+      | null;
+    if (!authPayload?.result?.uid) return null;
+
+    const cookieHeader = [
+      ...(typeof authResponse.headers.getSetCookie === "function"
+        ? authResponse.headers.getSetCookie()
+        : [authResponse.headers.get("set-cookie") || ""]),
+      authPayload.result.session_id ? `session_id=${String(authPayload.result.session_id)}` : "",
+    ]
+      .filter(Boolean)
+      .map((cookie) => cookie.split(";")[0]?.trim())
+      .filter(Boolean)
+      .join("; ");
+    if (!cookieHeader) return null;
+
+    const pdfResponse = await fetch(`${this.config.url}/report/pdf/${reportXmlId}/${ids.join(",")}`, {
+      headers: { Cookie: cookieHeader, Accept: "application/pdf" },
+      redirect: "follow",
+    });
+    if (!pdfResponse.ok) return null;
+    const buffer = Buffer.from(await pdfResponse.arrayBuffer());
+    if (buffer.length > 4 && buffer.subarray(0, 4).toString() === "%PDF") return buffer;
+    return null;
+  }
+
   async searchRead(
     model: string,
     domain: XmlRpcValue[] = [],
