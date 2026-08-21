@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
 import { sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
+import { sendPaymentConfirmedSms } from "@/lib/ecommerce/sms";
 import { recordCouponUsageForPaidOrder } from "@/lib/ecommerce/coupons";
 import { centsToEuros } from "@/lib/ecommerce/money";
 import { finalizeOdooOrderAfterPayment } from "@/lib/ecommerce/odooOrders";
@@ -371,6 +372,12 @@ export async function markPaymentPaid(
     await sendPaymentConfirmedEmails(payment.orderId);
   } catch {
     // Never roll back payment because of email failures.
+  }
+
+  try {
+    await sendPaymentConfirmedSms(payment.orderId);
+  } catch {
+    // Never roll back payment because of SMS failures.
   }
 
   return 1;
