@@ -119,11 +119,14 @@ export function stripePaidAmountCents(session: { amount_total?: number | null })
   return Math.round(session.amount_total);
 }
 
-export function stripePaymentMethodTypes(method: string): Array<"klarna" | "revolut_pay" | "card"> | null {
+export function stripePaymentMethodTypes(
+  method: string
+): Array<"klarna" | "revolut_pay" | "card" | "paypal"> | null {
   if (method === "KLARNA") return ["klarna"];
   if (method === "REVOLUT_PAY") return ["revolut_pay"];
-  // Google Pay is a card wallet on Stripe Checkout; the separate CARD method stays a placeholder.
-  if (method === "GOOGLE_PAY") return ["card"];
+  if (method === "PAYPAL") return ["paypal"];
+  // Cards, Apple Pay and Google Pay all use Stripe card Checkout (wallets appear when enabled).
+  if (method === "CARD" || method === "GOOGLE_PAY" || method === "APPLE_PAY") return ["card"];
   return null;
 }
 

@@ -40,6 +40,8 @@ assert(!stripeSessionIsPaid({ payment_status: "unpaid" }), "unpaid session shoul
 assert(stripePaymentMethodTypes("KLARNA")?.join() === "klarna", "Klarna must not include card");
 assert(stripePaymentMethodTypes("REVOLUT_PAY")?.join() === "revolut_pay", "Revolut Pay must not include card");
 assert(stripePaymentMethodTypes("GOOGLE_PAY")?.join() === "card", "Google Pay uses Stripe card wallets");
-assert(stripePaymentMethodTypes("CARD") === null, "standalone card must not use Stripe Checkout");
+assert(stripePaymentMethodTypes("APPLE_PAY")?.join() === "card", "Apple Pay uses Stripe card wallets");
+assert(stripePaymentMethodTypes("CARD")?.join() === "card", "card checkout uses Stripe");
+assert(stripePaymentMethodTypes("PAYPAL")?.join() === "paypal", "PayPal uses Stripe Checkout");
 
 console.log("stripe checkout helpers ok");

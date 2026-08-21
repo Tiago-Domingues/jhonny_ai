@@ -67,7 +67,7 @@ export function CheckoutClient() {
       return;
     }
     if (!isLiveCheckoutPaymentMethod(paymentMethod)) {
-      setMessage("Este método ainda não está ligado. Escolhe MB WAY, Multibanco, Klarna, Google Pay ou Revolut Pay.");
+      setMessage("Este método ainda não está ligado. Escolhe MB WAY, Multibanco ou um pagamento Stripe.");
       setSubmitting(false);
       return;
     }

@@ -142,9 +142,26 @@ function paymentInstructionsHtml(order: NonNullable<Awaited<ReturnType<typeof lo
     `;
   }
 
-  if (payment.method === "KLARNA" || payment.method === "GOOGLE_PAY" || payment.method === "REVOLUT_PAY") {
+  if (
+    payment.method === "KLARNA" ||
+    payment.method === "GOOGLE_PAY" ||
+    payment.method === "REVOLUT_PAY" ||
+    payment.method === "CARD" ||
+    payment.method === "APPLE_PAY" ||
+    payment.method === "PAYPAL"
+  ) {
     const label =
-      payment.method === "KLARNA" ? "Klarna" : payment.method === "GOOGLE_PAY" ? "Google Pay" : "Revolut Pay";
+      payment.method === "KLARNA"
+        ? "Klarna"
+        : payment.method === "GOOGLE_PAY"
+          ? "Google Pay"
+          : payment.method === "REVOLUT_PAY"
+            ? "Revolut Pay"
+            : payment.method === "CARD"
+              ? "Cartão"
+              : payment.method === "APPLE_PAY"
+                ? "Apple Pay"
+                : "PayPal";
     return `
       <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:8px">
         <p><strong>Pagamento ${escapeHtml(label)}</strong></p>
