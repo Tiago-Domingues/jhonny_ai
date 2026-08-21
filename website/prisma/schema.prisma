@@ -359,6 +359,7 @@ model Order {
   items               OrderItem[]
   payments            Payment[]
   emailEvents         EmailEvent[]
+  smsEvents           SmsEvent[]
   couponUsage         CouponUsage?
 
   @@index([userId])
@@ -490,6 +491,8 @@ model SmsEvent {
   id             String      @id @default(cuid())
   userId         String?
   user           User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  orderId        String?
+  order          Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
   type           String      @default("WELCOME_CUSTOMER")
   status         EmailStatus @default(PENDING)
   recipientPhone String
@@ -501,6 +504,7 @@ model SmsEvent {
   createdAt      DateTime    @default(now())
 
   @@index([userId, type])
+  @@index([orderId, type])
   @@index([status])
 }
 

@@ -1,6 +1,11 @@
 import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
+import {
+  customerPaidSmsBody,
+  jhonnySmsPhone,
+  ownerPaidSmsBody,
+} from "@/lib/ecommerce/smsMessages";
 
 type SendSmsResult = {
   status: "SENT" | "FAILED" | "SKIPPED";
@@ -114,5 +119,94 @@ export async function sendWelcomeSms(input: {
       error: result.error,
       sentAt: result.status === "SENT" ? new Date() : null,
     },
+  });
+}
+
+async function recordSmsEvent(input: {
+  userId?: string | null;
+  orderId?: string | null;
+  type: string;
+  to: string | null;
+  body: string;
+  skipError?: string;
+}) {
+  if (!input.to) {
+    return prisma.smsEvent.create({
+      data: {
+        userId: input.userId ?? undefined,
+        orderId: input.orderId ?? undefined,
+        type: input.type,
+        status: "SKIPPED",
+        recipientPhone: "",
+        body: input.body,
+        provider: "twilio",
+        error: input.skipError || "Phone number missing.",
+      },
+    });
+  }
+
+  const result = await sendTwilioSms(input.to, input.body);
+  return prisma.smsEvent.create({
+    data: {
+      userId: input.userId ?? undefined,
+      orderId: input.orderId ?? undefined,
+      type: input.type,
+      status: result.status,
+      recipientPhone: input.to,
+      body: input.body,
+      provider: result.provider,
+      providerId: result.providerId,
+      error: result.error,
+      sentAt: result.status === "SENT" ? new Date() : null,
+    },
+  });
+}
+
+export async function sendPaymentConfirmedSms(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true, payments: { orderBy: { createdAt: "desc" } } },
+  });
+  if (!order) return;
+
+  const payment = order.payments.find((entry) => entry.status === "PAID") || order.payments[0];
+  const paidAt = order.paidAt || payment?.paidAt || new Date();
+  const customerTo =
+    order.customerPhoneCountryCode && order.customerPhone
+      ? toE164(order.customerPhoneCountryCode, order.customerPhone)
+      : null;
+  const customerBody = customerPaidSmsBody(order.orderNumber, order.totalCents);
+
+  await recordSmsEvent({
+    userId: order.userId,
+    orderId: order.id,
+    type: "ORDER_PAID_CUSTOMER",
+    to: customerTo,
+    body: customerBody,
+    skipError: "Phone number missing.",
+  });
+
+  const ownerTo = jhonnySmsPhone() || null;
+  const ownerBody = ownerPaidSmsBody({
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    customerPhone: customerTo || order.customerPhone,
+    totalCents: order.totalCents,
+    paidAt,
+    paymentMethod: payment?.method ?? null,
+    items: order.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      totalCents: item.totalCents,
+    })),
+  });
+
+  await recordSmsEvent({
+    userId: order.userId,
+    orderId: order.id,
+    type: "ORDER_PAID_OWNER",
+    to: ownerTo,
+    body: ownerBody,
+    skipError: "JHONNY_SMS_PHONE is not configured.",
   });
 }
