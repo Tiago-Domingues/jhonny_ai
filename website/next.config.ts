@@ -16,9 +16,9 @@ const securityHeaders = [
       "font-src 'self' data:",
       "connect-src 'self' https:",
       "media-src 'self' https: blob:",
-      // Visit section embeds Google Maps + Matterport virtual tour.
+      // Visit section embeds Google Maps + Matterport; product pages embed YouTube reviews.
       // Without frame-src, browsers fall back to default-src 'self' and blank the iframes.
-      "frame-src 'self' https://www.google.com https://maps.google.com https://www.google.com/maps https://my.matterport.com https://*.matterport.com",
+      "frame-src 'self' https://www.google.com https://maps.google.com https://www.google.com/maps https://my.matterport.com https://*.matterport.com https://www.youtube.com https://www.youtube-nocookie.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
