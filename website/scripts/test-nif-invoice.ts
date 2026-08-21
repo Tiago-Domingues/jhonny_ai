@@ -1,5 +1,14 @@
 import { isValidOptionalNif, normalizeNif } from "../src/lib/ecommerce/nif";
-import { pdfBufferFromOdooResult } from "../src/lib/ecommerce/odooInvoice";
+import {
+  fetchOdooInvoicePdf,
+  isFaturaReciboJournal,
+  odooPartnerCountryCode,
+  odooPartnerValues,
+  parseAccountMoveIds,
+  pdfBufferFromOdooResult,
+  runSaleInvoiceWizard,
+  saleOrderInvoiceContext,
+} from "../src/lib/ecommerce/odooInvoice";
 import { profileSchema } from "../src/lib/ecommerce/schemas";
 
 function assert(condition: unknown, message: string) {
@@ -42,4 +51,98 @@ assert(pdf && pdf.subarray(0, 4).toString() === "%PDF", "Odoo report tuple extra
 assert(pdfBufferFromOdooResult("short") === null, "short strings are not treated as PDFs");
 assert(pdfBufferFromOdooResult(null) === null, "null Odoo result yields no PDF");
 
-console.log("NIF + invoice PDF helpers ok");
+assert(parseAccountMoveIds(41)[0] === 41, "numeric wizard result is an invoice id");
+assert(parseAccountMoveIds({ res_model: "account.move", res_id: 77 })[0] === 77, "window action res_id is parsed");
+assert(
+  parseAccountMoveIds({ domain: [["id", "in", [12, 13]]] }).join() === "12,13",
+  "window action domain ids are parsed"
+);
+assert(parseAccountMoveIds(false).length === 0, "false wizard result is empty");
+assert(
+  parseAccountMoveIds({ type: "ir.actions.act_window_close", id: 999 }).length === 0,
+  "window-close actions do not use the action id as an invoice"
+);
+assert(
+  parseAccountMoveIds({
+    type: "ir.actions.act_window",
+    res_model: "account.move",
+    res_id: 41,
+    id: 999,
+  }).join() === "41",
+  "invoice window action uses res_id, not the action database id"
+);
+assert(isFaturaReciboJournal({ name: "Fatura-Recibo", code: "FR" }), "FR journal is detected by name/code");
+assert(!isFaturaReciboJournal({ name: "Customer Invoices", code: "INV" }), "normal sales journal is not FR");
+
+const partner = odooPartnerValues({
+  customerName: "Ana Silva",
+  customerEmail: "ana@example.com",
+  customerPhone: "912000000",
+  customerVat: "PT241984700",
+  shippingAddressJson: { addressLine1: "Rua A", postalCode: "1000-001", city: "Lisboa", country: "PT" },
+  billingAddressJson: { addressLine1: "Rua Fiscal 1", postalCode: "2775-597", city: "Carcavelos", country: "PT" },
+});
+assert(partner.vat === "PT241984700", "NIF is written to the Odoo partner");
+assert(partner.street === "Rua Fiscal 1", "billing address is preferred for the fatura");
+assert(odooPartnerCountryCode({ billingAddressJson: { country: "es" } }) === "ES", "billing country is used for partner");
+assert(saleOrderInvoiceContext(9).active_ids[0] === 9, "invoice wizard context targets the sale order");
+assert(saleOrderInvoiceContext(9).open_invoices === true, "wizard asks Odoo to return the created invoice");
+
+async function run() {
+  const wizardCalls: Array<{ model: string; method: string; kwargs?: unknown }> = [];
+  const wizardClient = {
+    async executeKw(model: string, method: string, args?: unknown[], kwargs?: unknown) {
+      wizardCalls.push({ model, method, kwargs });
+      if (model === "sale.advance.payment.inv" && method === "create") return 55;
+      if (model === "sale.advance.payment.inv" && method === "create_invoices") {
+        return { type: "ir.actions.act_window", res_model: "account.move", res_id: 88, id: 321 };
+      }
+      throw new Error(`unexpected ${model}.${method}`);
+    },
+    async searchRead() {
+      return [];
+    },
+  };
+  const invoiceIds = await runSaleInvoiceWizard(wizardClient, 6);
+  assert(invoiceIds.join() === "88", "public invoice wizard returns the created account.move id");
+  assert(
+    wizardCalls.every((call) => call.model === "sale.advance.payment.inv"),
+    "invoices are created through sale.advance.payment.inv"
+  );
+  assert(
+    wizardCalls.some((call) => call.method === "create_invoices"),
+    "public create_invoices is used instead of sale.order._create_invoices"
+  );
+  const createKwargs = wizardCalls.find((call) => call.method === "create")?.kwargs as { context?: { active_ids?: number[] } };
+  assert(createKwargs?.context?.active_ids?.[0] === 6, "wizard context targets the website sale order");
+
+  const calls: string[] = [];
+  const invoicePdf = Buffer.from(`%PDF-1.4\n${"y".repeat(120)}`);
+  const client = {
+    async executeKw(model: string, method: string) {
+      calls.push(`${model}.${method}`);
+      throw new Error("private method blocked");
+    },
+    async searchRead() {
+      return [{ datas: invoicePdf.toString("base64") }];
+    },
+    async downloadReportPdf() {
+      calls.push("downloadReportPdf");
+      return invoicePdf;
+    },
+  };
+  const fetched = await fetchOdooInvoicePdf(client, 88);
+  assert(fetched && fetched.subarray(0, 4).toString() === "%PDF", "PDF is loaded via public report download");
+  assert(calls[0] === "downloadReportPdf", "HTTP/report download is preferred over private _render_qweb_pdf");
+  assert(
+    !calls.some((call) => call.includes("_create_invoices") || call.includes("_render_qweb_pdf")),
+    "private Odoo methods are not used to fetch the fatura PDF"
+  );
+
+  console.log("NIF + invoice PDF helpers ok");
+}
+
+run().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

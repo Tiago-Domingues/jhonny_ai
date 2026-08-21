@@ -3,13 +3,13 @@
  * is clearly in a BoardshopUK / Surf n Show / REAL Watersports title.
  * Run: cd website && npm run test:surfboard-videos
  */
-import { applySurfboardReviewVideo, buildSurfboardEnrichment } from "../src/lib/ecommerce/surfboardEnrichment.ts";
+import { applySurfboardReviewVideo, buildSurfboardEnrichment } from "../src/lib/ecommerce/surfboardEnrichment";
 import {
   distinctiveSurfboardModelTokens,
   matchSurfboardReviewVideo,
   stableChannelOrder,
   type SurfboardReviewVideo,
-} from "../src/lib/ecommerce/surfboardReviewVideoMatch.ts";
+} from "../src/lib/ecommerce/surfboardReviewVideoMatch";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);

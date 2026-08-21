@@ -7,6 +7,10 @@
     {
       "path": "/api/odoo/sync/products?mode=full",
       "schedule": "15 * * * *"
+    },
+    {
+      "path": "/api/odoo/sync/paid-orders",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

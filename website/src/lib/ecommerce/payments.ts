@@ -330,11 +330,15 @@ export async function markPaymentPaid(
     }));
   if (!payment) return 0;
   if (payment.status === "PAID") {
-    if (payment.order.odooSyncStatus !== "SYNCED") {
+    if (payment.order.odooSyncStatus !== "SYNCED" || !payment.order.odooInvoiceId) {
       try {
-        await finalizeOdooOrderAfterPayment(payment.orderId);
+        const hadInvoice = Boolean(payment.order.odooInvoiceId);
+        const result = await finalizeOdooOrderAfterPayment(payment.orderId);
+        if (result.invoiceId && !hadInvoice) {
+          await sendPaymentConfirmedEmails(payment.orderId);
+        }
       } catch {
-        // Payment already succeeded; Odoo sync can be retried on the next callback.
+        // Payment already succeeded; Odoo fatura sync can be retried on the next callback.
       }
     }
     return 1;

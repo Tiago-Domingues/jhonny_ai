@@ -202,7 +202,8 @@ function paymentInstructionsHtml(order: NonNullable<Awaited<ReturnType<typeof lo
 function orderHtml(
   order: Awaited<ReturnType<typeof loadOrderForEmail>>,
   audience: "customer" | "jhonny",
-  variant: "received" | "paid" = "received"
+  variant: "received" | "paid" = "received",
+  options?: { hasFatura?: boolean }
 ) {
   if (!order) return "";
   const itemRows = order.items
@@ -227,7 +228,11 @@ function orderHtml(
 
   const paidNote =
     variant === "paid"
-      ? `<p>O pagamento desta encomenda foi confirmado.${order.customerVat ? ` NIF: ${escapeHtml(order.customerVat)}.` : ""}</p>`
+      ? `<p>O pagamento desta encomenda foi confirmado.${order.customerVat ? ` NIF: ${escapeHtml(order.customerVat)}.` : ""}</p>${
+          options?.hasFatura
+            ? "<p>A fatura-recibo oficial do Odoo segue em anexo (PDF).</p>"
+            : "<p>A fatura-recibo oficial está a ser emitida no Odoo. Se não chegou em anexo, o Jhonny envia-a em seguida.</p>"
+        }`
       : paymentInstructionsHtml(order);
 
   return `
@@ -258,7 +263,7 @@ async function loadPaidInvoicePdf(order: NonNullable<Awaited<ReturnType<typeof l
     const pdf = await fetchOdooInvoicePdf(client, order.odooInvoiceId);
     if (!pdf) return null;
     return {
-      filename: `fatura-${order.orderNumber}.pdf`,
+      filename: `fatura-recibo-${order.orderNumber}.pdf`,
       content: pdf,
       contentType: "application/pdf",
     } satisfies EmailAttachment;
@@ -392,7 +397,7 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
     const customer = await sendEmail(
       order.customerEmail,
       customerSubject,
-      orderHtml(order, "customer", "paid"),
+      orderHtml(order, "customer", "paid", { hasFatura: Boolean(invoice) }),
       attachments
     );
     await recordEmailEvent({
@@ -410,7 +415,7 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
     const owner = await sendEmail(
       jhonnyEmail(),
       ownerSubject,
-      orderHtml(order, "jhonny", "paid"),
+      orderHtml(order, "jhonny", "paid", { hasFatura: Boolean(invoice) }),
       attachments
     );
     await recordEmailEvent({
