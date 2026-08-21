@@ -43,5 +43,6 @@ assert(stripePaymentMethodTypes("GOOGLE_PAY")?.join() === "card", "Google Pay us
 assert(stripePaymentMethodTypes("APPLE_PAY")?.join() === "card", "Apple Pay uses Stripe card wallets");
 assert(stripePaymentMethodTypes("CARD")?.join() === "card", "card checkout uses Stripe");
 assert(stripePaymentMethodTypes("PAYPAL")?.join() === "paypal", "PayPal uses Stripe Checkout");
+assert(stripePaymentMethodTypes("PIX")?.join() === "pix", "Pix uses Stripe Checkout");
 
 console.log("stripe checkout helpers ok");

@@ -148,7 +148,8 @@ function paymentInstructionsHtml(order: NonNullable<Awaited<ReturnType<typeof lo
     payment.method === "REVOLUT_PAY" ||
     payment.method === "CARD" ||
     payment.method === "APPLE_PAY" ||
-    payment.method === "PAYPAL"
+    payment.method === "PAYPAL" ||
+    payment.method === "PIX"
   ) {
     const label =
       payment.method === "KLARNA"
@@ -161,7 +162,9 @@ function paymentInstructionsHtml(order: NonNullable<Awaited<ReturnType<typeof lo
               ? "Cartão"
               : payment.method === "APPLE_PAY"
                 ? "Apple Pay"
-                : "PayPal";
+                : payment.method === "PIX"
+                  ? "Pix"
+                  : "PayPal";
     return `
       <div style="margin:16px 0;padding:12px;border:1px solid #ddd;border-radius:8px">
         <p><strong>Pagamento ${escapeHtml(label)}</strong></p>

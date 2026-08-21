@@ -87,6 +87,7 @@ export const checkoutSchema = z.object({
     "GOOGLE_PAY",
     "APPLE_PAY",
     "REVOLUT_PAY",
+    "PIX",
   ]),
   mbwayPhone: z.string().max(40).optional().or(z.literal("")),
   marketingOptIn: z.boolean().default(false),

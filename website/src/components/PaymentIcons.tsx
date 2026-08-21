@@ -123,6 +123,16 @@ export function ApplePayBadge() {
   );
 }
 
+export function PixBadge() {
+  return (
+    <Card label="Pix" bg="#32bcad">
+      <span className="font-display text-[0.58rem] font-extrabold leading-none tracking-tight text-white">
+        Pix
+      </span>
+    </Card>
+  );
+}
+
 export function PayshopBadge() {
   return (
     <Card label="Payshop" bg="#e30613">
@@ -150,6 +160,7 @@ export function PaymentMethodMark({ method }: { method: string }) {
   if (method === "GOOGLE_PAY") return <GooglePayBadge />;
   if (method === "APPLE_PAY") return <ApplePayBadge />;
   if (method === "REVOLUT_PAY") return <RevolutPayBadge />;
+  if (method === "PIX") return <PixBadge />;
   return null;
 }
 
@@ -166,6 +177,7 @@ export function PaymentBadges({ className = "" }: { className?: string }) {
       <GooglePayBadge />
       <ApplePayBadge />
       <RevolutPayBadge />
+      <PixBadge />
       <PayshopBadge />
     </div>
   );

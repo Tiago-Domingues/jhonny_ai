@@ -83,6 +83,7 @@ enum PaymentMethod {
   GOOGLE_PAY
   APPLE_PAY
   REVOLUT_PAY
+  PIX
 }
 
 enum PaymentStatus {
