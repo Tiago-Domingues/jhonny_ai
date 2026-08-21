@@ -121,10 +121,11 @@ export function stripePaidAmountCents(session: { amount_total?: number | null })
 
 export function stripePaymentMethodTypes(
   method: string
-): Array<"klarna" | "revolut_pay" | "card" | "paypal"> | null {
+): Array<"klarna" | "revolut_pay" | "card" | "paypal" | "pix"> | null {
   if (method === "KLARNA") return ["klarna"];
   if (method === "REVOLUT_PAY") return ["revolut_pay"];
   if (method === "PAYPAL") return ["paypal"];
+  if (method === "PIX") return ["pix"];
   // Cards, Apple Pay and Google Pay all use Stripe card Checkout (wallets appear when enabled).
   if (method === "CARD" || method === "GOOGLE_PAY" || method === "APPLE_PAY") return ["card"];
   return null;

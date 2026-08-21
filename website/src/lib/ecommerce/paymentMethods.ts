@@ -62,6 +62,13 @@ export const CHECKOUT_PAYMENT_METHODS = [
     live: true,
     provider: "stripe",
   },
+  {
+    id: "PIX",
+    label: "Pix",
+    hint: "Avanças para a Stripe para pagar com Pix.",
+    live: true,
+    provider: "stripe",
+  },
 ] as const;
 
 export type CheckoutPaymentMethodId = (typeof CHECKOUT_PAYMENT_METHODS)[number]["id"];

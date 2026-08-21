@@ -19,8 +19,8 @@ const pt: InfoContent = {
       bullets: [
         "MB WAY via Ifthenpay.",
         "Multibanco entidade/referência via Ifthenpay.",
-        "Klarna, Google Pay e Revolut Pay via Stripe.",
-        "Cartão (Visa, Mastercard, Amex), PayPal, Apple Pay e Payshop, quando cada contrato/provider estiver ligado.",
+        "Klarna, Google Pay, Apple Pay, Cartão, PayPal, Revolut Pay e Pix via Stripe.",
+        "Payshop, quando o contrato Ifthenpay estiver ligado.",
         "Dinheiro na loja física.",
         "Transferência bancária para encomendas especiais.",
       ],
@@ -58,8 +58,8 @@ const en: InfoContent = {
       bullets: [
         "MB WAY through Ifthenpay.",
         "Multibanco entity/reference through Ifthenpay.",
-        "Klarna, Google Pay and Revolut Pay through Stripe.",
-        "Card (Visa, Mastercard, Amex), PayPal, Apple Pay and Payshop once each provider is connected.",
+        "Klarna, Google Pay, Apple Pay, card, PayPal, Revolut Pay and Pix through Stripe.",
+        "Payshop once the Ifthenpay contract is connected.",
         "Cash in the physical store.",
         "Bank transfer for special orders.",
       ],

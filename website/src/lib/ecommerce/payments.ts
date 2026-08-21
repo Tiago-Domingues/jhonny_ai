@@ -26,7 +26,8 @@ type PaymentRequest = {
     | "PAYSHOP"
     | "GOOGLE_PAY"
     | "APPLE_PAY"
-    | "REVOLUT_PAY";
+    | "REVOLUT_PAY"
+    | "PIX";
   amountCents: number;
   currency: string;
   email: string;
