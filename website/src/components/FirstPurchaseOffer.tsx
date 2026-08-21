@@ -93,6 +93,7 @@ export function FirstPurchaseOffer() {
   const [open, setOpen] = useState(false);
   const [ribbonVisible, setRibbonVisible] = useState(false);
   const [ribbonSlide, setRibbonSlide] = useState(0);
+  const [ribbonTheme, setRibbonTheme] = useState<"dark" | "light">("dark");
   const [copied, setCopied] = useState(false);
   const shownThisLoad = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -182,6 +183,7 @@ export function FirstPurchaseOffer() {
 
     const id = window.setInterval(() => {
       setRibbonSlide((current) => (current + 1) % RIBBON_SLIDES.length);
+      setRibbonTheme((current) => (current === "dark" ? "light" : "dark"));
     }, RIBBON_ROTATE_MS);
     return () => window.clearInterval(id);
   }, [ribbonVisible, open]);
@@ -215,6 +217,9 @@ export function FirstPurchaseOffer() {
       setCopied(false);
     }
   }
+
+  const ribbonBg = ribbonTheme === "dark" ? "#000000" : "#ffffff";
+  const ribbonFg = ribbonTheme === "dark" ? "#ffffff" : "#000000";
 
   return (
     <>
@@ -299,12 +304,14 @@ export function FirstPurchaseOffer() {
           ref={widgetRef}
           className="jss-free-shipping-widget"
           data-testid="free-shipping-widget"
+          data-theme={ribbonTheme}
         >
           <button
             type="button"
             onClick={openFromRibbon}
             aria-label={`${RIBBON_SLIDES[ribbonSlide].join(" ")} — ${t.title}`}
             className="jss-free-shipping-ribbon"
+            style={{ backgroundColor: ribbonBg, color: ribbonFg }}
           />
           <span
             key={ribbonSlide}
@@ -312,6 +319,7 @@ export function FirstPurchaseOffer() {
             aria-hidden="true"
             data-testid="ribbon-copy"
             data-slide={ribbonSlide}
+            style={{ color: ribbonFg }}
           >
             {RIBBON_SLIDES[ribbonSlide].map((word) => (
               <span key={word}>{word}</span>
@@ -322,6 +330,11 @@ export function FirstPurchaseOffer() {
             onClick={hideRibbon}
             aria-label="Dismiss"
             className="jss-free-shipping-close"
+            style={{
+              backgroundColor: ribbonBg,
+              color: ribbonFg,
+              borderColor: ribbonFg,
+            }}
           >
             <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
               <path
