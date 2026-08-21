@@ -1,7 +1,7 @@
 # Jhonny Surf Store — Website Launch Status
 
 **Audience:** owner + shop/ops + technical team  
-**Last updated:** 23 July 2026  
+**Last updated:** 25 July 2026  
 **Live sites:** [jhonnysurfstore.com](https://www.jhonnysurfstore.com) · [jhonnysurfstore.pt](https://www.jhonnysurfstore.pt)  
 **HTML version:** [website-launch-status.html](./website-launch-status.html)  
 **PDF version:** [website-launch-status.pdf](./website-launch-status.pdf)
@@ -23,11 +23,11 @@ The marketing site, product catalog, and shopping foundations are largely in pla
 | Area | Status |
 |------|--------|
 | Brand / homepage content | Ready (imagery refresh still needed — see P1.8) |
-| Product catalog (Odoo → site) | Connected, but **not guaranteed near real-time** (see P0.18) |
+| Product catalog (Odoo → site) | Connected — near real-time sync live (P0.18 ✅) |
 | Browse shop, filters, product pages | Ready for browsing |
 | Cart + guest/account checkout skeleton | Built, not production-safe |
-| Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** |
-| Security / abuse protection | **Partial — harden before open checkout** |
+| Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** — credentials pending |
+| Security / abuse protection | **Baseline done** (P0.4, P0.13–P0.17); more at P1 |
 | Order email + ops admin | **Not ready** |
 | Public go-live (.com + .pt) | **Blocked** |
 
@@ -70,7 +70,7 @@ From production integration status and code review:
 
 | Integration | Production status |
 |-------------|-------------------|
-| Odoo | Configured and authenticated — catalog sync exists but is **not a reliable near-real-time pipeline** yet |
+| Odoo | Configured — incremental sync ~every 2 min (+ on-read kick ~60s); typical freshness **under 2 minutes** |
 | Email (Resend) | **Not configured** — order emails skipped |
 | Ifthenpay MB WAY | **Not configured** — would fall back to mocks |
 | Ifthenpay Multibanco | **Not configured** — would fall back to mocks |
@@ -120,7 +120,7 @@ Other important mismatches / risks:
 | Risk | Why it matters |
 |------|----------------|
 | No password reset / email verification | Account recovery and takeover resistance |
-| Public integrations/Odoo status APIs | Leaks config readiness to scanners |
+| Public integrations/Odoo status APIs | **Hardened:** admin or ops secret required |
 | Order email HTML unsanitized fields | HTML injection into customer inbox |
 | Ratings / availability without rate limits | Spam / abuse |
 
@@ -133,42 +133,54 @@ S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 ### P0 — Must ship before public purchases
 
-| # | Item | Why it matters | Effort |
-|---|------|----------------|--------|
-| P0.1 | Configure **Ifthenpay** (MB WAY + Multibanco keys + callback URL + secret) and **fail closed** in production (no mock refs) | Without this, “paid” orders are fake | S–M (config + code guard) |
-| P0.2 | Implement and connect **PayPal** for real capture/redirect | Required for day-1 payment set | L |
-| P0.3 | Implement and connect **Klarna** for real checkout | Required for day-1 payment set | L |
-| P0.4 | Harden payment **callback** (secret **always** required in prod, constant-time compare, **amount + status** checks) | Prevents forged “paid” states | S–M |
-| P0.5 | Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps | Customer must know how to pay | M |
-| P0.6 | Configure **transactional email** (Resend or SMTP) and send order + payment instructions | No email = broken ops and trust | S (config) + S–M (content) |
-| P0.7 | **Reserve/decrement stock** on order (release on cancel/expiry) | Stops overselling | M |
-| P0.8 | Apply **coupon usage only after payment** (or roll back if unpaid) | Stops burned coupons | S–M |
-| P0.9 | Require full **shipping address** when ship-to-home is selected | Avoid undeliverable orders | S |
-| P0.10 | Align **€100 free shipping** in checkout logic + legal pages | Matches banner and launch decision | S |
-| P0.11 | Show **shipping cost in checkout total** UI | Total currently can understate amount due | S |
-| P0.12 | Open public domains: set **`SITE_PUBLIC_LAUNCH=true`** (removes coming-soon on .com + .pt) when checkout is ready | Needed for joint .com/.pt launch; until then public sees coming-soon and staff use `/preview-access` | S |
-| P0.13 | Block **mock catalog** from selling in production | Avoid selling demo products | S |
-| P0.14 | Confirm production secrets (session, DB, Odoo, payments, email) on Vercel; **refuse to boot/checkout** if `SESSION_SECRET` is missing or still the default | Security and reliability | S |
-| P0.15 | **Rate-limit** login, register, checkout, coupon, and payment-callback endpoints | Stops brute-force and callback flooding | S–M |
-| P0.16 | **Lock down** Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe) | Stops unauthorized sync / info leak | S |
-| P0.17 | Add **security HTTP headers** (HSTS, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`, baseline CSP, `nosniff`) | Hardens browser attack surface | S |
-| P0.18 | **Near real-time Odoo ↔ website catalog sync**: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA | Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly | M |
+| # | Item | Status | Why it matters | Effort |
+|---|------|--------|----------------|--------|
+| P0.1 | Configure **Ifthenpay** (MB WAY + Multibanco keys + callback URL + secret) and **fail closed** in production (no mock refs) | ⏸ Blocked — waiting on credentials | Without this, “paid” orders are fake | S–M (config + code guard) |
+| P0.2 | Implement and connect **PayPal** for real capture/redirect | ⏸ Blocked — waiting on credentials | Required for day-1 payment set | L |
+| P0.3 | Implement and connect **Klarna** for real checkout | ⏸ Blocked — waiting on credentials | Required for day-1 payment set | L |
+| P0.4 | Harden payment **callback** (secret **always** required in prod, constant-time compare, **amount + status** checks) | ✅ Done | Prevents forged “paid” states | S–M |
+| P0.5 | Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps | Open (partially blocked by P0.1–P0.3) | Customer must know how to pay | M |
+| P0.6 | Configure **transactional email** (Resend or SMTP) and send order + payment instructions | Open — needs email credentials for live send; code can proceed | No email = broken ops and trust | S (config) + S–M (content) |
+| P0.7 | **Reserve/decrement stock** on order (release on cancel/expiry) | Open — can do now | Stops overselling | M |
+| P0.8 | Apply **coupon usage only after payment** (or roll back if unpaid) | Open — can do now | Stops burned coupons | S–M |
+| P0.9 | Require full **shipping address** when ship-to-home is selected | Open — can do now | Avoid undeliverable orders | S |
+| P0.10 | Align **€100 free shipping** in checkout logic + legal pages | Open — can do now | Matches banner and launch decision | S |
+| P0.11 | Show **shipping cost in checkout total** UI | Open — can do now | Total currently can understate amount due | S |
+| P0.12 | Open public domains: set **`SITE_PUBLIC_LAUNCH=true`** (removes coming-soon on .com + .pt) when checkout is ready | Open — do last | Needed for joint .com/.pt launch; until then public sees coming-soon and staff use `/preview-access` | S |
+| P0.13 | Block **mock catalog** from selling in production | ✅ Done | Avoid selling demo products | S |
+| P0.14 | Confirm production secrets (session, DB, Odoo, payments, email) on Vercel; **refuse to boot/checkout** if `SESSION_SECRET` is missing or still the default | ✅ Done (code); confirm remaining secrets on Vercel | Security and reliability | S |
+| P0.15 | **Rate-limit** login, register, checkout, coupon, and payment-callback endpoints | ✅ Done | Stops brute-force and callback flooding | S–M |
+| P0.16 | **Lock down** Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe) | ✅ Done | Stops unauthorized sync / info leak | S |
+| P0.17 | Add **security HTTP headers** (HSTS, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`, baseline CSP, `nosniff`) | ✅ Done | Hardens browser attack surface | S |
+| P0.18 | **Near real-time Odoo ↔ website catalog sync**: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA | ✅ Done (cron every 2 min + incremental sync; webhook optional later) | Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly | M |
 
 **P0 rough total:** about **2–4 weeks** of focused build + provider setup, dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1. Security items P0.4 / P0.14–P0.17 and catalog freshness **P0.18** are mostly S–M and should be done **before** opening paid traffic.
 
+### Recommended next (no payment credentials needed)
+
+Work these next while Ifthenpay / PayPal / Klarna credentials are pending:
+
+1. **P0.10 + P0.11 + P0.9** — shipping rules (€100 free shipping, show shipping in total, require address)  
+2. **P0.7 + P0.8** — stock reservation + coupon only after payment  
+3. **P1.5** — FAQ / trust copy cleanup  
+4. **P1.9** — sanitize order email HTML + rate-limit ratings/availability  
+5. **P1.1 / P1.2** — admin orders + customer “My orders”  
+6. **P1.8** — homepage/category imagery refresh (needs your photos)  
+7. Return to **P0.1–P0.6** when payment/email credentials arrive  
+
 ### P1 — Launch ops and trust
 
-| # | Item | Why it matters | Effort |
-|---|------|----------------|--------|
-| P1.1 | Minimal **admin orders** view (list, status, pickup/ship) | Staff cannot run the store blind | M–L |
-| P1.2 | Customer **My orders** in account | Expected after purchase | M |
-| P1.3 | Password reset / email verification | Account safety for public traffic | M |
-| P1.4 | Enforce **JHONNY10** rules (registered + first purchase) | Matches welcome offer promise | S–M |
-| P1.5 | Update **FAQ** / trust copy that still implies the store is “not ready” | Avoid conflicting messages at launch | S |
-| P1.6 | Smoke-test suite or scripted checklist for cart → pay → callback → paid | Catch regressions before opening traffic | M |
-| P1.7 | End-to-end test orders on each payment method (sandbox then live) | Go-live gate | M (ops time) |
-| P1.8 | Refresh **homepage + category hero images** with recent store / product photos (assets under `website/public/brand/` and mappings in `Products.tsx` / `categoryHeroes.ts`) | Brand looks current and trustworthy at launch | S–M (assets + wire-up) |
-| P1.9 | Escape/sanitize fields in **order email HTML**; tighten public ratings/availability against spam | Stops inbox HTML injection and abuse | S–M |
+| # | Item | Status | Why it matters | Effort |
+|---|------|--------|----------------|--------|
+| P1.1 | Minimal **admin orders** view (list, status, pickup/ship) | Open — can do now | Staff cannot run the store blind | M–L |
+| P1.2 | Customer **My orders** in account | Open — can do now | Expected after purchase | M |
+| P1.3 | Password reset / email verification | Open — needs email provider | Account safety for public traffic | M |
+| P1.4 | Enforce **JHONNY10** rules (registered + first purchase) | Open — can do now | Matches welcome offer promise | S–M |
+| P1.5 | Update **FAQ** / trust copy that still implies the store is “not ready” | Open — can do now | Avoid conflicting messages at launch | S |
+| P1.6 | Smoke-test suite or scripted checklist for cart → pay → callback → paid | Open — later with payments | Catch regressions before opening traffic | M |
+| P1.7 | End-to-end test orders on each payment method (sandbox then live) | ⏸ Blocked — waiting on credentials | Go-live gate | M (ops time) |
+| P1.8 | Refresh **homepage + category hero images** with recent store / product photos (assets under `website/public/brand/` and mappings in `Products.tsx` / `categoryHeroes.ts`) | Open — needs your photos | Brand looks current and trustworthy at launch | S–M (assets + wire-up) |
+| P1.9 | Escape/sanitize fields in **order email HTML**; tighten public ratings/availability against spam | Open — can do now | Stops inbox HTML injection and abuse | S–M |
 
 ### P2 — Soon after go-live
 
