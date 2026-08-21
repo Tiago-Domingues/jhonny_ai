@@ -128,13 +128,13 @@ export function CheckoutClient() {
   const payment = checkoutResult?.payment;
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr]">
-      <form onSubmit={submit} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.8fr)_minmax(14rem,0.45fr)]">
+      <form onSubmit={submit} className="min-w-0 rounded-3xl border border-line bg-white p-6 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2">
           <input name="fullName" required placeholder="Nome completo" className="rounded-2xl border border-line px-4 py-3" />
           <input name="email" required type="email" placeholder="Email" className="rounded-2xl border border-line px-4 py-3" />
-          <div className="grid grid-cols-[minmax(96px,0.45fr)_1fr] gap-2">
-            <select name="phoneCountryCode" defaultValue="+351" className="rounded-2xl border border-line px-4 py-3">
+          <div className="grid min-w-0 grid-cols-[7.5rem_minmax(0,1fr)] gap-2 md:col-span-2">
+            <select name="phoneCountryCode" defaultValue="+351" className="min-w-0 rounded-2xl border border-line px-3 py-3">
               <option value="+351">PT +351</option>
               <option value="+34">ES +34</option>
               <option value="+33">FR +33</option>
@@ -142,14 +142,14 @@ export function CheckoutClient() {
               <option value="+49">DE +49</option>
               <option value="+1">US/CA +1</option>
             </select>
-            <input name="phone" required placeholder="Telemóvel" className="rounded-2xl border border-line px-4 py-3" />
+            <input name="phone" required placeholder="Telemóvel" className="min-w-0 rounded-2xl border border-line px-4 py-3" />
           </div>
           {paymentMethod === "MBWAY" && (
             <input
               name="mbwayPhone"
               placeholder="Telemóvel MB WAY"
               required
-              className="rounded-2xl border border-line px-4 py-3"
+              className="rounded-2xl border border-line px-4 py-3 md:col-span-2"
             />
           )}
 
@@ -294,7 +294,7 @@ export function CheckoutClient() {
         </div>
       </form>
 
-      <aside className="h-fit rounded-3xl border border-line bg-white p-6 shadow-sm">
+      <aside className="h-fit min-w-0 rounded-3xl border border-line bg-white p-5 shadow-sm lg:sticky lg:top-36">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Resumo</p>
         <div className="mt-4 space-y-3">
           {cart?.items?.length ? (
