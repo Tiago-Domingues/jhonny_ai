@@ -93,6 +93,7 @@ export function FirstPurchaseOffer() {
   const [open, setOpen] = useState(false);
   const [ribbonVisible, setRibbonVisible] = useState(false);
   const [ribbonSlide, setRibbonSlide] = useState(0);
+  const [ribbonTheme, setRibbonTheme] = useState<"dark" | "light">("dark");
   const [copied, setCopied] = useState(false);
   const shownThisLoad = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -182,6 +183,7 @@ export function FirstPurchaseOffer() {
 
     const id = window.setInterval(() => {
       setRibbonSlide((current) => (current + 1) % RIBBON_SLIDES.length);
+      setRibbonTheme((current) => (current === "dark" ? "light" : "dark"));
     }, RIBBON_ROTATE_MS);
     return () => window.clearInterval(id);
   }, [ribbonVisible, open]);
@@ -216,7 +218,6 @@ export function FirstPurchaseOffer() {
     }
   }
 
-  const ribbonTheme = ribbonSlide % 2 === 0 ? "dark" : "light";
   const ribbonBg = ribbonTheme === "dark" ? "#000000" : "#ffffff";
   const ribbonFg = ribbonTheme === "dark" ? "#ffffff" : "#000000";
 
