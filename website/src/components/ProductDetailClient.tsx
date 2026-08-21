@@ -4,7 +4,9 @@ import Image from "next/image";
 import { useMemo, useState, type ReactNode } from "react";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
 import { ProductDetailActions } from "@/components/ProductDetailActions";
+import { useLanguage } from "@/components/LanguageProvider";
 import type { StoreProduct } from "@/lib/ecommerce/catalog";
+import { storefrontText } from "@/lib/storefrontCopy";
 import {
   buildVariantAxes,
   deriveTemplateDisplayName,
@@ -26,6 +28,8 @@ export function ProductDetailClient({
   categoryLabel,
   extras,
 }: ProductDetailClientProps) {
+  const { locale } = useLanguage();
+  const copy = storefrontText(locale).product;
   const hasMultipleVariants = variants.length > 1;
   const templateName = hasMultipleVariants ? deriveTemplateDisplayName(variants) : initialProduct.name;
   const axes = useMemo(() => (hasMultipleVariants ? buildVariantAxes(variants) : []), [hasMultipleVariants, variants]);
@@ -90,7 +94,9 @@ export function ProductDetailClient({
             availableForSale ? "bg-ink text-white" : "border border-dashed border-ink/30 text-muted"
           }`}
         >
-          {availableForSale ? `${selectedVariant.stockQuantity} em stock` : "Esgotado"}
+          {availableForSale
+            ? copy.inStockCount.replace("{n}", String(selectedVariant.stockQuantity))
+            : copy.outOfStock}
         </p>
 
         {hasMultipleVariants && axes.length > 0 && (

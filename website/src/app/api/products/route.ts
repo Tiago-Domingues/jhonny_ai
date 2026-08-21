@@ -28,7 +28,6 @@ function toCompactListProduct(product: StoreProduct) {
     ...(lean.size ? { size: lean.size } : {}),
     ...(lean.color ? { color: lean.color } : {}),
     ...(lean.forecastQuantity != null ? { forecastQuantity: lean.forecastQuantity } : {}),
-    ...(lean.stockState ? { stockState: lean.stockState } : {}),
     ...(lean.saleable != null ? { saleable: lean.saleable } : {}),
     ...(lean.isOpportunity ? { isOpportunity: true } : {}),
     ...(lean.isNewIn ? { isNewIn: true } : {}),

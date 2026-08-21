@@ -518,7 +518,12 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     const name = resolveOdooArtigoName(product, artigoField);
     const brandLabel = brand || "Jhonny Surf Store";
     const excludedFromCatalog = foodBeverageExclusion({ name, category, brand: brandLabel });
-    const enrichment = buildSurfboardEnrichment({ name, category, brand: brandLabel });
+    const enrichment = buildSurfboardEnrichment({
+      id: String(product.id),
+      name,
+      category,
+      brand: brandLabel,
+    });
     const odooListPriceCents = cents(product.list_price);
     const opportunity = hasOpportunityAttribute(attributeValueIds, attributes);
     const newIn =

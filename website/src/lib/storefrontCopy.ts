@@ -75,6 +75,8 @@ type StorefrontCopy = {
     notifyOk: string;
     notifyFailed: string;
     notifyCta: string;
+    inStockCount: string;
+    outOfStock: string;
     name: string;
     email: string;
     phone: string;
@@ -209,6 +211,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyOk: "Pedido registado. Avisamos-te quando voltar a estar disponível.",
       notifyFailed: "Não foi possível registar o pedido.",
       notifyCta: "Pedir aviso",
+      inStockCount: "{n} em stock",
+      outOfStock: "Esgotado",
       name: "Nome",
       email: "Email",
       phone: "Telefone",
@@ -341,6 +345,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyOk: "Request saved. We’ll email you when it’s back.",
       notifyFailed: "Could not save the request.",
       notifyCta: "Notify me",
+      inStockCount: "{n} in stock",
+      outOfStock: "Out of stock",
       name: "Name",
       email: "Email",
       phone: "Phone",
@@ -473,6 +479,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyOk: "已登记。到货后我们会通知你。",
       notifyFailed: "无法登记请求。",
       notifyCta: "登记通知",
+      inStockCount: "{n} 件库存",
+      outOfStock: "缺货",
       name: "姓名",
       email: "邮箱",
       phone: "电话",

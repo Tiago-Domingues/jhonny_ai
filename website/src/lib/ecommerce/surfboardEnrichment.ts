@@ -3,8 +3,15 @@ import {
   matchSurfboardBrandDefault,
   matchSurfboardModel,
 } from "@/lib/ecommerce/surfboardModelCatalog";
+import {
+  matchSurfboardReviewVideo,
+  SURFBOARD_REVIEW_CHANNEL_META,
+  surfboardReviewWatchUrl,
+} from "@/lib/ecommerce/surfboardReviewVideoMatch";
 
 type SurfboardProduct = {
+  id?: string | null;
+  slug?: string | null;
   name: string;
   brand?: string | null;
   category: string;
@@ -37,38 +44,52 @@ export function buildSurfboardEnrichment(product: SurfboardProduct) {
   if (!productMatchesCategoryGroup(product.category, "surfboards")) return null;
 
   const model = matchSurfboardModel(product.brand, product.name);
-  if (model) {
-    return {
-      marketingDescription: `${model.description} Stock, size, colour, and price on this page are the Jhonny Surf Store commercial source of truth — confirm final dims and fins with the team when you buy.`,
-      videoUrl: model.videoUrl,
-      contentSourceName: model.sourceName,
-      contentSourceUrl: model.sourceUrl,
-      contentUpdatedAt: new Date(),
-      contentSyncStatus: "CATALOG_ENRICHED",
-    };
-  }
-
   const brandDefault = matchSurfboardBrandDefault(product.brand, product.name);
   const type = boardType(product.name);
+  const review = matchSurfboardReviewVideo(product);
+  const videoUrl = surfboardReviewWatchUrl(review);
+  const reviewMeta = review ? SURFBOARD_REVIEW_CHANNEL_META[review.channel] : null;
 
-  if (brandDefault) {
-    return {
-      marketingDescription: fallbackDescription(product, type, brandDefault.descriptionLead),
-      videoUrl: brandDefault.videoUrl,
-      contentSourceName: brandDefault.sourceName,
-      contentSourceUrl: brandDefault.sourceUrl,
-      contentUpdatedAt: new Date(),
-      contentSyncStatus: "CATALOG_ENRICHED",
-    };
-  }
+  const descriptionSource = model
+    ? { name: model.sourceName, url: model.sourceUrl }
+    : brandDefault
+      ? { name: brandDefault.sourceName, url: brandDefault.sourceUrl }
+      : {
+          name: "Jhonny Surf Store",
+          url: "https://www.jhonnysurfstore.com/loja?categoryGroup=surfboards",
+        };
 
-  const brand = product.brand || "the shaper";
+  const marketingDescription = model
+    ? `${model.description} Stock, size, colour, and price on this page are the Jhonny Surf Store commercial source of truth — confirm final dims and fins with the team when you buy.`
+    : fallbackDescription(product, type, brandDefault?.descriptionLead);
+
   return {
-    marketingDescription: fallbackDescription(product, type),
-    videoUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${brand} ${product.name} surfboard`)}`,
-    contentSourceName: "Jhonny Surf Store",
-    contentSourceUrl: "https://www.jhonnysurfstore.com/loja?categoryGroup=surfboards",
+    marketingDescription,
+    videoUrl,
+    contentSourceName: reviewMeta?.name || descriptionSource.name,
+    contentSourceUrl: reviewMeta?.url || descriptionSource.url,
     contentUpdatedAt: new Date(),
     contentSyncStatus: "CATALOG_ENRICHED",
+  };
+}
+
+export function applySurfboardReviewVideo<T extends {
+  id?: string | null;
+  slug?: string | null;
+  name: string;
+  brand?: string | null;
+  category: string;
+  videoUrl?: string | null;
+  contentSourceName?: string | null;
+  contentSourceUrl?: string | null;
+}>(product: T): T {
+  if (!productMatchesCategoryGroup(product.category, "surfboards")) return product;
+  const review = matchSurfboardReviewVideo(product);
+  const meta = review ? SURFBOARD_REVIEW_CHANNEL_META[review.channel] : null;
+  return {
+    ...product,
+    videoUrl: surfboardReviewWatchUrl(review),
+    contentSourceName: meta?.name ?? product.contentSourceName,
+    contentSourceUrl: meta?.url ?? product.contentSourceUrl,
   };
 }
