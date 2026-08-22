@@ -230,8 +230,8 @@ function orderHtml(
     variant === "paid"
       ? `<p>O pagamento desta encomenda foi confirmado.${order.customerVat ? ` NIF: ${escapeHtml(order.customerVat)}.` : ""}</p>${
           options?.hasFatura
-            ? "<p>A fatura-recibo oficial do Odoo segue em anexo (PDF).</p>"
-            : "<p>A fatura-recibo oficial está a ser emitida no Odoo. Se não chegou em anexo, o Jhonny envia-a em seguida.</p>"
+            ? "<p>A fatura-recibo oficial do Odoo (Ponto de Venda) segue em anexo (PDF).</p>"
+            : ""
         }`
       : paymentInstructionsHtml(order);
 
@@ -388,9 +388,21 @@ export async function sendOrderEmails(orderId: string) {
 
 export async function sendPaymentConfirmedEmails(orderId: string) {
   const order = await loadOrderForEmail(orderId);
-  if (!order) return;
+  if (!order) return { skipped: true, reason: "order_not_found" };
   const invoice = await loadPaidInvoicePdf(order);
-  const attachments = invoice ? [invoice] : undefined;
+  if (!invoice) {
+    await recordEmailEvent({
+      orderId,
+      userId: order.userId,
+      type: "PAYMENT_CONFIRMED",
+      recipientEmail: order.customerEmail,
+      subject: `Pagamento confirmado — ${order.orderNumber}`,
+      status: "SKIPPED",
+      error: "missing_odoo_fatura_pdf",
+    });
+    return { skipped: true, reason: "missing_odoo_fatura_pdf" };
+  }
+  const attachments = [invoice];
 
   try {
     const customerSubject = `Pagamento confirmado — ${order.orderNumber}`;

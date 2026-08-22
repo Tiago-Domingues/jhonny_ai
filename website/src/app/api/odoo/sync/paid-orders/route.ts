@@ -1,4 +1,5 @@
 import { sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
+import { prisma } from "@/lib/ecommerce/db";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { syncPaidOrdersMissingOdooInvoices } from "@/lib/ecommerce/odooOrders";
 import { hasValidOpsBearer, isProductionRuntime, readOpsSecret } from "@/lib/ecommerce/securityRuntime";
@@ -35,11 +36,29 @@ async function runSync(request: Request) {
 
   const started = Date.now();
   const result = await syncPaidOrdersMissingOdooInvoices(20);
+  const pendingEmail = new Map(result.invoiced.map((order) => [order.orderId, order.orderNumber]));
+  const skipped = await prisma.emailEvent.findMany({
+    where: {
+      type: "PAYMENT_CONFIRMED",
+      status: "SKIPPED",
+      error: "missing_odoo_fatura_pdf",
+      order: { status: "PAID", odooInvoiceId: { not: null } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    select: { orderId: true, order: { select: { orderNumber: true } } },
+  });
+  for (const event of skipped) {
+    if (event.orderId && event.order?.orderNumber) {
+      pendingEmail.set(event.orderId, event.order.orderNumber);
+    }
+  }
+
   const emailed: string[] = [];
-  for (const order of result.invoiced) {
+  for (const [orderId, orderNumber] of pendingEmail) {
     try {
-      await sendPaymentConfirmedEmails(order.orderId);
-      emailed.push(order.orderNumber);
+      const sent = await sendPaymentConfirmedEmails(orderId);
+      if (!sent?.skipped) emailed.push(orderNumber);
     } catch {
       // Invoice exists in Odoo even if the follow-up email fails.
     }
