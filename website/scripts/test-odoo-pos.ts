@@ -14,11 +14,18 @@ assert(posConfigName(undefined) === "Loja Carcavelos", "default POS is Loja Carc
 assert(posConfigName(" Website ") === "Website", "POS name env is trimmed");
 
 const bank = pickPosPaymentMethod([
-  { id: 1, name: "Cash", type: "cash", is_cash_count: true },
-  { id: 2, name: "Stripe / MB WAY", type: "bank" },
+  { id: 1, name: "Cash", type: "cash", is_cash_count: true, journal_id: 9 },
+  { id: 2, name: "Stripe / MB WAY", type: "bank", journal_id: 11 },
   { id: 3, name: "Customer Account", type: "pay_later" },
 ]);
 assert(bank === 2, "non-cash online method is preferred for website POS payments");
+assert(
+  pickPosPaymentMethod([
+    { id: 2, name: "Cartão", type: "bank" },
+    { id: 4, name: "Numerário", type: "cash", is_cash_count: true, journal_id: 9 },
+  ]) === 4,
+  "a payment method with a journal is required to post the fatura"
+);
 assert(pickPosPaymentMethod([]) === 0, "no methods yields 0");
 
 const domain = posOrderSearchDomain("JSS-260821161346-H094");
