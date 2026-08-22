@@ -129,6 +129,56 @@ function pickExisting(fields: Set<string>, candidates: string[]) {
   return candidates.find((name) => fields.has(name)) || "";
 }
 
+export function extractPosOrderId(result: unknown): number {
+  if (typeof result === "number" || typeof result === "string") return asOdooId(result);
+  if (Array.isArray(result)) {
+    for (const item of result) {
+      const id = extractPosOrderId(item);
+      if (id) return id;
+    }
+    return 0;
+  }
+  if (!result || typeof result !== "object") return 0;
+  const record = result as Record<string, unknown>;
+  if (record.id) return asOdooId(record.id);
+  if (record.res_id) return asOdooId(record.res_id);
+  return extractPosOrderId(record["pos.order"]);
+}
+
+async function productTaxIds(client: PosRpcClient, productIds: number[]) {
+  const rows = await client.searchRead("product.product", [["id", "in", productIds]], ["id", "taxes_id"], {
+    limit: productIds.length,
+  });
+  const taxes = new Map<number, number[]>();
+  for (const row of rows) {
+    taxes.set(asOdooId(row.id), idList(row.taxes_id));
+  }
+  return taxes;
+}
+
+async function createPosOrder(
+  client: PosRpcClient,
+  values: Record<string, unknown>,
+  uiOrder: Record<string, unknown>
+) {
+  try {
+    const created = asOdooId(await client.executeKw("pos.order", "create", [values]));
+    if (created) return created;
+  } catch {
+    // Odoo.com / recent POS builds often reject raw create; use the public UI sync next.
+  }
+  for (const method of ["sync_from_ui", "create_from_ui"]) {
+    try {
+      const result = await client.executeKw("pos.order", method, [[uiOrder]]);
+      const id = extractPosOrderId(result);
+      if (id) return id;
+    } catch {
+      // Try the next public POS import method.
+    }
+  }
+  throw new Error("Odoo rejected pos.order.create and the public POS UI sync methods.");
+}
+
 export async function findExistingPosOrder(client: PosRpcClient, orderNumber: string) {
   const rows = await client.searchRead("pos.order", posOrderSearchDomain(orderNumber), ["id", "account_move", "state"], {
     limit: 1,
@@ -265,11 +315,17 @@ export async function registerPaidPosOrder(
   const qtyField = pickExisting(lineFields, ["qty", "product_uom_qty"]) || "qty";
   const amount = Number((input.totalCents / 100).toFixed(2));
   const tax = Number((input.taxCents / 100).toFixed(2));
+  const taxesByProduct = await productTaxIds(
+    client,
+    products.map((item) => asOdooId(item.odooProductId))
+  );
+  const orderUuid = crypto.randomUUID();
 
   const lines = products.map((item) => {
     const qty = item.quantity;
     const priceUnit = Number((item.unitPriceCents / 100).toFixed(2));
     const lineTotal = Number((item.totalCents / 100).toFixed(2));
+    const taxIds = taxesByProduct.get(asOdooId(item.odooProductId)) || [];
     const values: Record<string, unknown> = {
       product_id: item.odooProductId,
       [qtyField]: qty,
@@ -280,6 +336,9 @@ export async function registerPaidPosOrder(
     if (lineFields.has("price_subtotal_incl")) values.price_subtotal_incl = lineTotal;
     if (lineFields.has("price_subtotal")) values.price_subtotal = lineTotal;
     if (lineFields.has("price_type")) values.price_type = "original";
+    if (lineFields.has("discount")) values.discount = 0;
+    if (lineFields.has("tax_ids") && taxIds.length) values.tax_ids = [[6, false, taxIds]];
+    if (lineFields.has("uuid")) values.uuid = crypto.randomUUID();
     return [0, 0, values];
   });
 
@@ -290,6 +349,7 @@ export async function registerPaidPosOrder(
       {
         payment_method_id: paymentMethodId,
         amount,
+        uuid: crypto.randomUUID(),
       },
     ],
   ];
@@ -309,10 +369,19 @@ export async function registerPaidPosOrder(
   if (orderFields.has("pos_reference")) values.pos_reference = input.orderNumber;
   if (orderFields.has("note")) values.note = note;
   if (orderFields.has("tracking_number")) values.tracking_number = input.orderNumber.slice(-8);
+  if (orderFields.has("uuid")) values.uuid = orderUuid;
+  if (orderFields.has("source")) values.source = "pos";
+
+  const uiOrder: Record<string, unknown> = {
+    ...values,
+    uuid: orderUuid,
+    name: input.orderNumber,
+    state: "paid",
+  };
 
   let posOrderId = existing.posOrderId;
   if (!posOrderId) {
-    posOrderId = asOdooId(await client.executeKw("pos.order", "create", [values]));
+    posOrderId = await createPosOrder(client, values, uiOrder);
   }
   if (!posOrderId) throw new Error("Odoo did not create a POS order.");
 

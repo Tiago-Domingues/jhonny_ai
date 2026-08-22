@@ -19,6 +19,7 @@
     "test:checkout": "npx tsx scripts/test-checkout-schema.ts",
     "test:nif": "npx tsx scripts/test-nif-invoice.ts",
     "test:odoo-pos": "npx tsx scripts/test-odoo-pos.ts",
+    "live:odoo-pos": "python3 scripts/live-odoo-pos.py",
     "lint": "eslint"
   },
   "dependencies": {

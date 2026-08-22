@@ -1,4 +1,5 @@
 import {
+  extractPosOrderId,
   pickPosPaymentMethod,
   posConfigName,
   posOrderSearchDomain,
@@ -23,6 +24,8 @@ assert(pickPosPaymentMethod([]) === 0, "no methods yields 0");
 const domain = posOrderSearchDomain("JSS-260821161346-H094");
 assert(JSON.stringify(domain).includes("JSS-260821161346-H094"), "existing website order number is searchable on POS");
 assert(JSON.stringify(domain).includes("pos_reference"), "POS lookup uses pos_reference");
+assert(extractPosOrderId({ "pos.order": [{ id: 88, account_move: 99 }] }) === 88, "UI sync result exposes pos.order id");
+assert(extractPosOrderId([77]) === 77, "create_from_ui id list is parsed");
 
 async function run() {
   const calls: string[] = [];
@@ -43,15 +46,23 @@ async function run() {
       if (model === "pos.payment.method") {
         return [{ id: 2, name: "Stripe / MB WAY", type: "bank" }];
       }
+      if (model === "product.product") {
+        return [{ id: 12, taxes_id: [1] }];
+      }
       return [];
     },
     async executeKw(model: string, method: string) {
       calls.push(`${model}.${method}`);
-      if (model === "pos.order.line" && method === "fields_get") return { qty: { type: "float" }, price_unit: { type: "float" } };
-      if (model === "pos.order" && method === "fields_get") {
-        return { pos_reference: { type: "char" }, note: { type: "text" }, lines: { type: "one2many" } };
+      if (model === "pos.order.line" && method === "fields_get") {
+        return { qty: { type: "float" }, price_unit: { type: "float" }, tax_ids: { type: "many2many" }, uuid: { type: "char" } };
       }
-      if (model === "pos.order" && method === "create") return 88;
+      if (model === "pos.order" && method === "fields_get") {
+        return { pos_reference: { type: "char" }, note: { type: "text" }, lines: { type: "one2many" }, uuid: { type: "char" } };
+      }
+      if (model === "pos.order" && method === "create") {
+        throw new Error("Access Denied: create is restricted");
+      }
+      if (model === "pos.order" && method === "sync_from_ui") return { "pos.order": [{ id: 88, account_move: 99 }] };
       if (model === "pos.order" && method === "action_pos_order_paid") return true;
       if (model === "pos.order" && method === "action_pos_order_invoice") return { res_id: 99 };
       return true;
@@ -70,10 +81,8 @@ async function run() {
     !calls.some((call) => call.includes("_create_invoices") || call.includes("_generate_pos_order_invoice")),
     "private Odoo invoice methods are not used"
   );
-  assert(
-    calls.includes("pos.order.create") || calls.some((call) => call === "pos.order.create"),
-    "a public pos.order create is used"
-  );
+  assert(calls.includes("pos.order.create"), "raw create is attempted first");
+  assert(calls.includes("pos.order.sync_from_ui"), "public sync_from_ui is the fallback when create is denied");
 
   console.log("odoo POS helpers ok");
 }
