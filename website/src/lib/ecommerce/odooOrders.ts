@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/ecommerce/db";
 import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { localStockAfterSale, odooQtyByProductId, stockFieldsFromQty } from "@/lib/ecommerce/odooStock";
-import { odooPartnerCountryCode, odooPartnerValues } from "@/lib/ecommerce/odooInvoice";
+import { fetchOdooInvoicePdf, odooPartnerCountryCode, odooPartnerValues } from "@/lib/ecommerce/odooInvoice";
 import { registerPaidPosOrder } from "@/lib/ecommerce/odooPos";
 
 async function loadOrder(orderId: string) {
@@ -134,6 +134,11 @@ export async function finalizeOdooOrderAfterPayment(orderId: string) {
       items: order.items,
     });
     const stockRefreshed = await refreshLocalStockFromOdoo(client, order.items);
+    try {
+      await fetchOdooInvoicePdf(client, pos.invoiceId);
+    } catch {
+      // Email retry can generate the official PDF if this first pass fails.
+    }
 
     await prisma.order.update({
       where: { id: order.id },

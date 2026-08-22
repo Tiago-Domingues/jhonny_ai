@@ -10,6 +10,7 @@ import {
   runSaleInvoiceWizard,
   saleOrderInvoiceContext,
 } from "../src/lib/ecommerce/odooInvoice";
+import { isPaidCustomerFaturaEmailSubject } from "../src/lib/ecommerce/emailSubjects";
 import { profileSchema } from "../src/lib/ecommerce/schemas";
 
 function assert(condition: unknown, message: string) {
@@ -71,6 +72,14 @@ assert(
     id: 999,
   }).join() === "41",
   "invoice window action uses res_id, not the action database id"
+);
+assert(
+  isPaidCustomerFaturaEmailSubject("Pagamento confirmado — JSS-260821161346-H094"),
+  "paid customer fatura email is detected by subject"
+);
+assert(
+  !isPaidCustomerFaturaEmailSubject("Pagamento recebido — JSS-260821161346-H094"),
+  "owner paid email is not treated as the customer fatura mail"
 );
 assert(isFaturaReciboJournal({ name: "Fatura-Recibo", code: "FR" }), "FR journal is detected by name/code");
 assert(!isFaturaReciboJournal({ name: "Customer Invoices", code: "INV" }), "normal sales journal is not FR");

@@ -7,6 +7,8 @@ import { getStripe } from "@/lib/ecommerce/stripe";
 import { hasStripeSecret, stripePaidAmountCents, stripeSessionIsPaid } from "@/lib/ecommerce/stripeCheckout";
 import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
 
+export const maxDuration = 300;
+
 export async function GET(request: Request) {
   if (!hasDatabaseUrl()) return unavailableError();
   const limited = enforceRateLimit(request, "stripe-session", 40, 60_000);
