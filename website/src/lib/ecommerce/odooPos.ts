@@ -87,8 +87,17 @@ export async function diagnosePos(client: PosRpcClient) {
     "pos.order",
     configId ? [["config_id", "=", configId]] : [],
     ["id", "name", "pos_reference", "state", "partner_id", "account_move", "amount_total", "to_invoice", "date_order"],
-    { limit: 5, order: "id desc" }
+    { limit: 8, order: "id desc" }
   );
+  const sampleInvoiceId = asOdooId(recent.find((order) => asOdooId(order.account_move))?.account_move);
+  const sampleInvoices = sampleInvoiceId
+    ? await client.searchRead(
+        "account.move",
+        [["id", "=", sampleInvoiceId]],
+        ["id", "name", "move_type", "journal_id", "state"],
+        { limit: 1 }
+      )
+    : [];
   return {
     configName: posConfigName(),
     configId,
@@ -116,6 +125,16 @@ export async function diagnosePos(client: PosRpcClient) {
       invoiceId: asOdooId(order.account_move),
       total: Number(order.amount_total || 0),
     })),
+    sampleInvoice: sampleInvoices[0]
+      ? {
+          id: asOdooId(sampleInvoices[0].id),
+          name: String(sampleInvoices[0].name || ""),
+          moveType: String(sampleInvoices[0].move_type || ""),
+          journal: many2oneName(sampleInvoices[0].journal_id),
+          journalId: asOdooId(sampleInvoices[0].journal_id),
+          state: String(sampleInvoices[0].state || ""),
+        }
+      : null,
   };
 }
 
@@ -207,7 +226,7 @@ export async function findExistingPosOrder(client: PosRpcClient, orderNumber: st
 
 async function resolvePosConfigId(client: PosRpcClient) {
   const wanted = posConfigName();
-  const fields = ["id", "name", "payment_method_ids", "invoice_journal_id"];
+  const fields = ["id", "name", "payment_method_ids", "invoice_journal_id", "company_id"];
   const exact = await client.searchRead("pos.config", [["name", "ilike", wanted]], fields, {
     limit: 5,
   });
@@ -218,6 +237,7 @@ async function resolvePosConfigId(client: PosRpcClient) {
       id: asOdooId(match.id),
       paymentMethodIds: idList(match.payment_method_ids),
       invoiceJournalId: asOdooId(match.invoice_journal_id),
+      companyId: asOdooId(match.company_id),
     };
   }
   const all = await client.searchRead("pos.config", [], fields, { limit: 20 });
@@ -227,6 +247,7 @@ async function resolvePosConfigId(client: PosRpcClient) {
     id: asOdooId(fallback.id),
     paymentMethodIds: idList(fallback.payment_method_ids),
     invoiceJournalId: asOdooId(fallback.invoice_journal_id),
+    companyId: asOdooId(fallback.company_id),
   };
 }
 
@@ -304,6 +325,101 @@ async function invoiceIdForPosOrder(client: PosRpcClient, posOrderId: number) {
     limit: 1,
   });
   return asOdooId(rows[0]?.account_move);
+}
+
+async function shopInvoiceMoveType(client: PosRpcClient, configId: number) {
+  const invoiced = await client.searchRead(
+    "pos.order",
+    [
+      ["config_id", "=", configId],
+      ["account_move", "!=", false],
+    ],
+    ["account_move"],
+    { limit: 1, order: "id desc" }
+  );
+  const invoiceId = asOdooId(invoiced[0]?.account_move);
+  if (!invoiceId) return "out_invoice";
+  const moves = await client.searchRead("account.move", [["id", "=", invoiceId]], ["move_type"], { limit: 1 });
+  return String(moves[0]?.move_type || "out_invoice") || "out_invoice";
+}
+
+async function createFallbackPosInvoice(
+  client: PosRpcClient,
+  posOrderId: number,
+  invoiceJournalId: number,
+  companyId: number
+) {
+  if (!invoiceJournalId) {
+    throw new Error("Loja Carcavelos has no invoice journal for fatura-recibo.");
+  }
+  const orders = await client.searchRead(
+    "pos.order",
+    [["id", "=", posOrderId]],
+    ["id", "name", "partner_id", "config_id"],
+    { limit: 1 }
+  );
+  const order = orders[0];
+  if (!order) throw new Error("POS order disappeared before invoicing.");
+  const lines = await client.searchRead(
+    "pos.order.line",
+    [["order_id", "=", posOrderId]],
+    ["product_id", "qty", "price_unit", "full_product_name", "name"],
+    { limit: 50 }
+  );
+  const moveType = await shopInvoiceMoveType(client, asOdooId(order.config_id) || 0);
+  const values: Record<string, unknown> = {
+    move_type: moveType,
+    journal_id: invoiceJournalId,
+    partner_id: asOdooId(order.partner_id),
+    invoice_origin: String(order.name || ""),
+    ref: String(order.name || ""),
+    invoice_line_ids: lines.map((line) => [
+      0,
+      0,
+      {
+        product_id: asOdooId(line.product_id),
+        quantity: Number(line.qty || 1),
+        price_unit: Number(line.price_unit || 0),
+        name: String(line.full_product_name || line.name || ""),
+      },
+    ]),
+  };
+  if (companyId) values.company_id = companyId;
+  const moveId = asOdooId(await client.executeKw("account.move", "create", [values]));
+  if (!moveId) throw new Error("Odoo did not create the fatura-recibo journal entry.");
+  await client.executeKw("account.move", "action_post", [[moveId]]);
+  await client.executeKw("pos.order", "write", [[posOrderId], { account_move: moveId, to_invoice: true, state: "invoiced" }]);
+  return moveId;
+}
+
+async function invoicePosOrder(
+  client: PosRpcClient,
+  posOrderId: number,
+  invoiceJournalId: number,
+  companyId: number
+) {
+  const existing = await invoiceIdForPosOrder(client, posOrderId);
+  if (existing) return existing;
+  const context: Record<string, unknown> = {};
+  if (invoiceJournalId) context.default_journal_id = invoiceJournalId;
+  if (companyId) {
+    context.allowed_company_ids = [companyId];
+    context.force_company = companyId;
+  }
+  try {
+    await client.executeKw("pos.order", "write", [[posOrderId], { to_invoice: true }]);
+  } catch {
+    // Optional.
+  }
+  try {
+    await client.executeKw("pos.order", "action_pos_order_invoice", [[posOrderId]], { context });
+  } catch {
+    return createFallbackPosInvoice(client, posOrderId, invoiceJournalId, companyId);
+  }
+  return (
+    (await invoiceIdForPosOrder(client, posOrderId)) ||
+    createFallbackPosInvoice(client, posOrderId, invoiceJournalId, companyId)
+  );
 }
 
 export async function registerPaidPosOrder(
@@ -419,20 +535,7 @@ export async function registerPaidPosOrder(
     }
   }
 
-  let invoiceId = await invoiceIdForPosOrder(client, posOrderId);
-  if (!invoiceId) {
-    const invoiceContext: Record<string, unknown> = {};
-    if (config.invoiceJournalId) invoiceContext.default_journal_id = config.invoiceJournalId;
-    try {
-      await client.executeKw("pos.order", "write", [[posOrderId], { to_invoice: true }]);
-    } catch {
-      // to_invoice may already be set by the session.
-    }
-    await client.executeKw("pos.order", "action_pos_order_invoice", [[posOrderId]], {
-      context: invoiceContext,
-    });
-    invoiceId = await invoiceIdForPosOrder(client, posOrderId);
-  }
+  const invoiceId = await invoicePosOrder(client, posOrderId, config.invoiceJournalId, config.companyId);
   if (!invoiceId) {
     throw new Error("Odoo POS sale was created but no fatura-recibo (account.move) was generated.");
   }
