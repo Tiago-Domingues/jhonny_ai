@@ -1,4 +1,4 @@
-import { findPaidOrdersMissingFaturaEmail, sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
+import { findOrderForPaidEmail, findPaidOrdersMissingFaturaEmail, sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { syncPaidOrdersMissingOdooInvoices } from "@/lib/ecommerce/odooOrders";
 import { hasValidOpsBearer, isProductionRuntime, readOpsSecret } from "@/lib/ecommerce/securityRuntime";
@@ -34,6 +34,7 @@ async function runSync(request: Request) {
   }
 
   const started = Date.now();
+  const forceOrderNumber = new URL(request.url).searchParams.get("forceOrder")?.trim() || "";
   const result = await syncPaidOrdersMissingOdooInvoices(20);
   const pendingEmail = new Map(result.invoiced.map((order) => [order.orderId, order.orderNumber]));
   const missingEmail = await findPaidOrdersMissingFaturaEmail(20);
@@ -41,10 +42,32 @@ async function runSync(request: Request) {
     pendingEmail.set(order.id, order.orderNumber);
   }
 
+  const forceIds = new Set<string>();
+  let forceOrder: { orderNumber: string; found: boolean } | null = null;
+  if (forceOrderNumber) {
+    const order = await findOrderForPaidEmail(forceOrderNumber);
+    forceOrder = { orderNumber: forceOrderNumber, found: Boolean(order) };
+    if (!order) {
+      return Response.json(
+        {
+          ...result,
+          forceOrder,
+          emailed: [],
+          durationMs: Date.now() - started,
+          error: "order_not_found",
+          ok: false,
+        },
+        { status: 404 }
+      );
+    }
+    pendingEmail.set(order.id, order.orderNumber);
+    forceIds.add(order.id);
+  }
+
   const emailed: string[] = [];
   for (const [orderId, orderNumber] of pendingEmail) {
     try {
-      const sent = await sendPaymentConfirmedEmails(orderId);
+      const sent = await sendPaymentConfirmedEmails(orderId, { force: forceIds.has(orderId) });
       if (!sent?.skipped) emailed.push(orderNumber);
     } catch {
       // Invoice exists in Odoo even if the follow-up email fails.
@@ -53,6 +76,7 @@ async function runSync(request: Request) {
 
   return Response.json({
     ...result,
+    forceOrder,
     emailed,
     durationMs: Date.now() - started,
     ok: true,

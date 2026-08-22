@@ -20,6 +20,7 @@
     "test:nif": "npx tsx scripts/test-nif-invoice.ts",
     "test:odoo-pos": "npx tsx scripts/test-odoo-pos.ts",
     "test:site-access": "npx tsx scripts/test-site-access.ts",
+    "test:email": "npx tsx scripts/test-email-from.ts",
     "live:odoo-pos": "python3 scripts/live-odoo-pos.py",
     "lint": "eslint"
   },
