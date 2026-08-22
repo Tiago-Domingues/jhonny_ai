@@ -2,19 +2,24 @@ import { createHash, timingSafeEqual } from "crypto";
 
 export const SITE_PREVIEW_COOKIE = "jss_site_preview";
 
-/** Public launch flag — when true, coming-soon gate is off. */
+/**
+ * Public launch flag — coming-soon stays on until this is exactly `open`.
+ * The previous value `true` is ignored so a leftover Vercel flag cannot
+ * accidentally publish the unfinished shop.
+ */
 export function isSitePubliclyLaunched() {
-  return process.env.SITE_PUBLIC_LAUNCH?.trim() === "true";
+  return process.env.SITE_PUBLIC_LAUNCH?.trim().toLowerCase() === "open";
 }
 
 /**
  * Gate the marketing/shop UI until launch.
- * - Production (and any non-dev host): gated unless SITE_PUBLIC_LAUNCH=true
- * - Local development: open unless SITE_COMING_SOON=true (for testing the gate)
+ * - SITE_COMING_SOON=true always locks (wins over the launch flag)
+ * - Production: locked unless SITE_PUBLIC_LAUNCH=open
+ * - Local development: open unless SITE_COMING_SOON=true
  */
 export function shouldEnforceComingSoon() {
+  if (process.env.SITE_COMING_SOON?.trim() === "true") return true;
   if (isSitePubliclyLaunched()) return false;
-  if (process.env.SITE_COMING_SOON === "true") return true;
   if (process.env.NODE_ENV === "development") return false;
   return true;
 }
