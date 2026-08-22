@@ -7,6 +7,8 @@ import {
   secretsEqual,
 } from "@/lib/ecommerce/securityRuntime";
 
+export const maxDuration = 300;
+
 function parseAmountCents(payload: Record<string, unknown>) {
   const raw =
     payload.amount ??

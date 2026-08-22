@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
-import { sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
+import { hasSentPaidFaturaEmail, sendPaymentConfirmedEmails } from "@/lib/ecommerce/email";
 import { sendPaymentConfirmedSms } from "@/lib/ecommerce/sms";
 import { recordCouponUsageForPaidOrder } from "@/lib/ecommerce/coupons";
 import { centsToEuros } from "@/lib/ecommerce/money";
@@ -330,16 +330,17 @@ export async function markPaymentPaid(
     }));
   if (!payment) return 0;
   if (payment.status === "PAID") {
-    if (payment.order.odooSyncStatus !== "SYNCED" || !payment.order.odooInvoiceId) {
-      try {
-        const hadInvoice = Boolean(payment.order.odooInvoiceId);
+    try {
+      let invoiceId = payment.order.odooInvoiceId;
+      if (payment.order.odooSyncStatus !== "SYNCED" || !invoiceId) {
         const result = await finalizeOdooOrderAfterPayment(payment.orderId);
-        if (result.invoiceId && !hadInvoice) {
-          await sendPaymentConfirmedEmails(payment.orderId);
-        }
-      } catch {
-        // Payment already succeeded; Odoo fatura sync can be retried on the next callback.
+        invoiceId = result.invoiceId || invoiceId;
       }
+      if (invoiceId && !(await hasSentPaidFaturaEmail(payment.orderId))) {
+        await sendPaymentConfirmedEmails(payment.orderId);
+      }
+    } catch {
+      // Payment already succeeded; Odoo fatura sync can be retried on the next callback.
     }
     return 1;
   }

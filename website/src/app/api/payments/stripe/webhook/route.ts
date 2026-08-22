@@ -7,6 +7,7 @@ import { enforceRateLimit, isProductionRuntime } from "@/lib/ecommerce/securityR
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
+export const maxDuration = 300;
 
 async function markStripeSessionPaid(session: Stripe.Checkout.Session) {
   const reference = session.id;

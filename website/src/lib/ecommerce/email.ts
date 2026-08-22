@@ -6,6 +6,9 @@ import { prisma } from "@/lib/ecommerce/db";
 import { formatEuro } from "@/lib/ecommerce/money";
 import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { fetchOdooInvoicePdf } from "@/lib/ecommerce/odooInvoice";
+import { PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX } from "@/lib/ecommerce/emailSubjects";
+
+export { isPaidCustomerFaturaEmailSubject, PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX } from "@/lib/ecommerce/emailSubjects";
 
 function emailFrom() {
   return process.env.EMAIL_FROM || "Jhonny Surf Store <orders@jhonnysurfstore.com>";
@@ -386,9 +389,46 @@ export async function sendOrderEmails(orderId: string) {
   }
 }
 
+export async function hasSentPaidFaturaEmail(orderId: string) {
+  const sent = await prisma.emailEvent.findFirst({
+    where: {
+      orderId,
+      type: "PAYMENT_CONFIRMED",
+      status: "SENT",
+      subject: { startsWith: PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX },
+    },
+    select: { id: true },
+  });
+  return Boolean(sent);
+}
+
+export async function findPaidOrdersMissingFaturaEmail(limit = 20) {
+  return prisma.order.findMany({
+    where: {
+      status: "PAID",
+      odooInvoiceId: { not: null },
+      NOT: {
+        emailEvents: {
+          some: {
+            type: "PAYMENT_CONFIRMED",
+            status: "SENT",
+            subject: { startsWith: PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX },
+          },
+        },
+      },
+    },
+    orderBy: { paidAt: "desc" },
+    take: limit,
+    select: { id: true, orderNumber: true },
+  });
+}
+
 export async function sendPaymentConfirmedEmails(orderId: string) {
   const order = await loadOrderForEmail(orderId);
   if (!order) return { skipped: true, reason: "order_not_found" };
+  if (await hasSentPaidFaturaEmail(orderId)) {
+    return { skipped: true, reason: "already_sent" };
+  }
   const invoice = await loadPaidInvoicePdf(order);
   if (!invoice) {
     await recordEmailEvent({
@@ -440,6 +480,7 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
       providerId: owner.providerId,
       error: owner.error,
     });
+    return { skipped: false, reason: customer.status === "SENT" ? "sent" : customer.status.toLowerCase() };
   } catch (error) {
     await recordEmailEvent({
       orderId,
@@ -450,6 +491,7 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
       status: "FAILED",
       error: error instanceof Error ? error.message : "payment_email_failed",
     }).catch(() => null);
+    return { skipped: true, reason: "failed" };
   }
 }
 
