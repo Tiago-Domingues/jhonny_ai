@@ -191,10 +191,7 @@ export class OdooClient {
     throw lastError;
   }
 
-  async downloadReportPdf(reportXmlId: string, recordIds: number[]) {
-    const ids = recordIds.filter((id) => Number.isFinite(id) && id > 0);
-    if (!ids.length || !reportXmlId) return null;
-
+  private async odooSessionCookie() {
     const authResponse = await fetch(`${this.config.url}/web/session/authenticate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -224,9 +221,13 @@ export class OdooClient {
       .map((cookie) => cookie.split(";")[0]?.trim())
       .filter(Boolean)
       .join("; ");
-    if (!cookieHeader) return null;
+    return cookieHeader || null;
+  }
 
-    const pdfResponse = await fetch(`${this.config.url}/report/pdf/${reportXmlId}/${ids.join(",")}`, {
+  private async downloadPdfUrl(path: string) {
+    const cookieHeader = await this.odooSessionCookie();
+    if (!cookieHeader) return null;
+    const pdfResponse = await fetch(`${this.config.url}${path}`, {
       headers: { Cookie: cookieHeader, Accept: "application/pdf" },
       redirect: "follow",
     });
@@ -234,6 +235,17 @@ export class OdooClient {
     const buffer = Buffer.from(await pdfResponse.arrayBuffer());
     if (buffer.length > 4 && buffer.subarray(0, 4).toString() === "%PDF") return buffer;
     return null;
+  }
+
+  async downloadReportPdf(reportXmlId: string, recordIds: number[]) {
+    const ids = recordIds.filter((id) => Number.isFinite(id) && id > 0);
+    if (!ids.length || !reportXmlId) return null;
+    return this.downloadPdfUrl(`/report/pdf/${reportXmlId}/${ids.join(",")}`);
+  }
+
+  async downloadInvoiceLegalPdf(invoiceId: number) {
+    if (!Number.isFinite(invoiceId) || invoiceId <= 0) return null;
+    return this.downloadPdfUrl(`/account/download_invoice_documents/${invoiceId}/pdf`);
   }
 
   async searchRead(

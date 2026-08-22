@@ -30,6 +30,7 @@ type InvoiceRpcClient = {
   executeKw: (...args: any[]) => Promise<unknown>;
   searchRead: (...args: any[]) => Promise<Record<string, unknown>[]>;
   downloadReportPdf?: (reportXmlId: string, recordIds: number[]) => Promise<Buffer | null>;
+  downloadInvoiceLegalPdf?: (invoiceId: number) => Promise<Buffer | null>;
 };
 
 export function saleOrderInvoiceContext(saleOrderId: number) {
@@ -235,10 +236,120 @@ async function invoiceReportNames(client: InvoiceRpcClient) {
   return names;
 }
 
+async function attachmentPdf(client: InvoiceRpcClient, attachmentId: number) {
+  if (!attachmentId) return null;
+  const rows = await client.searchRead(
+    "ir.attachment",
+    [["id", "=", attachmentId]],
+    ["datas", "name", "mimetype"],
+    { limit: 1 }
+  );
+  const datas = rows[0]?.datas;
+  return typeof datas === "string" ? pdfBufferFromOdooResult(datas) : null;
+}
+
+export async function readStoredInvoicePdf(client: InvoiceRpcClient, invoiceId: number) {
+  if (!invoiceId) return null;
+  try {
+    const rows = await client.searchRead(
+      "account.move",
+      [["id", "=", invoiceId]],
+      ["invoice_pdf_report_id", "invoice_pdf_report_file", "message_main_attachment_id", "name"],
+      { limit: 1 }
+    );
+    const row = rows[0];
+    if (!row) return null;
+    if (typeof row.invoice_pdf_report_file === "string") {
+      const pdf = pdfBufferFromOdooResult(row.invoice_pdf_report_file);
+      if (pdf) return pdf;
+    }
+    const storedId = asOdooId(row.invoice_pdf_report_id);
+    const mainId = asOdooId(row.message_main_attachment_id);
+    return (await attachmentPdf(client, storedId)) || (await attachmentPdf(client, mainId));
+  } catch {
+    return null;
+  }
+}
+
+const MANUAL_SENDING = {
+  sending_methods: ["manual"],
+  sending_method_checkboxes: {
+    manual: { checked: true, label: "Download" },
+    email: { checked: false, label: "Email" },
+  },
+};
+
+async function generateOfficialInvoicePdf(client: InvoiceRpcClient, invoiceId: number) {
+  const context = {
+    active_model: "account.move",
+    active_id: invoiceId,
+    active_ids: [invoiceId],
+  };
+
+  for (const model of ["account.move.send.wizard", "account.move.send"]) {
+    try {
+      const wizardId = asOdooId(await client.executeKw(model, "create", [{}], { context }));
+      if (!wizardId) continue;
+      try {
+        await client.executeKw(model, "write", [[wizardId], MANUAL_SENDING]);
+      } catch {
+        // Odoo 17 send wizard fields differ; action still generates the PDF.
+      }
+      await client.executeKw(model, "action_send_and_print", [[wizardId]], { allow_fallback_pdf: true });
+      return;
+    } catch {
+      // Try the next public send wizard / fallback.
+    }
+  }
+
+  try {
+    await client.executeKw("account.move", "_generate_and_send", [[invoiceId]], {
+      force_synchronous: true,
+      allow_fallback_pdf: true,
+      sending_methods: ["manual"],
+    });
+  } catch {
+    // Private generate is blocked on some Odoo.com databases.
+  }
+}
+
+async function invoiceAttachmentPdfs(client: InvoiceRpcClient, invoiceId: number) {
+  const attachments = await client.searchRead(
+    "ir.attachment",
+    [
+      ["res_model", "=", "account.move"],
+      ["res_id", "=", invoiceId],
+    ],
+    ["datas", "name", "mimetype"],
+    { limit: 10, order: "id desc" }
+  );
+  for (const attachment of attachments) {
+    const pdf = typeof attachment.datas === "string" ? pdfBufferFromOdooResult(attachment.datas) : null;
+    if (pdf) return pdf;
+  }
+  return null;
+}
+
 export async function fetchOdooInvoicePdf(client: InvoiceRpcClient, invoiceId: number) {
   if (!invoiceId) return null;
-  const reports = await invoiceReportNames(client);
 
+  const stored = await readStoredInvoicePdf(client, invoiceId);
+  if (stored) return stored;
+
+  await generateOfficialInvoicePdf(client, invoiceId);
+  const generated = await readStoredInvoicePdf(client, invoiceId);
+  if (generated) return generated;
+
+  if (client.downloadInvoiceLegalPdf) {
+    try {
+      const legal = await client.downloadInvoiceLegalPdf(invoiceId);
+      if (legal) return legal;
+    } catch {
+      // Session download is optional.
+    }
+  }
+
+  const reports = await invoiceReportNames(client);
   if (client.downloadReportPdf) {
     for (const report of reports) {
       try {
@@ -262,18 +373,5 @@ export async function fetchOdooInvoicePdf(client: InvoiceRpcClient, invoiceId: n
     }
   }
 
-  const attachments = await client.searchRead(
-    "ir.attachment",
-    [
-      ["res_model", "=", "account.move"],
-      ["res_id", "=", invoiceId],
-    ],
-    ["datas", "name", "mimetype"],
-    { limit: 10, order: "id desc" }
-  );
-  for (const attachment of attachments) {
-    const pdf = typeof attachment.datas === "string" ? pdfBufferFromOdooResult(attachment.datas) : null;
-    if (pdf) return pdf;
-  }
-  return null;
+  return invoiceAttachmentPdfs(client, invoiceId);
 }

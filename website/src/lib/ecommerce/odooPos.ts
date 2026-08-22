@@ -94,7 +94,7 @@ export async function diagnosePos(client: PosRpcClient) {
     ? await client.searchRead(
         "account.move",
         [["id", "=", sampleInvoiceId]],
-        ["id", "name", "move_type", "journal_id", "state"],
+        ["id", "name", "move_type", "journal_id", "state", "invoice_pdf_report_id"],
         { limit: 1 }
       )
     : [];
@@ -133,6 +133,7 @@ export async function diagnosePos(client: PosRpcClient) {
           journal: many2oneName(sampleInvoices[0].journal_id),
           journalId: asOdooId(sampleInvoices[0].journal_id),
           state: String(sampleInvoices[0].state || ""),
+          hasOfficialPdf: Boolean(asOdooId(sampleInvoices[0].invoice_pdf_report_id)),
         }
       : null,
   };
