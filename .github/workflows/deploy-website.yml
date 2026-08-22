@@ -61,7 +61,16 @@ jobs:
         run: npm ci
 
       - name: Pull Vercel project metadata
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        run: |
+          for attempt in 1 2 3 4; do
+            if vercel pull --yes --environment=production --token="$VERCEL_TOKEN"; then
+              exit 0
+            fi
+            echo "vercel pull failed (attempt ${attempt}/4), retrying in ${attempt}0s..."
+            sleep $((attempt * 10))
+          done
+          echo "::error::vercel pull failed after retries."
+          exit 1
 
       - name: Apply database schema
         run: |
