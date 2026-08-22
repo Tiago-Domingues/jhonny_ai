@@ -24,6 +24,9 @@ assert(pickPosPaymentMethod([]) === 0, "no methods yields 0");
 const domain = posOrderSearchDomain("JSS-260821161346-H094");
 assert(JSON.stringify(domain).includes("JSS-260821161346-H094"), "existing website order number is searchable on POS");
 assert(JSON.stringify(domain).includes("pos_reference"), "POS lookup uses pos_reference");
+const liveDomain = posOrderSearchDomain("JSS-260821161346-H094", ["pos_reference", "name"]);
+assert(!JSON.stringify(liveDomain).includes("note"), "POS lookup skips note when the field does not exist");
+assert(JSON.stringify(liveDomain).includes("pos_reference"), "POS lookup still uses pos_reference without note");
 assert(extractPosOrderId({ "pos.order": [{ id: 88, account_move: 99 }] }) === 88, "UI sync result exposes pos.order id");
 assert(extractPosOrderId([77]) === 77, "create_from_ui id list is parsed");
 

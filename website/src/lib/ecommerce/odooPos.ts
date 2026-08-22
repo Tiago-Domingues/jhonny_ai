@@ -37,14 +37,15 @@ export function pickPosPaymentMethod(
   return scored[0]?.id || 0;
 }
 
-export function posOrderSearchDomain(orderNumber: string) {
-  return [
-    "|",
-    "|",
-    ["pos_reference", "=", orderNumber],
-    ["name", "=", orderNumber],
-    ["note", "ilike", orderNumber],
-  ];
+export function posOrderSearchDomain(orderNumber: string, availableFields?: Iterable<string>) {
+  const available = availableFields ? new Set(availableFields) : null;
+  const clauses: Array<[string, string, string]> = [];
+  if (!available || available.has("pos_reference")) clauses.push(["pos_reference", "=", orderNumber]);
+  if (!available || available.has("name")) clauses.push(["name", "=", orderNumber]);
+  if (!available || available.has("note")) clauses.push(["note", "ilike", orderNumber]);
+  if (!clauses.length) clauses.push(["pos_reference", "=", orderNumber]);
+  if (clauses.length === 1) return clauses;
+  return [...Array(clauses.length - 1).fill("|"), ...clauses];
 }
 
 function many2oneName(value: unknown) {
@@ -180,10 +181,16 @@ async function createPosOrder(
 }
 
 export async function findExistingPosOrder(client: PosRpcClient, orderNumber: string) {
-  const rows = await client.searchRead("pos.order", posOrderSearchDomain(orderNumber), ["id", "account_move", "state"], {
-    limit: 1,
-    order: "id desc",
-  });
+  const orderFields = await fieldsOf(client, "pos.order");
+  const rows = await client.searchRead(
+    "pos.order",
+    posOrderSearchDomain(orderNumber, orderFields),
+    ["id", "account_move", "state"],
+    {
+      limit: 1,
+      order: "id desc",
+    }
+  );
   const row = rows[0];
   if (!row) return { posOrderId: 0, invoiceId: 0, state: "" };
   return {
