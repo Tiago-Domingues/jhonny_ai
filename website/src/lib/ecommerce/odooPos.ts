@@ -21,16 +21,19 @@ export function idList(value: unknown): number[] {
 }
 
 export function pickPosPaymentMethod(
-  methods: Array<{ id?: unknown; name?: unknown; type?: unknown; is_cash_count?: unknown }>
+  methods: Array<{ id?: unknown; name?: unknown; type?: unknown; is_cash_count?: unknown; journal_id?: unknown }>
 ) {
   if (!methods.length) return 0;
   const scored = methods.map((method) => {
     const name = String(method.name || "").toLowerCase();
     const type = String(method.type || "").toLowerCase();
+    const journalId = asOdooId(method.journal_id);
     let score = 0;
-    if (/stripe|mb ?way|multibanco|online|website|bank|cart|visa|mbway/.test(name)) score += 8;
+    if (/stripe|mb ?way|multibanco|online|website|bank|cart|visa|mbway|cartão|cartao/.test(name)) score += 8;
     if (type === "bank" || type === "pay_later") score += 4;
     if (type === "cash" || method.is_cash_count) score -= 3;
+    if (journalId) score += 10;
+    if ((type === "bank" || type === "cash" || method.is_cash_count) && !journalId) score -= 12;
     return { id: asOdooId(method.id), score };
   });
   scored.sort((a, b) => b.score - a.score);
@@ -76,7 +79,7 @@ export async function diagnosePos(client: PosRpcClient) {
     ? await client.searchRead(
         "pos.payment.method",
         [["id", "in", methodIds]],
-        ["id", "name", "type", "is_cash_count"],
+        ["id", "name", "type", "is_cash_count", "journal_id"],
         { limit: 30 }
       )
     : [];
@@ -91,6 +94,7 @@ export async function diagnosePos(client: PosRpcClient) {
     configId,
     configLabel: config ? String(config.name || "") : "",
     invoiceJournal: many2oneName(config?.invoice_journal_id),
+    invoiceJournalId: asOdooId(config?.invoice_journal_id),
     openSessionId: asOdooId(sessions.find((session) => ["opened", "opening_control"].includes(String(session.state)))?.id),
     sessions: sessions.map((session) => ({
       id: asOdooId(session.id),
@@ -102,6 +106,7 @@ export async function diagnosePos(client: PosRpcClient) {
       id: asOdooId(method.id),
       name: String(method.name || ""),
       type: String(method.type || ""),
+      journalId: asOdooId(method.journal_id),
     })),
     recentOrders: recent.map((order) => ({
       id: asOdooId(order.id),
@@ -202,23 +207,34 @@ export async function findExistingPosOrder(client: PosRpcClient, orderNumber: st
 
 async function resolvePosConfigId(client: PosRpcClient) {
   const wanted = posConfigName();
-  const exact = await client.searchRead("pos.config", [["name", "ilike", wanted]], ["id", "name", "payment_method_ids"], {
+  const fields = ["id", "name", "payment_method_ids", "invoice_journal_id"];
+  const exact = await client.searchRead("pos.config", [["name", "ilike", wanted]], fields, {
     limit: 5,
   });
   const match =
     exact.find((row) => String(row.name || "").toLowerCase() === wanted.toLowerCase()) || exact[0];
-  if (match) return { id: asOdooId(match.id), paymentMethodIds: idList(match.payment_method_ids) };
-  const all = await client.searchRead("pos.config", [], ["id", "name", "payment_method_ids"], { limit: 20 });
+  if (match) {
+    return {
+      id: asOdooId(match.id),
+      paymentMethodIds: idList(match.payment_method_ids),
+      invoiceJournalId: asOdooId(match.invoice_journal_id),
+    };
+  }
+  const all = await client.searchRead("pos.config", [], fields, { limit: 20 });
   const fallback = all[0];
   if (!fallback) throw new Error("No Odoo POS configuration found.");
-  return { id: asOdooId(fallback.id), paymentMethodIds: idList(fallback.payment_method_ids) };
+  return {
+    id: asOdooId(fallback.id),
+    paymentMethodIds: idList(fallback.payment_method_ids),
+    invoiceJournalId: asOdooId(fallback.invoice_journal_id),
+  };
 }
 
 async function resolvePaymentMethodId(client: PosRpcClient, methodIds: number[]) {
   const configured = Number(process.env.ODOO_POS_PAYMENT_METHOD_ID || 0);
   if (configured > 0) return configured;
   if (!methodIds.length) {
-    const all = await client.searchRead("pos.payment.method", [], ["id", "name", "type", "is_cash_count"], { limit: 30 });
+    const all = await client.searchRead("pos.payment.method", [], ["id", "name", "type", "is_cash_count", "journal_id"], { limit: 30 });
     const picked = pickPosPaymentMethod(all);
     if (!picked) throw new Error("No Odoo POS payment method found.");
     return picked;
@@ -226,7 +242,7 @@ async function resolvePaymentMethodId(client: PosRpcClient, methodIds: number[])
   const methods = await client.searchRead(
     "pos.payment.method",
     [["id", "in", methodIds]],
-    ["id", "name", "type", "is_cash_count"],
+    ["id", "name", "type", "is_cash_count", "journal_id"],
     { limit: 30 }
   );
   const picked = pickPosPaymentMethod(methods);
@@ -366,7 +382,7 @@ export async function registerPaidPosOrder(
     partner_id: input.partnerId,
     lines,
     payment_ids: payments,
-    to_invoice: true,
+    to_invoice: false,
     amount_total: amount,
     amount_paid: amount,
     amount_tax: tax,
@@ -405,7 +421,16 @@ export async function registerPaidPosOrder(
 
   let invoiceId = await invoiceIdForPosOrder(client, posOrderId);
   if (!invoiceId) {
-    await client.executeKw("pos.order", "action_pos_order_invoice", [[posOrderId]]);
+    const invoiceContext: Record<string, unknown> = {};
+    if (config.invoiceJournalId) invoiceContext.default_journal_id = config.invoiceJournalId;
+    try {
+      await client.executeKw("pos.order", "write", [[posOrderId], { to_invoice: true }]);
+    } catch {
+      // to_invoice may already be set by the session.
+    }
+    await client.executeKw("pos.order", "action_pos_order_invoice", [[posOrderId]], {
+      context: invoiceContext,
+    });
     invoiceId = await invoiceIdForPosOrder(client, posOrderId);
   }
   if (!invoiceId) {
