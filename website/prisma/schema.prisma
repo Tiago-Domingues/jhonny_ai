@@ -352,6 +352,7 @@ model Order {
   currency            String            @default("EUR")
   notes               String?
   odooSaleOrderId     Int?
+  odooPosOrderId      Int?
   odooInvoiceId       Int?
   odooSyncStatus      SyncStatus        @default(NOT_SYNCED)
   odooSyncError       String?
@@ -368,6 +369,7 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([odooSaleOrderId])
+  @@index([odooPosOrderId])
   @@index([odooSyncStatus])
 }
 
