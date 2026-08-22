@@ -7,11 +7,16 @@ import { formatEuro } from "@/lib/ecommerce/money";
 import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { fetchOdooInvoicePdf } from "@/lib/ecommerce/odooInvoice";
 import { PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX } from "@/lib/ecommerce/emailSubjects";
+import { emailAddressOnly, resolveTransactionalFrom, smtpDeliveryStatus } from "@/lib/ecommerce/emailFrom";
 
 export { isPaidCustomerFaturaEmailSubject, PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX } from "@/lib/ecommerce/emailSubjects";
+export { resolveTransactionalFrom } from "@/lib/ecommerce/emailFrom";
 
 function emailFrom() {
-  return process.env.EMAIL_FROM || "Jhonny Surf Store <orders@jhonnysurfstore.com>";
+  return resolveTransactionalFrom({
+    emailFrom: process.env.EMAIL_FROM,
+    smtpUser: emailProvider() === "smtp" ? process.env.SMTP_USER : null,
+  });
 }
 
 function jhonnyEmail() {
@@ -45,7 +50,12 @@ type SendResult = {
   error: string | null;
 };
 
-async function sendSmtpEmail(to: string, subject: string, html: string, attachments?: EmailAttachment[]): Promise<SendResult> {
+type SendEmailOptions = {
+  attachments?: EmailAttachment[];
+  bcc?: string;
+};
+
+async function sendSmtpEmail(to: string, subject: string, html: string, options?: SendEmailOptions): Promise<SendResult> {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 465);
   const user = process.env.SMTP_USER;
@@ -70,14 +80,23 @@ async function sendSmtpEmail(to: string, subject: string, html: string, attachme
     const result = await transport.sendMail({
       from: emailFrom(),
       to,
+      bcc: options?.bcc,
       subject,
       html,
-      attachments: attachments?.map((attachment) => ({
+      attachments: options?.attachments?.map((attachment) => ({
         filename: attachment.filename,
         content: attachment.content,
         contentType: attachment.contentType || "application/pdf",
       })),
     });
+    const delivery = smtpDeliveryStatus(result);
+    if (!delivery.ok) {
+      return {
+        status: "FAILED",
+        providerId: result.messageId || null,
+        error: delivery.error,
+      };
+    }
 
     return { status: "SENT", providerId: result.messageId, error: null };
   } catch (error) {
@@ -89,7 +108,7 @@ async function sendSmtpEmail(to: string, subject: string, html: string, attachme
   }
 }
 
-async function sendResendEmail(to: string, subject: string, html: string, attachments?: EmailAttachment[]): Promise<SendResult> {
+async function sendResendEmail(to: string, subject: string, html: string, options?: SendEmailOptions): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
     return { status: "SKIPPED", providerId: null, error: "RESEND_API_KEY is not configured." };
@@ -100,9 +119,10 @@ async function sendResendEmail(to: string, subject: string, html: string, attach
     const response = await resend.emails.send({
       from: emailFrom(),
       to,
+      bcc: options?.bcc,
       subject,
       html,
-      attachments: attachments?.map((attachment) => ({
+      attachments: options?.attachments?.map((attachment) => ({
         filename: attachment.filename,
         content: attachment.content.toString("base64"),
       })),
@@ -122,11 +142,11 @@ async function sendResendEmail(to: string, subject: string, html: string, attach
   }
 }
 
-async function sendEmail(to: string, subject: string, html: string, attachments?: EmailAttachment[]): Promise<SendResult> {
+async function sendEmail(to: string, subject: string, html: string, options?: SendEmailOptions): Promise<SendResult> {
   if (emailProvider() === "smtp") {
-    return sendSmtpEmail(to, subject, html, attachments);
+    return sendSmtpEmail(to, subject, html, options);
   }
-  return sendResendEmail(to, subject, html, attachments);
+  return sendResendEmail(to, subject, html, options);
 }
 
 function escapeHtml(value: string) {
@@ -423,10 +443,24 @@ export async function findPaidOrdersMissingFaturaEmail(limit = 20) {
   });
 }
 
-export async function sendPaymentConfirmedEmails(orderId: string) {
+export async function findOrderForPaidEmail(orderNumber: string) {
+  return prisma.order.findFirst({
+    where: { orderNumber },
+    select: { id: true, orderNumber: true },
+  });
+}
+
+function ownerCopyBcc(customerEmail: string): string | undefined {
+  const owner = emailAddressOnly(jhonnyEmail());
+  const customer = emailAddressOnly(customerEmail);
+  if (!owner || owner === customer) return undefined;
+  return jhonnyEmail();
+}
+
+export async function sendPaymentConfirmedEmails(orderId: string, options?: { force?: boolean }) {
   const order = await loadOrderForEmail(orderId);
   if (!order) return { skipped: true, reason: "order_not_found" };
-  if (await hasSentPaidFaturaEmail(orderId)) {
+  if (!options?.force && (await hasSentPaidFaturaEmail(orderId))) {
     return { skipped: true, reason: "already_sent" };
   }
   const invoice = await loadPaidInvoicePdf(order);
@@ -450,7 +484,7 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
       order.customerEmail,
       customerSubject,
       orderHtml(order, "customer", "paid", { hasFatura: Boolean(invoice) }),
-      attachments
+      { attachments, bcc: ownerCopyBcc(order.customerEmail) }
     );
     await recordEmailEvent({
       orderId,
@@ -468,7 +502,7 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
       jhonnyEmail(),
       ownerSubject,
       orderHtml(order, "jhonny", "paid", { hasFatura: Boolean(invoice) }),
-      attachments
+      { attachments }
     );
     await recordEmailEvent({
       orderId,
@@ -480,7 +514,11 @@ export async function sendPaymentConfirmedEmails(orderId: string) {
       providerId: owner.providerId,
       error: owner.error,
     });
-    return { skipped: false, reason: customer.status === "SENT" ? "sent" : customer.status.toLowerCase() };
+    const bothSent = customer.status === "SENT" && owner.status === "SENT";
+    return {
+      skipped: !bothSent,
+      reason: bothSent ? "sent" : `customer_${customer.status.toLowerCase()}_owner_${owner.status.toLowerCase()}`,
+    };
   } catch (error) {
     await recordEmailEvent({
       orderId,
