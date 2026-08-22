@@ -44,11 +44,11 @@ Or add `VERCEL_TOKEN` as a **Cursor Cloud environment secret** so agents can run
 
 Until the shop is ready for purchases:
 
-1. Keep **`SITE_PUBLIC_LAUNCH`** unset or `false` on Vercel (default after this feature ships).
+1. Keep **`SITE_PUBLIC_LAUNCH`** unset or `false` on Vercel (default after this feature ships). `true` is ignored and does not publish the shop.
 2. Set **`SITE_PREVIEW_PASSWORD`** to a long private password (Vercel → Project → Settings → Environment Variables → Production).
 3. Public visitors on **www.jhonnysurfstore.com** / **.pt** only see `/coming-soon`.
 4. You review the full site at **https://www.jhonnysurfstore.com/preview-access** (enter the password once; cookie lasts 30 days).
 
-When go-live is approved, set `SITE_PUBLIC_LAUNCH=true` and redeploy (or wait for next `main` deploy).
+When go-live is approved, set `SITE_PUBLIC_LAUNCH=open` and redeploy (or wait for next `main` deploy).
 
 Optional: also enable Vercel **Deployment Protection** as a second lock, but the in-app gate is enough for hiding the unfinished shop.
