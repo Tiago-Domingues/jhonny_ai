@@ -6,6 +6,7 @@ import {
   odooPartnerValues,
   parseAccountMoveIds,
   pdfBufferFromOdooResult,
+  readStoredInvoicePdf,
   runSaleInvoiceWizard,
   saleOrderInvoiceContext,
 } from "../src/lib/ecommerce/odooInvoice";
@@ -116,6 +117,54 @@ async function run() {
   const createKwargs = wizardCalls.find((call) => call.method === "create")?.kwargs as { context?: { active_ids?: number[] } };
   assert(createKwargs?.context?.active_ids?.[0] === 6, "wizard context targets the website sale order");
 
+  const storedPdf = Buffer.from(`%PDF-1.4\n${"stored".repeat(20)}`);
+  const stored = await readStoredInvoicePdf(
+    {
+      async executeKw() {
+        throw new Error("unused");
+      },
+      async searchRead() {
+        return [{ invoice_pdf_report_file: storedPdf.toString("base64"), invoice_pdf_report_id: 12 }];
+      },
+    },
+    88
+  );
+  assert(stored && stored.subarray(0, 4).toString() === "%PDF", "stored official invoice PDF is read from account.move");
+
+  const generatedCalls: string[] = [];
+  const generatedPdf = Buffer.from(`%PDF-1.4\n${"generated".repeat(16)}`);
+  let generated = false;
+  const generatedClient = {
+    async executeKw(model: string, method: string) {
+      generatedCalls.push(`${model}.${method}`);
+      if (model === "account.move.send.wizard" && method === "create") return 44;
+      if (model === "account.move.send.wizard" && method === "write") return true;
+      if (model === "account.move.send.wizard" && method === "action_send_and_print") {
+        generated = true;
+        return true;
+      }
+      throw new Error(`unexpected ${model}.${method}`);
+    },
+    async searchRead(model: string) {
+      if (model === "account.move") {
+        return generated
+          ? [{ invoice_pdf_report_file: generatedPdf.toString("base64"), invoice_pdf_report_id: 13 }]
+          : [{ invoice_pdf_report_id: false }];
+      }
+      return [];
+    },
+  };
+  const generatedFetched = await fetchOdooInvoicePdf(generatedClient, 88);
+  assert(generatedFetched && generatedFetched.equals(generatedPdf), "Send & Print wizard stores the official fatura PDF");
+  assert(
+    generatedCalls.includes("account.move.send.wizard.action_send_and_print"),
+    "official PDF is generated through the public send wizard"
+  );
+  assert(
+    !generatedCalls.some((call) => call.includes("email") || call.includes("_render_qweb_pdf")),
+    "wizard generation does not email from Odoo or call private render methods"
+  );
+
   const calls: string[] = [];
   const invoicePdf = Buffer.from(`%PDF-1.4\n${"y".repeat(120)}`);
   const client = {
@@ -124,7 +173,11 @@ async function run() {
       throw new Error("private method blocked");
     },
     async searchRead() {
-      return [{ datas: invoicePdf.toString("base64") }];
+      return [];
+    },
+    async downloadInvoiceLegalPdf() {
+      calls.push("downloadInvoiceLegalPdf");
+      return invoicePdf;
     },
     async downloadReportPdf() {
       calls.push("downloadReportPdf");
@@ -132,8 +185,8 @@ async function run() {
     },
   };
   const fetched = await fetchOdooInvoicePdf(client, 88);
-  assert(fetched && fetched.subarray(0, 4).toString() === "%PDF", "PDF is loaded via public report download");
-  assert(calls[0] === "downloadReportPdf", "HTTP/report download is preferred over private _render_qweb_pdf");
+  assert(fetched && fetched.subarray(0, 4).toString() === "%PDF", "PDF is loaded via official invoice download");
+  assert(calls.includes("downloadInvoiceLegalPdf"), "HTTP legal invoice download is used when no stored PDF exists");
   assert(
     !calls.some((call) => call.includes("_create_invoices") || call.includes("_render_qweb_pdf")),
     "private Odoo methods are not used to fetch the fatura PDF"
