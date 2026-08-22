@@ -213,11 +213,34 @@ export async function runSaleInvoiceWizard(client: InvoiceRpcClient, saleOrderId
   return parseAccountMoveIds(result);
 }
 
+async function invoiceReportNames(client: InvoiceRpcClient) {
+  const names = [...ODOO_INVOICE_REPORTS];
+  try {
+    const rows = await client.searchRead(
+      "ir.actions.report",
+      [
+        ["model", "=", "account.move"],
+        ["report_type", "=", "qweb-pdf"],
+      ],
+      ["report_name", "name"],
+      { limit: 20 }
+    );
+    for (const row of rows) {
+      const name = String(row.report_name || "").trim();
+      if (name && !names.includes(name)) names.push(name);
+    }
+  } catch {
+    // Keep the built-in invoice reports.
+  }
+  return names;
+}
+
 export async function fetchOdooInvoicePdf(client: InvoiceRpcClient, invoiceId: number) {
   if (!invoiceId) return null;
+  const reports = await invoiceReportNames(client);
 
   if (client.downloadReportPdf) {
-    for (const report of ODOO_INVOICE_REPORTS) {
+    for (const report of reports) {
       try {
         const pdf = await client.downloadReportPdf(report, [invoiceId]);
         if (pdf) return pdf;
@@ -228,7 +251,7 @@ export async function fetchOdooInvoicePdf(client: InvoiceRpcClient, invoiceId: n
   }
 
   for (const method of ODOO_PUBLIC_INVOICE_RENDER_METHODS) {
-    for (const report of ODOO_INVOICE_REPORTS) {
+    for (const report of reports) {
       try {
         const rendered = await client.executeKw("ir.actions.report", method, [report, [invoiceId]]);
         const pdf = pdfBufferFromOdooResult(rendered);
@@ -244,10 +267,9 @@ export async function fetchOdooInvoicePdf(client: InvoiceRpcClient, invoiceId: n
     [
       ["res_model", "=", "account.move"],
       ["res_id", "=", invoiceId],
-      ["mimetype", "=", "application/pdf"],
     ],
-    ["datas", "name"],
-    { limit: 5, order: "id desc" }
+    ["datas", "name", "mimetype"],
+    { limit: 10, order: "id desc" }
   );
   for (const attachment of attachments) {
     const pdf = typeof attachment.datas === "string" ? pdfBufferFromOdooResult(attachment.datas) : null;
