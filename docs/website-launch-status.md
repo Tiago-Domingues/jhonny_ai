@@ -115,70 +115,70 @@ Other remaining gaps:
 
 ## 6. Priority backlog
 
-Effort is **rough sizing** (not a calendar). S ≈ hours · M ≈ 1–2 days · L ≈ several days.
+**Description** is the plain-language meaning of each ID (what it is, where it shows up, why it exists). Effort is **rough sizing** (not a calendar). S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 ### P0 — Must ship before public purchases
 
-| # | Item | Status | Effort |
-|---|------|--------|--------|
-| P0.1 | Ifthenpay MB WAY + Multibanco keys + callback + fail closed | **Done** (code + live paid path) | — |
-| P0.2 | PayPal via Stripe Checkout | **Done in code** — prove a live/sandbox capture (P1.7) | — |
-| P0.3 | Klarna via Stripe Checkout | **Done in code** — prove a live/sandbox capture (P1.7) | — |
-| P0.4 | Harden payment callback (secret, amount, status) | **Done** | — |
-| P0.5 | Post-checkout UX + email (MB entity/ref, MB WAY, Stripe link) | **Done** | — |
-| P0.6 | Transactional email | **Done** | — |
-| P0.7 | Decrement stock on paid order | **Done** (unpaid still not reserved) | — |
-| P0.8 | Coupon usage only after payment | **Done** | — |
-| P0.9 | Full shipping address when ship-to-home | **Done** | — |
-| P0.10 | €100 free shipping in logic + legal | **Done** | — |
-| P0.11 | Shipping cost in checkout Total | **Done** (CTT bands + fatura Portes) | — |
-| P0.12 | Open public domains: `SITE_PUBLIC_LAUNCH=open` | **Ready to flip** after P1.10 (and P1.8 if you want new photos) | S |
-| P0.13 | Block mock catalog in production | **Done** | — |
-| P0.14 | Refuse weak/default `SESSION_SECRET` | **Done** | — |
-| P0.15 | Rate-limit auth / checkout / coupon / callback | **Done** | — |
-| P0.16 | Lock Odoo sync + status APIs | **Done** | — |
-| P0.17 | Security HTTP headers | **Done** | — |
-| P0.18 | Near real-time catalog sync | **Done** (2 min cron + ~60s stale kick). Optional: Odoo webhook + alert if cron fails | — |
+| # | Item | Description | Status | Effort |
+|---|------|-------------|--------|--------|
+| P0.1 | Ifthenpay MB WAY + Multibanco | Portuguese bank payments: customer pays with MB WAY or a Multibanco entity/reference. The bank callback must prove the amount before we mark the order paid. | **Done** (code + live paid path) | — |
+| P0.2 | PayPal via Stripe Checkout | Customer can pay with PayPal on the Stripe-hosted checkout page (not a separate PayPal account integration). | **Done** (proved in P1.7) | — |
+| P0.3 | Klarna via Stripe Checkout | Customer can pay later / in instalments with Klarna, also via Stripe Checkout. | **Done** (proved in P1.7) | — |
+| P0.4 | Harden payment callback | The Ifthenpay “paid” webhook is secret-only, compares amounts, and ignores fake or wrong-status notices. | **Done** | — |
+| P0.5 | Post-checkout UX + email | After checkout the customer sees (and is emailed) what to do next: Multibanco entity/ref, MB WAY waiting, or the Stripe pay link. | **Done** | — |
+| P0.6 | Transactional email | SMTP sends welcome, order, payment, password-reset, verify, and fatura emails to the customer and Jhonny. | **Done** | — |
+| P0.7 | Decrement stock on paid order | When an order is paid, website + Odoo stock go down. Unpaid carts do **not** reserve stock. | **Done** (unpaid still not reserved) | — |
+| P0.8 | Coupon usage only after payment | A coupon (JHONNY10, athlete codes) is only consumed when the order is paid, so abandoned checkouts do not burn the code. | **Done** | — |
+| P0.9 | Full shipping address when ship-to-home | Delivery checkout requires street, postal code, city, and country. Pickup does not. | **Done** | — |
+| P0.10 | €100 free shipping | Merchandise orders at or above €100 (after coupon) get €0 portes. Pickup is always free. Shown on banner, checkout, and legal pages. | **Done** | — |
+| P0.11 | Shipping cost in checkout Total | Checkout Total = products − coupon + CTT portes (or €0 pickup / free-over-€100). Same portes line goes on the Odoo fatura. | **Done** | — |
+| P0.12 | Open public domains | Flip Vercel `SITE_PUBLIC_LAUNCH=open` so .com and .pt stop showing coming-soon. `true` is ignored on purpose. | **Ready to flip** after P1.10 (and P1.8 if you want new photos) | S |
+| P0.13 | Block mock catalog | Production cannot sell the 3 built-in demo products unless you explicitly allow it. | **Done** | — |
+| P0.14 | Refuse weak session secret | The live site will not start checkout/login if `SESSION_SECRET` is missing or still the default. | **Done** | — |
+| P0.15 | Rate-limit auth / checkout / coupon / callback | Too many login, register, checkout, coupon, or payment-callback hits from one IP get HTTP 429. | **Done** | — |
+| P0.16 | Lock Odoo sync + status APIs | Catalog sync and ops status URLs need `CRON_SECRET` / admin — they are not public. | **Done** | — |
+| P0.17 | Security HTTP headers | Browser headers (no iframe embed, HSTS, nosniff, baseline CSP) reduce common web attacks. | **Done** | — |
+| P0.18 | Near real-time catalog sync | Odoo products, price, and stock refresh on the site about every 2 minutes (plus a catch-up if a page looks stale). | **Done** | — |
 
 **P0 left:** only **P0.12** (flip the launch flag). Do that after you are happy with portes (P1.10) and brand photos (P1.8).
 
 ### P1 — Launch ops and trust (active)
 
-| # | Item | Status | Why | Effort |
-|---|------|--------|-----|--------|
-| P1.1 | Admin orders (list, status, pickup/ship) | **Done** (`/admin/encomendas`) | | — |
-| P1.2 | Customer **My orders** in account | **Done** (`/conta#encomendas`) | Buyer sees past orders / Multibanco refs | — |
-| P1.3 | Password reset | **Done** (email link) | | — |
-| P1.4 | JHONNY10 registered + first paid order | **Done** | | — |
-| P1.5 | FAQ / trust copy that still sounds “not ready” | **Done** | Live payments, fatura, reset, JHONNY10 | — |
-| P1.6 | Scripted cart → pay → callback → paid checks | Partial (offline scripts + launch-remaining; no full paid E2E in CI) | | M |
-| P1.7 | One live/sandbox order per payment method | **Done** (ops) | Go-live gate | — |
-| P1.8 | Recent homepage + category photos | **Open** | Trust at launch | S–M |
-| P1.9 | Sanitize order email HTML; rate-limit ratings/availability | **Done** (escape + 429 limits) | | — |
-| P1.10 | Fill Odoo **weight + size** on products | **Open — next ops** | Portes use guesses when weight is 0 | S (ops) |
-| P1.11 | Email verification on register | **Done** (soft; does not block checkout) | Stronger accounts | — |
+| # | Item | Description | Status | Effort |
+|---|------|-------------|--------|--------|
+| P1.1 | Admin orders | Staff page `/admin/encomendas`: list orders and mark pickup / shipped / preparing. | **Done** | — |
+| P1.2 | Customer **My orders** | Signed-in `/conta#encomendas` shows that customer’s orders: items, coupon, portes, total, and Multibanco entity/ref if still unpaid. | **Done** | — |
+| P1.3 | Password reset | “Forgot password” emails a 1-hour, single-use link. Google-only accounts stay on Google sign-in. | **Done** | — |
+| P1.4 | JHONNY10 first-purchase coupon | Signed-in customers get 10% on their **first paid** order only. The code does not stick if they never pay. | **Done** | — |
+| P1.5 | FAQ / trust copy | FAQ “Já posso comprar online?” must say the shop is live (MB WAY, Multibanco, card, PayPal, Klarna) — not “em preparação”. Also covers fatura, reset, JHONNY10. | **Done** | — |
+| P1.6 | Scripted paid-path tests | Automated checks that cart → pay → bank callback → paid/stock/email still work. Offline scripts exist; a full live-pay test is not in CI. | Partial | M |
+| P1.7 | One live order per payment method | You already placed a real/sandbox paid order on Multibanco, MB WAY, and Stripe (card or PayPal/Klarna) and checked the fatura matches checkout. | **Done** (ops) | — |
+| P1.8 | Recent homepage + category photos | Swap older hero / category pictures for new real store photos. You drop files in `website/public/brand/` when you have them. | **Open** | S–M |
+| P1.9 | Email HTML escape + spam limits | Order emails cannot inject HTML from names/addresses. Product ratings and “notify when available” are rate-limited. | **Done** | — |
+| P1.10 | Fill Odoo **weight + size** | In Odoo, put real kg (and board length/width/height) on products. The site uses that for CTT portes. Empty weight = a category guess (often 0.8 kg). | **Open — next ops** | S (ops) |
+| P1.11 | Email verification | After register we email a 24h confirm link. Account and checkout still work if they ignore it (soft). Google-verified emails skip this. | **Done** | — |
 
 ### P2 — Soon after go-live
 
-| # | Item | Status | Effort |
-|---|------|--------|--------|
-| P2.1 | Localize leftover PT-hardcoded shop/PDP/checkout strings | Open | M |
-| P2.2 | Real cart drawer | **Done** | — |
-| P2.3 | Hide empty Odoo categories or fill them | Open | S–M |
-| P2.4 | Product image gallery | Partial (multi-image exists on some PDPs) | M |
-| P2.5 | Bulky board vs standard shipping rules | **Done** (CTT limits → €29.90 + note) | — |
-| P2.6 | Variant UX for size/color Odoo products | Partial (variants shipped; keep polishing) | M |
-| P2.7 | Zero leftover negative Odoo on-hand (draft `#138`) | Open — script only, dry-run first | S–M (ops) |
+| # | Item | Description | Status | Effort |
+|---|------|-------------|--------|--------|
+| P2.1 | Leftover Portuguese-only UI strings | Some shop / product / checkout labels are still hardcoded in PT when the customer picked EN or ZH. | Open | M |
+| P2.2 | Real cart drawer | Side cart that opens from the bag icon (qty, remove, go to cart/checkout) instead of only a full cart page. | **Done** | — |
+| P2.3 | Empty Odoo categories | Hide (or fill in Odoo) categories that show 0 products, e.g. an empty women’s wetsuits group. | Open | S–M |
+| P2.4 | Product image gallery | Product pages should show several photos you can click through, not only one thumbnail. Some products already have extra images. | Partial | M |
+| P2.5 | Bulky board shipping | Oversized boards that exceed CTT limits get a €29.90 quote plus a note that Jhonny will confirm. | **Done** | — |
+| P2.6 | Size / color variant UX | When Odoo has the same board in several sizes or colors, the product page should pick the variant cleanly. Basic support is live; polish can continue. | Partial | M |
+| P2.7 | Zero leftover negative Odoo stock | Clean leftover negative on-hand quantities in Odoo (script in draft `#138`). Dry-run first — do not apply blindly. | Open — dry-run first | S–M (ops) |
 
 ### P3 — Later / growth
 
-| # | Item | Status | Effort |
-|---|------|--------|--------|
-| P3.1 | Chinese (ZH) legal pages | Open | M |
-| P3.2 | SEO: sitemap, robots, product OG/JSON-LD | Open | S–M |
-| P3.3 | First-party analytics | **Done** (consent + admin). GA/GTM optional later | — |
-| P3.4 | Ratings on product cards | Open | S |
-| P3.5 | Abandoned-cart emails | Open | M |
+| # | Item | Description | Status | Effort |
+|---|------|-------------|--------|--------|
+| P3.1 | Chinese legal pages | Terms, privacy, returns, and payments pages fully translated to ZH (shop UI already has ZH). | Open | M |
+| P3.2 | SEO | Public sitemap, robots.txt, and product share cards (title/image when you paste a link). | Open | S–M |
+| P3.3 | First-party analytics | Cookie-consent pageviews, coupon uses, and admin dashboards. Google Analytics is optional later. | **Done** | — |
+| P3.4 | Ratings on product cards | Star scores on `/loja` tiles, not only on the product detail page. | Open | S |
+| P3.5 | Abandoned-cart emails | Reminder email if someone leaves products in the cart and does not pay. | Open | M |
 
 ---
 

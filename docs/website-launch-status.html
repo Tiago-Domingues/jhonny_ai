@@ -382,123 +382,142 @@
     <section>
       <h2>6. Priority backlog</h2>
       <p class="note">
-        Effort below is <strong>rough technical sizing</strong> for planning (not a calendar commitment).
+        <strong>Description</strong> is the plain-language meaning of each ID (what it is, where it shows up, why it exists).
+        Effort is <strong>rough technical sizing</strong> for planning (not a calendar commitment).
         S ≈ hours · M ≈ 1–2 days · L ≈ several days.
       </p>
 
       <h3>P0 — Must ship before public purchases</h3>
       <table>
         <thead>
-          <tr><th>#</th><th>Item</th><th>Why it matters</th><th>Effort</th></tr>
+          <tr><th>#</th><th>Item</th><th>Description</th><th>Status</th><th>Effort</th></tr>
         </thead>
         <tbody>
           <tr>
             <td data-label="#">P0.1</td>
-            <td data-label="Item">Configure <strong>Ifthenpay</strong> (MB WAY + Multibanco keys + callback URL + secret) and <strong>fail closed</strong> in production (no mock refs)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> — code + live paid path</td>
-            <td data-label="Effort">S–M (config + code guard)</td>
+            <td data-label="Item">Ifthenpay MB WAY + Multibanco</td>
+            <td data-label="Description">Portuguese bank payments: customer pays with MB WAY or a Multibanco entity/reference. The bank callback must prove the amount before we mark the order paid.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> (code + live paid path)</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.2</td>
             <td data-label="Item">PayPal via Stripe Checkout</td>
-            <td data-label="Why" class="status-ok"><strong>Done in code</strong> — prove a capture (P1.7)</td>
-            <td data-label="Effort">L</td>
+            <td data-label="Description">Customer can pay with PayPal on the Stripe-hosted checkout page (not a separate PayPal account integration).</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> (proved in P1.7)</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.3</td>
             <td data-label="Item">Klarna via Stripe Checkout</td>
-            <td data-label="Why" class="status-ok"><strong>Done in code</strong> — prove a capture (P1.7)</td>
-            <td data-label="Effort">L</td>
+            <td data-label="Description">Customer can pay later / in instalments with Klarna, also via Stripe Checkout.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> (proved in P1.7)</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.4</td>
-            <td data-label="Item">Harden payment <strong>callback</strong> (secret <strong>always</strong> required in prod, constant-time compare, <strong>amount + status</strong> checks)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S–M</td>
+            <td data-label="Item">Harden payment callback</td>
+            <td data-label="Description">The Ifthenpay “paid” webhook is secret-only, compares amounts, and ignores fake or wrong-status notices.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.5</td>
-            <td data-label="Item">Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">M</td>
+            <td data-label="Item">Post-checkout UX + email</td>
+            <td data-label="Description">After checkout the customer sees (and is emailed) what to do next: Multibanco entity/ref, MB WAY waiting, or the Stripe pay link.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.6</td>
-            <td data-label="Item">Configure <strong>transactional email</strong> (Resend or SMTP) and send order + payment instructions</td>
-            <td data-label="Why"><strong>Done</strong> — SMTP order + payment emails confirmed in production</td>
-            <td data-label="Effort">S (config) + S–M (content)</td>
+            <td data-label="Item">Transactional email</td>
+            <td data-label="Description">SMTP sends welcome, order, payment, password-reset, verify, and fatura emails to the customer and Jhonny.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.7</td>
-            <td data-label="Item"><strong>Reserve/decrement stock</strong> on order (release on cancel/expiry)</td>
-            <td data-label="Why"><strong>Done</strong> — paid orders validate Odoo delivery and update website qty immediately</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Item">Decrement stock on paid order</td>
+            <td data-label="Description">When an order is paid, website + Odoo stock go down. Unpaid carts do <strong>not</strong> reserve stock.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> (unpaid still not reserved)</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.8</td>
-            <td data-label="Item">Apply <strong>coupon usage only after payment</strong> (or roll back if unpaid)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S–M</td>
+            <td data-label="Item">Coupon usage only after payment</td>
+            <td data-label="Description">A coupon (JHONNY10, athlete codes) is only consumed when the order is paid, so abandoned checkouts do not burn the code.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.9</td>
-            <td data-label="Item">Require full <strong>shipping address</strong> when ship-to-home is selected</td>
-            <td data-label="Why"><strong>Done</strong> — street, postal code, city, country required for delivery</td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">Full shipping address when ship-to-home</td>
+            <td data-label="Description">Delivery checkout requires street, postal code, city, and country. Pickup does not.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.10</td>
-            <td data-label="Item">Align <strong>€100 free shipping</strong> in checkout logic + legal pages</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">€100 free shipping</td>
+            <td data-label="Description">Merchandise orders at or above €100 (after coupon) get €0 portes. Pickup is always free. Shown on banner, checkout, and legal pages.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.11</td>
-            <td data-label="Item">Show <strong>shipping cost in checkout total</strong> UI</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> — CTT bands + fatura Portes</td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">Shipping cost in checkout Total</td>
+            <td data-label="Description">Checkout Total = products − coupon + CTT portes (or €0 pickup / free-over-€100). Same portes line goes on the Odoo fatura.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.12</td>
-            <td data-label="Item">Open public domains: set <strong><code>SITE_PUBLIC_LAUNCH=open</code></strong> after P1.10 (and P1.8 if you want new photos)</td>
-            <td data-label="Why" class="status-bad"><strong>Blocked</strong> — <code>true</code> is ignored on purpose</td>
+            <td data-label="Item">Open public domains</td>
+            <td data-label="Description">Flip Vercel <code>SITE_PUBLIC_LAUNCH=open</code> so .com and .pt stop showing coming-soon. <code>true</code> is ignored on purpose.</td>
+            <td data-label="Status" class="status-bad"><strong>Ready to flip</strong> after P1.10 (and P1.8 if you want new photos)</td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.13</td>
-            <td data-label="Item">Block <strong>mock catalog</strong> from selling in production</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">Block mock catalog</td>
+            <td data-label="Description">Production cannot sell the 3 built-in demo products unless you explicitly allow it.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.14</td>
-            <td data-label="Item">Confirm production secrets (session, DB, Odoo, payments, email) on Vercel; <strong>refuse to boot/checkout</strong> if <code>SESSION_SECRET</code> is missing or still the default</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">Refuse weak session secret</td>
+            <td data-label="Description">The live site will not start checkout/login if <code>SESSION_SECRET</code> is missing or still the default.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.15</td>
-            <td data-label="Item"><strong>Rate-limit</strong> login, register, checkout, coupon, and payment-callback endpoints</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S–M</td>
+            <td data-label="Item">Rate-limit auth / checkout / coupon / callback</td>
+            <td data-label="Description">Too many login, register, checkout, coupon, or payment-callback hits from one IP get HTTP 429.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.16</td>
-            <td data-label="Item"><strong>Lock down</strong> Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">Lock Odoo sync + status APIs</td>
+            <td data-label="Description">Catalog sync and ops status URLs need <code>CRON_SECRET</code> / admin — they are not public.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.17</td>
-            <td data-label="Item">Add <strong>security HTTP headers</strong> (HSTS, frame deny, Referrer-Policy, baseline CSP, nosniff)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">Security HTTP headers</td>
+            <td data-label="Description">Browser headers (no iframe embed, HSTS, nosniff, baseline CSP) reduce common web attacks.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P0.18</td>
-            <td data-label="Item"><strong>Near real-time Odoo ↔ website catalog sync</strong>: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> (2 min cron + ~60s stale kick)</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Item">Near real-time catalog sync</td>
+            <td data-label="Description">Odoo products, price, and stock refresh on the site about every 2 minutes (plus a catch-up if a page looks stale).</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
         </tbody>
       </table>
@@ -509,74 +528,85 @@
       <h3>P1 — Launch ops and trust</h3>
       <table>
         <thead>
-          <tr><th>#</th><th>Item</th><th>Why it matters</th><th>Effort</th></tr>
+          <tr><th>#</th><th>Item</th><th>Description</th><th>Status</th><th>Effort</th></tr>
         </thead>
         <tbody>
           <tr>
             <td data-label="#">P1.1</td>
-            <td data-label="Item">Minimal <strong>admin orders</strong> view (list, status, pickup/ship)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> — /admin/encomendas</td>
-            <td data-label="Effort">M–L</td>
+            <td data-label="Item">Admin orders</td>
+            <td data-label="Description">Staff page <code>/admin/encomendas</code>: list orders and mark pickup / shipped / preparing.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.2</td>
-            <td data-label="Item">Customer <strong>My orders</strong> in account</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> — /conta#encomendas</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Item">Customer My orders</td>
+            <td data-label="Description">Signed-in <code>/conta#encomendas</code> shows that customer’s orders: items, coupon, portes, total, and Multibanco entity/ref if still unpaid.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.3</td>
-            <td data-label="Item">Password reset (email verification → P1.11)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> — email reset link</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Item">Password reset</td>
+            <td data-label="Description">“Forgot password” emails a 1-hour, single-use link. Google-only accounts stay on Google sign-in.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.4</td>
-            <td data-label="Item">Enforce <strong>JHONNY10</strong> rules (registered + first purchase)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
-            <td data-label="Effort">S–M</td>
+            <td data-label="Item">JHONNY10 first-purchase coupon</td>
+            <td data-label="Description">Signed-in customers get 10% on their <strong>first paid</strong> order only. The code does not stick if they never pay.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.5</td>
-            <td data-label="Item">Update <strong>FAQ</strong> / trust copy that still implies the store is “not ready”</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> — live payments, fatura, reset, JHONNY10</td>
-            <td data-label="Effort">S</td>
+            <td data-label="Item">FAQ / trust copy</td>
+            <td data-label="Description">FAQ “Já posso comprar online?” must say the shop is live (MB WAY, Multibanco, card, PayPal, Klarna) — not “em preparação”. Also covers fatura, reset, JHONNY10.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.6</td>
-            <td data-label="Item">Smoke-test suite or scripted checklist for cart → pay → callback → paid</td>
-            <td data-label="Why">Catch regressions before opening traffic</td>
+            <td data-label="Item">Scripted paid-path tests</td>
+            <td data-label="Description">Automated checks that cart → pay → bank callback → paid/stock/email still work. Offline scripts exist; a full live-pay test is not in CI.</td>
+            <td data-label="Status">Partial</td>
             <td data-label="Effort">M</td>
           </tr>
           <tr>
             <td data-label="#">P1.7</td>
-            <td data-label="Item">End-to-end test orders on each payment method (sandbox then live)</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> (ops)</td>
-            <td data-label="Effort">M (ops time)</td>
+            <td data-label="Item">One live order per payment method</td>
+            <td data-label="Description">A real/sandbox paid order on Multibanco, MB WAY, and Stripe (card or PayPal/Klarna), with fatura matching checkout.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> (ops)</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.8</td>
-            <td data-label="Item">Refresh <strong>homepage + category hero images</strong> with recent store / product photos (assets under <code>website/public/brand/</code> and mappings in <code>Products.tsx</code> / <code>categoryHeroes.ts</code>)</td>
-            <td data-label="Why">Brand looks current and trustworthy at launch</td>
-            <td data-label="Effort">S–M (assets + wire-up)</td>
-          </tr>
-          <tr>
-            <td data-label="#">P1.9</td>
-            <td data-label="Item">Escape/sanitize fields in <strong>order email HTML</strong>; tighten public ratings/availability against spam</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> (escape + 429 limits)</td>
+            <td data-label="Item">Recent homepage + category photos</td>
+            <td data-label="Description">Swap older hero / category pictures for new real store photos. Drop files in <code>website/public/brand/</code> when you have them.</td>
+            <td data-label="Status" class="status-bad"><strong>Open</strong></td>
             <td data-label="Effort">S–M</td>
           </tr>
           <tr>
+            <td data-label="#">P1.9</td>
+            <td data-label="Item">Email HTML escape + spam limits</td>
+            <td data-label="Description">Order emails cannot inject HTML from names/addresses. Product ratings and “notify when available” are rate-limited.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
+          </tr>
+          <tr>
             <td data-label="#">P1.10</td>
-            <td data-label="Item">Fill Odoo <strong>weight + size</strong> on products</td>
-            <td data-label="Why" class="status-bad"><strong>Open — next ops</strong></td>
+            <td data-label="Item">Fill Odoo weight + size</td>
+            <td data-label="Description">In Odoo, put real kg (and board length/width/height) on products. The site uses that for CTT portes. Empty weight = a category guess (often 0.8 kg).</td>
+            <td data-label="Status" class="status-bad"><strong>Open — next ops</strong></td>
             <td data-label="Effort">S (ops)</td>
           </tr>
           <tr>
             <td data-label="#">P1.11</td>
-            <td data-label="Item">Email verification on register</td>
-            <td data-label="Why" class="status-ok"><strong>Done</strong> (soft; does not block checkout)</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Item">Email verification</td>
+            <td data-label="Description">After register we email a 24h confirm link. Account and checkout still work if they ignore it (soft). Google-verified emails skip this.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
         </tbody>
       </table>
@@ -584,29 +614,102 @@
       <h3>P2 — Soon after go-live</h3>
       <table>
         <thead>
-          <tr><th>#</th><th>Item</th><th>Effort</th></tr>
+          <tr><th>#</th><th>Item</th><th>Description</th><th>Status</th><th>Effort</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="#">P2.1</td><td data-label="Item">Localize shop / PDP / checkout strings still hardcoded in Portuguese</td><td data-label="Effort">M</td></tr>
-          <tr><td data-label="#">P2.2</td><td data-label="Item">Real cart drawer</td><td data-label="Effort" class="status-ok">Done</td></tr>
-          <tr><td data-label="#">P2.3</td><td data-label="Item">Hide empty Odoo categories (e.g. women wetsuits with 0 products) or fill in Odoo</td><td data-label="Effort">S–M</td></tr>
-          <tr><td data-label="#">P2.4</td><td data-label="Item">Product image gallery (beyond single thumbnail)</td><td data-label="Effort">M</td></tr>
-          <tr><td data-label="#">P2.5</td><td data-label="Item">Bulky board vs standard shipping</td><td data-label="Effort" class="status-ok">Done — CTT limits → €29.90</td></tr>
-          <tr><td data-label="#">P2.6</td><td data-label="Item">Variant UX if size/color are separate Odoo products</td><td data-label="Effort">M–L</td></tr>
+          <tr>
+            <td data-label="#">P2.1</td>
+            <td data-label="Item">Leftover Portuguese-only UI strings</td>
+            <td data-label="Description">Some shop / product / checkout labels are still hardcoded in PT when the customer picked EN or ZH.</td>
+            <td data-label="Status">Open</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P2.2</td>
+            <td data-label="Item">Real cart drawer</td>
+            <td data-label="Description">Side cart that opens from the bag icon (qty, remove, go to cart/checkout) instead of only a full cart page.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
+          </tr>
+          <tr>
+            <td data-label="#">P2.3</td>
+            <td data-label="Item">Empty Odoo categories</td>
+            <td data-label="Description">Hide (or fill in Odoo) categories that show 0 products, e.g. an empty women’s wetsuits group.</td>
+            <td data-label="Status">Open</td>
+            <td data-label="Effort">S–M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P2.4</td>
+            <td data-label="Item">Product image gallery</td>
+            <td data-label="Description">Product pages should show several photos you can click through, not only one thumbnail. Some products already have extra images.</td>
+            <td data-label="Status">Partial</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P2.5</td>
+            <td data-label="Item">Bulky board shipping</td>
+            <td data-label="Description">Oversized boards that exceed CTT limits get a €29.90 quote plus a note that Jhonny will confirm.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
+          </tr>
+          <tr>
+            <td data-label="#">P2.6</td>
+            <td data-label="Item">Size / color variant UX</td>
+            <td data-label="Description">When Odoo has the same board in several sizes or colors, the product page should pick the variant cleanly. Basic support is live; polish can continue.</td>
+            <td data-label="Status">Partial</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P2.7</td>
+            <td data-label="Item">Zero leftover negative Odoo stock</td>
+            <td data-label="Description">Clean leftover negative on-hand quantities in Odoo (script in draft <code>#138</code>). Dry-run first — do not apply blindly.</td>
+            <td data-label="Status" class="status-bad">Open — dry-run first</td>
+            <td data-label="Effort">S–M (ops)</td>
+          </tr>
         </tbody>
       </table>
 
       <h3>P3 — Later / growth</h3>
       <table>
         <thead>
-          <tr><th>#</th><th>Item</th><th>Effort</th></tr>
+          <tr><th>#</th><th>Item</th><th>Description</th><th>Status</th><th>Effort</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="#">P3.1</td><td data-label="Item">Chinese (ZH) legal pages</td><td data-label="Effort">M</td></tr>
-          <tr><td data-label="#">P3.2</td><td data-label="Item">SEO: sitemap, robots, product OG/JSON-LD</td><td data-label="Effort">S–M</td></tr>
-          <tr><td data-label="#">P3.3</td><td data-label="Item">First-party analytics</td><td data-label="Effort" class="status-ok">Done (consent + admin). GA/GTM optional</td></tr>
-          <tr><td data-label="#">P3.4</td><td data-label="Item">Ratings on product cards (already on PDP)</td><td data-label="Effort">S</td></tr>
-          <tr><td data-label="#">P3.5</td><td data-label="Item">Abandoned-cart emails</td><td data-label="Effort">M</td></tr>
+          <tr>
+            <td data-label="#">P3.1</td>
+            <td data-label="Item">Chinese legal pages</td>
+            <td data-label="Description">Terms, privacy, returns, and payments pages fully translated to ZH (shop UI already has ZH).</td>
+            <td data-label="Status">Open</td>
+            <td data-label="Effort">M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P3.2</td>
+            <td data-label="Item">SEO</td>
+            <td data-label="Description">Public sitemap, robots.txt, and product share cards (title/image when you paste a link).</td>
+            <td data-label="Status">Open</td>
+            <td data-label="Effort">S–M</td>
+          </tr>
+          <tr>
+            <td data-label="#">P3.3</td>
+            <td data-label="Item">First-party analytics</td>
+            <td data-label="Description">Cookie-consent pageviews, coupon uses, and admin dashboards. Google Analytics is optional later.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
+          </tr>
+          <tr>
+            <td data-label="#">P3.4</td>
+            <td data-label="Item">Ratings on product cards</td>
+            <td data-label="Description">Star scores on <code>/loja</code> tiles, not only on the product detail page.</td>
+            <td data-label="Status">Open</td>
+            <td data-label="Effort">S</td>
+          </tr>
+          <tr>
+            <td data-label="#">P3.5</td>
+            <td data-label="Item">Abandoned-cart emails</td>
+            <td data-label="Description">Reminder email if someone leaves products in the cart and does not pay.</td>
+            <td data-label="Status">Open</td>
+            <td data-label="Effort">M</td>
+          </tr>
         </tbody>
       </table>
     </section>
