@@ -34,6 +34,18 @@ NEAR_DUPLICATE_RATIO = 0.85
 ALL_RECORDS = {"active_test": False}
 # Confirmed real brands that would otherwise be reported every run.
 KNOWN_GOOD = {"RIP"}
+# Spellings used in product titles that mean an existing brand.
+ALIASES = {
+    "CHANNEL ISLAND": "CHANNEL ISLANDS",
+    "TWINS BROS": "TWINSBROS SURFBOARDS",
+    "HAYDEN SHAPES": "HAYDENSHAPES",
+    "ONEILL": "O'NEILL",
+    "SEX WAX": "MR. ZOGS SEX WAX",
+    "MR ZOGS": "MR. ZOGS SEX WAX",
+}
+# Brands whose name is also a component spec here, so only a title that starts
+# with it is really that brand ("ISS STRINGER" is, "... QUANTUM QUAD PP ISS" is not).
+LEADING_ONLY = {"ISS"}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -183,14 +195,23 @@ def brands_in_title(name: str, brands: list[dict[str, Any]]) -> tuple[str, list[
     so the earliest match in the head is the maker. Later mentions are usually a
     fin system or compatibility note, so they are reported separately.
     """
+    known = {brand["x_name"] for brand in brands}
+    candidates = [(words(name), name) for name in known]
+    candidates += [
+        (words(alias), canonical) for alias, canonical in ALIASES.items() if canonical in known
+    ]
+
     def matches(text: str) -> list[str]:
         haystack = words(text)
-        found = []
-        for brand in brands:
-            at = position_of(haystack, words(brand["x_name"]))
-            if at is not None:
-                found.append((at, -len(words(brand["x_name"])), brand["x_name"]))
-        return [found_name for _, _, found_name in sorted(found)]
+        best: dict[str, tuple[int, int]] = {}
+        for needle, canonical in candidates:
+            at = position_of(haystack, needle)
+            if at is None or (canonical in LEADING_ONLY and at != 0):
+                continue
+            rank = (at, -len(needle))
+            if canonical not in best or rank < best[canonical]:
+                best[canonical] = rank
+        return [name for name, _ in sorted(best.items(), key=lambda item: item[1])]
 
     in_head = matches(title_head(name))
     suggestion = in_head[0] if in_head else ""
