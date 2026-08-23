@@ -114,7 +114,21 @@ Run local regression checks that do not require live OpenAI:
 ```powershell
 py scripts/evaluate_agent.py
 py scripts/evaluate_api_security.py
+py scripts/evaluate_stock_maintenance.py
 ```
+
+## Stock Maintenance
+
+Set every negative on-hand ("Em mão") quantity in Odoo to zero. The first
+command only reports what it would change:
+
+```powershell
+py scripts/fix_negative_on_hand.py
+py scripts/fix_negative_on_hand.py --apply
+```
+
+Each fix is a real inventory adjustment, so Odoo records a stock move and the
+change stays auditable. The Odoo user needs Inventory access.
 
 With the backend running, verify the local API:
 

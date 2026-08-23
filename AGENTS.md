@@ -16,7 +16,8 @@ Both `frontend/` and `website/` default to **port 3000**. Only one can own 3000 
 - Run backend: `python3 scripts/run_app.py` (serves `src.api:app` on `127.0.0.1:8000`). `pip` installs the `uvicorn` console script to `~/.local/bin` (not on PATH), so launch via `python3` / `python3 -m uvicorn`, not the bare `uvicorn` command.
 - Run UI: `cd frontend && npm run dev` (reads `NEXT_PUBLIC_API_BASE_URL`, default `http://127.0.0.1:8000`).
 - **The backend hard-requires real Odoo credentials.** The agent is built lazily on the first `/dashboard`, `/chat`, or `/tools/*` request via `create_agent()`, which calls `OdooClient.authenticate()`. With the placeholder `ODOO_*` values in `.env.example`, those endpoints return HTTP 503 `odoo_unavailable`. Only `GET /health` (→ `{"status":"ok"}`) works without valid Odoo creds. Full dashboard/chat testing needs real `ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY` (and optionally `OPENAI_API_KEY`).
-- Offline regression checks that need **no** Odoo/OpenAI: `python3 scripts/evaluate_agent.py` and `python3 scripts/evaluate_api_security.py` (they use fake tools / signature fixtures).
+- Offline regression checks that need **no** Odoo/OpenAI: `python3 scripts/evaluate_agent.py`, `python3 scripts/evaluate_api_security.py`, and `python3 scripts/evaluate_stock_maintenance.py` (they use fake tools / signature fixtures / a fake Odoo XML-RPC layer).
+- `python3 scripts/fix_negative_on_hand.py` zeroes negative on-hand ("Em mão") stock through Odoo inventory adjustments. It needs real Odoo credentials and an Inventory-enabled user; it is a dry run unless you pass `--apply`.
 
 ### E-commerce website (`website/`)
 - Requires `website/.env` with at least `DATABASE_URL` and `SESSION_SECRET`. Create it from `website/.env.example` and set a real `SESSION_SECRET` (e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
