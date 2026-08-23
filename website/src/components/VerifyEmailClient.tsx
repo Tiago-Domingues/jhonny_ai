@@ -21,12 +21,13 @@ export function VerifyEmailClient({ token }: { token: string }) {
       body: JSON.stringify({ token }),
     })
       .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
           throw new Error(data.message || data.error || copy.verifyFailed);
         }
         setOk(true);
         setMessage(copy.verifyOk);
+        window.location.assign(typeof data.redirect === "string" ? data.redirect : "/conta");
       })
       .catch((error) => {
         setMessage(error instanceof Error ? error.message : copy.verifyFailed);
@@ -39,7 +40,7 @@ export function VerifyEmailClient({ token }: { token: string }) {
       {message && <p className="mt-4 rounded-xl bg-cream p-3 text-sm text-ink">{message}</p>}
       {ok && (
         <a href="/conta" className="mt-4 inline-block text-sm font-semibold underline underline-offset-4">
-          {copy.signIn}
+          {copy.verifyOk}
         </a>
       )}
     </div>

@@ -102,7 +102,7 @@ Other remaining gaps:
 
 **Done this pack (P1)**
 
-- Soft email verification after register (does not block checkout) — P1.11.
+- Email/password signup must click the confirm link before the account exists; then they fill the profile on `/conta`. Google skips this. Guest checkout still works. — P1.11.
 - Rate limits on public ratings and availability-notify — P1.9.
 
 **Still open (P1 ops)**
@@ -156,7 +156,7 @@ Effort is **rough sizing** (not a calendar). S ≈ hours · M ≈ 1–2 days · 
 | P1.8 | Recent homepage + category photos | **Open** | Trust at launch | S–M |
 | P1.9 | Sanitize order email HTML; rate-limit ratings/availability | **Done** (escape + 429 limits) | | — |
 | P1.10 | Fill Odoo **weight + size** on products | **Open — next ops** | Portes use guesses when weight is 0 | S (ops) |
-| P1.11 | Email verification on register | **Done** (soft; does not block checkout) | Stronger accounts | — |
+| P1.11 | Email verification on register | **Done** (hard gate: no account until the email link) | Profile is filled after confirm | — |
 
 ### P2 — Soon after go-live
 
