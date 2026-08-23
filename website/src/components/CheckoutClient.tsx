@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
 import { CartQtyControls } from "@/components/CartQtyControls";
 import { useLanguage } from "@/components/LanguageProvider";
-import { FREE_SHIPPING_THRESHOLD_EUROS } from "@/lib/ecommerce/shipping";
+import { FREE_SHIPPING_THRESHOLD_EUROS, shippingQuoteFor } from "@/lib/ecommerce/shipping";
 import { CHECKOUT_PAYMENT_METHODS, getCheckoutPaymentMethod, isLiveCheckoutPaymentMethod } from "@/lib/ecommerce/paymentMethods";
 import { PaymentMethodMark } from "@/components/PaymentIcons";
 import { isValidOptionalNif } from "@/lib/ecommerce/nif";
@@ -52,6 +52,8 @@ export function CheckoutClient() {
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [couponDiscountCents, setCouponDiscountCents] = useState(0);
+  const [couponPercentOff, setCouponPercentOff] = useState(0);
+  const [shipCountry, setShipCountry] = useState("PT");
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [prefill, setPrefill] = useState<Prefill | null>(null);
@@ -72,6 +74,8 @@ export function CheckoutClient() {
           .then((response) => (response.ok ? response.json() : null))
           .then((data) => {
             const profile = data?.user?.profile || {};
+            const nextCountry = String(profile.country || "PT");
+            setShipCountry(nextCountry);
             setPrefill({
               fullName: String(profile.fullName || user.fullName || ""),
               email: String(user.email || ""),
@@ -82,7 +86,7 @@ export function CheckoutClient() {
               addressLine2: String(profile.addressLine2 || ""),
               postalCode: String(profile.postalCode || ""),
               city: String(profile.city || ""),
-              country: String(profile.country || "PT"),
+              country: nextCountry,
             });
           });
       })
@@ -175,6 +179,7 @@ export function CheckoutClient() {
   async function applyCoupon() {
     setCouponMessage(null);
     setCouponDiscountCents(0);
+    setCouponPercentOff(0);
     const response = await fetch("/api/coupons/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -186,11 +191,27 @@ export function CheckoutClient() {
       return;
     }
     setCouponDiscountCents(data.discountCents || 0);
+    setCouponPercentOff(Number(data.coupon?.percentOff || 0));
     setCouponCode(data.coupon?.code || couponCode);
     setCouponMessage(`${data.coupon?.code} ${copy.couponApplied}: ${data.coupon?.percentOff}% off.`);
   }
 
   const discountedSubtotalCents = Math.max(0, cart.subtotalCents - couponDiscountCents);
+  const shippingQuote = shippingQuoteFor({
+    fulfillmentMethod: fulfillmentMethod === "SHIP_TO_ADDRESS" ? "SHIP_TO_ADDRESS" : "PICKUP_IN_STORE",
+    amountAfterDiscountCents: discountedSubtotalCents,
+    destinationCountry: shipCountry,
+    items: cart.items.map((item) => ({
+      quantity: item.quantity,
+      weightKg: item.weightKg,
+      lengthCm: item.lengthCm,
+      widthCm: item.widthCm,
+      heightCm: item.heightCm,
+      category: item.category,
+      name: item.name,
+    })),
+  });
+  const payableCents = discountedSubtotalCents + shippingQuote.shippingCents;
   const payment = checkoutResult?.payment;
   const fieldClass = "w-full rounded-2xl border border-line px-4 py-3";
 
@@ -245,7 +266,12 @@ export function CheckoutClient() {
               <input name="addressLine2" placeholder={copy.addressDetails} defaultValue={prefill?.addressLine2} className={`${fieldClass} sm:col-span-2`} />
               <input name="postalCode" required placeholder={copy.postalCode} defaultValue={prefill?.postalCode} className={fieldClass} />
               <input name="city" required placeholder={copy.city} defaultValue={prefill?.city} className={fieldClass} />
-              <select name="country" defaultValue={prefill?.country || "PT"} className={fieldClass}>
+              <select
+                name="country"
+                defaultValue={prefill?.country || "PT"}
+                onChange={(event) => setShipCountry(event.target.value)}
+                className={fieldClass}
+              >
                 <option value="PT">Portugal</option>
                 <option value="ES">Espanha</option>
                 <option value="FR">França</option>
@@ -412,15 +438,37 @@ export function CheckoutClient() {
           {cartError && <p className="text-sm text-muted">{cartError}</p>}
         </div>
         <div className="mt-5 border-t border-line pt-4">
+          <div className="mb-2 flex justify-between text-sm text-muted">
+            <span>{copy.subtotal}</span>
+            <span><CurrencyPrice cents={cart.subtotalCents} /></span>
+          </div>
           {couponDiscountCents > 0 && (
-            <div className="mb-3 flex justify-between text-sm font-semibold text-muted">
-              <span>{copy.couponDiscount}</span>
+            <div className="mb-2 flex justify-between text-sm font-semibold text-muted">
+              <span>
+                {copy.couponDiscount}
+                {couponPercentOff ? ` ${couponCode} −${couponPercentOff}%` : ""}
+              </span>
               <span>-<CurrencyPrice cents={couponDiscountCents} /></span>
             </div>
           )}
+          <div className="mb-3 flex justify-between text-sm text-muted">
+            <span>{copy.shipping}</span>
+            <span>
+              {shippingQuote.shippingCents > 0 ? (
+                <CurrencyPrice cents={shippingQuote.shippingCents} />
+              ) : shippingQuote.freeReason === "threshold" ? (
+                copy.shippingFree.replace("{threshold}", String(FREE_SHIPPING_THRESHOLD_EUROS))
+              ) : (
+                copy.pickup
+              )}
+            </span>
+          </div>
+          {shippingQuote.note === "bulky" && (
+            <p className="mb-3 text-xs text-muted">{copy.shippingBulky}</p>
+          )}
           <div className="flex flex-col gap-1 font-display text-2xl font-extrabold sm:flex-row sm:justify-between">
             <span>{copy.total}</span>
-            <span className="sm:text-right"><CurrencyPrice cents={discountedSubtotalCents} /></span>
+            <span className="sm:text-right"><CurrencyPrice cents={payableCents} /></span>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <CurrencySelector compact />

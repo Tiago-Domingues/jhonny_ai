@@ -46,6 +46,10 @@ type StorefrontCopy = {
     couponApplied: string;
     couponInvalid: string;
     couponDiscount: string;
+    subtotal: string;
+    shipping: string;
+    shippingFree: string;
+    shippingBulky: string;
     notes: string;
     marketing: string;
     confirm: string;
@@ -92,6 +96,10 @@ type StorefrontCopy = {
     profileIntro: string;
     fullName: string;
     birthDate: string;
+    birthYear: string;
+    birthMonth: string;
+    birthDay: string;
+    forgotPassword: string;
     gender: string;
     customerType: string;
     mobile: string;
@@ -182,6 +190,10 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       couponApplied: "aplicado",
       couponInvalid: "Cupão inválido.",
       couponDiscount: "Desconto do cupão",
+      subtotal: "Subtotal",
+      shipping: "Portes",
+      shippingFree: "Grátis — encomenda acima de €{threshold}",
+      shippingBulky: "Estimativa para artigo volumoso. O Jhonny confirma o envio.",
       notes: "Notas para a encomenda",
       marketing: "Aceito receber novidades e lembretes de carrinho da Jhonny Surf Store.",
       confirm: "Confirmar encomenda",
@@ -228,6 +240,10 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       profileIntro: "Mantém os teus dados prontos para checkouts mais rápidos e fatura com NIF.",
       fullName: "Nome completo",
       birthDate: "Data de nascimento",
+      birthYear: "Ano",
+      birthMonth: "Mês",
+      birthDay: "Dia",
+      forgotPassword: "Esqueceste a password?",
       gender: "Género",
       customerType: "Tipo de cliente",
       mobile: "Telemóvel",
@@ -316,6 +332,10 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       couponApplied: "applied",
       couponInvalid: "Invalid coupon.",
       couponDiscount: "Coupon discount",
+      subtotal: "Subtotal",
+      shipping: "Shipping",
+      shippingFree: "Free — order over €{threshold}",
+      shippingBulky: "Estimate for a bulky item. Jhonny will confirm shipping.",
       notes: "Order notes",
       marketing: "I agree to receive news and cart reminders from Jhonny Surf Store.",
       confirm: "Place order",
@@ -362,6 +382,10 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       profileIntro: "Keep your details ready for faster checkouts and invoices with NIF.",
       fullName: "Full name",
       birthDate: "Birth date",
+      birthYear: "Year",
+      birthMonth: "Month",
+      birthDay: "Day",
+      forgotPassword: "Forgot your password?",
       gender: "Gender",
       customerType: "Customer type",
       mobile: "Mobile",
@@ -450,6 +474,10 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       couponApplied: "已使用",
       couponInvalid: "优惠码无效。",
       couponDiscount: "优惠码折扣",
+      subtotal: "小计",
+      shipping: "运费",
+      shippingFree: "免运费 — 订单满 €{threshold}",
+      shippingBulky: "大件预估运费，Jhonny 会再确认。",
       notes: "订单备注",
       marketing: "我同意接收 Jhonny Surf Store 的新闻和购物车提醒。",
       confirm: "确认订单",
@@ -496,6 +524,10 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       profileIntro: "保存资料以便更快结账，并在发票上填写税号。",
       fullName: "姓名",
       birthDate: "出生日期",
+      birthYear: "年",
+      birthMonth: "月",
+      birthDay: "日",
+      forgotPassword: "忘记密码？",
       gender: "性别",
       customerType: "客户类型",
       mobile: "手机",

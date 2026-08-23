@@ -156,6 +156,7 @@ model User {
   smsEvents       SmsEvent[]
   couponUsages    CouponUsage[]
   productRatings  ProductRating[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
   @@index([username])
@@ -237,6 +238,10 @@ model Product {
   contentSyncStatus     String?
   priceCents            Int
   currency              String     @default("EUR")
+  weightKg              Float      @default(0)
+  lengthCm              Float?
+  widthCm               Float?
+  heightCm              Float?
   stockQuantity         Int        @default(0)
   forecastQuantity      Int        @default(0)
   stockState            String     @default("out_of_stock")
@@ -532,16 +537,33 @@ model AvailabilityRequest {
 
 /// First-party pageview beacon for admin analytics (country from Vercel edge headers).
 model PageView {
-  id        String   @id @default(cuid())
-  path      String
-  referrer  String?
-  country   String?
-  region    String?
-  city      String?
-  userAgent String?
-  createdAt DateTime @default(now())
+  id                 String   @id @default(cuid())
+  path               String
+  referrer           String?
+  country            String?
+  region             String?
+  city               String?
+  userAgent          String?
+  latitude           Float?
+  longitude          Float?
+  locationAccuracyM  Float?
+  locationSource     String?
+  createdAt          DateTime @default(now())
 
   @@index([createdAt])
   @@index([country, createdAt])
   @@index([path, createdAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }

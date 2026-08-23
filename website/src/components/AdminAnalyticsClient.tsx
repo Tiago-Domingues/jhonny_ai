@@ -3,6 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 
 type Bucket = { key: string; count: number };
+type CouponRow = Bucket & {
+  code: string;
+  label: string;
+  percentOff: number;
+  discountCents: number;
+  lastUsed: string;
+};
+
 type Summary = {
   days: number;
   totalViews: number;
@@ -11,11 +19,14 @@ type Summary = {
   byCity: Bucket[];
   byPath: Bucket[];
   byDay: Bucket[];
+  byLocationSource?: Bucket[];
+  coupons?: CouponRow[];
   recent: Array<{
     path: string;
     country: string | null;
     city: string | null;
     referrer: string | null;
+    locationSource?: string | null;
     createdAt: string;
   }>;
 };
@@ -127,16 +138,41 @@ export function AdminAnalyticsClient() {
       {message && <p className="rounded-xl bg-white p-3 text-sm text-muted">{message}</p>}
 
       <p className="max-w-3xl text-sm leading-relaxed text-muted">
-        Dados first-party (país/cidade via Vercel). Só gravamos visitas quando o visitante aceita cookies de analytics.
-        Se a lista estiver vazia, aceita analytics num browser e navega pela loja.
+        Dados first-party (país/cidade via Vercel, GPS só com consentimento de analytics).
+        Cupões contam apenas compras pagas.
       </p>
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <BarList title="Cupões usados em compras" rows={summary?.coupons || []} />
+        <BarList title="Localização (GPS vs IP)" rows={summary?.byLocationSource || []} />
         <BarList title="Por país" rows={summary?.byCountry || []} />
         <BarList title="Por cidade" rows={summary?.byCity || []} />
         <BarList title="Páginas mais vistas" rows={summary?.byPath || []} />
         <BarList title="Por dia" rows={summary?.byDay || []} />
       </div>
+
+      {(summary?.coupons?.length || 0) > 0 && (
+        <div className="overflow-hidden rounded-3xl border border-line bg-white">
+          <div className="border-b border-line px-5 py-4">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Cupões — detalhe</p>
+          </div>
+          <div className="divide-y divide-line">
+            {summary?.coupons?.map((coupon) => (
+              <div key={coupon.code} className="grid gap-1 px-5 py-4 sm:grid-cols-[1fr_auto]">
+                <div>
+                  <p className="font-semibold text-ink">{coupon.code} · {coupon.label}</p>
+                  <p className="text-sm text-muted">
+                    {coupon.count} compras · −{coupon.percentOff}% · {((coupon.discountCents || 0) / 100).toFixed(2)} €
+                  </p>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wide text-muted">
+                  {new Date(coupon.lastUsed).toLocaleString("pt-PT")}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-3xl border border-line bg-white">
         <div className="border-b border-line px-5 py-4">
@@ -149,6 +185,7 @@ export function AdminAnalyticsClient() {
                 <p className="font-semibold text-ink">{visit.path}</p>
                 <p className="text-sm text-muted">
                   {[visit.city, visit.country].filter(Boolean).join(", ") || "Local desconhecido"}
+                  {visit.locationSource ? ` · ${visit.locationSource}` : ""}
                   {visit.referrer ? ` · ref ${visit.referrer}` : ""}
                 </p>
               </div>

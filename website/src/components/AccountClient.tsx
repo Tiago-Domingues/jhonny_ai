@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState, type ReactNode } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { storefrontText } from "@/lib/storefrontCopy";
+import { BirthDateFields } from "@/components/BirthDateFields";
 
 type SessionUser = {
   id: string;
@@ -229,13 +230,11 @@ export function AccountClient() {
                   className={fieldClass}
                 />
               </Field>
-              <Field label={copy.birthDate} htmlFor="birthDate">
-                <input
-                  id="birthDate"
-                  name="birthDate"
-                  type="date"
+              <Field label={copy.birthDate} className="md:col-span-2">
+                <BirthDateFields
                   defaultValue={profile?.birthDate ? String(profile.birthDate).slice(0, 10) : ""}
-                  className={fieldClass}
+                  locale={locale === "zh" ? "zh" : locale === "en" ? "en" : "pt"}
+                  labels={{ year: copy.birthYear, month: copy.birthMonth, day: copy.birthDay }}
                 />
               </Field>
               <Field label={copy.gender} htmlFor="gender">
@@ -517,6 +516,9 @@ export function AccountClient() {
             </div>
             <input name="emailOrUsername" required placeholder={copy.emailOrUsername} className={fieldClass} />
             <input name="password" required type="password" placeholder={copy.password} className={fieldClass} />
+            <a href="/conta/recuperar-password" className="text-sm font-semibold text-ink underline underline-offset-4">
+              {copy.forgotPassword}
+            </a>
             <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98]">
               {copy.signIn}
             </button>
@@ -551,6 +553,14 @@ export function AccountClient() {
               <input name="phone" placeholder={copy.mobile} className={fieldClass} />
             </div>
             <input name="password" required type="password" placeholder={copy.password} className={fieldClass} />
+            <div className="md:col-span-2">
+              <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-muted">{copy.birthDate}</p>
+              <BirthDateFields
+                required
+                locale={locale === "zh" ? "zh" : locale === "en" ? "en" : "pt"}
+                labels={{ year: copy.birthYear, month: copy.birthMonth, day: copy.birthDay }}
+              />
+            </div>
             <select name="customerType" defaultValue="SURFER" className={selectClass} style={{ backgroundImage: selectChevron }}>
               {customerTypes.map(([value, label]) => (
                 <option key={value} value={value}>

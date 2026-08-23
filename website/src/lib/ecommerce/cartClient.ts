@@ -11,6 +11,11 @@ export type CartLine = {
   unitPriceCents?: number;
   totalCents: number;
   stockQuantity?: number;
+  category?: string | null;
+  weightKg?: number | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
 };
 
 export type CartSummary = {

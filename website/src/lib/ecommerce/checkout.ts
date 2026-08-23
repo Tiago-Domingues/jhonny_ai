@@ -6,7 +6,7 @@ import { checkoutSchema } from "@/lib/ecommerce/schemas";
 import { createPaymentForOrder } from "@/lib/ecommerce/payments";
 import { sendOrderEmails } from "@/lib/ecommerce/email";
 import { validateCoupon } from "@/lib/ecommerce/coupons";
-import { shippingCentsFor } from "@/lib/ecommerce/shipping";
+import { shippingQuoteFor } from "@/lib/ecommerce/shipping";
 import { normalizeNif } from "@/lib/ecommerce/nif";
 
 type CheckoutIdentity = {
@@ -46,10 +46,21 @@ export async function createCheckout(
   });
   const discountCents = coupon?.discountCents || 0;
   const amountForShippingCents = Math.max(0, summary.subtotalCents - discountCents);
-  const shippingCents = shippingCentsFor({
+  const shippingQuote = shippingQuoteFor({
     fulfillmentMethod: data.fulfillmentMethod,
     amountAfterDiscountCents: amountForShippingCents,
+    destinationCountry: data.country,
+    items: cart.items.map((item) => ({
+      quantity: item.quantity,
+      weightKg: item.product.weightKg,
+      lengthCm: item.product.lengthCm,
+      widthCm: item.product.widthCm,
+      heightCm: item.product.heightCm,
+      category: item.product.category,
+      name: item.product.name,
+    })),
   });
+  const shippingCents = shippingQuote.shippingCents;
   const totalCents = Math.max(0, summary.subtotalCents + shippingCents - discountCents);
   const customerVat = normalizeNif(data.nif) || null;
   if (identity.userId && customerVat) {

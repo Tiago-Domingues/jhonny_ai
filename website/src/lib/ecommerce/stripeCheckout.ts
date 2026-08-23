@@ -1,3 +1,5 @@
+import { allocateDiscountCents } from "@/lib/ecommerce/orderPricing";
+
 /** Pure Stripe Checkout helpers (no Stripe SDK). Safe to unit-test. */
 
 const ALLOWED_HOSTS = [
@@ -53,18 +55,10 @@ export function stripeLineItems(order: {
   currency: string;
 }) {
   const currency = (order.currency || "EUR").toLowerCase();
-  const productTotal = order.items.reduce((sum, item) => sum + item.totalCents, 0);
-  let leftoverDiscount = Math.max(0, order.discountCents);
+  const allocated = allocateDiscountCents(order.items, order.discountCents);
 
-  const lines = order.items.map((item, index) => {
-    const isLast = index === order.items.length - 1;
-    const share =
-      productTotal <= 0 ? 0 : Math.round((item.totalCents / productTotal) * order.discountCents);
-    const discount = isLast
-      ? leftoverDiscount
-      : Math.min(Math.max(0, share), leftoverDiscount, item.totalCents);
-    leftoverDiscount -= discount;
-    const amount = Math.max(0, item.totalCents - discount);
+  const lines = allocated.map((item) => {
+    const amount = item.netCents;
     const label = item.quantity > 1 ? `${item.quantity} × ${item.name}` : item.name;
     return {
       quantity: 1,

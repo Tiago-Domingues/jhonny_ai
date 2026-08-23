@@ -1,3 +1,5 @@
+import { allocateDiscountCents, couponFaturaNote, lineDiscountPercent } from "@/lib/ecommerce/orderPricing";
+
 export type PosRpcClient = {
   executeKw: (...args: any[]) => Promise<unknown>;
   searchRead: (...args: any[]) => Promise<Record<string, unknown>[]>;
@@ -364,7 +366,7 @@ async function createFallbackPosInvoice(
   const lines = await client.searchRead(
     "pos.order.line",
     [["order_id", "=", posOrderId]],
-    ["product_id", "qty", "price_unit", "full_product_name", "name"],
+    ["product_id", "qty", "price_unit", "discount", "full_product_name", "name"],
     { limit: 50 }
   );
   const moveType = await shopInvoiceMoveType(client, asOdooId(order.config_id) || 0);
@@ -381,6 +383,7 @@ async function createFallbackPosInvoice(
         product_id: asOdooId(line.product_id),
         quantity: Number(line.qty || 1),
         price_unit: Number(line.price_unit || 0),
+        discount: Number(line.discount || 0),
         name: String(line.full_product_name || line.name || ""),
       },
     ]),
@@ -423,13 +426,51 @@ async function invoicePosOrder(
   );
 }
 
+async function resolveShippingProductId(client: PosRpcClient) {
+  const configured = Number(process.env.ODOO_SHIPPING_PRODUCT_ID || 0);
+  if (Number.isFinite(configured) && configured > 0) return configured;
+  const byCode = await client.searchRead(
+    "product.product",
+    [["default_code", "=", "PORTES"]],
+    ["id", "name"],
+    { limit: 1 }
+  );
+  if (asOdooId(byCode[0]?.id)) return asOdooId(byCode[0]?.id);
+  const byName = await client.searchRead(
+    "product.product",
+    [["name", "ilike", "Portes"]],
+    ["id", "name"],
+    { limit: 1 }
+  );
+  if (asOdooId(byName[0]?.id)) return asOdooId(byName[0]?.id);
+  const created = asOdooId(
+    await client.executeKw("product.product", "create", [
+      {
+        name: "Portes",
+        default_code: "PORTES",
+        type: "service",
+        list_price: 0,
+        sale_ok: true,
+      },
+    ])
+  );
+  if (!created) throw new Error("Could not create the Odoo Portes product for shipping.");
+  return created;
+}
+
 export async function registerPaidPosOrder(
   client: PosRpcClient,
   input: {
     orderNumber: string;
     partnerId: number;
+    subtotalCents?: number;
+    shippingCents?: number;
+    discountCents?: number;
     totalCents: number;
     taxCents: number;
+    couponCode?: string | null;
+    couponLabel?: string | null;
+    couponPercentOff?: number | null;
     notes?: string | null;
     items: Array<{ odooProductId: number | null; name: string; quantity: number; unitPriceCents: number; totalCents: number }>;
   }
@@ -461,10 +502,12 @@ export async function registerPaidPosOrder(
   );
   const orderUuid = crypto.randomUUID();
 
-  const lines = products.map((item) => {
+  const allocated = allocateDiscountCents(products, input.discountCents || 0);
+  const lines = allocated.map((item) => {
     const qty = item.quantity;
     const priceUnit = Number((item.unitPriceCents / 100).toFixed(2));
-    const lineTotal = Number((item.totalCents / 100).toFixed(2));
+    const netLine = Number((item.netCents / 100).toFixed(2));
+    const discountPercent = lineDiscountPercent(item.totalCents, item.netCents);
     const taxIds = taxesByProduct.get(asOdooId(item.odooProductId)) || [];
     const values: Record<string, unknown> = {
       product_id: item.odooProductId,
@@ -473,14 +516,30 @@ export async function registerPaidPosOrder(
       full_product_name: item.name,
       name: item.name,
     };
-    if (lineFields.has("price_subtotal_incl")) values.price_subtotal_incl = lineTotal;
-    if (lineFields.has("price_subtotal")) values.price_subtotal = lineTotal;
+    if (lineFields.has("price_subtotal_incl")) values.price_subtotal_incl = netLine;
+    if (lineFields.has("price_subtotal")) values.price_subtotal = netLine;
     if (lineFields.has("price_type")) values.price_type = "original";
-    if (lineFields.has("discount")) values.discount = 0;
+    if (lineFields.has("discount")) values.discount = discountPercent;
     if (lineFields.has("tax_ids") && taxIds.length) values.tax_ids = [[6, false, taxIds]];
     if (lineFields.has("uuid")) values.uuid = crypto.randomUUID();
     return [0, 0, values];
   });
+  if ((input.shippingCents || 0) > 0) {
+    const shippingProductId = await resolveShippingProductId(client);
+    const shippingAmount = Number(((input.shippingCents || 0) / 100).toFixed(2));
+    const shippingValues: Record<string, unknown> = {
+      product_id: shippingProductId,
+      [qtyField]: 1,
+      price_unit: shippingAmount,
+      full_product_name: "Portes",
+      name: "Portes",
+    };
+    if (lineFields.has("price_subtotal_incl")) shippingValues.price_subtotal_incl = shippingAmount;
+    if (lineFields.has("price_subtotal")) shippingValues.price_subtotal = shippingAmount;
+    if (lineFields.has("discount")) shippingValues.discount = 0;
+    if (lineFields.has("uuid")) shippingValues.uuid = crypto.randomUUID();
+    lines.push([0, 0, shippingValues]);
+  }
 
   const payments = [
     [
@@ -505,7 +564,17 @@ export async function registerPaidPosOrder(
     amount_tax: tax,
     amount_return: 0,
   };
-  const note = [input.orderNumber, input.notes].filter(Boolean).join("\n");
+  const note = [
+    input.orderNumber,
+    couponFaturaNote({
+      couponCode: input.couponCode,
+      couponPercentOff: input.couponPercentOff,
+      couponLabel: input.couponLabel,
+    }),
+    input.notes,
+  ]
+    .filter(Boolean)
+    .join("\n");
   if (orderFields.has("pos_reference")) values.pos_reference = input.orderNumber;
   if (orderFields.has("note")) values.note = note;
   if (orderFields.has("tracking_number")) values.tracking_number = input.orderNumber.slice(-8);
