@@ -164,6 +164,18 @@ The report is read-only. It flags duplicate brand records, names differing only
 in case or punctuation, near-identical spellings, unused brands, and brands
 whose own products never mention them in their name.
 
+Correct the misspelled names and merge the duplicate records it found:
+
+```powershell
+py scripts/fix_product_brands.py
+py scripts/fix_product_brands.py --apply
+```
+
+The corrections are an explicit list inside the script, each recording the name
+the record must currently have, so it refuses to touch a brand that was edited
+in the meantime. Products are moved to the surviving record before a duplicate
+is removed.
+
 ## Ask The Agent From CLI
 
 ```powershell
