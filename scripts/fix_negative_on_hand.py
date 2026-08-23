@@ -28,15 +28,7 @@ sys.path.insert(0, str(ROOT))
 from src.odoo_client import OdooClient, OdooConfig, load_env
 
 STOCKABLE_USAGES = ["internal", "transit"]
-QUANT_FIELDS = [
-    "product_id",
-    "location_id",
-    "lot_id",
-    "quantity",
-    "reserved_quantity",
-    "available_quantity",
-    "company_id",
-]
+QUANT_FIELDS = ["product_id", "location_id", "lot_id", "quantity", "reserved_quantity"]
 DEFAULT_INVENTORY_NAME = "Negative on-hand cleanup"
 
 
@@ -178,11 +170,13 @@ def apply_target(client: OdooClient, quant: dict[str, Any], args: argparse.Names
 
 
 def verify(client: OdooClient, quants: list[dict[str, Any]], target: float) -> list[dict[str, Any]]:
+    """Re-read the touched quants; Odoo may have unlinked the ones now at zero."""
     ids = [quant["id"] for quant in quants]
-    rows = client.execute_kw(
+    rows = client.search_read(
         "stock.quant",
-        "read",
-        [ids, ["product_id", "location_id", "quantity"]],
+        domain=[["id", "in", ids]],
+        fields=["product_id", "location_id", "quantity"],
+        limit=len(ids),
     )
     return [row for row in rows if float(row["quantity"]) < target]
 

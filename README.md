@@ -145,6 +145,24 @@ Expected result includes:
 }
 ```
 
+## Stock Maintenance
+
+List negative on-hand quantities in stockable Odoo locations (read-only):
+
+```powershell
+py scripts/fix_negative_on_hand.py
+```
+
+Clear them with inventory adjustments that raise each quant back to zero:
+
+```powershell
+py scripts/fix_negative_on_hand.py --apply
+```
+
+Use `--location`, `--product`, and `--limit` to narrow the selection, `--target`
+to correct to a value other than zero, and `--max-units` to cap how large a
+correction may be applied in one run.
+
 ## Ask The Agent From CLI
 
 ```powershell
