@@ -11,17 +11,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, launched: true });
   }
 
-  const expected = process.env.SITE_PREVIEW_PASSWORD?.trim();
-  if (!expected) {
-    return NextResponse.json(
-      {
-        error: "preview_password_not_configured",
-        message: "Set SITE_PREVIEW_PASSWORD in Vercel to unlock the site before public launch.",
-      },
-      { status: 503 }
-    );
-  }
-
   let password = "";
   const contentType = request.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
