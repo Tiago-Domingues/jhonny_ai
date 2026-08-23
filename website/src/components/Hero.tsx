@@ -17,10 +17,10 @@ export function Hero() {
         loop
         playsInline
         preload="auto"
-        poster="/brand/surf-hero-poster.jpg?v=wa-2026-07-18"
+        poster="/brand/surf-hero-poster.jpg?v=wa-2026-08-23"
         aria-hidden
       >
-        <source src="/brand/surf-hero.mp4?v=wa-2026-07-18" type="video/mp4" />
+        <source src="/brand/surf-hero.mp4?v=wa-2026-08-23" type="video/mp4" />
       </video>
 
       {/* Lighter overlays so ocean color stays vivid; keep text readable */}
