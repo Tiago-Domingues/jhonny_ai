@@ -42,6 +42,11 @@ ALIASES = {
     "ONEILL": "O'NEILL",
     "SEX WAX": "MR. ZOGS SEX WAX",
     "MR ZOGS": "MR. ZOGS SEX WAX",
+    "OCEAN AND EARTH": "OCEAN & EARTH",
+    "SURF LOGIC": "SURFLOGIC",
+    "CAPTIN FIN": "CAPTAIN FIN",
+    "QUICKSILVER": "QUIKSILVER",
+    "SLATER DESIGN": "SLATER DESIGNS",
 }
 # Brands whose name is also a component spec here, so only a title that starts
 # with it is really that brand ("ISS STRINGER" is, "... QUANTUM QUAD PP ISS" is not).
