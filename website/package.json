@@ -24,6 +24,7 @@
     "test:shipping": "npx tsx scripts/test-shipping.ts",
     "test:pricing": "npx tsx scripts/test-order-pricing.ts",
     "test:password-reset": "npx tsx scripts/test-password-reset.ts",
+    "test:launch-remaining": "npx tsx scripts/test-launch-remaining.ts",
     "live:odoo-pos": "python3 scripts/live-odoo-pos.py",
     "lint": "eslint"
   },

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
-import { normalizeEmail } from "@/lib/ecommerce/security";
+import { ordersWhereForUser } from "@/lib/ecommerce/orderAccess";
 
 export function normalizeOrderNumber(orderNumber: string) {
   return orderNumber.trim().toUpperCase();
@@ -136,11 +136,8 @@ export async function listOrdersForAdmin(input: {
 }
 
 export async function listOrdersForUser(userId: string, email: string) {
-  const normalized = normalizeEmail(email);
   const orders = await prisma.order.findMany({
-    where: {
-      OR: [{ userId }, { customerEmail: { equals: normalized, mode: "insensitive" } }],
-    },
+    where: ordersWhereForUser(userId, email),
     include: orderInclude,
     orderBy: { createdAt: "desc" },
     take: 50,

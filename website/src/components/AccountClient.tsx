@@ -4,12 +4,14 @@ import { FormEvent, useEffect, useState, type ReactNode } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { storefrontText } from "@/lib/storefrontCopy";
 import { BirthDateFields } from "@/components/BirthDateFields";
+import { AccountOrders } from "@/components/AccountOrders";
 
 type SessionUser = {
   id: string;
   email: string;
   username: string;
   fullName?: string;
+  emailVerifiedAt?: string | null;
 } | null;
 
 const customerTypes = [
@@ -74,6 +76,8 @@ export function AccountClient() {
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
+  const [verifyBusy, setVerifyBusy] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -186,7 +190,37 @@ export function AccountClient() {
             {copy.hello}, {profile?.fullName || user.fullName || user.username}
           </h2>
           <p className="mt-2 break-all text-muted">{user.email}</p>
+          {!user.emailVerifiedAt && (
+            <div className="mt-4 rounded-2xl bg-cream px-4 py-3 text-sm text-ink">
+              <p>{copy.verifyBanner}</p>
+              <button
+                type="button"
+                disabled={verifyBusy}
+                onClick={async () => {
+                  setVerifyBusy(true);
+                  setVerifyStatus(null);
+                  const response = await fetch("/api/auth/verify-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ resend: true }),
+                  });
+                  setVerifyBusy(false);
+                  setVerifyStatus(response.ok ? copy.verifySent : copy.submitFailed);
+                }}
+                className="mt-2 text-sm font-semibold underline underline-offset-4 disabled:opacity-60"
+              >
+                {copy.verifySend}
+              </button>
+              {verifyStatus && <p className="mt-2 text-sm font-semibold">{verifyStatus}</p>}
+            </div>
+          )}
           <div className="mt-6 grid gap-3">
+            <a
+              href="#encomendas"
+              className="rounded-2xl border border-line px-5 py-4 text-center text-sm font-bold uppercase tracking-wide transition hover:bg-cream active:scale-[0.98]"
+            >
+              {copy.ordersKicker}
+            </a>
             <a
               href="/checkout"
               className="rounded-2xl bg-ink px-5 py-4 text-center text-sm font-bold uppercase tracking-wide text-white transition hover:bg-ink/90 active:scale-[0.98]"
@@ -466,6 +500,8 @@ export function AccountClient() {
             </div>
           )}
         </form>
+
+        <AccountOrders locale={locale} />
       </div>
     );
   }

@@ -20,7 +20,25 @@ const pt: InfoContent = {
     {
       heading: "Já posso comprar online?",
       paragraphs: [
-        "A loja online está em preparação. Para já, podes comprar na loja física ou encomendar por WhatsApp, telefone ou Instagram.",
+        "Sim. Compra em jhonnysurfstore.com com MB WAY, Multibanco, cartão, PayPal ou Klarna. Podes levantar na loja em Parede ou pedir envio para casa. Portes grátis acima de €100; pranchas e artigos volumosos confirmamos contigo. WhatsApp, telefone ou Instagram continuam abertos se precisares de ajuda.",
+      ],
+    },
+    {
+      heading: "Recebo fatura?",
+      paragraphs: [
+        "Sim. Depois do pagamento enviamos o fatura-recibo oficial (Odoo) para o teu email, com cupão e portes iguais ao checkout.",
+      ],
+    },
+    {
+      heading: "Como recupero a password?",
+      paragraphs: [
+        "Em Conta → Esqueceste a password? Enviamos um link para o email da conta. Contas só com Google entram com Google.",
+      ],
+    },
+    {
+      heading: "O que é o JHONNY10?",
+      paragraphs: [
+        "10% na primeira compra com conta. Entra, aplica JHONNY10 no checkout, e o desconto só fica gravado depois do pagamento.",
       ],
     },
     {
@@ -61,9 +79,27 @@ const en: InfoContent = {
       ],
     },
     {
-      heading: "Can I buy online yet?",
+      heading: "Can I buy online?",
       paragraphs: [
-        "The online store is being prepared. For now, you can buy in the physical store or order via WhatsApp, phone or Instagram.",
+        "Yes. Shop at jhonnysurfstore.com with MB WAY, Multibanco, card, PayPal or Klarna. Pick up in Parede or ship to your address. Free shipping over €100; bulky boards are confirmed with you. WhatsApp, phone or Instagram are still there if you need help.",
+      ],
+    },
+    {
+      heading: "Do I get an invoice?",
+      paragraphs: [
+        "Yes. After payment we email the official fatura-recibo (Odoo), with the same coupon and shipping as checkout.",
+      ],
+    },
+    {
+      heading: "How do I reset my password?",
+      paragraphs: [
+        "In Account → Forgot your password? We send a link to the account email. Google-only accounts sign in with Google.",
+      ],
+    },
+    {
+      heading: "What is JHONNY10?",
+      paragraphs: [
+        "10% off your first purchase with an account. Sign in, apply JHONNY10 at checkout; the discount is stored only after payment.",
       ],
     },
     {
@@ -106,7 +142,25 @@ const zh: InfoContent = {
     {
       heading: "现在可以在线上购买吗？",
       paragraphs: [
-        "网上商店正在筹备中。目前你可以到实体店购买，或通过 WhatsApp、电话或 Instagram 下单。",
+        "可以。在 jhonnysurfstore.com 用 MB WAY、Multibanco、银行卡、PayPal 或 Klarna 下单。可到 Parede 门店自取或配送到家。满 €100 免运费；大件冲浪板我们会再确认。WhatsApp、电话或 Instagram 仍可用于咨询。",
+      ],
+    },
+    {
+      heading: "有发票吗？",
+      paragraphs: [
+        "有。付款后我们会把正式 fatura-recibo（Odoo）发到你的邮箱，优惠码和运费与结账一致。",
+      ],
+    },
+    {
+      heading: "如何重置密码？",
+      paragraphs: [
+        "在账户页点击“忘记密码？”。我们会把链接发到账户邮箱。仅 Google 登录的账户请继续用 Google。",
+      ],
+    },
+    {
+      heading: "JHONNY10 是什么？",
+      paragraphs: [
+        "注册账户首次购买享 10% 优惠。登录后在结账输入 JHONNY10；折扣只在付款后计入。",
       ],
     },
     {
