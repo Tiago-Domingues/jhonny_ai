@@ -225,7 +225,7 @@
       <p class="subtitle">Website Launch Status</p>
       <div class="meta">
         <div><strong>Audience:</strong> owner + shop/ops + technical team</div>
-        <div><strong>Last updated:</strong> 21 August 2026</div>
+        <div><strong>Last updated:</strong> 23 August 2026</div>
         <div>
           <strong>Live sites:</strong>
           <a href="https://www.jhonnysurfstore.com">jhonnysurfstore.com</a>
@@ -249,13 +249,12 @@
     <section>
       <h2>2. Executive verdict</h2>
       <div class="verdict">
-        <strong>Not ready for public purchases yet.</strong>
+        <strong>Ready for staff / preview testing. Not ready to open .com and .pt to the public yet.</strong>
         <p style="margin-bottom:0">
-          The marketing site, product catalog, and shopping foundations are largely in place.
-          What still blocks selling online is <strong>real payment processing</strong>,
-          <strong>post-checkout payment instructions</strong>, <strong>stock/coupon correctness</strong>,
-          <strong>opening the .pt domain</strong>, and
-          <strong>security controls</strong> so payment callbacks and store APIs cannot be abused.
+          Checkout, payments, fatura, shipping totals, coupons, email, and the security baseline are on <code>main</code>.
+          The public still sees coming-soon until <code>SITE_PUBLIC_LAUNCH=open</code>.
+          Left: <strong>one live order per payment method (P1.7)</strong>, <strong>customer My orders (P1.2)</strong>,
+          <strong>Odoo weights (P1.10)</strong>, FAQ/photos, then the launch flag.
         </p>
       </div>
 
@@ -264,14 +263,14 @@
           <tr><th>Area</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready (imagery refresh still needed — see P1.8)</td></tr>
-          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status">Connected, but <strong>not guaranteed near real-time</strong> (see P0.18)</td></tr>
-          <tr><td data-label="Area">Browse shop, filters, product pages</td><td data-label="Status" class="status-ok">Ready for browsing</td></tr>
-          <tr><td data-label="Area">Cart + guest/account checkout skeleton</td><td data-label="Status">Built, not production-safe</td></tr>
-          <tr><td data-label="Area">Payments (MB WAY, Multibanco, PayPal, Klarna)</td><td data-label="Status" class="status-bad">Not ready</td></tr>
-          <tr><td data-label="Area">Security / abuse protection</td><td data-label="Status" class="status-bad">Partial — harden before open checkout</td></tr>
-          <tr><td data-label="Area">Order email + ops admin</td><td data-label="Status" class="status-ok">Emails sending; ops admin still limited</td></tr>
-          <tr><td data-label="Area">Public go-live (.com + .pt)</td><td data-label="Status" class="status-bad">Blocked</td></tr>
+          <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready (imagery refresh still needed — P1.8)</td></tr>
+          <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status" class="status-ok">Connected; cron + stale-kick sync (P0.18)</td></tr>
+          <tr><td data-label="Area">Browse shop, filters, product pages</td><td data-label="Status" class="status-ok">Ready</td></tr>
+          <tr><td data-label="Area">Cart + checkout</td><td data-label="Status" class="status-ok">Ready for preview; totals include coupon + Portes</td></tr>
+          <tr><td data-label="Area">Payments (MB WAY, Multibanco, Stripe card / PayPal / Klarna)</td><td data-label="Status">Code live — confirm one paid order per method (P1.7)</td></tr>
+          <tr><td data-label="Area">Security / abuse protection</td><td data-label="Status" class="status-ok">Baseline done (P0.4, P0.14–P0.17)</td></tr>
+          <tr><td data-label="Area">Order email + ops admin</td><td data-label="Status" class="status-ok">Emails + fatura PDF; admin orders/analytics exist</td></tr>
+          <tr><td data-label="Area">Public go-live (.com + .pt)</td><td data-label="Status" class="status-bad">Locked — preview via /preview-access</td></tr>
         </tbody>
       </table>
     </section>
@@ -341,28 +340,21 @@
           <tr><th>Integration</th><th>Production status</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Integration">Odoo</td><td data-label="Status">Configured and authenticated — catalog sync exists but is <strong>not a reliable near-real-time pipeline</strong> yet</td></tr>
-          <tr><td data-label="Integration">Email (SMTP)</td><td data-label="Status" class="status-ok">Done — order + payment emails send (P0.6)</td></tr>
-          <tr><td data-label="Integration">Ifthenpay MB WAY</td><td data-label="Status" class="status-bad">Not configured — would fall back to mocks</td></tr>
-          <tr><td data-label="Integration">Ifthenpay Multibanco</td><td data-label="Status" class="status-bad">Not configured — would fall back to mocks</td></tr>
-          <tr><td data-label="Integration">Ifthenpay callback secret</td><td data-label="Status" class="status-bad">Not configured</td></tr>
-          <tr><td data-label="Integration">PayPal</td><td data-label="Status" class="status-bad">Placeholder only</td></tr>
-          <tr><td data-label="Integration">Klarna</td><td data-label="Status" class="status-bad">Placeholder only</td></tr>
+          <tr><td data-label="Integration">Odoo</td><td data-label="Status" class="status-ok">Configured. Incremental cron ~every 2 min. Weights/dims often empty.</td></tr>
+          <tr><td data-label="Integration">Email (SMTP)</td><td data-label="Status" class="status-ok">Done — order, payment, welcome, password-reset, fatura PDF</td></tr>
+          <tr><td data-label="Integration">Ifthenpay MB WAY / Multibanco</td><td data-label="Status" class="status-ok">Wired and fail-closed — live paid orders have issued faturas</td></tr>
+          <tr><td data-label="Integration">Stripe (card / PayPal / Klarna)</td><td data-label="Status">Wired — confirm a live/sandbox capture per method (P1.7)</td></tr>
         </tbody>
       </table>
 
-      <p>Other important mismatches / risks:</p>
+      <p>Other remaining gaps:</p>
       <ul>
-        <li>Banner already says free shipping over <strong>€100</strong>; checkout + legal still use <strong>€50</strong>.</li>
-        <li>After checkout, customers do <strong>not</strong> see Multibanco entity/reference or MB WAY next steps.</li>
-        <li>Stock is checked at cart/checkout; <strong>paid orders decrement Odoo on-hand and website qty immediately</strong> (P0.7). Unpaid pending orders are not reserved.</li>
-        <li>Coupons can be consumed when the order is created, even if payment never completes.</li>
-        <li>Until <code>SITE_PUBLIC_LAUNCH=true</code>, <strong>both .com and .pt</strong> show coming-soon to the public; staff unlock via <code>/preview-access</code> + <code>SITE_PREVIEW_PASSWORD</code>.</li>
-        <li>If catalog/DB fails, mock demo products must not become sellable.</li>
-        <li>No simple admin screen to process orders; no customer “My orders” history.</li>
-        <li>Homepage hero / category tile images may be outdated vs recent store photography.</li>
-        <li>Odoo → website catalog updates are <strong>not guaranteed near real-time</strong>: with <code>ODOO_LIVE_CATALOG=true</code>, listing may kick a <strong>background</strong> sync only when DB data is older than <strong>~15 minutes</strong> and someone hits the shop; there is no scheduled cron and no Odoo product-change webhook. Manual <code>POST /api/odoo/sync/products</code> still exists.</li>
-        <li>Security gaps listed in §5.1 below.</li>
+        <li>Most products have <strong>Odoo weight = 0</strong>, so shipping uses category fallbacks (P1.10).</li>
+        <li>No customer <strong>My orders</strong> list in <code>/conta</code> (P1.2).</li>
+        <li>FAQ / some trust copy may still read like a preview shop (P1.5).</li>
+        <li>Homepage / category heroes may be older photos (P1.8).</li>
+        <li>Until <code>SITE_PUBLIC_LAUNCH=open</code>, both .com and .pt show coming-soon; staff unlock via <code>/preview-access</code>.</li>
+        <li>Unpaid pending orders are <strong>not</strong> reserved (stock drops only when paid).</li>
       </ul>
 
       <h3>5.1 Security posture (attack resistance)</h3>
@@ -379,21 +371,14 @@
           <tr><th>Risk</th><th>Why it matters</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Risk">Ifthenpay callback secret optional + no amount/status check</td><td data-label="Why">Attacker who knows an order reference can mark orders <strong>paid</strong></td></tr>
-          <tr><td data-label="Risk">Missing payment keys → mock / placeholder “payments”</td><td data-label="Why">Fake paid state in production</td></tr>
-          <tr><td data-label="Risk">Mock catalog upserted into DB if catalog empty</td><td data-label="Why">Demo SKUs become sellable</td></tr>
-          <tr><td data-label="Risk"><code>POST /api/odoo/sync/products</code> unauthenticated</td><td data-label="Why">Anyone can trigger sync / DoS Odoo</td></tr>
-          <tr><td data-label="Risk">No rate limits on login, register, checkout, callback</td><td data-label="Why">Brute-force and abuse</td></tr>
-          <tr><td data-label="Risk">Soft-default <code>SESSION_SECRET</code> if unset</td><td data-label="Why">Predictable sessions if misconfigured</td></tr>
-          <tr><td data-label="Risk">No security HTTP headers</td><td data-label="Why">Clickjacking / XSS blast-radius / downgrade</td></tr>
+          <tr><td data-label="Risk">Ifthenpay callback + fail-closed payments + mock catalog + sync lock + rate limits + SESSION_SECRET + headers</td><td data-label="Why" class="status-ok"><strong>Done</strong></td></tr>
         </tbody>
       </table>
-      <p><strong>Should fix soon after / with launch ops (P1)</strong></p>
+      <p><strong>Should fix soon / with launch ops (P1)</strong></p>
       <ul>
-        <li>No password reset / email verification</li>
-        <li>Public integrations/Odoo status APIs leak config readiness</li>
-        <li>Order email HTML unsanitized fields</li>
-        <li>Ratings / availability without rate limits</li>
+        <li>Password reset <strong>done</strong>; email verification still open (P1.11)</li>
+        <li>Order email HTML escaped</li>
+        <li>Ratings / availability spam limits optional (P1.9 remainder)</li>
       </ul>
     </section>
 
@@ -413,31 +398,31 @@
           <tr>
             <td data-label="#">P0.1</td>
             <td data-label="Item">Configure <strong>Ifthenpay</strong> (MB WAY + Multibanco keys + callback URL + secret) and <strong>fail closed</strong> in production (no mock refs)</td>
-            <td data-label="Why">Without this, “paid” orders are fake</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong> — code + live paid path</td>
             <td data-label="Effort">S–M (config + code guard)</td>
           </tr>
           <tr>
             <td data-label="#">P0.2</td>
-            <td data-label="Item">Implement and connect <strong>PayPal</strong> for real capture/redirect</td>
-            <td data-label="Why">Required for day-1 payment set</td>
+            <td data-label="Item">PayPal via Stripe Checkout</td>
+            <td data-label="Why" class="status-ok"><strong>Done in code</strong> — prove a capture (P1.7)</td>
             <td data-label="Effort">L</td>
           </tr>
           <tr>
             <td data-label="#">P0.3</td>
-            <td data-label="Item">Implement and connect <strong>Klarna</strong> for real checkout</td>
-            <td data-label="Why">Required for day-1 payment set</td>
+            <td data-label="Item">Klarna via Stripe Checkout</td>
+            <td data-label="Why" class="status-ok"><strong>Done in code</strong> — prove a capture (P1.7)</td>
             <td data-label="Effort">L</td>
           </tr>
           <tr>
             <td data-label="#">P0.4</td>
             <td data-label="Item">Harden payment <strong>callback</strong> (secret <strong>always</strong> required in prod, constant-time compare, <strong>amount + status</strong> checks)</td>
-            <td data-label="Why">Prevents forged “paid” states</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S–M</td>
           </tr>
           <tr>
             <td data-label="#">P0.5</td>
             <td data-label="Item">Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps</td>
-            <td data-label="Why">Customer must know how to pay</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">M</td>
           </tr>
           <tr>
@@ -455,7 +440,7 @@
           <tr>
             <td data-label="#">P0.8</td>
             <td data-label="Item">Apply <strong>coupon usage only after payment</strong> (or roll back if unpaid)</td>
-            <td data-label="Why">Stops burned coupons</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S–M</td>
           </tr>
           <tr>
@@ -467,63 +452,61 @@
           <tr>
             <td data-label="#">P0.10</td>
             <td data-label="Item">Align <strong>€100 free shipping</strong> in checkout logic + legal pages</td>
-            <td data-label="Why">Matches banner and launch decision</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.11</td>
             <td data-label="Item">Show <strong>shipping cost in checkout total</strong> UI</td>
-            <td data-label="Why">Total currently can understate amount due</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong> — CTT bands + fatura Portes</td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.12</td>
-            <td data-label="Item">Open public domains: set <strong><code>SITE_PUBLIC_LAUNCH=true</code></strong> (removes coming-soon on .com + .pt) when checkout is ready</td>
-            <td data-label="Why">Needed for joint .com/.pt launch; until then public sees coming-soon and staff use <code>/preview-access</code></td>
+            <td data-label="Item">Open public domains: set <strong><code>SITE_PUBLIC_LAUNCH=open</code></strong> when P1.7 is green</td>
+            <td data-label="Why" class="status-bad"><strong>Blocked</strong> — <code>true</code> is ignored on purpose</td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.13</td>
             <td data-label="Item">Block <strong>mock catalog</strong> from selling in production</td>
-            <td data-label="Why">Avoid selling demo products</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.14</td>
             <td data-label="Item">Confirm production secrets (session, DB, Odoo, payments, email) on Vercel; <strong>refuse to boot/checkout</strong> if <code>SESSION_SECRET</code> is missing or still the default</td>
-            <td data-label="Why">Security and reliability</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.15</td>
             <td data-label="Item"><strong>Rate-limit</strong> login, register, checkout, coupon, and payment-callback endpoints</td>
-            <td data-label="Why">Stops brute-force and callback flooding</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S–M</td>
           </tr>
           <tr>
             <td data-label="#">P0.16</td>
             <td data-label="Item"><strong>Lock down</strong> Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe)</td>
-            <td data-label="Why">Stops unauthorized sync / info leak</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.17</td>
             <td data-label="Item">Add <strong>security HTTP headers</strong> (HSTS, frame deny, Referrer-Policy, baseline CSP, nosniff)</td>
-            <td data-label="Why">Hardens browser attack surface</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S</td>
           </tr>
           <tr>
             <td data-label="#">P0.18</td>
             <td data-label="Item"><strong>Near real-time Odoo ↔ website catalog sync</strong>: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA</td>
-            <td data-label="Why">Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong> (2 min cron + ~60s stale kick)</td>
             <td data-label="Effort">M</td>
           </tr>
         </tbody>
       </table>
       <p>
-        <strong>P0 rough total:</strong> about <strong>2–4 weeks</strong> of focused build + provider setup,
-        dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1.
-        Security items P0.4 / P0.14–P0.17 and catalog freshness <strong>P0.18</strong> are mostly S–M and should be done <strong>before</strong> opening paid traffic.
+        <strong>P0 left:</strong> only <strong>P0.12</strong> (flip <code>SITE_PUBLIC_LAUNCH=open</code>) after P1.7.
       </p>
 
       <h3>P1 — Launch ops and trust</h3>
@@ -535,25 +518,25 @@
           <tr>
             <td data-label="#">P1.1</td>
             <td data-label="Item">Minimal <strong>admin orders</strong> view (list, status, pickup/ship)</td>
-            <td data-label="Why">Staff cannot run the store blind</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong> — /admin/encomendas</td>
             <td data-label="Effort">M–L</td>
           </tr>
           <tr>
             <td data-label="#">P1.2</td>
             <td data-label="Item">Customer <strong>My orders</strong> in account</td>
-            <td data-label="Why">Expected after purchase</td>
+            <td data-label="Why" class="status-bad"><strong>Open — next build</strong></td>
             <td data-label="Effort">M</td>
           </tr>
           <tr>
             <td data-label="#">P1.3</td>
-            <td data-label="Item">Password reset / email verification</td>
-            <td data-label="Why">Account safety for public traffic</td>
+            <td data-label="Item">Password reset (email verification → P1.11)</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong> — email reset link</td>
             <td data-label="Effort">M</td>
           </tr>
           <tr>
             <td data-label="#">P1.4</td>
             <td data-label="Item">Enforce <strong>JHONNY10</strong> rules (registered + first purchase)</td>
-            <td data-label="Why">Matches welcome offer promise</td>
+            <td data-label="Why" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">S–M</td>
           </tr>
           <tr>
@@ -571,7 +554,7 @@
           <tr>
             <td data-label="#">P1.7</td>
             <td data-label="Item">End-to-end test orders on each payment method (sandbox then live)</td>
-            <td data-label="Why">Go-live gate</td>
+            <td data-label="Why" class="status-bad"><strong>Open — next ops</strong></td>
             <td data-label="Effort">M (ops time)</td>
           </tr>
           <tr>
@@ -596,10 +579,10 @@
         </thead>
         <tbody>
           <tr><td data-label="#">P2.1</td><td data-label="Item">Localize shop / PDP / checkout strings still hardcoded in Portuguese</td><td data-label="Effort">M</td></tr>
-          <tr><td data-label="#">P2.2</td><td data-label="Item">Real cart drawer (lines, qty, remove) instead of count-only header cart</td><td data-label="Effort">M</td></tr>
+          <tr><td data-label="#">P2.2</td><td data-label="Item">Real cart drawer</td><td data-label="Effort" class="status-ok">Done</td></tr>
           <tr><td data-label="#">P2.3</td><td data-label="Item">Hide empty Odoo categories (e.g. women wetsuits with 0 products) or fill in Odoo</td><td data-label="Effort">S–M</td></tr>
           <tr><td data-label="#">P2.4</td><td data-label="Item">Product image gallery (beyond single thumbnail)</td><td data-label="Effort">M</td></tr>
-          <tr><td data-label="#">P2.5</td><td data-label="Item">Clear rules for bulky board shipping vs standard € shipping</td><td data-label="Effort">S–M (policy + code)</td></tr>
+          <tr><td data-label="#">P2.5</td><td data-label="Item">Bulky board vs standard shipping</td><td data-label="Effort" class="status-ok">Done — CTT limits → €29.90</td></tr>
           <tr><td data-label="#">P2.6</td><td data-label="Item">Variant UX if size/color are separate Odoo products</td><td data-label="Effort">M–L</td></tr>
         </tbody>
       </table>
@@ -612,7 +595,7 @@
         <tbody>
           <tr><td data-label="#">P3.1</td><td data-label="Item">Chinese (ZH) legal pages</td><td data-label="Effort">M</td></tr>
           <tr><td data-label="#">P3.2</td><td data-label="Item">SEO: sitemap, robots, product OG/JSON-LD</td><td data-label="Effort">S–M</td></tr>
-          <tr><td data-label="#">P3.3</td><td data-label="Item">Analytics (consent flag exists; wire GA/GTM or equivalent)</td><td data-label="Effort">S–M</td></tr>
+          <tr><td data-label="#">P3.3</td><td data-label="Item">First-party analytics</td><td data-label="Effort" class="status-ok">Done (consent + admin). GA/GTM optional</td></tr>
           <tr><td data-label="#">P3.4</td><td data-label="Item">Ratings on product cards (already on PDP)</td><td data-label="Effort">S</td></tr>
           <tr><td data-label="#">P3.5</td><td data-label="Item">Abandoned-cart emails</td><td data-label="Effort">M</td></tr>
         </tbody>
@@ -622,15 +605,13 @@
     <section>
       <h2>7. Suggested go-live sequence</h2>
       <ol class="sequence">
-        <li><strong>Configure production:</strong> Ifthenpay, email, Odoo, secrets — fail closed if payments/email/session secret missing.</li>
-        <li><strong>Security baseline:</strong> callback hardening, rate limits, lock sync/status APIs, security headers (P0.4, P0.14–P0.17).</li>
-        <li><strong>Odoo freshness:</strong> scheduled + (optional) webhook catalog sync with health monitoring (P0.18).</li>
-        <li><strong>Ship PT payment path:</strong> MB WAY + Multibanco end-to-end (UI + email + callback).</li>
-        <li><strong>Ship international payments:</strong> PayPal, then Klarna (or in parallel if two people).</li>
-        <li><strong>Harden commerce rules:</strong> stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.</li>
-        <li><strong>Ops + brand:</strong> admin order list, FAQ/trust copy, <strong>recent homepage/category photos</strong> (P1.8).</li>
-        <li><strong>Open domains:</strong> set <code>SITE_PUBLIC_LAUNCH=true</code> on Vercel (removes coming-soon on .com + .pt).</li>
-        <li><strong>Gate:</strong> complete one successful live (or final sandbox) order per payment method; then announce.</li>
+        <li><strong>Preview-test</strong> the merged checkout pack (birthday, Portes, coupon, fatura, reset, analytics).</li>
+        <li><strong>P1.7</strong> — one paid order per method; fatura total = checkout.</li>
+        <li><strong>P1.10</strong> — put real kg (and board cm) on Odoo products.</li>
+        <li><strong>P1.2</strong> — My orders in <code>/conta</code>.</li>
+        <li><strong>P1.5 + P1.8</strong> — FAQ + recent photos.</li>
+        <li><strong>P0.12</strong> — <code>SITE_PUBLIC_LAUNCH=open</code> on Vercel.</li>
+        <li>Announce.</li>
       </ol>
 
       <div class="flow" aria-label="Go-live flow">
