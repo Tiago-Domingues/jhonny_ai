@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import xmlrpc.client
 from pathlib import Path
 from typing import Any
 
@@ -137,18 +138,43 @@ def print_report(quants: list[dict[str, Any]], target: float) -> None:
         print(f"\nWarning: {len(reserved)} negative quants carry reservations; review them manually.")
 
 
+def call_void(client: OdooClient, method: str, quant_id: int, context: dict[str, Any]) -> None:
+    """Call a stock.quant action that returns nothing.
+
+    Odoo's XML-RPC layer cannot serialise None, so these actions raise a Fault
+    on the way back even when they succeeded. Only that response-encoding fault
+    is swallowed; the caller still verifies the resulting quantities.
+    """
+    try:
+        client.execute_kw("stock.quant", method, [[quant_id]], {"context": context})
+    except xmlrpc.client.Fault as fault:
+        if "cannot marshal None" not in str(fault):
+            raise
+
+
 def apply_target(client: OdooClient, quant: dict[str, Any], args: argparse.Namespace) -> None:
     """Raise one quant to the target quantity via an Odoo inventory adjustment.
 
-    Writing inventory_quantity_auto_apply under inventory_mode makes Odoo count
-    and apply in a single call, so no quant is left in a half-counted state.
+    Counting then applying (rather than writing inventory_quantity_auto_apply)
+    is what lets --inventory-name land on the generated stock move, so the
+    correction is identifiable in Odoo's move history.
     """
-    client.execute_kw(
-        "stock.quant",
-        "write",
-        [[quant["id"]], {"inventory_quantity_auto_apply": args.target}],
-        {"context": {"inventory_mode": True, "inventory_name": args.inventory_name}},
-    )
+    context = {"inventory_mode": True, "inventory_name": args.inventory_name}
+    try:
+        client.execute_kw(
+            "stock.quant",
+            "write",
+            [[quant["id"]], {"inventory_quantity": args.target}],
+            {"context": context},
+        )
+        call_void(client, "action_apply_inventory", quant["id"], context)
+    except Exception:
+        # Leave no half-counted quant behind for the next person opening Odoo.
+        try:
+            call_void(client, "action_clear_inventory_quantity", quant["id"], context)
+        except Exception:
+            pass
+        raise
 
 
 def verify(client: OdooClient, quants: list[dict[str, Any]], target: float) -> list[dict[str, Any]]:
