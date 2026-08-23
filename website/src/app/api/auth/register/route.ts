@@ -4,6 +4,7 @@ import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
 import { registerCustomer } from "@/lib/ecommerce/auth";
 import { sendWelcomeEmail } from "@/lib/ecommerce/email";
 import { sendWelcomeSms } from "@/lib/ecommerce/sms";
+import { requestEmailVerification } from "@/lib/ecommerce/emailVerification";
 import { createSessionToken, setSessionCookie } from "@/lib/ecommerce/session";
 import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
 
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
         email: user.email,
         username: user.username,
         fullName: user.profile?.fullName,
+        emailVerifiedAt: user.emailVerifiedAt,
       },
     });
     setSessionCookie(response, token);
@@ -35,6 +37,11 @@ export async function POST(request: Request) {
       });
     } catch {
       // logged via EmailEvent when possible
+    }
+    try {
+      await requestEmailVerification(user.id);
+    } catch {
+      // EmailEvent SKIPPED when SMTP is blank
     }
     try {
       await sendWelcomeSms({

@@ -366,6 +366,38 @@ export async function sendWelcomeEmail(input: { userId: string; email: string; f
   });
 }
 
+export async function sendEmailVerificationEmail(input: {
+  userId: string;
+  email: string;
+  fullName?: string | null;
+  verifyUrl: string;
+}) {
+  const subject = "Jhonny Surf Store — confirma o teu email";
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      <h1>Confirma o teu email</h1>
+      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Clica no link para confirmares este email. Expira em 24 horas.</p>
+      <p><a href="${escapeHtml(input.verifyUrl)}">Confirmar email</a></p>
+      <p>Se não criaste esta conta, ignora este email.</p>
+    </div>
+  `;
+  const result = await sendEmail(input.email, subject, html);
+  return prisma.emailEvent.create({
+    data: {
+      userId: input.userId,
+      type: "EMAIL_VERIFICATION",
+      recipientEmail: input.email,
+      subject,
+      status: result.status,
+      provider: emailProvider(),
+      providerId: result.providerId,
+      error: result.error,
+      sentAt: result.status === "SENT" ? new Date() : null,
+    },
+  });
+}
+
 export async function sendPasswordResetEmail(input: {
   userId: string;
   email: string;

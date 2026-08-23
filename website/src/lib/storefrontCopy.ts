@@ -141,6 +141,24 @@ type StorefrontCopy = {
     male: string;
     female: string;
     nonBinary: string;
+    ordersKicker: string;
+    ordersIntro: string;
+    ordersEmpty: string;
+    ordersShop: string;
+    orderPickup: string;
+    orderShip: string;
+    orderPortes: string;
+    orderCoupon: string;
+    orderItems: string;
+    orderPendingPay: string;
+    orderEntity: string;
+    orderReference: string;
+    verifyTitle: string;
+    verifyBanner: string;
+    verifySend: string;
+    verifySent: string;
+    verifyOk: string;
+    verifyFailed: string;
   };
 };
 
@@ -286,6 +304,24 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       male: "Masculino",
       female: "Feminino",
       nonBinary: "Não binário",
+      ordersKicker: "Minhas encomendas",
+      ordersIntro: "Histórico desta conta e de compras feitas com o mesmo email.",
+      ordersEmpty: "Ainda não tens encomendas. Quando pagares, aparecem aqui.",
+      ordersShop: "Ir à loja",
+      orderPickup: "Levantamento na loja",
+      orderShip: "Envio para morada",
+      orderPortes: "Portes",
+      orderCoupon: "Cupão",
+      orderItems: "Artigos",
+      orderPendingPay: "Aguarda pagamento",
+      orderEntity: "Entidade",
+      orderReference: "Referência",
+      verifyTitle: "Confirmar email",
+      verifyBanner: "Confirma o teu email para recuperarmos a conta se precisares.",
+      verifySend: "Enviar link de confirmação",
+      verifySent: "Se o email estiver certo, enviámos o link.",
+      verifyOk: "Email confirmado. Já podes continuar.",
+      verifyFailed: "Este link é inválido ou já expirou.",
     },
   },
   en: {
@@ -429,6 +465,24 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       male: "Male",
       female: "Female",
       nonBinary: "Non-binary",
+      ordersKicker: "My orders",
+      ordersIntro: "Orders on this account and guest checkouts with the same email.",
+      ordersEmpty: "No orders yet. Paid purchases will show up here.",
+      ordersShop: "Go to the shop",
+      orderPickup: "Pickup in store",
+      orderShip: "Ship to address",
+      orderPortes: "Shipping",
+      orderCoupon: "Coupon",
+      orderItems: "Items",
+      orderPendingPay: "Awaiting payment",
+      orderEntity: "Entity",
+      orderReference: "Reference",
+      verifyTitle: "Confirm email",
+      verifyBanner: "Confirm your email so we can recover the account if you need it.",
+      verifySend: "Send confirmation link",
+      verifySent: "If that email is right, we sent the link.",
+      verifyOk: "Email confirmed. You can continue.",
+      verifyFailed: "This link is invalid or has expired.",
     },
   },
   zh: {
@@ -572,6 +626,24 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       male: "男",
       female: "女",
       nonBinary: "非二元",
+      ordersKicker: "我的订单",
+      ordersIntro: "此账户以及同一邮箱游客结账的订单。",
+      ordersEmpty: "还没有订单。付款后会出现在这里。",
+      ordersShop: "去商店",
+      orderPickup: "到店自取",
+      orderShip: "配送到地址",
+      orderPortes: "运费",
+      orderCoupon: "优惠码",
+      orderItems: "商品",
+      orderPendingPay: "待付款",
+      orderEntity: "实体",
+      orderReference: "参考号",
+      verifyTitle: "确认邮箱",
+      verifyBanner: "请确认邮箱，以便之后找回账户。",
+      verifySend: "发送确认链接",
+      verifySent: "如果邮箱正确，我们已发送链接。",
+      verifyOk: "邮箱已确认，可以继续。",
+      verifyFailed: "此链接无效或已过期。",
     },
   },
 };

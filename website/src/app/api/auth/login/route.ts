@@ -25,6 +25,7 @@ export async function POST(request: Request) {
         email: user.email,
         username: user.username,
         fullName: user.profile?.fullName,
+        emailVerifiedAt: user.emailVerifiedAt,
       },
     });
     setSessionCookie(response, token);

@@ -472,7 +472,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                   </a>
                 )}
                 <a
-                  href="/checkout"
+                  href={user ? "/conta#encomendas" : "/conta"}
                   className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                 >
                   {t.account.orders}
