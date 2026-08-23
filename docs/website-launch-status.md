@@ -18,7 +18,7 @@ This document states whether the website is ready for **public online purchases*
 
 **Ready for staff / preview testing. Not ready to open .com and .pt to the public yet.**
 
-Checkout, payments, fatura-recibo, shipping totals, coupons, email, and the security baseline are on `main`. The public still sees coming-soon until `SITE_PUBLIC_LAUNCH=open`. What is left is mostly **ops proof** (one live order per method), **customer My orders**, **FAQ/brand polish**, and **Odoo weights** so portes stay accurate.
+Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, FAQ, email verification, and the security baseline are on `main`. The public still sees coming-soon until `SITE_PUBLIC_LAUNCH=open`. What is left is **Odoo weights** (P1.10), optional **photos** (P1.8), then the launch flag.
 
 | Area | Status |
 |------|--------|
@@ -26,18 +26,16 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, and the secu
 | Product catalog (Odoo → site) | Connected; cron + stale-kick sync (P0.18) |
 | Browse shop, filters, product pages | Ready |
 | Cart + checkout | Ready for preview; totals include coupon + Portes |
-| Payments (MB WAY, Multibanco, Stripe card / PayPal / Klarna) | **Code live** — confirm one paid order per method (P1.7) |
+| Payments (MB WAY, Multibanco, Stripe card / PayPal / Klarna) | **Code live** — P1.7 payment smoke done (ops) |
 | Security / abuse protection | **Baseline done** (P0.4, P0.14–P0.17) |
 | Order email + ops admin | Emails + fatura PDF send; admin orders/analytics exist |
 | Public go-live (.com + .pt) | **Locked** — preview via `/preview-access` |
 
 ### What to tackle next
 
-1. **You (ops, this week):** unlock preview and run **P1.7** — one paid order each for Multibanco, MB WAY, and Stripe (card or PayPal/Klarna). Confirm the fatura total matches checkout (coupon % + Portes).
-2. **Build next:** **P1.2 Customer My orders** — account has register/login/reset/profile, but no order history after pay.
-3. **Ops in Odoo:** fill **Weight** (and L/W/H on boards). Most SKUs are still `0`, so portes use category guesses (0.8 kg default).
-4. Then **P1.5 FAQ/trust copy** and **P1.8** recent photos.
-5. **Last:** `SITE_PUBLIC_LAUNCH=open` (**P0.12**) only after P1.7 is green. Do not set `true` — that value is ignored on purpose.
+1. **Ops in Odoo:** fill **Weight** (and L/W/H on boards). Most SKUs are still `0`, so portes use category guesses (0.8 kg default) — **P1.10**.
+2. Optional **P1.8** recent homepage / category photos (drop files under `website/public/brand/`).
+3. **Last:** `SITE_PUBLIC_LAUNCH=open` (**P0.12**). Do not set `true` — that value is ignored on purpose.
 
 ---
 
@@ -46,7 +44,7 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, and the secu
 - Homepage and store story (New In, categories, services, Local Heroes, visit/contact).
 - Shop at `/loja` with catalog from Odoo/Postgres; product detail, variants, ratings, cart drawer.
 - Guest and registered carts; stock checked at add/checkout; paid orders decrement Odoo + website qty.
-- Account: register (year-first birthday), login, Google, **password reset**, profile.
+- Account: register (year-first birthday), login, Google, **password reset**, soft **email verification**, profile, **My orders**.
 - Coupons: athlete codes + **JHONNY10** (signed-in, first paid order only); usage written **only after pay**.
 - Checkout sidebar = payment amount: Subtotal, Cupão −X%, Portes (CTT bands / €100 free / pickup €0), Total.
 - Paid path: Ifthenpay MB WAY/Multibanco + Stripe Checkout (card, Google Pay, PayPal, Klarna, Revolut, Pix).
@@ -79,13 +77,11 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, and the secu
 | Odoo | Configured. Incremental cron ~every 2 min + hourly full sync. Weights/dims often empty. |
 | Email (SMTP) | **Done** — order, payment, welcome, password-reset, fatura PDF |
 | Ifthenpay MB WAY / Multibanco | **Wired and fail-closed** — live paid orders have already issued faturas |
-| Stripe (card / PayPal / Klarna / …) | **Wired** — confirm live/sandbox capture on each method (P1.7) |
+| Stripe (card / PayPal / Klarna / …) | **Wired** — P1.7 payment smoke done (ops) |
 
 Other remaining gaps:
 
 - Most products have **Odoo weight = 0**, so shipping uses category fallbacks (see P1.10).
-- No customer **My orders** list in `/conta` (P1.2).
-- FAQ / some trust copy may still read like a preview shop (P1.5).
 - Homepage / category heroes may be older photos (P1.8).
 - Public domains stay locked until **P0.12**.
 - Unpaid pending orders are **not** reserved (stock drops only when paid).
@@ -104,12 +100,16 @@ Other remaining gaps:
 - Password reset tokens hashed, 1h, single use (P1.3).
 - Order email fields HTML-escaped.
 
-**Still open (P1)**
+**Done this pack (P1)**
+
+- Soft email verification after register (does not block checkout) — P1.11.
+- Rate limits on public ratings and availability-notify — P1.9.
+
+**Still open (P1 ops)**
 
 | Risk | Why it matters |
 |------|----------------|
-| No email verification on register | Weaker proof the mailbox is theirs |
-| Ratings / availability spam limits | Partial — tighten if abuse shows up (P1.9 remainder) |
+| Odoo weights still empty on most SKUs | Portes fall back to category guesses |
 
 ---
 
@@ -132,7 +132,7 @@ Effort is **rough sizing** (not a calendar). S ≈ hours · M ≈ 1–2 days · 
 | P0.9 | Full shipping address when ship-to-home | **Done** | — |
 | P0.10 | €100 free shipping in logic + legal | **Done** | — |
 | P0.11 | Shipping cost in checkout Total | **Done** (CTT bands + fatura Portes) | — |
-| P0.12 | Open public domains: `SITE_PUBLIC_LAUNCH=open` | **Blocked** until P1.7 | S |
+| P0.12 | Open public domains: `SITE_PUBLIC_LAUNCH=open` | **Ready to flip** after P1.10 (and P1.8 if you want new photos) | S |
 | P0.13 | Block mock catalog in production | **Done** | — |
 | P0.14 | Refuse weak/default `SESSION_SECRET` | **Done** | — |
 | P0.15 | Rate-limit auth / checkout / coupon / callback | **Done** | — |
@@ -140,23 +140,23 @@ Effort is **rough sizing** (not a calendar). S ≈ hours · M ≈ 1–2 days · 
 | P0.17 | Security HTTP headers | **Done** | — |
 | P0.18 | Near real-time catalog sync | **Done** (2 min cron + ~60s stale kick). Optional: Odoo webhook + alert if cron fails | — |
 
-**P0 left:** only **P0.12** (flip the launch flag). Do that after P1.7.
+**P0 left:** only **P0.12** (flip the launch flag). Do that after you are happy with portes (P1.10) and brand photos (P1.8).
 
 ### P1 — Launch ops and trust (active)
 
 | # | Item | Status | Why | Effort |
 |---|------|--------|-----|--------|
 | P1.1 | Admin orders (list, status, pickup/ship) | **Done** (`/admin/encomendas`) | | — |
-| P1.2 | Customer **My orders** in account | **Open — next build** | Buyer cannot see past orders / pay refs | M |
-| P1.3 | Password reset | **Done** (email link). Email verification still open → P1.11 | | — |
+| P1.2 | Customer **My orders** in account | **Done** (`/conta#encomendas`) | Buyer sees past orders / Multibanco refs | — |
+| P1.3 | Password reset | **Done** (email link) | | — |
 | P1.4 | JHONNY10 registered + first paid order | **Done** | | — |
-| P1.5 | FAQ / trust copy that still sounds “not ready” | **Open** | Conflicting launch message | S |
-| P1.6 | Scripted cart → pay → callback → paid checks | Partial (offline scripts exist; no full paid E2E in CI) | | M |
-| P1.7 | One live/sandbox order per payment method | **Open — next ops** | Go-live gate | M (your time) |
+| P1.5 | FAQ / trust copy that still sounds “not ready” | **Done** | Live payments, fatura, reset, JHONNY10 | — |
+| P1.6 | Scripted cart → pay → callback → paid checks | Partial (offline scripts + launch-remaining; no full paid E2E in CI) | | M |
+| P1.7 | One live/sandbox order per payment method | **Done** (ops) | Go-live gate | — |
 | P1.8 | Recent homepage + category photos | **Open** | Trust at launch | S–M |
-| P1.9 | Sanitize order email HTML; rate-limit ratings/availability | Email escape **done**; ratings limits optional | | S |
+| P1.9 | Sanitize order email HTML; rate-limit ratings/availability | **Done** (escape + 429 limits) | | — |
 | P1.10 | Fill Odoo **weight + size** on products | **Open — next ops** | Portes use guesses when weight is 0 | S (ops) |
-| P1.11 | Email verification on register | **Open** | Stronger accounts | M |
+| P1.11 | Email verification on register | **Done** (soft; does not block checkout) | Stronger accounts | — |
 
 ### P2 — Soon after go-live
 
@@ -184,23 +184,17 @@ Effort is **rough sizing** (not a calendar). S ≈ hours · M ≈ 1–2 days · 
 
 ## 7. Suggested go-live sequence (now)
 
-1. **Preview-test the merged checkout pack** (birthday, Portes, coupon, fatura, reset, analytics).  
-2. **P1.7** — one paid order per method; fatura total = checkout.  
-3. **P1.10** — put real kg (and board cm) on Odoo products; wait for sync.  
-4. **P1.2** — My orders in `/conta`.  
-5. **P1.5 + P1.8** — FAQ + photos.  
-6. **P0.12** — `SITE_PUBLIC_LAUNCH=open` on Vercel.  
-7. Announce.
+1. **P1.10** — put real kg (and board cm) on Odoo products; wait for sync.  
+2. Optional **P1.8** — drop recent photos under `website/public/brand/`.  
+3. **P0.12** — `SITE_PUBLIC_LAUNCH=open` on Vercel.  
+4. Announce.
 
 ```mermaid
 flowchart LR
-  preview[Preview_test_checkout_pack]
-  pay[P1.7_live_payment_smoke]
   weights[P1.10_Odoo_weights]
-  orders[P1.2_My_orders]
-  polish[P1.5_FAQ_and_P1.8_photos]
+  photos[P1.8_optional_photos]
   open[P0.12_SITE_PUBLIC_LAUNCH_open]
-  preview --> pay --> weights --> orders --> polish --> open
+  weights --> photos --> open
 ```
 
 ---
@@ -208,21 +202,21 @@ flowchart LR
 ## 8. Definition of “live for purchases”
 
 - [x] Customers can start MB WAY, Multibanco, and Stripe (PayPal/Klarna/card) checkouts (no mocks in prod).  
-- [ ] **P1.7:** one successful paid order per method, fatura matches checkout.  
+- [x] **P1.7:** one successful paid order per method, fatura matches checkout.  
 - [x] After checkout they get payment instructions (page + email).  
 - [x] Paid orders update via secure callback.  
 - [x] Stock decrements on pay; coupons stick only on paid orders.  
 - [x] Free shipping threshold is **€100** in banner, checkout, and legal.  
 - [x] Order + fatura emails send.  
 - [x] Staff can see and update orders (`/admin/encomendas`).  
-- [ ] Customer can see **My orders**.  
+- [x] Customer can see **My orders**.  
 - [ ] **jhonnysurfstore.com** and **.pt** both serve the full shop (`SITE_PUBLIC_LAUNCH=open`).  
 - [x] Auth/checkout/callback rate-limited; Odoo sync not anonymous.  
 - [x] Production refuses weak `SESSION_SECRET`; security headers on.  
 - [x] Catalog sync on a short cron.  
 - [ ] Homepage + category heroes use **approved recent photos**.  
 
-Until P1.7 and P0.12 are green, treat the public internet as **coming-soon**, not an open webshop.
+Until P0.12 is green, treat the public internet as **coming-soon**, not an open webshop.
 
 ---
 
@@ -238,6 +232,8 @@ Until P1.7 and P0.12 are green, treat the public internet as **coming-soon**, no
 | Payments | `website/src/lib/ecommerce/payments.ts`, `stripeCheckout.ts` |
 | Ifthenpay callback | `website/src/app/api/payments/ifthenpay/callback/route.ts` |
 | Password reset | `website/src/lib/ecommerce/passwordReset.ts` |
+| Email verification | `website/src/lib/ecommerce/emailVerification.ts` |
+| Customer My orders | `website/src/app/api/account/orders/route.ts`, `AccountOrders.tsx` |
 | Analytics | `website/src/lib/ecommerce/analytics.ts` |
 | Odoo catalog + weight sync | `website/src/lib/ecommerce/odooCatalog.ts` |
 | Admin orders | `website/src/app/admin/encomendas/page.tsx` |
