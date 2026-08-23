@@ -56,6 +56,12 @@ MERGES: tuple[tuple[int, str, int], ...] = (
     (2, "Quicksilver", 79),
 )
 
+# (brand id, name it must currently have) - removed only while no product uses it
+UNUSED: tuple[tuple[int, str], ...] = (
+    (3, "Element"),
+    (75, "SCARPER"),
+)
+
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -119,6 +125,9 @@ def run_renames(client: OdooClient, brands: dict[int, dict[str, Any]], apply: bo
     problems = []
     print("== Renames ==")
     for brand_id, expected, new_name, reason in RENAMES:
+        if brand_id in brands and brands[brand_id]["x_name"] == new_name:
+            print(f"- already {new_name!r} (id {brand_id})")
+            continue
         skip = check_expected(brands, brand_id, expected)
         if skip:
             print(f"- SKIPPED {expected!r}: {skip}")
@@ -137,6 +146,9 @@ def run_merges(client: OdooClient, brands: dict[int, dict[str, Any]], apply: boo
     problems = []
     print("\n== Merges ==")
     for duplicate_id, expected, keeper_id in MERGES:
+        if duplicate_id not in brands:
+            print(f"- already merged: {expected!r} (id {duplicate_id}) is gone")
+            continue
         skip = check_expected(brands, duplicate_id, expected)
         if skip:
             print(f"- SKIPPED {expected!r}: {skip}")
@@ -159,6 +171,59 @@ def run_merges(client: OdooClient, brands: dict[int, dict[str, Any]], apply: boo
             move_products(client, product_ids, keeper_id)
         outcome = remove_brand(client, duplicate_id)
         print(f"    moved {len(product_ids)} products, duplicate record {outcome}")
+    return problems
+
+
+def run_unused(client: OdooClient, brands: dict[int, dict[str, Any]], apply: bool) -> list[str]:
+    problems = []
+    print("\n== Unused brands ==")
+    for brand_id, expected in UNUSED:
+        if brand_id not in brands:
+            print(f"- already removed: {expected!r} (id {brand_id})")
+            continue
+        skip = check_expected(brands, brand_id, expected)
+        if skip:
+            print(f"- SKIPPED {expected!r}: {skip}")
+            problems.append(skip)
+            continue
+        product_ids = products_of(client, brand_id)
+        if product_ids:
+            problem = f"{expected!r} now has {len(product_ids)} products, not removing it"
+            print(f"- SKIPPED {expected!r}: {problem}")
+            problems.append(problem)
+            continue
+        print(f"- {expected!r} (id {brand_id}, 0 products) -> remove")
+        if apply:
+            print(f"    record {remove_brand(client, brand_id)}")
+    return problems
+
+
+def run_uppercase(client: OdooClient, apply: bool) -> list[str]:
+    """Bring every brand name to the uppercase house style."""
+    problems = []
+    rows = client.execute_kw(
+        BRAND_MODEL,
+        "search_read",
+        [[["id", "!=", 0]], ["x_name"]],
+        {"context": ALL_RECORDS, "limit": 5000},
+    )
+    taken = {row["x_name"] for row in rows}
+    print("\n== Uppercase names ==")
+    lowercase = [row for row in rows if row["x_name"] != row["x_name"].upper()]
+    if not lowercase:
+        print("every brand is already uppercase")
+    for row in lowercase:
+        upper = row["x_name"].upper()
+        if upper in taken:
+            problem = f"cannot uppercase {row['x_name']!r}: {upper!r} already exists, merge them first"
+            print(f"- SKIPPED {problem}")
+            problems.append(problem)
+            continue
+        count = len(products_of(client, row["id"]))
+        print(f"- {row['x_name']!r} -> {upper!r} (id {row['id']}, {count} products)")
+        if apply:
+            rename_brand(client, row["id"], upper)
+            taken.add(upper)
     return problems
 
 
@@ -199,11 +264,20 @@ def verify(client: OdooClient) -> list[str]:
             f"| keeper {keeper_name!r} now has {keeper_count}"
         )
 
+    for brand_id, expected in UNUSED:
+        if brand_id in live:
+            problems.append(f"unused brand {expected!r} (id {brand_id}) is still present")
+        print(f"- unused {expected!r} (id {brand_id}): {'still present' if brand_id in live else 'removed'}")
+
     names = [row["x_name"] for row in rows]
     duplicated = sorted({name for name in names if names.count(name) > 1})
+    not_upper = sorted(name for name in names if name != name.upper())
     print(f"- brand records: {len(rows)} | names still duplicated: {duplicated or 'none'}")
+    print(f"- names not uppercase: {not_upper or 'none'}")
     if duplicated:
         problems.append(f"names still duplicated: {duplicated}")
+    if not_upper:
+        problems.append(f"names not uppercase: {not_upper}")
     return problems
 
 
@@ -217,16 +291,16 @@ def main(argv: list[str] | None = None) -> int:
     ids = [brand_id for brand_id, _, _, _ in RENAMES]
     ids += [brand_id for brand_id, _, _ in MERGES]
     ids += [keeper_id for _, _, keeper_id in MERGES]
+    ids += [brand_id for brand_id, _ in UNUSED]
     brands = read_brands(client, sorted(set(ids)))
 
     problems = run_renames(client, brands, args.apply)
     problems += run_merges(client, brands, args.apply)
+    problems += run_unused(client, brands, args.apply)
+    problems += run_uppercase(client, args.apply)
 
     if not args.apply:
-        print(
-            f"\nDry run: no changes written. Re-run with --apply to rename "
-            f"{len(RENAMES)} brands and merge {len(MERGES)} duplicates."
-        )
+        print("\nDry run: no changes written. Re-run with --apply.")
         return 1 if problems else 0
 
     problems += verify(client)

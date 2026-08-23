@@ -42,6 +42,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="print the brand list as CSV instead of the full report",
     )
     parser.add_argument(
+        "--missing-csv",
+        action="store_true",
+        help="print a CSV of products with no brand, with a column to fill in",
+    )
+    parser.add_argument(
         "--similarity",
         type=float,
         default=NEAR_DUPLICATE_RATIO,
@@ -68,7 +73,7 @@ def read_templates(client: OdooClient) -> list[dict[str, Any]]:
     return client.execute_kw(
         "product.template",
         "search_read",
-        [[["active", "in", [True, False]]], ["name", "default_code", BRAND_FIELD, "active"]],
+        [[["active", "in", [True, False]]], ["name", "default_code", BRAND_FIELD, "active", "categ_id"]],
         {"context": ALL_RECORDS, "limit": 20000},
     )
 
@@ -133,6 +138,46 @@ def print_csv(brands: list[dict[str, Any]], total: dict[int, int], archived: dic
                 brand["x_active"],
                 total.get(brand["id"], 0),
                 archived.get(brand["id"], 0),
+            ]
+        )
+
+
+def words(text: str) -> list[str]:
+    return [word for word in re.split(r"[^A-Za-z0-9&]+", text.upper()) if word]
+
+
+def contains_words(haystack: list[str], needle: list[str]) -> bool:
+    size = len(needle)
+    return size > 0 and any(haystack[i : i + size] == needle for i in range(len(haystack) - size + 1))
+
+
+def suggest_brand(name: str, brands: list[dict[str, Any]]) -> str:
+    """Longest brand name stated in the product title, which is usually the brand."""
+    title = words(name)
+    matches = [brand for brand in brands if contains_words(title, words(brand["x_name"]))]
+    if not matches:
+        return ""
+    return max(matches, key=lambda brand: len(words(brand["x_name"])))["x_name"]
+
+
+def print_missing_csv(templates: list[dict[str, Any]], brands: list[dict[str, Any]]) -> None:
+    """Products with no brand, ready to be filled in and handed back."""
+    writer = csv.writer(sys.stdout)
+    writer.writerow(
+        ["product_id", "sku", "product_name", "category", "active", "suggested_brand", "brand_to_use"]
+    )
+    unbranded = [template for template in templates if not template[BRAND_FIELD]]
+    for template in sorted(unbranded, key=lambda item: item["name"].strip().upper()):
+        suggestion = suggest_brand(template["name"], brands)
+        writer.writerow(
+            [
+                template["id"],
+                template.get("default_code") or "",
+                template["name"].strip(),
+                template["categ_id"][1] if template.get("categ_id") else "",
+                "yes" if template["active"] else "no",
+                suggestion,
+                suggestion,
             ]
         )
 
@@ -272,6 +317,10 @@ def main(argv: list[str] | None = None) -> int:
     brands = read_brands(client)
     templates = read_templates(client)
     total, archived, unbranded = count_usage(templates)
+
+    if args.missing_csv:
+        print_missing_csv(templates, brands)
+        return 0
 
     if args.csv:
         print_csv(brands, total, archived)
