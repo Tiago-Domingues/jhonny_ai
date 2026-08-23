@@ -64,7 +64,7 @@ async function run() {
     async executeKw(model: string, method: string) {
       calls.push(`${model}.${method}`);
       if (model === "pos.order.line" && method === "fields_get") {
-        return { qty: { type: "float" }, price_unit: { type: "float" }, tax_ids: { type: "many2many" }, uuid: { type: "char" } };
+        return { qty: { type: "float" }, price_unit: { type: "float" }, discount: { type: "float" }, tax_ids: { type: "many2many" }, uuid: { type: "char" } };
       }
       if (model === "pos.order" && method === "fields_get") {
         return { pos_reference: { type: "char" }, note: { type: "text" }, lines: { type: "one2many" }, uuid: { type: "char" } };
@@ -82,9 +82,14 @@ async function run() {
   const result = await registerPaidPosOrder(client, {
     orderNumber: "JSS-TEST-POS",
     partnerId: 41,
-    totalCents: 400,
+    subtotalCents: 1000,
+    shippingCents: 490,
+    discountCents: 100,
+    totalCents: 1390,
     taxCents: 75,
-    items: [{ odooProductId: 12, name: "COMB RANGE", quantity: 1, unitPriceCents: 400, totalCents: 400 }],
+    couponCode: "JHONNY10",
+    couponPercentOff: 10,
+    items: [{ odooProductId: 12, name: "COMB RANGE", quantity: 1, unitPriceCents: 1000, totalCents: 1000 }],
   });
   assert(result.posOrderId === 88 && result.invoiceId === 99, "POS create + invoice ids are stored");
   assert(

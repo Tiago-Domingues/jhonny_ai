@@ -23,7 +23,7 @@ export function VisitBeacon() {
   useEffect(() => {
     if (!pathname || pathname.startsWith("/admin")) return;
 
-    const send = () => {
+    const send = (coords?: { latitude: number; longitude: number; accuracy: number }) => {
       if (!hasAnalyticsConsent()) return;
       void fetch("/api/analytics/collect", {
         method: "POST",
@@ -31,13 +31,34 @@ export function VisitBeacon() {
         body: JSON.stringify({
           path: pathname,
           referrer: document.referrer || null,
+          latitude: coords?.latitude,
+          longitude: coords?.longitude,
+          locationAccuracyM: coords?.accuracy,
         }),
         keepalive: true,
       }).catch(() => undefined);
     };
 
-    send();
-    const onConsent = () => send();
+    const sendWithLocation = () => {
+      if (!hasAnalyticsConsent()) return;
+      if (!("geolocation" in navigator)) {
+        send();
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) =>
+          send({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          }),
+        () => send(),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+      );
+    };
+
+    sendWithLocation();
+    const onConsent = () => sendWithLocation();
     window.addEventListener("jss-consent-saved", onConsent);
     return () => window.removeEventListener("jss-consent-saved", onConsent);
   }, [pathname]);

@@ -125,11 +125,25 @@ export async function finalizeOdooOrderAfterPayment(orderId: string) {
   const client = new OdooClient();
   try {
     const partnerId = await findOrCreatePartner(client, order);
+    let couponMeta: { label: string; percentOff: number } | null = null;
+    if (order.couponCode) {
+      const coupon = await prisma.coupon.findUnique({
+        where: { code: order.couponCode },
+        select: { label: true, percentOff: true },
+      });
+      if (coupon) couponMeta = coupon;
+    }
     const pos = await registerPaidPosOrder(client, {
       orderNumber: order.orderNumber,
       partnerId,
+      subtotalCents: order.subtotalCents,
+      shippingCents: order.shippingCents,
+      discountCents: order.discountCents,
       totalCents: order.totalCents,
       taxCents: order.taxCents,
+      couponCode: order.couponCode,
+      couponLabel: couponMeta?.label,
+      couponPercentOff: couponMeta?.percentOff,
       notes: order.notes,
       items: order.items,
     });

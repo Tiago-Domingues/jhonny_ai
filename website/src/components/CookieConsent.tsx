@@ -33,6 +33,8 @@ const copy = {
     customize: "Personalizar",
     save: "Guardar escolhas",
     accept: "Aceitar tudo",
+    location: "Localização aproximada: {place}",
+    locationPrecise: "Localização precisa recebida.",
     labels: {
       analytics: "Analytics",
       personalization: "Personalização",
@@ -51,6 +53,8 @@ const copy = {
     customize: "Customize",
     save: "Save choices",
     accept: "Accept all",
+    location: "Approximate location: {place}",
+    locationPrecise: "Precise location received.",
     labels: {
       analytics: "Analytics",
       personalization: "Personalization",
@@ -69,6 +73,8 @@ const copy = {
     customize: "自定义",
     save: "保存选择",
     accept: "全部接受",
+    location: "大致位置：{place}",
+    locationPrecise: "已收到精确位置。",
     labels: {
       analytics: "分析",
       personalization: "个性化",
@@ -88,6 +94,7 @@ export function CookieConsent({ initialVisible = true }: { initialVisible?: bool
   const [visible, setVisible] = useState(initialVisible);
   const [customizing, setCustomizing] = useState(false);
   const [consent, setConsent] = useState<ConsentState>(defaultConsent);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
 
   useEffect(() => {
     // Sync with the live browser cookie after paint (covers SSR / client mismatch).
@@ -103,13 +110,27 @@ export function CookieConsent({ initialVisible = true }: { initialVisible?: bool
       decisions: next,
       policyVersion,
     }))}; Path=/; Max-Age=${maxAge}; SameSite=Lax`;
-    setVisible(false);
     window.dispatchEvent(new Event("jss-consent-saved"));
     await fetch("/api/consent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ decisions: next, source: "cookie_banner" }),
     }).catch(() => undefined);
+    if (next.analytics) {
+      const geo = await fetch("/api/geo/lookup").then((response) => (response.ok ? response.json() : null)).catch(() => null);
+      const place = [geo?.city, geo?.region, geo?.country].filter(Boolean).join(", ");
+      if (place) setLocationLabel(text.location.replace("{place}", place));
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          () => setLocationLabel((current) => current ? `${current} ${text.locationPrecise}` : text.locationPrecise),
+          () => undefined,
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+        );
+      }
+      window.setTimeout(() => setVisible(false), 4000);
+      return;
+    }
+    setVisible(false);
   }
 
   if (!visible) return null;
@@ -127,6 +148,7 @@ export function CookieConsent({ initialVisible = true }: { initialVisible?: bool
           <p className="mt-2 text-sm leading-relaxed text-muted">
             {text.body}
           </p>
+          {locationLabel && <p className="mt-2 text-sm font-semibold text-ink">{locationLabel}</p>}
           <p className="mt-2 text-xs leading-relaxed text-muted">
             {text.required}.{" "}
             <a href="/privacidade" className="font-semibold text-ink underline underline-offset-4">

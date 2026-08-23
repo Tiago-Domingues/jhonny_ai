@@ -44,7 +44,10 @@ const productFields = [
   "description_sale",
   "description",
   "product_template_attribute_value_ids",
+  "weight",
 ];
+
+const dimensionFieldCandidates = ["length", "width", "height", "product_length", "product_width", "product_height"];
 
 /** Prefer explicit Studio / custom fields that mirror Odoo’s “Artigo” column. */
 const artigoFieldCandidates = [
@@ -112,6 +115,10 @@ type SyncedOdooProduct = {
   opportunityOriginalPriceCents: number | null;
   opportunityDiscountPercent: number | null;
   opportunitySource: string | null;
+  weightKg: number;
+  lengthCm: number | null;
+  widthCm: number | null;
+  heightCm: number | null;
   odooSyncStatus: "SYNCED";
   odooSyncError: null;
   lastOdooSyncAt: Date;
@@ -447,12 +454,14 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     discountPercentFields,
     imagePresenceField,
     artigoField,
+    dimensionFields,
   ] = await Promise.all([
     availableField(client, "product.product", brandFieldCandidates),
     availableFields(client, "product.product", originalPriceFieldCandidates),
     availableFields(client, "product.product", discountPercentFieldCandidates),
     availableField(client, "product.product", imagePresenceFieldCandidates),
     resolveArtigoFieldName(client),
+    availableFields(client, "product.product", dimensionFieldCandidates),
   ]);
   const fields = Array.from(new Set([
     ...productFields,
@@ -461,6 +470,7 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     ...(artigoField ? [artigoField] : []),
     ...originalPriceFields,
     ...discountPercentFields,
+    ...dimensionFields,
   ]));
   const products: OdooRow[] = [];
   let offset = 0;
@@ -593,6 +603,10 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
           ? "Oportunidade attribute"
           : originalPrice?.field || discountPercent?.field || "Oportunidade attribute"
         : null,
+      weightKg: Number(product.weight || 0) || 0,
+      lengthCm: numberField(product, dimensionFields.filter((field) => /length/i.test(field)))?.value || null,
+      widthCm: numberField(product, dimensionFields.filter((field) => /width/i.test(field)))?.value || null,
+      heightCm: numberField(product, dimensionFields.filter((field) => /height/i.test(field)))?.value || null,
       odooSyncStatus: "SYNCED",
       odooSyncError: null,
       lastOdooSyncAt: new Date(),

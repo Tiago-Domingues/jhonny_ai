@@ -366,6 +366,49 @@ export async function sendWelcomeEmail(input: { userId: string; email: string; f
   });
 }
 
+export async function sendPasswordResetEmail(input: {
+  userId: string;
+  email: string;
+  fullName?: string | null;
+  resetUrl: string;
+  googleOnly?: boolean;
+}) {
+  const subject = input.googleOnly
+    ? "Jhonny Surf Store — entra com Google"
+    : "Jhonny Surf Store — repor password";
+  const html = input.googleOnly
+    ? `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      <h1>Esta conta usa Google</h1>
+      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Esta conta entra com Google. Não precisas de password — usa “Continuar com Google” em <a href="${escapeHtml(input.resetUrl)}">jhonnysurfstore.com/conta</a>.</p>
+    </div>
+  `
+    : `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      <h1>Repor password</h1>
+      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Clica no link para escolheres uma password nova. Expira em 1 hora.</p>
+      <p><a href="${escapeHtml(input.resetUrl)}">Repor a password</a></p>
+      <p>Se não pediste isto, ignora este email.</p>
+    </div>
+  `;
+  const result = await sendEmail(input.email, subject, html);
+  return prisma.emailEvent.create({
+    data: {
+      userId: input.userId,
+      type: "PASSWORD_RESET",
+      recipientEmail: input.email,
+      subject,
+      status: result.status,
+      provider: emailProvider(),
+      providerId: result.providerId,
+      error: result.error,
+      sentAt: result.status === "SENT" ? new Date() : null,
+    },
+  });
+}
+
 export async function sendOrderEmails(orderId: string) {
   const order = await loadOrderForEmail(orderId);
   if (!order) throw new Error("Order not found.");

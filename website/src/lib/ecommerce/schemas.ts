@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { isValidOptionalNif } from "@/lib/ecommerce/nif";
+import { isValidIsoDate } from "@/lib/ecommerce/birthDate";
+
+const birthDateSchema = z.string().refine(isValidIsoDate, "Invalid birth date.");
 
 export const customerTypes = [
   "PROFESSIONAL",
@@ -32,6 +35,7 @@ export const registerSchema = z.object({
   customerType: z.enum(customerTypes).default("SURFER"),
   marketingOptIn: z.boolean().default(false),
   preferredLanguage: z.enum(["pt", "en", "zh"]).default("en"),
+  birthDate: birthDateSchema,
 });
 
 export const loginSchema = z.object({
@@ -43,7 +47,7 @@ export const profileSchema = z.object({
   fullName: z.string().min(2).max(120),
   phoneCountryCode: z.string().min(2).max(8).default("+351"),
   phone: z.string().max(40).optional().or(z.literal("")),
-  birthDate: z.string().date().optional().or(z.literal("")),
+  birthDate: z.union([birthDateSchema, z.literal("")]).optional(),
   gender: z.enum(genders).optional().or(z.literal("")),
   customerType: z.enum(customerTypes),
   preferredLanguage: z.enum(["pt", "en", "zh"]).default("en"),

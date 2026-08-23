@@ -21,6 +21,9 @@
     "test:odoo-pos": "npx tsx scripts/test-odoo-pos.ts",
     "test:site-access": "npx tsx scripts/test-site-access.ts",
     "test:email": "npx tsx scripts/test-email-from.ts",
+    "test:shipping": "npx tsx scripts/test-shipping.ts",
+    "test:pricing": "npx tsx scripts/test-order-pricing.ts",
+    "test:password-reset": "npx tsx scripts/test-password-reset.ts",
     "live:odoo-pos": "python3 scripts/live-odoo-pos.py",
     "lint": "eslint"
   },

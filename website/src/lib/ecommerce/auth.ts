@@ -26,6 +26,7 @@ export async function registerCustomer(input: unknown) {
             phone: data.phone || null,
             customerType: data.customerType,
             preferredLanguage: data.preferredLanguage,
+            birthDate: new Date(data.birthDate),
             marketingOptIn: data.marketingOptIn,
           },
         },
