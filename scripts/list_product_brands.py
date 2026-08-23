@@ -32,6 +32,8 @@ BRAND_MODEL = "x_marcas"
 BRAND_FIELD = "x_studio_marcas"
 NEAR_DUPLICATE_RATIO = 0.85
 ALL_RECORDS = {"active_test": False}
+# Confirmed real brands that would otherwise be reported every run.
+KNOWN_GOOD = {"RIP"}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -263,6 +265,8 @@ def print_issues(
     truncated = []
     tokens = {brand["id"]: brand["x_name"].lower().split() for brand in brands}
     for short in brands:
+        if short["x_name"] in KNOWN_GOOD:
+            continue
         for long in brands:
             short_tokens, long_tokens = tokens[short["id"]], tokens[long["id"]]
             if len(short_tokens) < len(long_tokens) and long_tokens[: len(short_tokens)] == short_tokens:
