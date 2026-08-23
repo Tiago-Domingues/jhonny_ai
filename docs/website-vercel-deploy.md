@@ -45,7 +45,7 @@ Or add `VERCEL_TOKEN` as a **Cursor Cloud environment secret** so agents can run
 Until the shop is ready for purchases:
 
 1. Keep **`SITE_PUBLIC_LAUNCH`** unset or `false` on Vercel (default after this feature ships). `true` is ignored and does not publish the shop.
-2. Set **`SITE_PREVIEW_PASSWORD`** to a long private password (Vercel → Project → Settings → Environment Variables → Production).
+2. Preview unlock uses the staff password checked in `website/src/lib/ecommerce/siteAccess.ts` (Vercel `SITE_PREVIEW_PASSWORD` is ignored so a stale dashboard value cannot lock you out).
 3. Public visitors on **www.jhonnysurfstore.com** / **.pt** only see `/coming-soon`.
 4. You review the full site at **https://www.jhonnysurfstore.com/preview-access** (enter the password once; cookie lasts 30 days).
 

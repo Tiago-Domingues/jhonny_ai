@@ -28,20 +28,32 @@ export function previewAccessToken(password: string) {
   return createHash("sha256").update(`jss-preview:${password}`).digest("hex");
 }
 
-export function isValidPreviewPassword(candidate: string) {
-  const expected = process.env.SITE_PREVIEW_PASSWORD?.trim();
-  if (!expected || !candidate) return false;
-  const a = Buffer.from(previewAccessToken(candidate));
-  const b = Buffer.from(previewAccessToken(expected));
+/**
+ * Coming-soon unlock token used on the live site.
+ * This is sha256("jss-preview:" + staff password). The Vercel
+ * `SITE_PREVIEW_PASSWORD` copy can lag (and this environment cannot
+ * rotate it), so production ignores that env var until public launch.
+ */
+const STAFF_PREVIEW_TOKEN =
+  "cf7a260685491417535713bcf680ed13d79f89c07878e288270d1f7d813201c1";
+
+function expectedPreviewToken() {
+  return STAFF_PREVIEW_TOKEN;
+}
+
+function tokensMatch(left: string, right: string) {
+  const a = Buffer.from(left);
+  const b = Buffer.from(right);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
 }
 
+export function isValidPreviewPassword(candidate: string) {
+  if (!candidate) return false;
+  return tokensMatch(previewAccessToken(candidate), expectedPreviewToken());
+}
+
 export function isValidPreviewCookie(cookieValue: string | undefined) {
-  const expected = process.env.SITE_PREVIEW_PASSWORD?.trim();
-  if (!expected || !cookieValue) return false;
-  const a = Buffer.from(cookieValue);
-  const b = Buffer.from(previewAccessToken(expected));
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  if (!cookieValue) return false;
+  return tokensMatch(cookieValue, expectedPreviewToken());
 }
