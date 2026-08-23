@@ -1,243 +1,228 @@
 # Jhonny Surf Store — Website Launch Status
 
 **Audience:** owner + shop/ops + technical team  
-**Last updated:** 21 August 2026  
+**Last updated:** 23 August 2026  
 **Live sites:** [jhonnysurfstore.com](https://www.jhonnysurfstore.com) · [jhonnysurfstore.pt](https://www.jhonnysurfstore.pt)  
 **HTML version:** [website-launch-status.html](./website-launch-status.html)  
-**PDF version:** [website-launch-status.pdf](./website-launch-status.pdf)
+**PDF version:** [website-launch-status.pdf](./website-launch-status.pdf) *(may lag this markdown)*
 
 ---
 
 ## 1. Purpose
 
-This document states whether the website is ready for **public online purchases**, what already works, and the **ordered backlog** to go live on both domains with full payment support — including **brand imagery** and **security hardening** against abuse and external attacks.
+This document states whether the website is ready for **public online purchases**, what already works, and the **ordered backlog** to go live on both domains.
 
 ---
 
 ## 2. Executive verdict
 
-**Not ready for public purchases yet.**
+**Ready for staff / preview testing. Not ready to open .com and .pt to the public yet.**
 
-The marketing site, product catalog, and shopping foundations are largely in place. What still blocks selling online is **real payment processing**, **post-checkout payment instructions**, **stock/coupon correctness**, **opening the .pt domain**, and **security controls** so payment callbacks and store APIs cannot be abused.
+Checkout, payments, fatura-recibo, shipping totals, coupons, email, and the security baseline are on `main`. The public still sees coming-soon until `SITE_PUBLIC_LAUNCH=open`. What is left is mostly **ops proof** (one live order per method), **customer My orders**, **FAQ/brand polish**, and **Odoo weights** so portes stay accurate.
 
 | Area | Status |
 |------|--------|
-| Brand / homepage content | Ready (imagery refresh still needed — see P1.8) |
-| Product catalog (Odoo → site) | Connected, but **not guaranteed near real-time** (see P0.18) |
-| Browse shop, filters, product pages | Ready for browsing |
-| Cart + guest/account checkout skeleton | Built, not production-safe |
-| Payments (MB WAY, Multibanco, PayPal, Klarna) | **Not ready** |
-| Security / abuse protection | **Partial — harden before open checkout** |
-| Order email + ops admin | Emails **sending**; ops admin still limited |
-| Public go-live (.com + .pt) | **Blocked** |
+| Brand / homepage content | Ready (imagery refresh still needed — P1.8) |
+| Product catalog (Odoo → site) | Connected; cron + stale-kick sync (P0.18) |
+| Browse shop, filters, product pages | Ready |
+| Cart + checkout | Ready for preview; totals include coupon + Portes |
+| Payments (MB WAY, Multibanco, Stripe card / PayPal / Klarna) | **Code live** — confirm one paid order per method (P1.7) |
+| Security / abuse protection | **Baseline done** (P0.4, P0.14–P0.17) |
+| Order email + ops admin | Emails + fatura PDF send; admin orders/analytics exist |
+| Public go-live (.com + .pt) | **Locked** — preview via `/preview-access` |
+
+### What to tackle next
+
+1. **You (ops, this week):** unlock preview and run **P1.7** — one paid order each for Multibanco, MB WAY, and Stripe (card or PayPal/Klarna). Confirm the fatura total matches checkout (coupon % + Portes).
+2. **Build next:** **P1.2 Customer My orders** — account has register/login/reset/profile, but no order history after pay.
+3. **Ops in Odoo:** fill **Weight** (and L/W/H on boards). Most SKUs are still `0`, so portes use category guesses (0.8 kg default).
+4. Then **P1.5 FAQ/trust copy** and **P1.8** recent photos.
+5. **Last:** `SITE_PUBLIC_LAUNCH=open` (**P0.12**) only after P1.7 is green. Do not set `true` — that value is ignored on purpose.
 
 ---
 
 ## 3. What works today
 
 - Homepage and store story (New In, categories, services, Local Heroes, visit/contact).
-- Shop at `/loja` with catalog from Odoo/Postgres; product detail pages and ratings.
-- Guest and registered carts; add-to-cart with stock checks at add/checkout time.
-- Account register / login / session.
-- Coupon validation plumbing (including welcome / athlete codes when seeded in DB).
-- Pickup vs ship-to-address pricing logic on the server.
-- Legal pages in Portuguese and English.
-- Order + payment-confirmation emails send (SMTP) to the customer and Jhonny.
-- **.com** is publicly browsable (home, shop, checkout pages load).
-- **Odoo** is connected in production (catalog sync / auth OK as of last scan).
-- Baseline app security: httpOnly session cookies, bcrypt passwords, Zod validation on APIs, Prisma (no raw SQL), React-escaped UI (no `dangerouslySetInnerHTML`).
+- Shop at `/loja` with catalog from Odoo/Postgres; product detail, variants, ratings, cart drawer.
+- Guest and registered carts; stock checked at add/checkout; paid orders decrement Odoo + website qty.
+- Account: register (year-first birthday), login, Google, **password reset**, profile.
+- Coupons: athlete codes + **JHONNY10** (signed-in, first paid order only); usage written **only after pay**.
+- Checkout sidebar = payment amount: Subtotal, Cupão −X%, Portes (CTT bands / €100 free / pickup €0), Total.
+- Paid path: Ifthenpay MB WAY/Multibanco + Stripe Checkout (card, Google Pay, PayPal, Klarna, Revolut, Pix).
+- Official Odoo POS fatura-recibo (coupon % + Portes line) emailed to customer and Jhonny.
+- Admin: orders, customers, analytics (pageviews, coupon uses, GPS vs IP).
+- Legal pages PT/EN; free shipping **€100** on banner, checkout, and payments page.
+- Public **coming-soon** on .com and .pt; staff unlock at `/preview-access`.
+- Security baseline: fail-closed payments, callback secret + amount checks, rate limits, locked sync APIs, security headers, no default `SESSION_SECRET`.
 
 ---
 
 ## 4. Target launch decisions
 
-These are the agreed end-state for go-live:
-
 | Decision | Choice |
 |----------|--------|
-| Domains | Open **.com and .pt together** (remove .pt coming-soon gate) |
-| Day-1 payments | **MB WAY + Multibanco + PayPal + Klarna** |
-| Free shipping | **€100** everywhere (banner, checkout, legal) |
-| Languages at launch | Site already supports PT / EN / ZH for most UX; legal ZH can follow later |
-| Brand imagery | Homepage + category heroes use **recent real store / product photos** (not stale assets) |
-| Odoo ↔ website | Catalog (products, price, stock, categories, New In / offers) stays in **near real-time** sync |
-| Security bar | Fail closed on payments/secrets; authenticated admin/sync APIs; rate limits; security headers |
+| Domains | Open **.com and .pt together** with `SITE_PUBLIC_LAUNCH=open` |
+| Day-1 payments | **MB WAY + Multibanco + PayPal + Klarna** (PayPal/Klarna via Stripe) |
+| Free shipping | **€100** after coupon on merchandise; pickup always €0 |
+| Languages at launch | PT / EN / ZH for most UX; legal ZH can follow |
+| Brand imagery | Homepage + category heroes use **recent real photos** |
+| Odoo ↔ website | Catalog stays in **near real-time** sync |
+| Security bar | Fail closed on payments/secrets; authenticated admin/sync; rate limits; headers |
 
 ---
 
 ## 5. Current gaps (snapshot)
 
-From production integration status and code review:
-
 | Integration | Production status |
 |-------------|-------------------|
-| Odoo | Configured and authenticated — catalog sync exists but is **not a reliable near-real-time pipeline** yet |
-| Email (SMTP) | **Done** — order + payment emails send (P0.6) |
-| Ifthenpay MB WAY | **Not configured** — would fall back to mocks |
-| Ifthenpay Multibanco | **Not configured** — would fall back to mocks |
-| Ifthenpay callback secret | **Not configured** |
-| PayPal | Placeholder only |
-| Klarna | Placeholder only |
+| Odoo | Configured. Incremental cron ~every 2 min + hourly full sync. Weights/dims often empty. |
+| Email (SMTP) | **Done** — order, payment, welcome, password-reset, fatura PDF |
+| Ifthenpay MB WAY / Multibanco | **Wired and fail-closed** — live paid orders have already issued faturas |
+| Stripe (card / PayPal / Klarna / …) | **Wired** — confirm live/sandbox capture on each method (P1.7) |
 
-Other important mismatches / risks:
+Other remaining gaps:
 
-- Banner already says free shipping over **€100**; checkout + legal still use **€50**.
-- After checkout, customers do **not** see Multibanco entity/reference or MB WAY next steps.
-- Stock is checked at cart/checkout; **paid orders decrement Odoo on-hand and website qty immediately** (P0.7). Unpaid pending orders are not reserved.
-- Coupons can be consumed when the order is created, even if payment never completes.
-- Until `SITE_PUBLIC_LAUNCH=true`, **both .com and .pt** show coming-soon to the public; staff unlock via `/preview-access` + `SITE_PREVIEW_PASSWORD`.
-- If catalog/DB fails, mock demo products must not become sellable.
-- No simple admin screen to process orders; no customer “My orders” history.
-- Homepage hero / category tile images may be outdated vs recent store photography.
-- Odoo → website catalog freshness: **Vercel Cron** runs incremental sync about **every 2 minutes** (plus hourly full sync). Shop/New In pages also kick a background incremental sync when the cache is older than **~60 seconds**. Typical delay after an Odoo edit (including New In tags): **under 2 minutes**. Manual `POST/GET /api/odoo/sync/products` still exists (requires `CRON_SECRET`).
-- Security gaps listed in §5.1 below.
+- Most products have **Odoo weight = 0**, so shipping uses category fallbacks (see P1.10).
+- No customer **My orders** list in `/conta` (P1.2).
+- FAQ / some trust copy may still read like a preview shop (P1.5).
+- Homepage / category heroes may be older photos (P1.8).
+- Public domains stay locked until **P0.12**.
+- Unpaid pending orders are **not** reserved (stock drops only when paid).
 
-### 5.1 Security posture (attack resistance)
+### 5.1 Security posture
 
-**Already in good shape**
+**Done (P0)**
 
-- Session JWT in httpOnly + `SameSite=lax` cookie; role re-checked from DB (not trusted from token alone).
-- Passwords hashed with bcrypt; Zod schemas on auth/cart/checkout routes.
-- Guest cart/rating tokens stored as hashes.
-- Admin order-status API requires `ADMIN` role.
-- Prisma ORM only (no raw SQL string building).
-- No HTML injection via `dangerouslySetInnerHTML` in the storefront UI.
+- Ifthenpay callback: secret required in prod, constant-time compare, amount/status checks.
+- Missing payment keys fail closed (no mock paid refs in production).
+- Mock catalog blocked in production unless `ALLOW_MOCK_CATALOG=true`.
+- Odoo sync requires `CRON_SECRET` / ops bearer.
+- Rate limits on auth, checkout, coupon, callback.
+- Production refuses missing/default/weak `SESSION_SECRET`.
+- Security headers in `next.config.ts`.
+- Password reset tokens hashed, 1h, single use (P1.3).
+- Order email fields HTML-escaped.
 
-**Must fix before open checkout (P0)**
+**Still open (P1)**
 
 | Risk | Why it matters |
 |------|----------------|
-| Ifthenpay callback secret optional + no amount/status check | **Hardened:** secret required in prod, constant-time compare, amount/status checks |
-| Missing payment keys → mock / placeholder “payments” | **Hardened:** production fail-closed (no mock MB WAY/Multibanco/PayPal/Klarna) |
-| Mock catalog upserted into DB if catalog empty | **Hardened:** demos blocked in production unless `ALLOW_MOCK_CATALOG=true` |
-| `POST /api/odoo/sync/products` unauthenticated | **Hardened:** `CRON_SECRET` / ops bearer required |
-| No rate limits on login, register, checkout, callback | **Hardened:** in-memory rate limits on auth/checkout/coupon/callback |
-| Soft-default `SESSION_SECRET` if unset | **Hardened:** production refuses missing/default/weak session secret |
-| No security HTTP headers (CSP, HSTS, frame deny, etc.) | **Hardened:** baseline headers via `next.config.ts` |
-
-**Should fix soon after / with launch ops (P1)**
-
-| Risk | Why it matters |
-|------|----------------|
-| No password reset / email verification | Account recovery and takeover resistance |
-| Public integrations/Odoo status APIs | Leaks config readiness to scanners |
-| Order email HTML unsanitized fields | HTML injection into customer inbox |
-| Ratings / availability without rate limits | Spam / abuse |
+| No email verification on register | Weaker proof the mailbox is theirs |
+| Ratings / availability spam limits | Partial — tighten if abuse shows up (P1.9 remainder) |
 
 ---
 
 ## 6. Priority backlog
 
-Effort below is **rough technical sizing** for planning (not a calendar commitment).  
-S ≈ hours · M ≈ 1–2 days · L ≈ several days.
+Effort is **rough sizing** (not a calendar). S ≈ hours · M ≈ 1–2 days · L ≈ several days.
 
 ### P0 — Must ship before public purchases
 
-| # | Item | Why it matters | Effort |
-|---|------|----------------|--------|
-| P0.1 | Configure **Ifthenpay** (MB WAY + Multibanco keys + callback URL + secret) and **fail closed** in production (no mock refs) | Without this, “paid” orders are fake | S–M (config + code guard) |
-| P0.2 | Implement and connect **PayPal** for real capture/redirect | Required for day-1 payment set | L |
-| P0.3 | Implement and connect **Klarna** for real checkout | Required for day-1 payment set | L |
-| P0.4 | Harden payment **callback** (secret **always** required in prod, constant-time compare, **amount + status** checks) | Prevents forged “paid” states | S–M |
-| P0.5 | Post-checkout UX + email: show Multibanco entity/ref, MB WAY status, PayPal/Klarna next steps | Customer must know how to pay | M |
-| P0.6 | Configure **transactional email** (Resend or SMTP) and send order + payment instructions | **Done** — SMTP order + payment emails confirmed in production | S (config) + S–M (content) |
-| P0.7 | **Reserve/decrement stock** on order (release on cancel/expiry) | **Done** — paid orders validate Odoo delivery and update website qty immediately | M |
-| P0.8 | Apply **coupon usage only after payment** (or roll back if unpaid) | Stops burned coupons | S–M |
-| P0.9 | Require full **shipping address** when ship-to-home is selected | **Done** — street, postal code, city, country required for delivery | S |
-| P0.10 | Align **€100 free shipping** in checkout logic + legal pages | Matches banner and launch decision | S |
-| P0.11 | Show **shipping cost in checkout total** UI | Total currently can understate amount due | S |
-| P0.12 | Open public domains: set **`SITE_PUBLIC_LAUNCH=true`** (removes coming-soon on .com + .pt) when checkout is ready | Needed for joint .com/.pt launch; until then public sees coming-soon and staff use `/preview-access` | S |
-| P0.13 | Block **mock catalog** from selling in production | Avoid selling demo products | S |
-| P0.14 | Confirm production secrets (session, DB, Odoo, payments, email) on Vercel; **refuse to boot/checkout** if `SESSION_SECRET` is missing or still the default | Security and reliability | S |
-| P0.15 | **Rate-limit** login, register, checkout, coupon, and payment-callback endpoints | Stops brute-force and callback flooding | S–M |
-| P0.16 | **Lock down** Odoo product sync and integrations/status APIs (admin session or shared secret; no anonymous write/probe) | Stops unauthorized sync / info leak | S |
-| P0.17 | Add **security HTTP headers** (HSTS, `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`, baseline CSP, `nosniff`) | Hardens browser attack surface | S |
-| P0.18 | **Near real-time Odoo ↔ website catalog sync**: scheduled sync (e.g. every 5–15 min via Vercel cron), optional Odoo webhook/push on product/stock/price change, sync health check (last success time + alert), and verify live stock/price/categories/New In/offers match Odoo within the SLA | Stale catalog sells wrong price/stock; new products and Odoo edits must show on the site quickly | M |
+| # | Item | Status | Effort |
+|---|------|--------|--------|
+| P0.1 | Ifthenpay MB WAY + Multibanco keys + callback + fail closed | **Done** (code + live paid path) | — |
+| P0.2 | PayPal via Stripe Checkout | **Done in code** — prove a live/sandbox capture (P1.7) | — |
+| P0.3 | Klarna via Stripe Checkout | **Done in code** — prove a live/sandbox capture (P1.7) | — |
+| P0.4 | Harden payment callback (secret, amount, status) | **Done** | — |
+| P0.5 | Post-checkout UX + email (MB entity/ref, MB WAY, Stripe link) | **Done** | — |
+| P0.6 | Transactional email | **Done** | — |
+| P0.7 | Decrement stock on paid order | **Done** (unpaid still not reserved) | — |
+| P0.8 | Coupon usage only after payment | **Done** | — |
+| P0.9 | Full shipping address when ship-to-home | **Done** | — |
+| P0.10 | €100 free shipping in logic + legal | **Done** | — |
+| P0.11 | Shipping cost in checkout Total | **Done** (CTT bands + fatura Portes) | — |
+| P0.12 | Open public domains: `SITE_PUBLIC_LAUNCH=open` | **Blocked** until P1.7 | S |
+| P0.13 | Block mock catalog in production | **Done** | — |
+| P0.14 | Refuse weak/default `SESSION_SECRET` | **Done** | — |
+| P0.15 | Rate-limit auth / checkout / coupon / callback | **Done** | — |
+| P0.16 | Lock Odoo sync + status APIs | **Done** | — |
+| P0.17 | Security HTTP headers | **Done** | — |
+| P0.18 | Near real-time catalog sync | **Done** (2 min cron + ~60s stale kick). Optional: Odoo webhook + alert if cron fails | — |
 
-**P0 rough total:** about **2–4 weeks** of focused build + provider setup, dominated by PayPal + Klarna (P0.2–P0.3) if both must ship on day 1. Security items P0.4 / P0.14–P0.17 and catalog freshness **P0.18** are mostly S–M and should be done **before** opening paid traffic.
+**P0 left:** only **P0.12** (flip the launch flag). Do that after P1.7.
 
-### P1 — Launch ops and trust
+### P1 — Launch ops and trust (active)
 
-| # | Item | Why it matters | Effort |
-|---|------|----------------|--------|
-| P1.1 | Minimal **admin orders** view (list, status, pickup/ship) | Staff cannot run the store blind | M–L |
-| P1.2 | Customer **My orders** in account | Expected after purchase | M |
-| P1.3 | Password reset / email verification | Account safety for public traffic | M |
-| P1.4 | Enforce **JHONNY10** rules (registered + first purchase) | Matches welcome offer promise | S–M |
-| P1.5 | Update **FAQ** / trust copy that still implies the store is “not ready” | Avoid conflicting messages at launch | S |
-| P1.6 | Smoke-test suite or scripted checklist for cart → pay → callback → paid | Catch regressions before opening traffic | M |
-| P1.7 | End-to-end test orders on each payment method (sandbox then live) | Go-live gate | M (ops time) |
-| P1.8 | Refresh **homepage + category hero images** with recent store / product photos (assets under `website/public/brand/` and mappings in `Products.tsx` / `categoryHeroes.ts`) | Brand looks current and trustworthy at launch | S–M (assets + wire-up) |
-| P1.9 | Escape/sanitize fields in **order email HTML**; tighten public ratings/availability against spam | Stops inbox HTML injection and abuse | S–M |
+| # | Item | Status | Why | Effort |
+|---|------|--------|-----|--------|
+| P1.1 | Admin orders (list, status, pickup/ship) | **Done** (`/admin/encomendas`) | | — |
+| P1.2 | Customer **My orders** in account | **Open — next build** | Buyer cannot see past orders / pay refs | M |
+| P1.3 | Password reset | **Done** (email link). Email verification still open → P1.11 | | — |
+| P1.4 | JHONNY10 registered + first paid order | **Done** | | — |
+| P1.5 | FAQ / trust copy that still sounds “not ready” | **Open** | Conflicting launch message | S |
+| P1.6 | Scripted cart → pay → callback → paid checks | Partial (offline scripts exist; no full paid E2E in CI) | | M |
+| P1.7 | One live/sandbox order per payment method | **Open — next ops** | Go-live gate | M (your time) |
+| P1.8 | Recent homepage + category photos | **Open** | Trust at launch | S–M |
+| P1.9 | Sanitize order email HTML; rate-limit ratings/availability | Email escape **done**; ratings limits optional | | S |
+| P1.10 | Fill Odoo **weight + size** on products | **Open — next ops** | Portes use guesses when weight is 0 | S (ops) |
+| P1.11 | Email verification on register | **Open** | Stronger accounts | M |
 
 ### P2 — Soon after go-live
 
-| # | Item | Effort |
-|---|------|--------|
-| P2.1 | Localize shop / PDP / checkout strings still hardcoded in Portuguese | M |
-| P2.2 | Real cart drawer (lines, qty, remove) instead of count-only header cart | M |
-| P2.3 | Hide empty Odoo categories (e.g. women wetsuits with 0 products) or fill in Odoo | S–M |
-| P2.4 | Product image gallery (beyond single thumbnail) | M |
-| P2.5 | Clear rules for bulky board shipping vs standard € shipping | S–M (policy + code) |
-| P2.6 | Variant UX if size/color are separate Odoo products | M–L |
+| # | Item | Status | Effort |
+|---|------|--------|--------|
+| P2.1 | Localize leftover PT-hardcoded shop/PDP/checkout strings | Open | M |
+| P2.2 | Real cart drawer | **Done** | — |
+| P2.3 | Hide empty Odoo categories or fill them | Open | S–M |
+| P2.4 | Product image gallery | Partial (multi-image exists on some PDPs) | M |
+| P2.5 | Bulky board vs standard shipping rules | **Done** (CTT limits → €29.90 + note) | — |
+| P2.6 | Variant UX for size/color Odoo products | Partial (variants shipped; keep polishing) | M |
+| P2.7 | Zero leftover negative Odoo on-hand (draft `#138`) | Open — script only, dry-run first | S–M (ops) |
 
 ### P3 — Later / growth
 
-| # | Item | Effort |
-|---|------|--------|
-| P3.1 | Chinese (ZH) legal pages | M |
-| P3.2 | SEO: sitemap, robots, product OG/JSON-LD | S–M |
-| P3.3 | Analytics (consent flag exists; wire GA/GTM or equivalent) | S–M |
-| P3.4 | Ratings on product cards (already on PDP) | S |
-| P3.5 | Abandoned-cart emails | M |
+| # | Item | Status | Effort |
+|---|------|--------|--------|
+| P3.1 | Chinese (ZH) legal pages | Open | M |
+| P3.2 | SEO: sitemap, robots, product OG/JSON-LD | Open | S–M |
+| P3.3 | First-party analytics | **Done** (consent + admin). GA/GTM optional later | — |
+| P3.4 | Ratings on product cards | Open | S |
+| P3.5 | Abandoned-cart emails | Open | M |
 
 ---
 
-## 7. Suggested go-live sequence
+## 7. Suggested go-live sequence (now)
 
-1. **Configure production:** Ifthenpay, email, Odoo, secrets — fail closed if payments/email/session secret missing.  
-2. **Security baseline:** callback hardening, rate limits, lock sync/status APIs, security headers (P0.4, P0.14–P0.17).  
-3. **Odoo freshness:** scheduled + (optional) webhook catalog sync with health monitoring (P0.18).  
-4. **Ship PT payment path:** MB WAY + Multibanco end-to-end (UI + email + callback).  
-5. **Ship international payments:** PayPal, then Klarna (or in parallel if two people).  
-6. **Harden commerce rules:** stock reservation, coupons-after-pay, address required, €100 shipping everywhere, honest checkout totals.  
-7. **Ops + brand:** admin order list, FAQ/trust copy, **recent homepage/category photos** (P1.8).  
-8. **Open domains:** set `SITE_PUBLIC_LAUNCH=true` on Vercel (removes coming-soon on .com + .pt).  
-9. **Gate:** complete one successful live (or final sandbox) order per payment method; then announce.
+1. **Preview-test the merged checkout pack** (birthday, Portes, coupon, fatura, reset, analytics).  
+2. **P1.7** — one paid order per method; fatura total = checkout.  
+3. **P1.10** — put real kg (and board cm) on Odoo products; wait for sync.  
+4. **P1.2** — My orders in `/conta`.  
+5. **P1.5 + P1.8** — FAQ + photos.  
+6. **P0.12** — `SITE_PUBLIC_LAUNCH=open` on Vercel.  
+7. Announce.
 
 ```mermaid
 flowchart LR
-  config[Config_secrets_providers]
-  security[Security_baseline]
-  odooSync[Odoo_near_realtime_sync]
-  ptPay[MBWAY_Multibanco]
-  intlPay[PayPal_Klarna]
-  rules[Stock_coupons_shipping]
-  ops[Admin_emails_brand_images]
-  domains[Open_com_and_pt]
-  config --> security --> odooSync --> ptPay --> intlPay --> rules --> ops --> domains
+  preview[Preview_test_checkout_pack]
+  pay[P1.7_live_payment_smoke]
+  weights[P1.10_Odoo_weights]
+  orders[P1.2_My_orders]
+  polish[P1.5_FAQ_and_P1.8_photos]
+  open[P0.12_SITE_PUBLIC_LAUNCH_open]
+  preview --> pay --> weights --> orders --> polish --> open
 ```
 
 ---
 
 ## 8. Definition of “live for purchases”
 
-All of the following must be true:
-
-- [ ] Customers can pay with **MB WAY, Multibanco, PayPal, and Klarna** for real (no mocks/placeholders).  
-- [ ] After checkout they receive clear **payment instructions** (page + email).  
-- [ ] Paid orders update correctly via **secure callback** (secret required; amount/status verified).  
-- [ ] Stock cannot oversell; coupons only stick on paid orders.  
-- [ ] Free shipping threshold is **€100** in banner, checkout, and legal text.  
-- [x] Order emails send reliably.  
-- [ ] Staff can see and update orders.  
-- [ ] **jhonnysurfstore.com** and **jhonnysurfstore.pt** both serve the full shop (`SITE_PUBLIC_LAUNCH=true`).  
-- [ ] Auth/checkout/callback are **rate-limited**; Odoo sync is **not** anonymously callable.  
-- [ ] Production refuses weak/default **SESSION_SECRET**; security headers are on.  
-- [ ] Odoo catalog changes (products, price, stock, categories, offers) appear on the website in **near real time** (scheduled sync and/or webhook; sync health OK).  
+- [x] Customers can start MB WAY, Multibanco, and Stripe (PayPal/Klarna/card) checkouts (no mocks in prod).  
+- [ ] **P1.7:** one successful paid order per method, fatura matches checkout.  
+- [x] After checkout they get payment instructions (page + email).  
+- [x] Paid orders update via secure callback.  
+- [x] Stock decrements on pay; coupons stick only on paid orders.  
+- [x] Free shipping threshold is **€100** in banner, checkout, and legal.  
+- [x] Order + fatura emails send.  
+- [x] Staff can see and update orders (`/admin/encomendas`).  
+- [ ] Customer can see **My orders**.  
+- [ ] **jhonnysurfstore.com** and **.pt** both serve the full shop (`SITE_PUBLIC_LAUNCH=open`).  
+- [x] Auth/checkout/callback rate-limited; Odoo sync not anonymous.  
+- [x] Production refuses weak `SESSION_SECRET`; security headers on.  
+- [x] Catalog sync on a short cron.  
 - [ ] Homepage + category heroes use **approved recent photos**.  
 
-Until that checklist is green, treat the site as **marketing + catalog preview**, not an open webshop.
+Until P1.7 and P0.12 are green, treat the public internet as **coming-soon**, not an open webshop.
 
 ---
 
@@ -246,22 +231,18 @@ Until that checklist is green, treat the site as **marketing + catalog preview**
 | Topic | Location |
 |-------|----------|
 | Coming-soon + preview unlock | `website/src/proxy.ts`, `website/src/lib/ecommerce/siteAccess.ts`, `/preview-access` |
-| Checkout / shipping threshold | `website/src/lib/ecommerce/checkout.ts` |
-| Payments / mocks / placeholders | `website/src/lib/ecommerce/payments.ts` |
+| Shipping quote (CTT bands, €100, bulky) | `website/src/lib/ecommerce/shipping.ts` |
+| Checkout totals | `website/src/lib/ecommerce/checkout.ts`, `CheckoutClient.tsx` |
+| Coupon after pay + JHONNY10 | `website/src/lib/ecommerce/coupons.ts` |
+| POS fatura coupon + Portes | `website/src/lib/ecommerce/odooPos.ts`, `orderPricing.ts` |
+| Payments | `website/src/lib/ecommerce/payments.ts`, `stripeCheckout.ts` |
 | Ifthenpay callback | `website/src/app/api/payments/ifthenpay/callback/route.ts` |
-| Session / cookies | `website/src/lib/ecommerce/session.ts` |
-| Auth validation | `website/src/lib/ecommerce/security.ts`, `schemas.ts` |
-| Odoo product sync API | `website/src/app/api/odoo/sync/products/route.ts` |
-| Catalog list + background stale sync (~15 min) | `website/src/lib/ecommerce/catalog.ts` (`kickBackgroundOdooSync`) |
-| Odoo fetch / upsert sync | `website/src/lib/ecommerce/odooCatalog.ts` (`syncOdooProducts`) |
-| Category hero images | `website/src/lib/ecommerce/categoryHeroes.ts`, `website/src/components/Products.tsx` |
-| Homepage hero media | `website/src/components/Hero.tsx`, `website/public/brand/` |
-| Checkout UI | `website/src/components/CheckoutClient.tsx` |
-| Dispatch free-shipping copy | `website/src/components/DispatchBanner.tsx` |
-| Integrations status API | `/api/integrations/status` |
-| Legal shipping copy | `website/src/app/pagamentos-e-envios/page.tsx` |
-| Vercel auto-deploy | `docs/website-vercel-deploy.md`, `.github/workflows/deploy-website.yml` |
+| Password reset | `website/src/lib/ecommerce/passwordReset.ts` |
+| Analytics | `website/src/lib/ecommerce/analytics.ts` |
+| Odoo catalog + weight sync | `website/src/lib/ecommerce/odooCatalog.ts` |
+| Admin orders | `website/src/app/admin/encomendas/page.tsx` |
+| Vercel auto-deploy | `docs/website-vercel-deploy.md` |
 
 ---
 
-*This document is the working backlog for launch. Update status checkboxes and dates as P0 items close.*
+*Working backlog for launch. Update this file as P1 items close.*
