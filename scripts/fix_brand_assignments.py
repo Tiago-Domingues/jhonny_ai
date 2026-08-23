@@ -54,6 +54,7 @@ REASSIGNMENTS: tuple[tuple[int, str | None, str, str], ...] = (
     (418, "DEV480", "DEFLOW", "DEVOTED"),
     (422, "DEV520", "DEFLOW", "DEVOTED"),
     (2054, "FC0RK0004BLK", "FCS", "DEVOTED"),
+    (707, "SURFSYSTEMFINSFUTURESBLK", "FUTURES", "SURF SYSTEM"),
 )
 
 # Flagged by the scanner but correct as filed: Channel Islands fins whose titles

@@ -40,6 +40,23 @@ from list_product_brands import (  # noqa: E402  (sibling script, shared matchin
 from src.odoo_client import OdooClient, OdooConfig, load_env  # noqa: E402
 
 
+# Products whose title names no brand, but whose SKU family or near-identical
+# siblings identify it beyond doubt. (product template id, brand, evidence)
+DECIDED: tuple[tuple[int, str, str], ...] = (
+    (27, "ROARK", "SKU RA275 next to RA276 'BACKPACK ROARK ACCOMPLICE MULE 45L'"),
+    (125, "NMD", "its two sibling colourways of 'BODYBOARD FINS ALPHA' are NMD"),
+    (210, "DEVOTED", "SKU 'DEV 481' belongs to the DEV series, all DEVOTED"),
+    (706, "SURF SYSTEM", "a SurfSystem fin; FCS1 is the base, and the brand has two other products"),
+    (789, "OCEAN & EARTH", "SKU SARE15 next to SARE16 'WATERPROOF DING TAPE 3PC OCEAN & EARTH'"),
+    (1084, "OCEAN & EARTH", "SKU SCFB01-C-7'0 completes the O&E CORE-X FISH size run"),
+    (1166, "CHANNEL ISLANDS", "duplicate of the CHANNEL ISLANDS 'CI FIN SET CI MID 2+1' record"),
+    (1199, "REEF", "SKU REEF-TRADEWIND, and the Reef Cushion sandal line is here"),
+    (1307, "STICKY BUMPS", "SKU SB76 is the STICKY BUMPS tour series wax"),
+    (1356, "OCEAN & EARTH", "SKU SCFS03-H belongs to the O&E travel cover family"),
+    (1398, "DSTREET", "SKU DST-COM-2144, and 'SURFSKATE D STREET MISSION MULTI 32' is DSTREET"),
+)
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
@@ -80,10 +97,12 @@ def resolve(
     templates: list[dict[str, Any]], brands: list[dict[str, Any]]
 ) -> tuple[dict[str, list[dict[str, Any]]], list[dict[str, Any]]]:
     """Split products into those whose title names a known brand and those that do not."""
+    decided = {template_id: brand for template_id, brand, _ in DECIDED}
     matched: dict[str, list[dict[str, Any]]] = {}
     unresolved: list[dict[str, Any]] = []
     for template in templates:
         suggestion, _ = brands_in_title(template["name"], brands)
+        suggestion = decided.get(template["id"], suggestion)
         if suggestion:
             matched.setdefault(suggestion, []).append(template)
         else:
