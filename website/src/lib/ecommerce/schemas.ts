@@ -38,6 +38,13 @@ export const registerSchema = z.object({
   birthDate: birthDateSchema,
 });
 
+/** First step of signup: credentials only. Profile is filled after the email link. */
+export const pendingRegisterSchema = z.object({
+  email: z.string().email(),
+  username: z.string().min(3).max(40).regex(/^[a-zA-Z0-9_.-]+$/),
+  password: z.string().min(8).max(128),
+});
+
 export const loginSchema = z.object({
   emailOrUsername: z.string().min(3).max(120),
   password: z.string().min(1).max(128),

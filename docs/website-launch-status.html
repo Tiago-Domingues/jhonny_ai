@@ -373,7 +373,7 @@
       </table>
       <p><strong>Should fix soon / with launch ops (P1)</strong></p>
       <ul>
-        <li>Password reset <strong>done</strong>; soft email verification <strong>done</strong> (P1.11)</li>
+        <li>Password reset <strong>done</strong>; email verification is a hard gate before the account exists (P1.11)</li>
         <li>Order email HTML escaped</li>
         <li>Ratings / availability rate limits <strong>done</strong> (P1.9)</li>
       </ul>
@@ -604,7 +604,7 @@
           <tr>
             <td data-label="#">P1.11</td>
             <td data-label="Item">Email verification</td>
-            <td data-label="Description">After register we email a 24h confirm link. Account and checkout still work if they ignore it (soft). Google-verified emails skip this.</td>
+            <td data-label="Description">Email/password signup stays pending until they click the 24h link. Then they are signed in and sent to <code>/conta</code> to fill the profile. Login is blocked until confirmed. Google-verified emails skip this. Guest checkout still works.</td>
             <td data-label="Status" class="status-ok"><strong>Done</strong></td>
             <td data-label="Effort">—</td>
           </tr>

@@ -44,7 +44,7 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, F
 - Homepage and store story (New In, categories, services, Local Heroes, visit/contact).
 - Shop at `/loja` with catalog from Odoo/Postgres; product detail, variants, ratings, cart drawer.
 - Guest and registered carts; stock checked at add/checkout; paid orders decrement Odoo + website qty.
-- Account: register (year-first birthday), login, Google, **password reset**, soft **email verification**, profile, **My orders**.
+- Account: register (year-first birthday), login, Google, **password reset**, **email confirmation before the account exists**, profile, **My orders**.
 - Coupons: athlete codes + **JHONNY10** (signed-in, first paid order only); usage written **only after pay**.
 - Checkout sidebar = payment amount: Subtotal, Cupão −X%, Portes (CTT bands / €100 free / pickup €0), Total.
 - Paid path: Ifthenpay MB WAY/Multibanco + Stripe Checkout (card, Google Pay, PayPal, Klarna, Revolut, Pix).
@@ -102,7 +102,7 @@ Other remaining gaps:
 
 **Done this pack (P1)**
 
-- Soft email verification after register (does not block checkout) — P1.11.
+- Email/password signup must click the confirm link before the account exists; then they fill the profile on `/conta`. Google skips this. Guest checkout still works. — P1.11.
 - Rate limits on public ratings and availability-notify — P1.9.
 
 **Still open (P1 ops)**
@@ -156,7 +156,7 @@ Other remaining gaps:
 | P1.8 | Recent homepage + category photos | Swap older hero / category pictures for new real store photos. You drop files in `website/public/brand/` when you have them. | **Open** | S–M |
 | P1.9 | Email HTML escape + spam limits | Order emails cannot inject HTML from names/addresses. Product ratings and “notify when available” are rate-limited. | **Done** | — |
 | P1.10 | Fill Odoo **weight + size** | In Odoo, put real kg (and board length/width/height) on products. The site uses that for CTT portes. Empty weight = a category guess (often 0.8 kg). | **Open — next ops** | S (ops) |
-| P1.11 | Email verification | After register we email a 24h confirm link. Account and checkout still work if they ignore it (soft). Google-verified emails skip this. | **Done** | — |
+| P1.11 | Email verification | Email/password signup stays pending until they click the 24h link. Then they are signed in and sent to `/conta` to fill the profile. Login is blocked until confirmed. Google-verified emails skip this. Guest checkout still works. | **Done** | — |
 
 ### P2 — Soon after go-live
 
