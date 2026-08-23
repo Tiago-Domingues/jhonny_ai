@@ -367,7 +367,7 @@ export async function sendWelcomeEmail(input: { userId: string; email: string; f
 }
 
 export async function sendEmailVerificationEmail(input: {
-  userId: string;
+  userId?: string | null;
   email: string;
   fullName?: string | null;
   verifyUrl: string;
@@ -377,15 +377,15 @@ export async function sendEmailVerificationEmail(input: {
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Confirma o teu email</h1>
       <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
-      <p>Clica no link para confirmares este email. Expira em 24 horas.</p>
-      <p><a href="${escapeHtml(input.verifyUrl)}">Confirmar email</a></p>
-      <p>Se não criaste esta conta, ignora este email.</p>
+      <p>Clica no link para confirmares o email e terminares o registo. Depois podes preencher o perfil. Expira em 24 horas.</p>
+      <p><a href="${escapeHtml(input.verifyUrl)}">Confirmar email e continuar</a></p>
+      <p>Se não pediste esta conta, ignora este email.</p>
     </div>
   `;
   const result = await sendEmail(input.email, subject, html);
   return prisma.emailEvent.create({
     data: {
-      userId: input.userId,
+      userId: input.userId || null,
       type: "EMAIL_VERIFICATION",
       recipientEmail: input.email,
       subject,

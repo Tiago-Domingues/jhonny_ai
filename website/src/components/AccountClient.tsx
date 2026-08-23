@@ -129,6 +129,11 @@ export function AccountClient() {
       setMessage(data.message || copy.submitFailed);
       return;
     }
+    if (data.pending) {
+      setMessageTone("success");
+      setMessage(copy.registerCheckEmail);
+      return;
+    }
     setUser(data.user);
     setMessageTone("success");
     setMessage(copy.ready);
@@ -562,53 +567,24 @@ export function AccountClient() {
         </form>
       ) : (
         <form onSubmit={(event) => submit("/api/auth/register", event)} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4">
             <a
               href="/api/auth/google"
-              className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream md:col-span-2"
+              className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream"
             >
               <GoogleMark />
               {copy.createGoogle}
             </a>
-            <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted md:col-span-2">
+            <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">
               <span className="h-px flex-1 bg-line" />
               {copy.or}
               <span className="h-px flex-1 bg-line" />
             </div>
-            <input name="fullName" required placeholder={copy.fullName} className={fieldClass} />
             <input name="username" required placeholder={copy.username} className={fieldClass} />
             <input name="email" required type="email" placeholder="Email" className={fieldClass} />
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(7.5rem,9rem)_minmax(0,1fr)]">
-              <select name="phoneCountryCode" defaultValue="+351" className={selectClass} style={{ backgroundImage: selectChevron }}>
-                {dialCodes.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <input name="phone" placeholder={copy.mobile} className={fieldClass} />
-            </div>
-            <input name="password" required type="password" placeholder={copy.password} className={fieldClass} />
-            <div className="md:col-span-2">
-              <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-muted">{copy.birthDate}</p>
-              <BirthDateFields
-                required
-                locale={locale === "zh" ? "zh" : locale === "en" ? "en" : "pt"}
-                labels={{ year: copy.birthYear, month: copy.birthMonth, day: copy.birthDay }}
-              />
-            </div>
-            <select name="customerType" defaultValue="SURFER" className={selectClass} style={{ backgroundImage: selectChevron }}>
-              {customerTypes.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <label className="flex items-start gap-3 text-sm text-muted md:col-span-2">
-              <input name="marketingOptIn" type="checkbox" className="mt-1 size-4 shrink-0 accent-ink" />
-              <span>{copy.marketing}</span>
-            </label>
-            <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98] md:col-span-2">
+            <input name="password" required type="password" placeholder={copy.password} minLength={8} className={fieldClass} />
+            <p className="text-sm text-muted">{copy.registerCheckEmail}</p>
+            <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98]">
               {copy.register}
             </button>
           </div>

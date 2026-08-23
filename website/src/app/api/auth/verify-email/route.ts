@@ -2,8 +2,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
-import { isVerifyTokenFormat, requestEmailVerification, verifyEmailWithToken } from "@/lib/ecommerce/emailVerification";
-import { readSessionUser } from "@/lib/ecommerce/session";
+import { sendWelcomeEmail } from "@/lib/ecommerce/email";
+import { sendWelcomeSms } from "@/lib/ecommerce/sms";
+import {
+  completeRegistrationWithToken,
+  isVerifyTokenFormat,
+  requestEmailVerification,
+} from "@/lib/ecommerce/emailVerification";
+import { createSessionToken, readSessionUser, setSessionCookie } from "@/lib/ecommerce/session";
 import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
 
 const schema = z.object({
@@ -27,8 +33,44 @@ export async function POST(request: Request) {
     if (!isVerifyTokenFormat(token)) {
       return NextResponse.json({ error: "invalid_token" }, { status: 400 });
     }
-    await verifyEmailWithToken(token);
-    return NextResponse.json({ ok: true });
+    const { user, created } = await completeRegistrationWithToken(token);
+    const sessionToken = await createSessionToken(user.id);
+    const response = NextResponse.json({
+      ok: true,
+      redirect: "/conta",
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        fullName: user.profile?.fullName,
+        emailVerifiedAt: user.emailVerifiedAt,
+      },
+    });
+    setSessionCookie(response, sessionToken);
+
+    if (created) {
+      try {
+        await sendWelcomeEmail({
+          userId: user.id,
+          email: user.email,
+          fullName: user.profile?.fullName,
+        });
+      } catch {
+        // EmailEvent SKIPPED when SMTP is blank
+      }
+      try {
+        await sendWelcomeSms({
+          userId: user.id,
+          fullName: user.profile?.fullName,
+          phoneCountryCode: user.profile?.phoneCountryCode,
+          phone: user.profile?.phone,
+        });
+      } catch {
+        // logged via SmsEvent when possible
+      }
+    }
+
+    return response;
   } catch (error) {
     return apiError(error);
   }
