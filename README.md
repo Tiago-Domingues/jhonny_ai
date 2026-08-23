@@ -145,6 +145,25 @@ Expected result includes:
 }
 ```
 
+## Product Brands
+
+List every brand (`x_marcas`) with its product count and a report of names that
+look like data-entry mistakes:
+
+```powershell
+py scripts/list_product_brands.py
+```
+
+Export the same list for a spreadsheet:
+
+```powershell
+py scripts/list_product_brands.py --csv
+```
+
+The report is read-only. It flags duplicate brand records, names differing only
+in case or punctuation, near-identical spellings, unused brands, and brands
+whose own products never mention them in their name.
+
 ## Ask The Agent From CLI
 
 ```powershell
