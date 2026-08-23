@@ -163,6 +163,50 @@ Use `--location`, `--product`, and `--limit` to narrow the selection, `--target`
 to correct to a value other than zero, and `--max-units` to cap how large a
 correction may be applied in one run.
 
+## Product Brands
+
+List every brand (`x_marcas`) with its product count and a report of names that
+look like data-entry mistakes:
+
+```powershell
+py scripts/list_product_brands.py
+```
+
+Export the same list for a spreadsheet, or export the products that still have
+no brand so someone can fill the missing ones in:
+
+```powershell
+py scripts/list_product_brands.py --csv
+py scripts/list_product_brands.py --missing-csv
+```
+
+The report is read-only. It flags duplicate brand records, names differing only
+in case or punctuation, near-identical spellings, unused brands, and brands
+whose own products never mention them in their name.
+
+Correct the misspelled names and merge the duplicate records it found:
+
+```powershell
+py scripts/fix_product_brands.py
+py scripts/fix_product_brands.py --apply
+```
+
+The same script also removes brands no product uses and brings every name to the
+uppercase house style.
+
+Move products that are filed under the wrong brand to the brand their own title
+states:
+
+```powershell
+py scripts/fix_brand_assignments.py
+py scripts/fix_brand_assignments.py --apply
+```
+
+Both correction scripts hold an explicit list of changes, each recording the
+value the record must currently have, so they refuse to touch anything that was
+edited in the meantime and are safe to re-run. Products are moved to the
+surviving record before a duplicate brand is removed.
+
 ## Ask The Agent From CLI
 
 ```powershell
