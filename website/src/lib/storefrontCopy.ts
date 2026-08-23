@@ -49,6 +49,7 @@ type StorefrontCopy = {
     subtotal: string;
     shipping: string;
     shippingFree: string;
+    shippingPickup: string;
     shippingBulky: string;
     notes: string;
     marketing: string;
@@ -193,6 +194,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       subtotal: "Subtotal",
       shipping: "Portes",
       shippingFree: "Grátis — encomenda acima de €{threshold}",
+      shippingPickup: "Grátis — levantamento na loja",
       shippingBulky: "Estimativa para artigo volumoso. O Jhonny confirma o envio.",
       notes: "Notas para a encomenda",
       marketing: "Aceito receber novidades e lembretes de carrinho da Jhonny Surf Store.",
@@ -335,6 +337,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       subtotal: "Subtotal",
       shipping: "Shipping",
       shippingFree: "Free — order over €{threshold}",
+      shippingPickup: "Free — in-store pickup",
       shippingBulky: "Estimate for a bulky item. Jhonny will confirm shipping.",
       notes: "Order notes",
       marketing: "I agree to receive news and cart reminders from Jhonny Surf Store.",
@@ -477,6 +480,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       subtotal: "小计",
       shipping: "运费",
       shippingFree: "免运费 — 订单满 €{threshold}",
+      shippingPickup: "免费 — 到店自取",
       shippingBulky: "大件预估运费，Jhonny 会再确认。",
       notes: "订单备注",
       marketing: "我同意接收 Jhonny Surf Store 的新闻和购物车提醒。",

@@ -45,7 +45,10 @@ function BarList({ title, rows }: { title: string; rows: Bucket[] }) {
               <span className="text-muted">{row.count}</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-cream">
-              <div className="h-full rounded-full bg-ink" style={{ width: `${(row.count / max) * 100}%` }} />
+              <div
+                className="h-full max-w-full rounded-full bg-ink"
+                style={{ width: `${Math.min(100, Math.max(0, (row.count / max) * 100))}%` }}
+              />
             </div>
           </div>
         ))}

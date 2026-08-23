@@ -451,15 +451,15 @@ export function CheckoutClient() {
               <span>-<CurrencyPrice cents={couponDiscountCents} /></span>
             </div>
           )}
-          <div className="mb-3 flex justify-between text-sm text-muted">
-            <span>{copy.shipping}</span>
-            <span>
+          <div className="mb-3 flex items-start justify-between gap-3 text-sm text-muted">
+            <span className="shrink-0">{copy.shipping}</span>
+            <span className="min-w-0 text-right">
               {shippingQuote.shippingCents > 0 ? (
                 <CurrencyPrice cents={shippingQuote.shippingCents} />
               ) : shippingQuote.freeReason === "threshold" ? (
                 copy.shippingFree.replace("{threshold}", String(FREE_SHIPPING_THRESHOLD_EUROS))
               ) : (
-                copy.pickup
+                copy.shippingPickup
               )}
             </span>
           </div>
