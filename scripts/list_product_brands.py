@@ -153,24 +153,69 @@ def contains_words(haystack: list[str], needle: list[str]) -> bool:
     return size > 0 and any(haystack[i : i + size] == needle for i in range(len(haystack) - size + 1))
 
 
-def suggest_brand(name: str, brands: list[dict[str, Any]]) -> str:
-    """Longest brand name stated in the product title, which is usually the brand."""
-    title = words(name)
-    matches = [brand for brand in brands if contains_words(title, words(brand["x_name"]))]
-    if not matches:
-        return ""
-    return max(matches, key=lambda brand: len(words(brand["x_name"])))["x_name"]
+def position_of(haystack: list[str], needle: list[str]) -> int | None:
+    size = len(needle)
+    for index in range(len(haystack) - size + 1):
+        if haystack[index : index + size] == needle:
+            return index
+    return None
+
+
+def title_head(name: str) -> str:
+    """The part of a title that carries the brand, before dimensions or variants.
+
+    Titles read "TYPE BRAND MODEL (dimensions) - FIN SYSTEM", so anything from
+    the first bracket or dash onwards is specification text. Matching brands in
+    there would credit a surfboard to its fin system.
+    """
+    head = name
+    for separator in ("(", " - ", " -", "- "):
+        index = head.find(separator)
+        if index > 0:
+            head = head[:index]
+    return head
+
+
+def brands_in_title(name: str, brands: list[dict[str, Any]]) -> tuple[str, list[str]]:
+    """The brand a title states, plus any other brands mentioned anywhere in it.
+
+    Titles put the brand right after the product type ("BOARDBAG DEVOTED ..."),
+    so the earliest match in the head is the maker. Later mentions are usually a
+    fin system or compatibility note, so they are reported separately.
+    """
+    def matches(text: str) -> list[str]:
+        haystack = words(text)
+        found = []
+        for brand in brands:
+            at = position_of(haystack, words(brand["x_name"]))
+            if at is not None:
+                found.append((at, -len(words(brand["x_name"])), brand["x_name"]))
+        return [found_name for _, _, found_name in sorted(found)]
+
+    in_head = matches(title_head(name))
+    suggestion = in_head[0] if in_head else ""
+    others = [other for other in matches(name) if other != suggestion]
+    return suggestion, others
 
 
 def print_missing_csv(templates: list[dict[str, Any]], brands: list[dict[str, Any]]) -> None:
     """Products with no brand, ready to be filled in and handed back."""
     writer = csv.writer(sys.stdout)
     writer.writerow(
-        ["product_id", "sku", "product_name", "category", "active", "suggested_brand", "brand_to_use"]
+        [
+            "product_id",
+            "sku",
+            "product_name",
+            "category",
+            "active",
+            "suggested_brand",
+            "also_mentioned_in_title",
+            "brand_to_use",
+        ]
     )
     unbranded = [template for template in templates if not template[BRAND_FIELD]]
     for template in sorted(unbranded, key=lambda item: item["name"].strip().upper()):
-        suggestion = suggest_brand(template["name"], brands)
+        suggestion, mentioned = brands_in_title(template["name"], brands)
         writer.writerow(
             [
                 template["id"],
@@ -179,6 +224,7 @@ def print_missing_csv(templates: list[dict[str, Any]], brands: list[dict[str, An
                 template["categ_id"][1] if template.get("categ_id") else "",
                 "yes" if template["active"] else "no",
                 suggestion,
+                ", ".join(mentioned),
                 suggestion,
             ]
         )
