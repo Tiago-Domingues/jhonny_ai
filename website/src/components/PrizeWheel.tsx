@@ -1,9 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/components/LanguageProvider";
 
 /** Ungated 10% coupon handed out by the wheel. Seed with `npm run seed:spin-coupon`. */
@@ -17,6 +17,8 @@ const SPIN_MS = 4600;
 
 const INK = "#0d0d0d";
 const CREAM = "#ebe4d6";
+/** The one warm accent in the brand, borrowed from the surfboard gradient. */
+const GOLD = "#f7d46f";
 
 const CENTER = 100;
 const WHEEL_RADIUS = 86;
@@ -65,6 +67,15 @@ function rotationForSegment(current: number, index: number) {
   const targetMod = ((target % 360) + 360) % 360;
   const delta = (targetMod - currentMod + 360) % 360;
   return current + FULL_TURNS * 360 + delta;
+}
+
+/** Winning wedge from an earlier spin this session, or null for a fresh visit. */
+function readStoredWinner() {
+  if (typeof window === "undefined") return null;
+  const raw = window.sessionStorage.getItem(SPIN_RESULT_KEY);
+  if (raw === null) return null;
+  const index = Number(raw);
+  return Number.isInteger(index) && index >= 0 && index < SEGMENT_COUNT ? index : null;
 }
 
 function prefersReducedMotion() {
@@ -128,38 +139,32 @@ const copy = {
 
 type Phase = "idle" | "spinning" | "won";
 
-export function PrizeWheel({ open, onClose }: { open: boolean; onClose: () => void }) {
+/**
+ * Only ever mounted in response to a click, so it is safe to seed state from
+ * sessionStorage in the initialisers rather than an effect — there is no
+ * server render to hydrate against.
+ */
+export function PrizeWheel({ onClose }: { onClose: () => void }) {
   const { locale } = useLanguage();
   const t = copy[locale];
 
-  const [mounted, setMounted] = useState(false);
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [rotation, setRotation] = useState(0);
-  const [winner, setWinner] = useState<number | null>(null);
+  const [phase, setPhase] = useState<Phase>(() =>
+    readStoredWinner() === null ? "idle" : "won"
+  );
+  const [rotation, setRotation] = useState(() => {
+    const stored = readStoredWinner();
+    return stored === null ? 0 : rotationForSegment(0, stored) - FULL_TURNS * 360;
+  });
+  const [winner, setWinner] = useState<number | null>(() => readStoredWinner());
   const [animateSpin, setAnimateSpin] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [hubSrc, setHubSrc] = useState("/brand/jhonny-character-cut.png");
   const spinButtonRef = useRef<HTMLButtonElement>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingWinnerRef = useRef<number | null>(null);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => setMounted(true), []);
-
-  // Restore an earlier win so re-opening shows the prize instead of a fresh spin.
   useEffect(() => {
-    if (!open) return;
-    const stored = window.sessionStorage.getItem(SPIN_RESULT_KEY);
-    if (stored === null) return;
-    const index = Number(stored);
-    if (!Number.isInteger(index) || index < 0 || index >= SEGMENT_COUNT) return;
-    setWinner(index);
-    setPhase("won");
-    setAnimateSpin(false);
-    setRotation(rotationForSegment(0, index) - FULL_TURNS * 360);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
@@ -169,11 +174,11 @@ export function PrizeWheel({ open, onClose }: { open: boolean; onClose: () => vo
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [onClose]);
 
   useEffect(() => {
-    if (open && phase === "idle") spinButtonRef.current?.focus();
-  }, [open, phase]);
+    if (phase === "idle") spinButtonRef.current?.focus();
+  }, [phase]);
 
   useEffect(() => {
     return () => {
@@ -224,8 +229,6 @@ export function PrizeWheel({ open, onClose }: { open: boolean; onClose: () => vo
     }
   }
 
-  if (!mounted || !open) return null;
-
   const won = phase === "won";
 
   return createPortal(
@@ -244,7 +247,10 @@ export function PrizeWheel({ open, onClose }: { open: boolean; onClose: () => vo
         onClick={onClose}
       />
 
-      <div className="jss-rise-in relative w-full max-w-md overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-black/40">
+      <div
+        data-testid="prize-wheel-card"
+        className="jss-rise-in relative w-full max-w-md overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-black/40"
+      >
         <button
           type="button"
           onClick={onClose}
@@ -296,12 +302,23 @@ export function PrizeWheel({ open, onClose }: { open: boolean; onClose: () => vo
                   ))}
 
                   {winner !== null && (
-                    <path
-                      className="jss-wheel-win"
-                      d={SEGMENTS[winner]!.path}
-                      fill={SEGMENTS[winner]!.dark ? CREAM : INK}
-                      pointerEvents="none"
-                    />
+                    <>
+                      <path
+                        className="jss-wheel-win"
+                        d={SEGMENTS[winner]!.path}
+                        fill={SEGMENTS[winner]!.dark ? CREAM : INK}
+                        pointerEvents="none"
+                      />
+                      <path
+                        className="jss-wheel-win-outline"
+                        d={SEGMENTS[winner]!.path}
+                        fill="none"
+                        stroke={GOLD}
+                        strokeWidth={3}
+                        strokeLinejoin="round"
+                        pointerEvents="none"
+                      />
+                    </>
                   )}
 
                   {SEGMENTS.map((segment) => (
@@ -338,23 +355,37 @@ export function PrizeWheel({ open, onClose }: { open: boolean; onClose: () => vo
               </div>
             </div>
 
-            {/* Hub sits outside the spinner so the Jhonny mark stays upright. */}
+            {/* Hub sits outside the spinner so Jhonny stays upright while it turns. */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full border-[3px] border-ink bg-cream shadow-md">
-                <Logo type="mark" className="h-7 w-auto" />
+              <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-[3px] border-ink bg-cream shadow-md">
+                <Image
+                  src={hubSrc}
+                  alt=""
+                  width={72}
+                  height={96}
+                  onError={() => setHubSrc("/brand/jhonny-character-cut.svg")}
+                  className="h-12 w-auto object-contain"
+                />
               </span>
             </div>
 
-            <div className="pointer-events-none absolute -top-1 left-1/2 -translate-x-1/2">
+            {/* Cream on the ink rim: an ink pointer would vanish into the ring. */}
+            <div className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2">
               <svg
-                viewBox="0 0 24 26"
+                viewBox="0 0 24 27"
                 aria-hidden="true"
-                className={`jss-wheel-pointer h-6 w-6 drop-shadow-[0_2px_3px_rgba(0,0,0,0.35)] ${
+                className={`jss-wheel-pointer h-8 w-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)] ${
                   won ? "jss-wheel-pointer--tick" : ""
                 }`}
               >
-                <path d="M12 25 L2 3 A 12 12 0 0 1 22 3 Z" fill={INK} />
-                <circle cx="12" cy="7" r="2.6" fill={CREAM} />
+                <path
+                  d="M12 26 L2.5 4 A 11 11 0 0 1 21.5 4 Z"
+                  fill={CREAM}
+                  stroke={INK}
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+                />
+                <circle cx="12" cy="8" r="2.4" fill={INK} />
               </svg>
             </div>
           </div>

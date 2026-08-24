@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { CloseIcon, WhatsappIcon } from "@/components/icons";
 import { useLanguage } from "@/components/LanguageProvider";
 import { whatsappHref, WHATSAPP_MESSAGES } from "@/lib/i18n";
@@ -63,6 +63,9 @@ const copy = {
   },
 } as const;
 
+/** Stable identity so useSyncExternalStore does not resubscribe every render. */
+const noopSubscribe = () => () => {};
+
 function prefersReducedMotion() {
   if (typeof window === "undefined") return false;
   return (
@@ -90,16 +93,20 @@ export function JhonnyAssistant() {
   const t = copy[locale];
 
   const [open, setOpen] = useState(false);
-  const [seen, setSeen] = useState(true);
   const [nudging, setNudging] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const [typing, setTyping] = useState(true);
+  const [typing, setTyping] = useState(false);
   const bubbleRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    setSeen(window.localStorage.getItem(SEEN_KEY) === "1");
-  }, []);
+  // Assume "seen" on the server so the attention dot never flashes during hydration.
+  const seenBefore = useSyncExternalStore(
+    noopSubscribe,
+    () => window.localStorage.getItem(SEEN_KEY) === "1",
+    () => true
+  );
+  const [openedHere, setOpenedHere] = useState(false);
+  const seen = seenBefore || openedHere;
 
   // Nudge the tooltip out once so the assistant gets discovered, then retract.
   useEffect(() => {
@@ -128,15 +135,10 @@ export function JhonnyAssistant() {
 
   // The placeholder still "thinks" before greeting, so it does not feel dead.
   useEffect(() => {
-    if (!open) return;
-    if (prefersReducedMotion()) {
-      setTyping(false);
-      return;
-    }
-    setTyping(true);
+    if (!open || !typing) return;
     const timer = window.setTimeout(() => setTyping(false), TYPING_MS);
     return () => window.clearTimeout(timer);
-  }, [open]);
+  }, [open, typing]);
 
   useEffect(() => {
     if (open) closeRef.current?.focus();
@@ -145,7 +147,8 @@ export function JhonnyAssistant() {
   function openPanel() {
     setOpen(true);
     setNudging(false);
-    setSeen(true);
+    setOpenedHere(true);
+    setTyping(!prefersReducedMotion());
     window.localStorage.setItem(SEEN_KEY, "1");
   }
 
@@ -161,7 +164,7 @@ export function JhonnyAssistant() {
           type="button"
           aria-label={t.close}
           tabIndex={-1}
-          className="jss-fade-in fixed inset-0 z-[60] cursor-default bg-ink/20"
+          className="jss-fade-in fixed inset-0 z-[66] cursor-default bg-ink/20"
           onClick={closePanel}
         />
       )}
@@ -171,10 +174,13 @@ export function JhonnyAssistant() {
           role="dialog"
           aria-labelledby="jhonny-assistant-title"
           data-testid="jhonny-assistant-panel"
-          className="jss-assistant-panel fixed inset-x-4 bottom-[5.75rem] z-[61] flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-black/40 sm:inset-x-auto sm:right-5 sm:w-[22rem]"
+          /* Above the corner ribbon (z-65), which otherwise cuts into the panel
+             on mobile, but below the cart/search drawers (z-70). */
+          className="jss-assistant-panel fixed inset-x-4 bottom-[5.75rem] z-[67] flex max-h-[70vh] flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-black/40 sm:inset-x-auto sm:right-5 sm:w-[22rem]"
         >
           <div className="flex items-center gap-3 bg-ink px-4 py-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink-soft ring-2 ring-cream">
+            {/* Cream disc, not ink: the mascot is dark and would vanish into the band. */}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-cream ring-2 ring-cream">
               <JhonnyAvatar className="h-8 w-auto object-contain" />
             </span>
             <div className="min-w-0 flex-1">
@@ -274,7 +280,7 @@ export function JhonnyAssistant() {
       )}
 
       <div
-        className="fixed bottom-5 right-5 z-[62] flex items-center gap-2"
+        className="fixed bottom-5 right-5 z-[68] flex items-center gap-2"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onFocus={() => setHovered(true)}
@@ -297,15 +303,17 @@ export function JhonnyAssistant() {
           aria-expanded={open}
           title={t.tooltip}
           data-testid="jhonny-assistant-bubble"
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-ink shadow-lg shadow-black/25 ring-2 ring-white transition hover:scale-105 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          /* Cream disc with an ink rim: the mascot is dark, so an ink disc
+             swallowed him, and the rim keeps the bubble defined on pale pages. */
+          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-cream shadow-lg shadow-black/30 ring-[3px] ring-ink transition hover:scale-105 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           {/* Cropped tall so Jhonny peeks over the rim instead of sitting boxed in. */}
-          <JhonnyAvatar className="jss-assistant-toy h-14 w-auto -translate-y-1.5 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]" />
+          <JhonnyAvatar className="jss-assistant-toy h-14 w-auto -translate-y-1.5 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
 
           {!seen && !open && (
             <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center">
-              <span className="jss-assistant-ping absolute inline-flex h-3 w-3 rounded-full bg-white" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white ring-2 ring-ink" />
+              <span className="jss-assistant-ping absolute inline-flex h-3 w-3 rounded-full bg-ink" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ink ring-2 ring-cream" />
             </span>
           )}
         </button>

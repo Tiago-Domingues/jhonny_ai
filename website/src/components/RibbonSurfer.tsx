@@ -28,7 +28,7 @@ export function RibbonSurfer() {
         />
         <svg
           className="jss-ribbon-surfer__board"
-          viewBox="-40 -6 168 26"
+          viewBox="-40 0 168 15"
           aria-hidden="true"
           focusable="false"
         >
@@ -46,16 +46,16 @@ export function RibbonSurfer() {
           </defs>
 
           <path
-            d="M0 6 C -12 1, -24 0, -36 2"
+            d="M4 5 C -6 2, -14 1.5, -24 3"
             stroke="url(#ribbonSprayGrad)"
-            strokeWidth="2.6"
+            strokeWidth="4"
             strokeLinecap="round"
             fill="none"
           />
           <path
-            d="M0 10 C -14 10, -26 12, -38 11"
+            d="M4 10 C -8 10, -18 11.5, -30 11"
             stroke="url(#ribbonSprayGrad)"
-            strokeWidth="1.8"
+            strokeWidth="3"
             strokeLinecap="round"
             fill="none"
           />

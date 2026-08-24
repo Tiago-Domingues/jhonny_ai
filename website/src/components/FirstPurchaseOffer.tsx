@@ -234,7 +234,7 @@ export function FirstPurchaseOffer() {
 
   return (
     <>
-      <PrizeWheel open={wheelOpen} onClose={() => setWheelOpen(false)} />
+      {wheelOpen && <PrizeWheel onClose={() => setWheelOpen(false)} />}
 
       {open && (
         <div
