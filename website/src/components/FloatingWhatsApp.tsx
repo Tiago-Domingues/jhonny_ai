@@ -4,6 +4,10 @@ import { whatsappHref, WHATSAPP_MESSAGES } from "@/lib/i18n";
 import { WhatsappIcon } from "@/components/icons";
 import { useLanguage } from "@/components/LanguageProvider";
 
+/**
+ * Stacks above the Jhonny AI bubble, which owns the bottom-right corner.
+ * `right-[2.125rem]` centres this 1.75rem mark over that 3.5rem bubble.
+ */
 export function FloatingWhatsApp() {
   const { locale } = useLanguage();
   return (
@@ -13,7 +17,7 @@ export function FloatingWhatsApp() {
       rel="noopener noreferrer"
       aria-label="WhatsApp"
       data-testid="whatsapp-float"
-      className="fixed bottom-5 right-5 z-50"
+      className="fixed bottom-24 right-[2.125rem] z-50"
     >
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#25D366] text-white shadow-md ring-2 ring-white transition hover:scale-105">
         <WhatsappIcon className="h-4 w-4" />
