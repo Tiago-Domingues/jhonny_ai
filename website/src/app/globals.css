@@ -228,6 +228,294 @@ html.jss-a11y-motion *::after {
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────
+   Shared entrance vocabulary for the floating widgets (prize wheel,
+   Jhonny assistant). Small translate + opacity, ease-out, no overshoot —
+   matches the rotating copy in DispatchBanner.
+   ───────────────────────────────────────────────────────────────────── */
+@keyframes jss-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes jss-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.jss-fade-in {
+  animation: jss-fade-in 0.25s ease-out both;
+}
+
+.jss-rise-in {
+  animation: jss-rise-in 0.32s ease-out both;
+}
+
+/* Grouped elements arrive as a wave rather than all at once. */
+.jss-stagger-1 {
+  animation-delay: 0.08s;
+}
+
+.jss-stagger-2 {
+  animation-delay: 0.16s;
+}
+
+/* ── Prize wheel ─────────────────────────────────────────────────── */
+
+/* Idle "breathing" lives on a wrapper so it never fights the spin
+   transform applied to the wheel itself. */
+@keyframes jss-wheel-idle {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+
+.jss-wheel-idle {
+  animation: jss-wheel-idle 6s ease-in-out infinite;
+}
+
+.jss-wheel-spinner {
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Long decelerating coast — the one deliberately slow motion on the site. */
+.jss-wheel-spinner--spinning {
+  transition: transform 4.6s cubic-bezier(0.17, 0.67, 0.16, 1);
+}
+
+@keyframes jss-wheel-pointer-tick {
+  0% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(-13deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.jss-wheel-pointer {
+  transform-origin: 50% 12%;
+}
+
+.jss-wheel-pointer--tick {
+  animation: jss-wheel-pointer-tick 0.12s ease-out 2;
+}
+
+/* Winning wedge brightens briefly, then keeps a soft highlight. */
+@keyframes jss-wheel-win-flash {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0.16;
+  }
+}
+
+.jss-wheel-win {
+  animation: jss-wheel-win-flash 0.9s ease-out both;
+}
+
+/* ── Jhonny AI assistant ─────────────────────────────────────────── */
+
+.jss-assistant-toy {
+  transform-origin: center bottom;
+  animation: toy-bob 6s ease-in-out infinite;
+}
+
+@keyframes jss-assistant-tip-in {
+  from {
+    opacity: 0;
+    transform: translateX(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.jss-assistant-tip {
+  animation: jss-assistant-tip-in 0.25s ease-out both;
+}
+
+/* Unfolds out of the bubble it is anchored to. */
+@keyframes jss-assistant-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.jss-assistant-panel {
+  transform-origin: bottom right;
+  animation: jss-assistant-panel-in 0.28s ease-out both;
+}
+
+@keyframes jss-assistant-ping {
+  0% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(2.1);
+  }
+}
+
+.jss-assistant-ping {
+  animation: jss-assistant-ping 2.4s ease-out infinite;
+}
+
+@keyframes jss-typing-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-0.15rem);
+  }
+}
+
+.jss-typing-dot {
+  animation: jss-typing-dot 1.4s ease-in-out infinite;
+}
+
+.jss-typing-dot:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.jss-typing-dot:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+/* ── Surfing Jhonny on the corner ribbon ─────────────────────────────
+   The traveller pivots on its bottom centre, so `translate(t, t)` walks
+   that contact point straight down the triangle's hypotenuse — the line
+   through (0,0) and (size, size) of the widget box. A nested element
+   carries the bob, so he rides the swell while he descends instead of
+   sliding as a rigid sprite.
+   ───────────────────────────────────────────────────────────────────── */
+.jss-ribbon-surfer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 2.6rem;
+  height: 2.6rem;
+  margin-top: -2.6rem;
+  margin-left: -1.3rem;
+  transform-origin: 50% 100%;
+  pointer-events: none;
+  animation: jss-ribbon-surf 10s linear infinite;
+}
+
+.jss-ribbon-surfer__bob {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  transform-origin: center bottom;
+  animation: toy-bob 2.6s ease-in-out infinite;
+}
+
+/* Counter-rotate so Jhonny leans rather than lying flat on the 45° face. */
+.jss-ribbon-surfer__rider {
+  width: auto;
+  height: 1.05rem;
+  transform: rotate(-22deg);
+  transform-origin: center bottom;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+/* The board SVG carries its wake in the left third of the viewBox, so the
+   element is wider than the board itself; the board stays centred on the
+   traveller's anchor. */
+.jss-ribbon-surfer__board {
+  width: 4.6rem;
+  height: auto;
+  margin-top: -0.22rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+@media (min-width: 640px) {
+  .jss-ribbon-surfer {
+    width: 3rem;
+    height: 3rem;
+    margin-top: -3rem;
+    margin-left: -1.5rem;
+  }
+
+  .jss-ribbon-surfer__rider {
+    height: 1.25rem;
+  }
+
+  .jss-ribbon-surfer__board {
+    width: 5.4rem;
+  }
+}
+
+@keyframes jss-ribbon-surf {
+  0% {
+    opacity: 0;
+    transform: translate(-1.4rem, -1.4rem) rotate(45deg);
+  }
+  3% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 1;
+    transform: translate(
+        calc(var(--jss-ribbon-size) * 0.87),
+        calc(var(--jss-ribbon-size) * 0.87)
+      )
+      rotate(45deg);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(var(--jss-ribbon-size), var(--jss-ribbon-size)) rotate(57deg);
+  }
+  30% {
+    opacity: 0;
+    transform: translate(calc(var(--jss-ribbon-size) + 0.6rem), calc(var(--jss-ribbon-size) + 3.5rem))
+      rotate(72deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--jss-ribbon-size) + 0.6rem), calc(var(--jss-ribbon-size) + 3.5rem))
+      rotate(72deg);
+  }
+}
+
 @layer utilities {
   .font-display {
     font-family: var(--font-montserrat), "Helvetica Neue", Arial, sans-serif;
@@ -384,7 +672,36 @@ html.jss-a11y-motion *::after {
   animation: shop-hero-in 0.7s ease-out both;
 }
 
+/* Motion-off parity: features must still read as finished, not broken.
+   The surfer is a pure flourish, so it is removed rather than frozen —
+   frozen it would park mid-air over the page. */
+.jss-a11y-motion .jss-ribbon-surfer {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .jss-ribbon-surfer {
+    display: none;
+  }
+  .jss-fade-in,
+  .jss-rise-in,
+  .jss-wheel-idle,
+  .jss-wheel-win,
+  .jss-wheel-pointer--tick,
+  .jss-assistant-toy,
+  .jss-assistant-tip,
+  .jss-assistant-panel,
+  .jss-typing-dot {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .jss-assistant-ping {
+    display: none;
+  }
+  .jss-wheel-spinner--spinning {
+    transition: none;
+  }
   .animate-brand {
     animation: none;
   }
