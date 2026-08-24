@@ -4,28 +4,30 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { categoryGroupHref, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
 import { ArrowIcon } from "@/components/icons";
 
+const CATEGORY_PHOTO_VERSION = "20260824";
+
 const categoryImages: Record<string, string> = {
-  surfboards: "/brand/categories/hero-surfboards.jpg",
-  wetsuits: "/brand/categories/hero-wetsuits.jpg",
-  surfgear: "/brand/categories/hero-surfgear.jpg",
-  essentials: "/brand/categories/hero-essentials.jpg",
-  bodyboard: "/brand/categories/hero-bodyboard.jpg",
-  clothing: "/brand/categories/hero-lifestyle.png",
-  jssMerch: "/brand/categories/hero-lifestyle.png",
-  travel: "/brand/categories/hero-lifestyle.png",
-  surfskate: "/brand/categories/hero-surfgear.jpg",
+  surfboards: `/brand/categories/hero-surfboards.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  wetsuits: `/brand/categories/hero-wetsuits.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  surfgear: `/brand/categories/hero-surfgear.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  essentials: `/brand/categories/hero-essentials.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  bodyboard: `/brand/categories/hero-bodyboard.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  clothing: `/brand/categories/hero-lifestyle.png?v=${CATEGORY_PHOTO_VERSION}`,
+  jssMerch: `/brand/categories/hero-jss-merch.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  travel: `/brand/categories/hero-shop.png?v=${CATEGORY_PHOTO_VERSION}`,
+  surfskate: `/brand/categories/hero-surfskate.jpg?v=${CATEGORY_PHOTO_VERSION}`,
 };
 
 const categoryPhotoFallbacks: Record<string, string> = {
-  surfboards: "/brand/categories/cat-surfboards.jpg",
-  wetsuits: "/brand/categories/cat-wetsuits.jpg",
-  surfgear: "/brand/categories/cat-technical.jpg",
-  essentials: "/brand/categories/cat-apparel.jpg",
-  bodyboard: "/brand/categories/cat-bodyboard.jpg",
-  clothing: "/brand/categories/cat-apparel.jpg",
-  jssMerch: "/brand/categories/cat-jss.jpg",
-  travel: "/brand/categories/cat-lifestyle.svg",
-  surfskate: "/brand/categories/cat-surfgear.svg",
+  surfboards: `/brand/categories/cat-surfboards.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  wetsuits: `/brand/categories/cat-wetsuits.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  surfgear: `/brand/categories/cat-technical.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  essentials: `/brand/categories/cat-apparel.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  bodyboard: `/brand/categories/cat-bodyboard.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  clothing: `/brand/categories/cat-apparel.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  jssMerch: `/brand/categories/hero-jss-merch.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  travel: `/brand/categories/cat-travel.jpg?v=${CATEGORY_PHOTO_VERSION}`,
+  surfskate: `/brand/categories/cat-surfskate.jpg?v=${CATEGORY_PHOTO_VERSION}`,
 };
 
 export function Products() {
