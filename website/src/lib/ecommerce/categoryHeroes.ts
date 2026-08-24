@@ -22,7 +22,7 @@ const DEFAULT_HERO: CategoryHero = {
 
 export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
   surfboards: {
-    image: "/brand/categories/hero-surfboards.jpg",
+    image: "/brand/categories/hero-surfboards.jpg?v=20260824",
     labelPt: "Pranchas",
     labelEn: "Surfboards",
     labelZh: "冲浪板",
@@ -31,7 +31,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "来自顶尖塑板师的竞速板、混合板、软板与长板。",
   },
   wetsuits: {
-    image: "/brand/categories/hero-wetsuits.jpg",
+    image: "/brand/categories/hero-wetsuits.jpg?v=20260824",
     labelPt: "Fatos",
     labelEn: "Wetsuits",
     labelZh: "潜水衣",
@@ -40,7 +40,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "适合各季节与海况的专业氯丁橡胶潜水衣。",
   },
   surfgear: {
-    image: "/brand/categories/hero-surfgear.jpg",
+    image: "/brand/categories/hero-surfgear.jpg?v=20260824",
     labelPt: "Material Técnico",
     labelEn: "Surf Gear",
     labelZh: "冲浪装备",
@@ -49,7 +49,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "鱼鳍、脚绳、防滑垫、板袋与水上配件。",
   },
   essentials: {
-    image: "/brand/categories/hero-essentials.jpg",
+    image: "/brand/categories/hero-essentials.jpg?v=20260824",
     labelPt: "Surf Essencials",
     labelEn: "Surf Essencials",
     labelZh: "Surf Essencials",
@@ -58,7 +58,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "冲浪蜡、浴袍斗篷、海滩用品、生活方式以及你在沙滩需要的一切。",
   },
   bodyboard: {
-    image: "/brand/categories/hero-bodyboard.jpg",
+    image: "/brand/categories/hero-bodyboard.jpg?v=20260824",
     labelPt: "Bodyboard",
     labelEn: "Bodyboard",
     labelZh: "趴板",
@@ -67,7 +67,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "趴板、脚蹼、脚绳与趴板配件。",
   },
   clothing: {
-    image: "/brand/categories/hero-lifestyle.png",
+    image: "/brand/categories/hero-lifestyle.png?v=20260824",
     labelPt: "Vestuário",
     labelEn: "Clothing",
     labelZh: "服装",
@@ -76,7 +76,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "服装、鞋履、帽子与配件。",
   },
   jssMerch: {
-    image: "/brand/categories/hero-lifestyle.png",
+    image: "/brand/categories/hero-jss-merch.jpg?v=20260824",
     labelPt: "JSS Merch",
     labelEn: "JSS Merch",
     labelZh: "JSS Merch",
@@ -85,7 +85,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "Jhonny Surf Store 自有系列。",
   },
   travel: {
-    image: "/brand/categories/hero-lifestyle.png",
+    image: "/brand/categories/hero-shop.png?v=20260824",
     labelPt: "Viagem",
     labelEn: "Travel",
     labelZh: "旅行",
@@ -94,7 +94,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
     subtitleZh: "背包、旅行袋、拉杆箱与日常携带。",
   },
   surfskate: {
-    image: "/brand/categories/hero-surfgear.jpg",
+    image: "/brand/categories/hero-surfskate.jpg?v=20260824",
     labelPt: "Surfskate",
     labelEn: "Surfskate",
     labelZh: "陆地冲浪",
