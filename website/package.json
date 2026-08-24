@@ -13,6 +13,7 @@
     "test:surfboard-videos": "npx tsx scripts/test-surfboard-review-videos.ts",
     "seed:athlete-coupons": "node scripts/seed-athlete-coupons.mjs",
     "seed:welcome-coupon": "node scripts/seed-welcome-coupon.mjs",
+    "seed:spin-coupon": "node scripts/seed-spin-coupon.mjs",
     "test:stripe": "npx tsx scripts/test-stripe-checkout.ts",
     "test:sms": "npx tsx scripts/test-sms.ts",
     "test:odoo-stock": "npx tsx scripts/test-odoo-stock.ts",

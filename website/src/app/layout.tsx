@@ -5,6 +5,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { CookieConsent } from "@/components/CookieConsent";
 import { FirstPurchaseOffer } from "@/components/FirstPurchaseOffer";
+import { JhonnyAssistant } from "@/components/JhonnyAssistant";
 import { VisitBeacon } from "@/components/VisitBeacon";
 import {
   SITE_PREVIEW_COOKIE,
@@ -91,6 +92,7 @@ export default async function RootLayout({
             <VisitBeacon />
             <CookieConsent initialVisible={showCookieBanner} />
             <FirstPurchaseOffer />
+            <JhonnyAssistant />
           </LanguageProvider>
         )}
       </body>

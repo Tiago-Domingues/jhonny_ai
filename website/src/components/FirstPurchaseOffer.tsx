@@ -5,6 +5,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/components/LanguageProvider";
+import { PrizeWheel } from "@/components/PrizeWheel";
+import { RibbonSurfer } from "@/components/RibbonSurfer";
 
 const SESSION_DISMISSED_KEY = "jss_welcome_offer_dismissed_v1";
 const RIBBON_HIDDEN_KEY = "jss_welcome_ribbon_hidden_v1";
@@ -16,6 +18,8 @@ const RIBBON_SLIDES = [
   ["Get", "special", "discounts"],
   ["Stay", "updated"],
 ] as const;
+/** The "Get special discounts" slide launches the prize wheel instead of the offer modal. */
+const SLIDE_DISCOUNTS = 1;
 
 const copy = {
   pt: {
@@ -91,6 +95,7 @@ export function FirstPurchaseOffer() {
   const { locale } = useLanguage();
   const t = copy[locale];
   const [open, setOpen] = useState(false);
+  const [wheelOpen, setWheelOpen] = useState(false);
   const [ribbonVisible, setRibbonVisible] = useState(false);
   const [ribbonSlide, setRibbonSlide] = useState(0);
   const [ribbonTheme, setRibbonTheme] = useState<"dark" | "light">("dark");
@@ -176,8 +181,9 @@ export function FirstPurchaseOffer() {
     };
   }, [ribbonVisible, open]);
 
+  // Freeze the copy while an overlay is open so the slide cannot change under the user.
   useEffect(() => {
-    if (!ribbonVisible || open) return;
+    if (!ribbonVisible || open || wheelOpen) return;
     if (typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -186,7 +192,7 @@ export function FirstPurchaseOffer() {
       setRibbonTheme((current) => (current === "dark" ? "light" : "dark"));
     }, RIBBON_ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [ribbonVisible, open]);
+  }, [ribbonVisible, open, wheelOpen]);
 
   function closeModal({ showRibbon = true }: { showRibbon?: boolean } = {}) {
     setOpen(false);
@@ -198,6 +204,11 @@ export function FirstPurchaseOffer() {
   }
 
   function openFromRibbon() {
+    if (ribbonSlide === SLIDE_DISCOUNTS) {
+      // PrizeWheel owns its own scroll lock, and the ribbon stays mounted behind it.
+      setWheelOpen(true);
+      return;
+    }
     setRibbonVisible(false);
     setOpen(true);
     document.body.style.overflow = "hidden";
@@ -223,6 +234,8 @@ export function FirstPurchaseOffer() {
 
   return (
     <>
+      {wheelOpen && <PrizeWheel onClose={() => setWheelOpen(false)} />}
+
       {open && (
         <div
           className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/75 p-4 backdrop-blur-sm"
@@ -346,6 +359,7 @@ export function FirstPurchaseOffer() {
               />
             </svg>
           </button>
+          <RibbonSurfer />
         </div>,
         document.body
       )}
