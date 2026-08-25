@@ -23,6 +23,8 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const PASSWORD = "TestPass123!";
 const CODE_PATTERN = /^RODA(5|10|20)-[A-Z0-9]{6}$/;
+/** Keep in sync with WHEEL_LAYOUT in src/lib/ecommerce/prizeWheel.ts. */
+const WHEEL_LAYOUT = [10, 5, 10, 5, 20, 5, 10, 5, 10, 10];
 
 const consentValue = encodeURIComponent(
   JSON.stringify({
@@ -99,6 +101,44 @@ async function resetSpins() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+/**
+ * The gold outline must mark the wedge actually parked under the pointer.
+ * Rotation and highlight are computed separately, so they can silently drift
+ * apart and leave the wheel appearing to celebrate the wrong prize.
+ */
+async function assertOutlineMatchesPointer(page, label) {
+  const result = await page.evaluate((layout) => {
+    const segmentAngle = 360 / layout.length;
+    const spinner = document.querySelector(".jss-wheel-spinner");
+    const matrix = /matrix\(([^,]+),\s*([^,]+)/.exec(getComputedStyle(spinner).transform);
+    if (!matrix) return null;
+    const angle =
+      ((((Math.atan2(Number(matrix[2]), Number(matrix[1])) * 180) / Math.PI) % 360) + 360) % 360;
+
+    // rotationForSegment parks wedge i at rotation -(i * segmentAngle) - segmentAngle/2,
+    // so invert that exactly. Approximating instead lands on a .5 rounding
+    // boundary and flips between neighbouring wedges.
+    const half = segmentAngle / 2;
+    const underPointer = Math.round(
+      ((((-half - angle) % 360) + 360) % 360) / segmentAngle
+    ) % layout.length;
+
+    const outline = document.querySelector(".jss-wheel-win-outline");
+    if (!outline) return null;
+    const paths = [...document.querySelectorAll("[data-testid='prize-wheel'] svg > path")];
+    const outlined = paths.findIndex((p) => p.getAttribute("d") === outline.getAttribute("d"));
+
+    return { underPointer, outlined, percent: layout[underPointer] };
+  }, WHEEL_LAYOUT);
+
+  assert(result !== null, `${label}: could not measure the wheel's resting position`);
+  assert(
+    result.outlined === result.underPointer,
+    `${label}: outline marks wedge ${result.outlined} but wedge ${result.underPointer} is under the pointer`
+  );
+  return result.percent;
 }
 
 async function openWheelFromRibbon(page) {
@@ -186,6 +226,12 @@ async function main() {
     wonCode.startsWith(`RODA${wonPercent}-`),
     `member: headline says ${wonPercent}% but the code is ${wonCode}`
   );
+
+  const landedPercent = await assertOutlineMatchesPointer(member, "member first spin");
+  assert(
+    landedPercent === Number(wonPercent),
+    `member: the wheel stopped on ${landedPercent}% but awarded ${wonPercent}%`
+  );
   step(`  won ${wonPercent}% as ${wonCode}`);
   await member.locator('[data-testid="prize-wheel-card"]').screenshot({
     path: path.join(OUT, "wheel_prize.png"),
@@ -222,6 +268,7 @@ async function main() {
     (await member.locator('[data-testid="prize-wheel-code"]').innerText()).trim() === wonCode,
     "member: an illustrative spin must not mint a new coupon"
   );
+  await assertOutlineMatchesPointer(member, "member replay spin");
 
   const afterReplay = await member.evaluate(async () => {
     const response = await fetch("/api/wheel/status");
