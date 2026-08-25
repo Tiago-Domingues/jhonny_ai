@@ -156,6 +156,7 @@ model User {
   smsEvents       SmsEvent[]
   couponUsages    CouponUsage[]
   productRatings  ProductRating[]
+  wheelSpins      WheelSpin[]
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
 
@@ -392,8 +393,31 @@ model Coupon {
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
   usages             CouponUsage[]
+  wheelSpin          WheelSpin?
 
   @@index([active])
+  @@index([code])
+}
+
+/// One prize-wheel spin per user per calendar month.
+///
+/// The @@unique([userId, periodKey]) constraint is the actual enforcement:
+/// a check-then-insert in application code loses to concurrent requests,
+/// whereas the database rejects the second write outright.
+model WheelSpin {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Calendar month bucket in store time, e.g. "2026-08".
+  periodKey    String
+  prizePercent Int
+  couponId     String?  @unique
+  coupon       Coupon?  @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  code         String
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, periodKey])
+  @@index([userId])
   @@index([code])
 }
 

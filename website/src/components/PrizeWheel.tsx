@@ -5,15 +5,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "@/components/LanguageProvider";
+import { WHEEL_LAYOUT, WHEEL_SEGMENT_COUNT } from "@/lib/ecommerce/prizeWheel";
 
-/** Ungated 10% coupon handed out by the wheel. Seed with `npm run seed:spin-coupon`. */
-export const SPIN_COUPON_CODE = "RODA10";
-
-const SPIN_RESULT_KEY = "jss_spin_wheel_result_v1";
-const SEGMENT_COUNT = 8;
-const SEGMENT_ANGLE = 360 / SEGMENT_COUNT;
+const SEGMENT_ANGLE = 360 / WHEEL_SEGMENT_COUNT;
 const FULL_TURNS = 5;
 const SPIN_MS = 4600;
+const JACKPOT_PERCENT = 20;
 
 const INK = "#0d0d0d";
 const CREAM = "#ebe4d6";
@@ -33,18 +30,24 @@ function polar(radius: number, degrees: number) {
 }
 
 /** Wedges are static geometry, so they are built once at module scope. */
-const SEGMENTS = Array.from({ length: SEGMENT_COUNT }, (_, index) => {
+const SEGMENTS = WHEEL_LAYOUT.map((percent, index) => {
   const start = -90 + index * SEGMENT_ANGLE;
   const mid = start + SEGMENT_ANGLE / 2;
   const from = polar(WHEEL_RADIUS, start);
   const to = polar(WHEEL_RADIUS, start + SEGMENT_ANGLE);
-  const label = polar(WHEEL_RADIUS * 0.6, mid);
+  const label = polar(WHEEL_RADIUS * 0.62, mid);
   // Keep labels on the left half from reading upside-down.
   const flipped = Math.cos((mid * Math.PI) / 180) < 0;
+  const jackpot = percent === JACKPOT_PERCENT;
+  const dark = index % 2 === 0;
 
   return {
     index,
-    dark: index % 2 === 0,
+    percent,
+    jackpot,
+    dark,
+    fill: jackpot ? GOLD : dark ? INK : CREAM,
+    textFill: jackpot ? INK : dark ? CREAM : INK,
     path: `M ${CENTER} ${CENTER} L ${from.x.toFixed(2)} ${from.y.toFixed(2)} A ${WHEEL_RADIUS} ${WHEEL_RADIUS} 0 0 1 ${to.x.toFixed(2)} ${to.y.toFixed(2)} Z`,
     labelX: Number(label.x.toFixed(2)),
     labelY: Number(label.y.toFixed(2)),
@@ -53,7 +56,7 @@ const SEGMENTS = Array.from({ length: SEGMENT_COUNT }, (_, index) => {
 });
 
 /** Bulbs sit on the wedge boundaries so the ring reads as aligned, not scattered. */
-const BULBS = Array.from({ length: SEGMENT_COUNT }, (_, index) =>
+const BULBS = Array.from({ length: WHEEL_SEGMENT_COUNT }, (_, index) =>
   polar(RING_RADIUS, -90 + index * SEGMENT_ANGLE)
 );
 
@@ -69,15 +72,6 @@ function rotationForSegment(current: number, index: number) {
   return current + FULL_TURNS * 360 + delta;
 }
 
-/** Winning wedge from an earlier spin this session, or null for a fresh visit. */
-function readStoredWinner() {
-  if (typeof window === "undefined") return null;
-  const raw = window.sessionStorage.getItem(SPIN_RESULT_KEY);
-  if (raw === null) return null;
-  const index = Number(raw);
-  return Number.isInteger(index) && index >= 0 && index < SEGMENT_COUNT ? index : null;
-}
-
 function prefersReducedMotion() {
   if (typeof window === "undefined") return false;
   return (
@@ -90,79 +84,132 @@ const copy = {
   pt: {
     eyebrow: "Roda da sorte",
     title: "Gira e ganha",
-    body: "Uma volta por visita. Gira a roda e leva o teu desconto para a próxima encomenda.",
+    body: "Uma volta por mês. Gira a roda e leva o teu desconto para a próxima encomenda.",
     spin: "Girar a roda",
     spinning: "A girar…",
-    wonTitle: "Ganhaste 10% de desconto",
+    wonTitle: "Ganhaste {percent}% de desconto",
     wonBody: "Usa o código no checkout e poupa na tua encomenda.",
+    usedTitle: "Já giraste este mês",
+    usedBody: "Volta no próximo mês para ganhar mais descontos. Este é o cupão que ganhaste:",
+    spinAgain: "Girar outra vez",
+    signInTitle: "Só para membros",
+    signInBody: "Cria conta ou entra para girar a roda e ganhar até 20% de desconto todos os meses.",
+    signInCta: "Entrar ou registar",
     codeLabel: "O teu cupão",
     copyCode: "Copiar código",
     copied: "Código copiado",
     cta: "Ir para a loja",
-    fineprint: "Um cupão por cliente. Não acumulável com outras campanhas.",
+    fineprint: "Um cupão por mês, só para a tua conta. Não acumulável com outras campanhas.",
     close: "Fechar",
-    wheelLabel: "Roda de prémios com 10% de desconto em cada fatia",
+    loading: "A carregar…",
+    wheelLabel: "Roda de prémios com cupões de 5%, 10% e 20% de desconto",
   },
   en: {
     eyebrow: "Wheel of fortune",
     title: "Spin & win",
-    body: "One spin per visit. Give the wheel a turn and take your discount to the checkout.",
+    body: "One spin a month. Give the wheel a turn and take your discount to the checkout.",
     spin: "Spin the wheel",
     spinning: "Spinning…",
-    wonTitle: "You won 10% off",
+    wonTitle: "You won {percent}% off",
     wonBody: "Use the code at checkout and save on your order.",
+    usedTitle: "You already spun this month",
+    usedBody: "Come back next month for more discounts. Here is the coupon you won:",
+    spinAgain: "Spin again",
+    signInTitle: "Members only",
+    signInBody: "Sign in or create an account to spin the wheel and win up to 20% off every month.",
+    signInCta: "Sign in or register",
     codeLabel: "Your coupon",
     copyCode: "Copy code",
     copied: "Code copied",
     cta: "Shop now",
-    fineprint: "One coupon per customer. Not combinable with other offers.",
+    fineprint: "One coupon a month, tied to your account. Not combinable with other offers.",
     close: "Close",
-    wheelLabel: "Prize wheel with 10% off on every slice",
+    loading: "Loading…",
+    wheelLabel: "Prize wheel with 5%, 10% and 20% off coupons",
   },
   zh: {
     eyebrow: "幸运转盘",
     title: "转动赢好礼",
-    body: "每次来访可转动一次。转动转盘，把折扣带到结账页面。",
+    body: "每月可转动一次。转动转盘，把折扣带到结账页面。",
     spin: "转动转盘",
     spinning: "转动中…",
-    wonTitle: "你赢得了 9 折优惠",
+    wonTitle: "你赢得了 {percent}% 折扣",
     wonBody: "结账时使用此优惠码即可享受折扣。",
+    usedTitle: "本月已转动过",
+    usedBody: "下个月再来赢取更多折扣。这是你已获得的优惠码：",
+    spinAgain: "再转一次",
+    signInTitle: "仅限会员",
+    signInBody: "登录或注册即可转动转盘，每月最高赢取 20% 折扣。",
+    signInCta: "登录或注册",
     codeLabel: "你的优惠码",
     copyCode: "复制代码",
     copied: "已复制代码",
     cta: "前往商店",
-    fineprint: "每位顾客限用一次，不可与其他活动叠加。",
+    fineprint: "每月一张，仅限本人账户使用，不可与其他活动叠加。",
     close: "关闭",
-    wheelLabel: "每一格都是 9 折优惠的幸运转盘",
+    loading: "加载中…",
+    wheelLabel: "含 5%、10% 和 20% 折扣的幸运转盘",
   },
 } as const;
 
-type Phase = "idle" | "spinning" | "won";
+type Prize = { percent: number; code: string; segmentIndex: number };
+type Phase = "loading" | "signedOut" | "ready" | "spinning" | "result";
+
+type WheelStatusResponse = {
+  signedIn?: boolean;
+  eligible?: boolean;
+  prize?: Prize | null;
+};
 
 /**
- * Only ever mounted in response to a click, so it is safe to seed state from
- * sessionStorage in the initialisers rather than an effect — there is no
- * server render to hydrate against.
+ * Members-only prize wheel.
+ *
+ * The prize is drawn by POST /api/wheel/spin, never here: the wheel awards up
+ * to 20%, so a client-side draw would let anyone pick their own prize. This
+ * component only animates to the wedge the server chose.
  */
 export function PrizeWheel({ onClose }: { onClose: () => void }) {
   const { locale } = useLanguage();
   const t = copy[locale];
 
-  const [phase, setPhase] = useState<Phase>(() =>
-    readStoredWinner() === null ? "idle" : "won"
-  );
-  const [rotation, setRotation] = useState(() => {
-    const stored = readStoredWinner();
-    return stored === null ? 0 : rotationForSegment(0, stored) - FULL_TURNS * 360;
-  });
-  const [winner, setWinner] = useState<number | null>(() => readStoredWinner());
+  const [phase, setPhase] = useState<Phase>("loading");
+  const [eligible, setEligible] = useState(false);
+  const [prize, setPrize] = useState<Prize | null>(null);
+  const [awardedNow, setAwardedNow] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const [landedOn, setLandedOn] = useState<number | null>(null);
   const [animateSpin, setAnimateSpin] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [hubSrc, setHubSrc] = useState("/brand/jhonny-character-cut.png");
+
   const spinButtonRef = useRef<HTMLButtonElement>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingWinnerRef = useRef<number | null>(null);
   const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<{ segmentIndex: number; awarded: boolean } | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/wheel/status", { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: WheelStatusResponse | null) => {
+        if (!data || data.signedIn === false) {
+          setPhase("signedOut");
+          return;
+        }
+        if (data.prize) {
+          setPrize(data.prize);
+          setLandedOn(data.prize.segmentIndex);
+          setRotation(rotationForSegment(0, data.prize.segmentIndex) - FULL_TURNS * 360);
+        }
+        setEligible(Boolean(data.eligible));
+        setPhase(data.eligible ? "ready" : "result");
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setPhase("signedOut");
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -177,7 +224,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   useEffect(() => {
-    if (phase === "idle") spinButtonRef.current?.focus();
+    if (phase === "ready") spinButtonRef.current?.focus();
   }, [phase]);
 
   useEffect(() => {
@@ -188,40 +235,67 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
   }, []);
 
   const settle = useCallback(() => {
-    const index = pendingWinnerRef.current;
-    if (index === null) return;
-    pendingWinnerRef.current = null;
+    const pending = pendingRef.current;
+    if (!pending) return;
+    pendingRef.current = null;
     if (settleTimerRef.current) {
       clearTimeout(settleTimerRef.current);
       settleTimerRef.current = null;
     }
-    setPhase("won");
-    setWinner(index);
-    window.sessionStorage.setItem(SPIN_RESULT_KEY, String(index));
+    setLandedOn(pending.segmentIndex);
+    setAwardedNow(pending.awarded);
+    setPhase("result");
   }, []);
 
-  function spin() {
-    if (phase !== "idle") return;
-    const index = Math.floor(Math.random() * SEGMENT_COUNT);
-    pendingWinnerRef.current = index;
+  function runSpin(segmentIndex: number, awarded: boolean) {
+    pendingRef.current = { segmentIndex, awarded };
 
     if (prefersReducedMotion()) {
       setAnimateSpin(false);
-      setRotation(rotationForSegment(rotation, index));
+      setRotation((current) => rotationForSegment(current, segmentIndex));
       settle();
       return;
     }
 
     setPhase("spinning");
     setAnimateSpin(true);
-    setRotation(rotationForSegment(rotation, index));
+    setRotation((current) => rotationForSegment(current, segmentIndex));
     // A backgrounded tab never fires transitionend, so guarantee the reveal.
     settleTimerRef.current = setTimeout(settle, SPIN_MS + 150);
   }
 
-  async function copyCode() {
+  async function spin() {
+    if (phase === "spinning" || phase === "loading") return;
+    setError(null);
+
+    // Already spent this month: the wheel still turns, but purely for show.
+    if (!eligible) {
+      runSpin(Math.floor(Math.random() * WHEEL_SEGMENT_COUNT), false);
+      return;
+    }
+
+    setPhase("spinning");
     try {
-      await navigator.clipboard.writeText(SPIN_COUPON_CODE);
+      const response = await fetch("/api/wheel/spin", { method: "POST" });
+      const data = (await response.json()) as WheelStatusResponse & { message?: string };
+      if (!response.ok || !data.prize) {
+        setPhase(prize ? "result" : "ready");
+        setError(data.message || "Could not spin the wheel. Please try again.");
+        return;
+      }
+      setPrize(data.prize);
+      setEligible(false);
+      runSpin(data.prize.segmentIndex, true);
+    } catch {
+      setPhase(prize ? "result" : "ready");
+      setError("Could not spin the wheel. Please try again.");
+    }
+  }
+
+  async function copyCode() {
+    if (!prize) return;
+    try {
+      await navigator.clipboard.writeText(prize.code);
       setCopied(true);
       copyTimerRef.current = setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -229,7 +303,24 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const won = phase === "won";
+  const showingResult = phase === "result";
+  const highlight = showingResult ? landedOn : null;
+
+  const heading = (() => {
+    if (phase === "signedOut") return t.signInTitle;
+    if (showingResult && awardedNow && prize) {
+      return t.wonTitle.replace("{percent}", String(prize.percent));
+    }
+    if (showingResult) return t.usedTitle;
+    return t.title;
+  })();
+
+  const blurb = (() => {
+    if (phase === "signedOut") return t.signInBody;
+    if (showingResult && awardedNow) return t.wonBody;
+    if (showingResult) return t.usedBody;
+    return t.body;
+  })();
 
   return createPortal(
     <div
@@ -238,6 +329,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
       aria-modal="true"
       aria-labelledby="prize-wheel-title"
       data-testid="prize-wheel"
+      data-phase={phase}
     >
       <button
         type="button"
@@ -249,7 +341,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
 
       <div
         data-testid="prize-wheel-card"
-        className="jss-rise-in relative w-full max-w-md overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl shadow-black/40"
+        className="jss-rise-in relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl border border-line bg-paper shadow-2xl shadow-black/40"
       >
         <button
           type="button"
@@ -269,20 +361,22 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
             id="prize-wheel-title"
             className="font-display mt-2 text-3xl font-extrabold uppercase leading-none tracking-tight text-ink"
           >
-            {won ? t.wonTitle : t.title}
+            {heading}
           </h2>
-          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">
-            {won ? t.wonBody : t.body}
-          </p>
+          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">{blurb}</p>
 
-          <div className="jss-rise-in jss-stagger-1 relative mt-6 h-60 w-60 sm:h-68 sm:w-68">
+          <div
+            className={`jss-rise-in jss-stagger-1 relative mt-6 h-60 w-60 transition-opacity sm:h-68 sm:w-68 ${
+              phase === "signedOut" ? "opacity-60" : ""
+            }`}
+          >
             {/* Grounding shadow so the wheel sits on the paper rather than floating. */}
             <div
               aria-hidden="true"
               className="absolute inset-x-6 bottom-1 h-6 rounded-[50%] bg-ink/20 blur-md"
             />
 
-            <div className={won || phase === "spinning" ? "" : "jss-wheel-idle"}>
+            <div className={phase === "ready" ? "jss-wheel-idle" : ""}>
               <div
                 className={`jss-wheel-spinner ${animateSpin ? "jss-wheel-spinner--spinning" : ""}`}
                 style={{ transform: `rotate(${rotation}deg)` }}
@@ -295,23 +389,27 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
                     <path
                       key={segment.index}
                       d={segment.path}
-                      fill={segment.dark ? INK : CREAM}
+                      fill={segment.fill}
                       stroke={segment.dark ? "rgba(235,228,214,0.25)" : "rgba(13,13,13,0.12)"}
                       strokeWidth={0.75}
                     />
                   ))}
 
-                  {winner !== null && (
+                  {highlight !== null && SEGMENTS[highlight] && (
                     <>
-                      <path
-                        className="jss-wheel-win"
-                        d={SEGMENTS[winner]!.path}
-                        fill={SEGMENTS[winner]!.dark ? CREAM : INK}
-                        pointerEvents="none"
-                      />
+                      {/* The flash celebrates a win as it lands. Reopening a
+                          prize won days ago only gets the outline. */}
+                      {awardedNow && (
+                        <path
+                          className="jss-wheel-win"
+                          d={SEGMENTS[highlight]!.path}
+                          fill={SEGMENTS[highlight]!.dark ? CREAM : INK}
+                          pointerEvents="none"
+                        />
+                      )}
                       <path
                         className="jss-wheel-win-outline"
-                        d={SEGMENTS[winner]!.path}
+                        d={SEGMENTS[highlight]!.path}
                         fill="none"
                         stroke={GOLD}
                         strokeWidth={3}
@@ -328,14 +426,14 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
                       y={segment.labelY}
                       transform={`rotate(${segment.labelRotation} ${segment.labelX} ${segment.labelY})`}
                       textAnchor="middle"
-                      fill={segment.dark ? CREAM : INK}
+                      fill={segment.textFill}
                       fontFamily="var(--font-montserrat), Helvetica Neue, Arial, sans-serif"
                       fontWeight={800}
                     >
-                      <tspan x={segment.labelX} dy="-0.1em" fontSize={17}>
-                        10%
+                      <tspan x={segment.labelX} dy="-0.1em" fontSize={segment.jackpot ? 16 : 14}>
+                        {segment.percent}%
                       </tspan>
-                      <tspan x={segment.labelX} dy="1.05em" fontSize={8} letterSpacing="1.6">
+                      <tspan x={segment.labelX} dy="1.05em" fontSize={7} letterSpacing="1.4">
                         OFF
                       </tspan>
                     </text>
@@ -346,7 +444,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
                       key={`bulb-${index}`}
                       cx={bulb.x}
                       cy={bulb.y}
-                      r={2.6}
+                      r={2.4}
                       fill={CREAM}
                       opacity={0.9}
                     />
@@ -375,7 +473,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
                 viewBox="0 0 24 27"
                 aria-hidden="true"
                 className={`jss-wheel-pointer h-8 w-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)] ${
-                  won ? "jss-wheel-pointer--tick" : ""
+                  showingResult ? "jss-wheel-pointer--tick" : ""
                 }`}
               >
                 <path
@@ -390,50 +488,80 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          {won ? (
-            <div className="jss-rise-in mt-6 w-full">
-              <div className="rounded-2xl border border-dashed border-ink/25 bg-cream px-4 py-3 text-left">
-                <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
-                  {t.codeLabel}
-                </p>
-                <div className="mt-1 flex items-center justify-between gap-3">
-                  <p
-                    className="font-display text-2xl font-extrabold tracking-[0.12em] text-ink"
-                    data-testid="prize-wheel-code"
-                  >
-                    {SPIN_COUPON_CODE}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={copyCode}
-                    className="rounded-full border border-line bg-white px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-ink transition hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-                  >
-                    {copied ? t.copied : t.copyCode}
-                  </button>
-                </div>
-              </div>
+          {error && (
+            <p className="mt-4 text-xs font-semibold text-ink" role="alert">
+              {error}
+            </p>
+          )}
 
-              <Link
-                href="/loja"
-                onClick={onClose}
-                className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          {phase === "signedOut" ? (
+            <Link
+              href="/conta"
+              onClick={onClose}
+              data-testid="prize-wheel-signin"
+              className="jss-rise-in jss-stagger-2 mt-6 inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+            >
+              {t.signInCta}
+            </Link>
+          ) : (
+            <>
+              {showingResult && prize && (
+                <div className="jss-rise-in mt-6 w-full">
+                  <div className="rounded-2xl border border-dashed border-ink/25 bg-cream px-4 py-3 text-left">
+                    <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">
+                      {t.codeLabel}
+                    </p>
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                      <p
+                        className="font-display text-xl font-extrabold tracking-[0.1em] text-ink"
+                        data-testid="prize-wheel-code"
+                      >
+                        {prize.code}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={copyCode}
+                        className="rounded-full border border-line bg-white px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-ink transition hover:bg-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                      >
+                        {copied ? t.copied : t.copyCode}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/loja"
+                    onClick={onClose}
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-3 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                  >
+                    {t.cta}
+                  </Link>
+                </div>
+              )}
+
+              <button
+                ref={spinButtonRef}
+                type="button"
+                onClick={spin}
+                disabled={phase === "spinning" || phase === "loading"}
+                data-testid="prize-wheel-spin"
+                data-awards={eligible ? "true" : "false"}
+                className={`jss-rise-in jss-stagger-2 mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3.5 text-xs font-bold uppercase tracking-[0.16em] transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+                  showingResult
+                    ? "border border-line bg-white text-ink hover:bg-cream"
+                    : "bg-ink text-white hover:bg-ink-soft"
+                }`}
               >
-                {t.cta}
-              </Link>
+                {phase === "loading"
+                  ? t.loading
+                  : phase === "spinning"
+                    ? t.spinning
+                    : showingResult
+                      ? t.spinAgain
+                      : t.spin}
+              </button>
 
               <p className="mt-4 text-[0.7rem] leading-relaxed text-muted/90">{t.fineprint}</p>
-            </div>
-          ) : (
-            <button
-              ref={spinButtonRef}
-              type="button"
-              onClick={spin}
-              disabled={phase === "spinning"}
-              data-testid="prize-wheel-spin"
-              className="jss-rise-in jss-stagger-2 mt-6 inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
-            >
-              {phase === "spinning" ? t.spinning : t.spin}
-            </button>
+            </>
           )}
         </div>
       </div>

@@ -91,21 +91,21 @@ jobs:
           done
           echo "::warning::prisma db push failed after retries — continuing deploy (schema may already be current)."
 
-      # The prize wheel always awards RODA10, so that coupon row has to exist or
-      # the code it hands out is rejected at checkout. The seed is an idempotent
-      # upsert, so it is safe to run on every deploy.
-      - name: Seed prize wheel coupon
+      # The wheel now mints a unique code per spin, so the old shared RODA10
+      # must be switched off: left active it is a permanent 10% discount anyone
+      # can type without spinning. Idempotent, so it is safe on every deploy.
+      - name: Retire the fixed prize wheel coupon
         run: |
           set -a
           # shellcheck disable=SC1091
           source .vercel/.env.production.local
           set +a
           if [ -z "$DATABASE_URL" ]; then
-            echo "::warning::DATABASE_URL missing — skipping RODA10 seed."
+            echo "::warning::DATABASE_URL missing — skipping RODA10 retirement."
             exit 0
           fi
-          npm run seed:spin-coupon || \
-            echo "::warning::RODA10 seed failed — the wheel coupon may not validate at checkout."
+          npm run retire:fixed-wheel-coupon || \
+            echo "::warning::Could not retire RODA10 — it may still be redeemable."
 
       - name: Build for production
         run: vercel build --prod --token="$VERCEL_TOKEN"
