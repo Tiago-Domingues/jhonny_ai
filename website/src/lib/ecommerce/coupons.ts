@@ -47,11 +47,25 @@ export async function validateCoupon(code: string | undefined | null, subtotalCe
   const now = new Date();
   const coupon = await prisma.coupon.findUnique({
     where: { code: normalizedCode },
-    include: { usages: { include: { order: { select: { status: true } } } } },
+    include: {
+      usages: { include: { order: { select: { status: true } } } },
+      wheelSpin: { select: { userId: true } },
+    },
   });
   if (!coupon || !coupon.active) throw new Error("Coupon not found or inactive.");
   if (coupon.startsAt && coupon.startsAt > now) throw new Error("Coupon is not active yet.");
   if (coupon.expiresAt && coupon.expiresAt < now) throw new Error("Coupon has expired.");
+
+  // Prize-wheel codes belong to the account that won them. Without this, a
+  // customer could publish their 20% code and anyone could redeem it.
+  if (coupon.wheelSpin) {
+    if (!identity.userId) {
+      throw new Error("Sign in with the account that won this prize to use it.");
+    }
+    if (coupon.wheelSpin.userId !== identity.userId) {
+      throw new Error("This prize coupon belongs to another account.");
+    }
+  }
 
   const consumedUsages = coupon.usages.filter(usageWasConsumed);
   if (coupon.maxUses && consumedUsages.length >= coupon.maxUses) {

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Logo } from "@/components/Logo";
@@ -10,6 +11,8 @@ import { RibbonSurfer } from "@/components/RibbonSurfer";
 
 const SESSION_DISMISSED_KEY = "jss_welcome_offer_dismissed_v1";
 const RIBBON_HIDDEN_KEY = "jss_welcome_ribbon_hidden_v1";
+/** Stops the monthly wheel prompt reopening on every homepage visit in one session. */
+const WHEEL_PROMPTED_KEY = "jss_wheel_prompted_v1";
 const COUPON_CODE = "JHONNY10";
 const SHOW_AFTER_MS = 7000;
 const RIBBON_ROTATE_MS = 7000;
@@ -18,8 +21,6 @@ const RIBBON_SLIDES = [
   ["Get", "special", "discounts"],
   ["Stay", "updated"],
 ] as const;
-/** The "Get special discounts" slide launches the prize wheel instead of the offer modal. */
-const SLIDE_DISCOUNTS = 1;
 
 const copy = {
   pt: {
@@ -100,62 +101,88 @@ export function FirstPurchaseOffer() {
   const [ribbonSlide, setRibbonSlide] = useState(0);
   const [ribbonTheme, setRibbonTheme] = useState<"dark" | "light">("dark");
   const [copied, setCopied] = useState(false);
+  const [auth, setAuth] = useState<"unknown" | "guest" | "member">("unknown");
+  const [wheelEligible, setWheelEligible] = useState(false);
+  const [consentTick, setConsentTick] = useState(0);
   const shownThisLoad = useRef(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const widgetRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const ribbonHidden = window.sessionStorage.getItem(RIBBON_HIDDEN_KEY) === "1";
     const dismissed = window.sessionStorage.getItem(SESSION_DISMISSED_KEY) === "1";
-    if (dismissed && !ribbonHidden) {
-      setRibbonVisible(true);
-    }
 
-    const clearTimer = () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
+    const loadAuth = () => {
+      fetch("/api/auth/me")
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => {
+          const member = Boolean(data?.user);
+          setAuth(member ? "member" : "guest");
+          // Members never see the welcome modal, so the ribbon cannot wait on
+          // it being dismissed the way it does for guests.
+          if ((member || dismissed) && !ribbonHidden) setRibbonVisible(true);
+        })
+        .catch(() => setAuth("guest"));
     };
 
-    const show = () => {
-      if (shownThisLoad.current) return;
-      if (!hasConsentCookie()) return;
-      // If user already dismissed this session, keep ribbon only (no auto re-popup).
-      if (window.sessionStorage.getItem(SESSION_DISMISSED_KEY) === "1") {
-        if (window.sessionStorage.getItem(RIBBON_HIDDEN_KEY) !== "1") {
-          setRibbonVisible(true);
-        }
-        return;
-      }
-      shownThisLoad.current = true;
-      setOpen(true);
-      setRibbonVisible(false);
-      document.body.style.overflow = "hidden";
-    };
-
-    const arm = () => {
-      clearTimer();
-      if (shownThisLoad.current) return;
-      if (!hasConsentCookie()) return;
-      timerRef.current = setTimeout(show, SHOW_AFTER_MS);
-    };
-
-    const onConsent = () => arm();
-
-    if (hasConsentCookie()) {
-      arm();
-    }
+    loadAuth();
+    // AccountClient fires this after a successful login, so the state flips
+    // without waiting for a reload.
+    window.addEventListener("jss-cart-updated", loadAuth);
+    const onConsent = () => setConsentTick((tick) => tick + 1);
     window.addEventListener("jss-consent-saved", onConsent);
 
     return () => {
-      clearTimer();
+      window.removeEventListener("jss-cart-updated", loadAuth);
       window.removeEventListener("jss-consent-saved", onConsent);
       document.body.style.overflow = "";
     };
   }, []);
+
+  useEffect(() => {
+    if (auth !== "member") return;
+    const controller = new AbortController();
+    fetch("/api/wheel/status", { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setWheelEligible(Boolean(data?.eligible)))
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [auth]);
+
+  /**
+   * Guests get the register-and-save invite; members get their monthly wheel on
+   * the homepage. Nothing is scheduled until we know which, so a member never
+   * briefly sees a prompt to register.
+   */
+  useEffect(() => {
+    if (auth === "unknown" || shownThisLoad.current) return;
+    if (typeof window === "undefined" || !hasConsentCookie()) return;
+
+    const member = auth === "member";
+    if (member) {
+      if (pathname !== "/") return;
+      if (!wheelEligible) return;
+      if (window.sessionStorage.getItem(WHEEL_PROMPTED_KEY) === "1") return;
+    } else if (window.sessionStorage.getItem(SESSION_DISMISSED_KEY) === "1") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      shownThisLoad.current = true;
+      if (member) {
+        window.sessionStorage.setItem(WHEEL_PROMPTED_KEY, "1");
+        setWheelOpen(true);
+        return;
+      }
+      setOpen(true);
+      setRibbonVisible(false);
+      document.body.style.overflow = "hidden";
+    }, SHOW_AFTER_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [auth, wheelEligible, pathname, consentTick]);
 
   useLayoutEffect(() => {
     if (!ribbonVisible || open) return;
@@ -204,8 +231,11 @@ export function FirstPurchaseOffer() {
   }
 
   function openFromRibbon() {
-    if (ribbonSlide === SLIDE_DISCOUNTS) {
-      // PrizeWheel owns its own scroll lock, and the ribbon stays mounted behind it.
+    // Members are already registered, so the welcome offer means nothing to
+    // them: the triangle is their way back to the monthly wheel, on any slide.
+    // Guests get the register invite instead, since the wheel is members-only.
+    // PrizeWheel owns its own scroll lock, and the ribbon stays mounted behind it.
+    if (auth === "member") {
       setWheelOpen(true);
       return;
     }
