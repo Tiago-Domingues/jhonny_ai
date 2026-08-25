@@ -15,7 +15,6 @@ const BASE = process.env.BASE_URL || "http://localhost:3000";
 const OUT = "/tmp/widgets-smoke";
 fs.mkdirSync(OUT, { recursive: true });
 
-const SPIN_CODE = "RODA10";
 /** Keep in sync with jss-ribbon-surf in globals.css: 10s loop, ride ends at 24%. */
 const SURF_CYCLE_MS = 10000;
 
@@ -199,44 +198,28 @@ async function assertBottomRightStack(page, label) {
   );
 }
 
-async function runWheel(page, { reduced = false, label = "desktop" } = {}) {
+/**
+ * The wheel is members-only, so a signed-out visitor clicking the ribbon must
+ * get the register invite and must never reach the wheel.
+ * Member wheel behaviour lives in smoke-monthly-wheel.mjs.
+ */
+async function assertGuestGetsRegisterInvite(page, label) {
   await waitForDiscountSlide(page);
   await page.locator(".jss-free-shipping-ribbon").click();
 
-  const wheel = page.locator('[data-testid="prize-wheel"]');
-  await wheel.waitFor({ timeout: 6000 });
-  assert(true, `${label}: discounts slide opened the prize wheel`);
-
-  const segmentCount = await page.locator('[data-testid="prize-wheel"] svg path[fill]').count();
-  assert(segmentCount >= 8, `${label}: expected 8 wedges, found ${segmentCount}`);
-
-  const spin = page.locator('[data-testid="prize-wheel-spin"]');
-  await spin.waitFor({ timeout: 4000 });
-  await spin.click();
-
-  const code = page.locator('[data-testid="prize-wheel-code"]');
-  await code.waitFor({ timeout: reduced ? 2000 : 9000 });
-  const won = (await code.innerText()).trim();
-  assert(won === SPIN_CODE, `${label}: expected ${SPIN_CODE}, got ${won}`);
-
-  const parked = await page.evaluate(() => {
-    const spinner = document.querySelector(".jss-wheel-spinner");
-    const transform = window.getComputedStyle(spinner).transform;
-    const match = /matrix\(([^,]+),\s*([^,]+)/.exec(transform);
-    if (!match) return null;
-    const angle = (Math.atan2(Number(match[2]), Number(match[1])) * 180) / Math.PI;
-    return ((angle % 360) + 360) % 360;
-  });
-  // Landing centres a wedge on the 12 o'clock pointer: always an odd half-step.
-  const offset = Math.abs((((parked + 22.5) % 45) + 45) % 45);
+  const welcomeModal = page.locator('[aria-labelledby="welcome-offer-title"]');
+  await welcomeModal.waitFor({ timeout: 6000 });
   assert(
-    offset < 1 || Math.abs(offset - 45) < 1,
-    `${label}: wheel did not park a wedge under the pointer (angle=${parked?.toFixed(2)})`
+    (await page.locator('[data-testid="prize-wheel"]').count()) === 0,
+    `${label}: a signed-out visitor must not reach the members-only wheel`
+  );
+  assert(
+    /JHONNY10/.test(await welcomeModal.innerText()),
+    `${label}: the register invite should carry the welcome coupon`
   );
 
-  // Let the win outline and prize reveal settle before anything is captured.
-  await page.waitForTimeout(1000);
-  return wheel;
+  await welcomeModal.locator("button[aria-label='Close']").click();
+  await welcomeModal.waitFor({ state: "detached", timeout: 5000 });
 }
 
 async function main() {
@@ -278,32 +261,18 @@ async function main() {
 
   // Wheel opens only from the discounts slide.
   step("desktop: prize wheel");
-  const wheel = await runWheel(page, { label: "desktop" });
-  await page.screenshot({ path: path.join(OUT, "prize_wheel_prize_desktop.png") });
-  await page.locator('[data-testid="prize-wheel-card"]').screenshot({ path: path.join(OUT, "prize_wheel_card.png") });
-  await page.locator('[data-testid="prize-wheel-close"]').click();
-  await wheel.waitFor({ state: "detached", timeout: 4000 });
+  await assertGuestGetsRegisterInvite(page, "desktop");
 
-  // Re-opening in the same session shows the stored prize, not a fresh spin.
-  await waitForDiscountSlide(page);
-  await page.locator(".jss-free-shipping-ribbon").click();
-  await page.locator('[data-testid="prize-wheel-code"]').waitFor({ timeout: 4000 });
-  assert(
-    (await page.locator('[data-testid="prize-wheel-spin"]').count()) === 0,
-    "desktop: a second visit should not offer another spin"
-  );
-  await page.locator('[data-testid="prize-wheel-close"]').click();
-  await wheel.waitFor({ state: "detached", timeout: 4000 });
-
-  // Other slides must still open the welcome modal.
+  // Every slide behaves the same for a guest, including the non-discount ones.
   await page.locator('[data-testid="ribbon-copy"][data-slide="2"]').waitFor({ timeout: 12000 });
   await page.locator(".jss-free-shipping-ribbon").click();
-  await page.getByRole("dialog").waitFor({ timeout: 5000 });
+  const welcomeModal = page.locator('[aria-labelledby="welcome-offer-title"]');
+  await welcomeModal.waitFor({ timeout: 5000 });
   assert(
     (await page.locator('[data-testid="prize-wheel"]').count()) === 0,
-    "desktop: non-discount slides must not open the wheel"
+    "desktop: non-discount slides must not open the wheel either"
   );
-  const welcomeModal = page.locator('[aria-labelledby="welcome-offer-title"]');
+  await page.screenshot({ path: path.join(OUT, "guest_register_invite.png") });
   await welcomeModal.locator("button[aria-label='Close']").click();
   await welcomeModal.waitFor({ state: "detached", timeout: 5000 });
 
@@ -351,9 +320,7 @@ async function main() {
   });
   await assertBottomRightStack(mobile, "mobile");
   await assertSurferRidesTheEdge(mobile, "mobile");
-  await runWheel(mobile, { label: "mobile" });
-  await mobile.screenshot({ path: path.join(OUT, "prize_wheel_mobile.png") });
-  await mobile.locator('[data-testid="prize-wheel-close"]').click();
+  await assertGuestGetsRegisterInvite(mobile, "mobile");
 
   await mobile.locator('[data-testid="jhonny-assistant-bubble"]').click();
   const mobilePanel = mobile.locator('[data-testid="jhonny-assistant-panel"]');
@@ -374,8 +341,7 @@ async function main() {
     viewport: { width: 768, height: 1024 },
   });
   await assertBottomRightStack(tablet, "tablet");
-  await runWheel(tablet, { label: "tablet" });
-  await tablet.screenshot({ path: path.join(OUT, "prize_wheel_tablet.png") });
+  await assertGuestGetsRegisterInvite(tablet, "tablet");
   await tabletCtx.close();
 
   // ── Reduced motion: still complete, just instant ─────────────────────
@@ -399,22 +365,11 @@ async function main() {
   );
 
   await calm.locator(".jss-free-shipping-ribbon").click();
-  await calm.locator('[data-testid="prize-wheel"]').waitFor({ timeout: 6000 });
-  const startedSpin = Date.now();
-  await calm.locator('[data-testid="prize-wheel-spin"]').click();
-  await calm.locator('[data-testid="prize-wheel-code"]').waitFor({ timeout: 3000 });
-  const elapsed = Date.now() - startedSpin;
-  assert(
-    elapsed < 2000,
-    `reduced motion: the wheel should resolve immediately, took ${elapsed}ms`
-  );
-  assert(
-    (await calm.locator('[data-testid="prize-wheel-code"]').innerText()).trim() === SPIN_CODE,
-    "reduced motion: the prize should still be awarded"
-  );
-  await calm.screenshot({ path: path.join(OUT, "reduced_motion_prize_wheel.png") });
-  await calm.locator('[data-testid="prize-wheel-close"]').click();
-  await calm.locator('[data-testid="prize-wheel"]').waitFor({ state: "detached", timeout: 4000 });
+  const calmModal = calm.locator('[aria-labelledby="welcome-offer-title"]');
+  await calmModal.waitFor({ timeout: 6000 });
+  await calm.screenshot({ path: path.join(OUT, "reduced_motion_register_invite.png") });
+  await calmModal.locator("button[aria-label='Close']").click();
+  await calmModal.waitFor({ state: "detached", timeout: 5000 });
 
   await calm.locator('[data-testid="jhonny-assistant-bubble"]').click();
   const calmPanel = calm.locator('[data-testid="jhonny-assistant-panel"]');
@@ -428,8 +383,8 @@ async function main() {
 
   // ── Locales ──────────────────────────────────────────────────────────
   for (const [locale, pattern] of [
-    ["pt", /Gira e ganha/i],
-    ["zh", /转动赢好礼/],
+    ["pt", /Ganha 10%/i],
+    ["zh", /首次购物立减/],
   ]) {
     const { context, page: localised } = await newSession(browser, {
       viewport: { width: 1440, height: 900 },
@@ -437,20 +392,14 @@ async function main() {
     });
     await waitForDiscountSlide(localised);
     await localised.locator(".jss-free-shipping-ribbon").click();
-    await localised.locator('[data-testid="prize-wheel"]').waitFor({ timeout: 6000 });
+    const localisedModal = localised.locator('[aria-labelledby="welcome-offer-title"]');
+    await localisedModal.waitFor({ timeout: 6000 });
     await localised.waitForTimeout(600); // let the entrance settle before capturing
-    const heading = await localised.locator("#prize-wheel-title").innerText();
-    assert(pattern.test(heading), `${locale}: unexpected wheel heading "${heading}"`);
+    const heading = await localised.locator("#welcome-offer-title").innerText();
+    assert(pattern.test(heading), `${locale}: unexpected invite heading "${heading}"`);
+    await localised.screenshot({ path: path.join(OUT, `register_invite_${locale}.png`) });
 
-    const overflow = await localised.evaluate(() => {
-      const card = document.querySelector("[data-testid='prize-wheel-card']");
-      return card ? card.scrollWidth - card.clientWidth : null;
-    });
-    assert(overflow !== null, `${locale}: could not find the wheel card to measure`);
-    assert(overflow <= 1, `${locale}: the wheel card overflows horizontally by ${overflow}px`);
-    await localised.screenshot({ path: path.join(OUT, `prize_wheel_${locale}.png`) });
-
-    await localised.locator('[data-testid="prize-wheel-close"]').click();
+    await localisedModal.locator("button[aria-label='Close']").click();
     await localised.locator('[data-testid="jhonny-assistant-bubble"]').click();
     await localised.locator('[data-testid="jhonny-assistant-panel"]').waitFor({ timeout: 4000 });
     await localised.waitForTimeout(1200);
