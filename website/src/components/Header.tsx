@@ -75,6 +75,7 @@ function LanguageSwitcher({
   onToggle,
   onPick,
   align,
+  changeLanguageLabel,
   className = "",
 }: {
   locale: Locale;
@@ -83,6 +84,7 @@ function LanguageSwitcher({
   onToggle: () => void;
   onPick: (code: Locale) => void;
   align: "left" | "right";
+  changeLanguageLabel: string;
   className?: string;
 }) {
   return (
@@ -90,7 +92,7 @@ function LanguageSwitcher({
       <button
         type="button"
         onClick={onToggle}
-        aria-label="Change language"
+        aria-label={changeLanguageLabel}
         aria-expanded={open}
         className="flex items-center gap-1.5 px-1.5 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-white transition hover:text-white/80"
       >
@@ -275,6 +277,12 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       checkout: "Checkout",
       subtotal: "Subtotal",
       signOut: "Sair",
+      menu: "Menu",
+      changeLanguage: "Mudar idioma",
+      openSubcategories: "Abrir subcategorias",
+      categories: "Categorias",
+      tools: "Ferramentas",
+      pickSubcategory: "— escolhe uma subcategoria",
     },
     en: {
       tryBoard: "Try a Board",
@@ -290,6 +298,12 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       checkout: "Checkout",
       subtotal: "Subtotal",
       signOut: "Sign out",
+      menu: "Menu",
+      changeLanguage: "Change language",
+      openSubcategories: "Open subcategories",
+      categories: "Categories",
+      tools: "Tools",
+      pickSubcategory: "— pick a subcategory",
     },
     zh: {
       tryBoard: "试板",
@@ -305,6 +319,12 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       checkout: "结算",
       subtotal: "小计",
       signOut: "退出",
+      menu: "菜单",
+      changeLanguage: "切换语言",
+      openSubcategories: "打开子分类",
+      categories: "分类",
+      tools: "工具",
+      pickSubcategory: "— 选择子分类",
     },
   }[locale];
 
@@ -326,7 +346,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
+            aria-label={headerCopy.menu}
             aria-expanded={open}
             className="flex h-10 w-10 items-center justify-center text-white xl:hidden"
           >
@@ -367,6 +387,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             open={langOpen}
             align="left"
             className="xl:hidden"
+            changeLanguageLabel={headerCopy.changeLanguage}
             onToggle={() => {
               setLangOpen((value) => !value);
               setDesktopCat(null);
@@ -425,6 +446,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             open={langOpen}
             align="right"
             className="hidden xl:block"
+            changeLanguageLabel={headerCopy.changeLanguage}
             onToggle={() => {
               setLangOpen((value) => !value);
               setDesktopCat(null);
@@ -632,11 +654,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                   )}
                   {!activeSubcategory && (
                     <span className="font-medium normal-case tracking-normal text-muted">
-                      {locale === "pt"
-                        ? "— escolhe uma subcategoria"
-                        : locale === "zh"
-                          ? "— 选择子分类"
-                          : "— choose a subcategory"}
+                      {headerCopy.pickSubcategory}
                     </span>
                   )}
                 </nav>
@@ -656,7 +674,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
 
             <div>
               <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-ink">
-                {locale === "pt" ? "Categorias" : locale === "zh" ? "分类" : "Categories"}
+                {headerCopy.categories}
               </p>
               <div className="flex flex-wrap gap-x-7 gap-y-3">
                 {activeDesktopCategory.items.map((item) => {
@@ -701,7 +719,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             {activeDesktopCategory.key === "surfboards" && (
               <div className="mt-5 border-t border-line pt-4">
                 <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-ink">
-                  {locale === "pt" ? "Ferramentas" : locale === "zh" ? "工具" : "Tools"}
+                  {headerCopy.tools}
                 </p>
                 <Link
                   href={VOLUME_CALCULATOR_PATH}
@@ -809,7 +827,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                       aria-expanded={expanded}
                       className="px-3 py-3.5 text-white/80 transition hover:text-white"
                     >
-                      <span className="sr-only">Abrir subcategorias</span>
+                      <span className="sr-only">{headerCopy.openSubcategories}</span>
                       <Chevron
                         className={`h-4 w-4 transition-transform duration-200 ${
                           expanded ? "rotate-180" : ""

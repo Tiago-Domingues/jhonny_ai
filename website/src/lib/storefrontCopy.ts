@@ -82,6 +82,7 @@ type StorefrontCopy = {
     notifyCta: string;
     inStockCount: string;
     outOfStock: string;
+    backToShop: string;
     name: string;
     email: string;
     phone: string;
@@ -253,6 +254,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyCta: "Pedir aviso",
       inStockCount: "{n} em stock",
       outOfStock: "Esgotado",
+      backToShop: "Voltar à loja",
       name: "Nome",
       email: "Email",
       phone: "Telefone",
@@ -424,6 +426,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyCta: "Notify me",
       inStockCount: "{n} in stock",
       outOfStock: "Out of stock",
+      backToShop: "Back to shop",
       name: "Name",
       email: "Email",
       phone: "Phone",
@@ -595,6 +598,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyCta: "登记通知",
       inStockCount: "{n} 件库存",
       outOfStock: "缺货",
+      backToShop: "返回商店",
       name: "姓名",
       email: "邮箱",
       phone: "电话",

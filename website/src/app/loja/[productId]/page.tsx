@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
@@ -67,9 +66,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <SiteHeader />
       <main className="bg-cream pb-20 pt-36">
         <section className="mx-auto max-w-7xl px-5 sm:px-8">
-          <Link href="/loja" className="text-xs font-bold uppercase tracking-[0.2em] text-muted underline">
-            Voltar à loja
-          </Link>
           <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_0.95fr]">
             <ProductDetailClient
               initialProduct={product}
