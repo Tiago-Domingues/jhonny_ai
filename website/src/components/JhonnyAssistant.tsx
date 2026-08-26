@@ -310,6 +310,14 @@ export function JhonnyAssistant() {
           {/* Cropped tall so Jhonny peeks over the rim instead of sitting boxed in. */}
           <JhonnyAvatar className="jss-assistant-toy h-14 w-auto -translate-y-1.5 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]" />
 
+          {/* Decorative WhatsApp mark — not a link; chat panel has the real WhatsApp CTA. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-0.5 right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#25D366] text-white ring-2 ring-cream"
+          >
+            <WhatsappIcon className="h-2.5 w-2.5" />
+          </span>
+
           {!seen && !open && (
             <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3 items-center justify-center">
               <span className="jss-assistant-ping absolute inline-flex h-3 w-3 rounded-full bg-ink" />

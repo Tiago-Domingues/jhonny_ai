@@ -48,6 +48,14 @@ export const metadata: Metadata = {
     "surfskate",
     "Parede",
   ],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand/icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
+  },
   openGraph: {
     title: "Jhonny Surf Store — Surf Shop in Carcavelos, Lisboa",
     description:

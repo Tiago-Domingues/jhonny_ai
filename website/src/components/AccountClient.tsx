@@ -78,6 +78,7 @@ export function AccountClient() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<string | null>(null);
+  const [googleConsentOpen, setGoogleConsentOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -543,13 +544,14 @@ export function AccountClient() {
       {mode === "login" ? (
         <form onSubmit={(event) => submit("/api/auth/login", event)} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4">
-            <a
-              href="/api/auth/google"
+            <button
+              type="button"
+              onClick={() => setGoogleConsentOpen(true)}
               className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream"
             >
               <GoogleMark />
               {copy.continueGoogle}
-            </a>
+            </button>
             <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">
               <span className="h-px flex-1 bg-line" />
               {copy.or}
@@ -568,13 +570,14 @@ export function AccountClient() {
       ) : (
         <form onSubmit={(event) => submit("/api/auth/register", event)} className="rounded-3xl border border-line bg-white p-6 shadow-sm">
           <div className="grid gap-4">
-            <a
-              href="/api/auth/google"
+            <button
+              type="button"
+              onClick={() => setGoogleConsentOpen(true)}
               className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream"
             >
               <GoogleMark />
               {copy.createGoogle}
-            </a>
+            </button>
             <div className="flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-muted">
               <span className="h-px flex-1 bg-line" />
               {copy.or}
@@ -589,6 +592,76 @@ export function AccountClient() {
             </button>
           </div>
         </form>
+      )}
+      {googleConsentOpen && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="google-consent-title"
+          onClick={() => setGoogleConsentOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl border border-line bg-white p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="google-consent-title" className="font-display text-xl font-extrabold tracking-tight text-ink">
+              {copy.googleConsentTitle}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{copy.googleConsentBody}</p>
+            <ul className="mt-4 grid gap-3 text-sm text-ink">
+              <li className="flex items-start gap-3 rounded-2xl border border-line bg-cream/40 px-3 py-2.5">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-ink" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                  </svg>
+                </span>
+                <span>
+                  <span className="font-semibold">Jhonny Surf Store</span>
+                  <span className="mt-0.5 block text-muted">{copy.googleConsentProfile}</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-3 rounded-2xl border border-line bg-cream/40 px-3 py-2.5">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-ink" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="M3 7l9 7 9-7" />
+                  </svg>
+                </span>
+                <span>
+                  <span className="font-semibold">Email</span>
+                  <span className="mt-0.5 block text-muted">{copy.googleConsentEmail}</span>
+                </span>
+              </li>
+            </ul>
+            <p className="mt-4 text-xs leading-relaxed text-muted">
+              {copy.googleConsentLegal}{" "}
+              <a href="/privacidade" className="font-semibold text-ink underline underline-offset-2">
+                Privacy
+              </a>
+              {" · "}
+              <a href="/termos" className="font-semibold text-ink underline underline-offset-2">
+                Terms
+              </a>
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setGoogleConsentOpen(false)}
+                className="flex-1 rounded-2xl border border-line bg-white px-4 py-3 text-sm font-bold text-ink transition hover:bg-cream"
+              >
+                {copy.googleConsentCancel}
+              </button>
+              <a
+                href="/api/auth/google"
+                className="flex flex-1 items-center justify-center rounded-2xl bg-ink px-4 py-3 text-sm font-bold text-white transition hover:bg-ink/90"
+              >
+                {copy.googleConsentContinue}
+              </a>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

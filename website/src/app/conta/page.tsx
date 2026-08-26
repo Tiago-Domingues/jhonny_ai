@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { AccountClient } from "@/components/AccountClient";
 import { AccountHeading } from "@/components/AccountHeading";
 
@@ -23,7 +22,6 @@ export default function AccountPage() {
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

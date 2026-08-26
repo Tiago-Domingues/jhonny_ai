@@ -131,6 +131,13 @@ type StorefrontCopy = {
     register: string;
     continueGoogle: string;
     createGoogle: string;
+    googleConsentTitle: string;
+    googleConsentBody: string;
+    googleConsentProfile: string;
+    googleConsentEmail: string;
+    googleConsentLegal: string;
+    googleConsentCancel: string;
+    googleConsentContinue: string;
     or: string;
     emailOrUsername: string;
     password: string;
@@ -295,6 +302,15 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       register: "Criar conta",
       continueGoogle: "Continuar com Google",
       createGoogle: "Criar conta com Google",
+      googleConsentTitle: "Inicie sessão em Jhonny Surf Store",
+      googleConsentBody:
+        "A Google vai permitir que a Jhonny Surf Store aceda a estas informações sobre si:",
+      googleConsentProfile: "Nome e imagem do perfil",
+      googleConsentEmail: "Endereço de email",
+      googleConsentLegal:
+        "Consulta a Política de Privacidade e os Termos de Utilização da Jhonny Surf Store para saberes como os teus dados são tratados. Podes alterar isto a qualquer momento na tua conta Google.",
+      googleConsentCancel: "Cancelar",
+      googleConsentContinue: "Continuar",
       or: "ou",
       emailOrUsername: "Email ou username",
       password: "Palavra-passe",
@@ -457,6 +473,15 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       register: "Create account",
       continueGoogle: "Continue with Google",
       createGoogle: "Create account with Google",
+      googleConsentTitle: "Sign in to Jhonny Surf Store",
+      googleConsentBody:
+        "Google will allow Jhonny Surf Store to access this information about you:",
+      googleConsentProfile: "Name and profile picture",
+      googleConsentEmail: "Email address",
+      googleConsentLegal:
+        "Review Jhonny Surf Store’s Privacy Policy and Terms of Use to understand how your data is handled. You can change this anytime in your Google Account.",
+      googleConsentCancel: "Cancel",
+      googleConsentContinue: "Continue",
       or: "or",
       emailOrUsername: "Email or username",
       password: "Password",
@@ -619,6 +644,14 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       register: "创建账户",
       continueGoogle: "使用 Google 继续",
       createGoogle: "使用 Google 创建账户",
+      googleConsentTitle: "登录 Jhonny Surf Store",
+      googleConsentBody: "Google 将允许 Jhonny Surf Store 访问以下关于你的信息：",
+      googleConsentProfile: "姓名与头像",
+      googleConsentEmail: "电子邮箱",
+      googleConsentLegal:
+        "请查阅 Jhonny Surf Store 的隐私政策与使用条款，了解我们如何处理你的数据。你可以随时在 Google 账户中更改这些设置。",
+      googleConsentCancel: "取消",
+      googleConsentContinue: "继续",
       or: "或",
       emailOrUsername: "邮箱或用户名",
       password: "密码",

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { VerifyEmailClient } from "@/components/VerifyEmailClient";
 
 export const metadata: Metadata = {
@@ -24,7 +23,6 @@ export default async function VerificarEmailPage({
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

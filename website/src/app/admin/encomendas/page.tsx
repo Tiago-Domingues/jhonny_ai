@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { AdminNav } from "@/components/AdminNav";
 import { AdminOrdersClient } from "@/components/AdminOrdersClient";
 
@@ -31,7 +30,6 @@ export default function AdminEncomendasPage() {
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

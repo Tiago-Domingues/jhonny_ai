@@ -69,7 +69,7 @@ export const CATEGORY_HEROES: Record<CategoryGroupKey, CategoryHero> = {
   clothing: {
     image: "/brand/categories/hero-lifestyle.png?v=20260824",
     labelPt: "Vestuário",
-    labelEn: "Clothing",
+    labelEn: "Apparel",
     labelZh: "服装",
     subtitlePt: "Roupa, calçado, hats e acessórios.",
     subtitleEn: "Apparel, footwear, hats and accessories.",

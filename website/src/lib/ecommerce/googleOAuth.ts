@@ -66,7 +66,7 @@ export function buildGoogleAuthorizeUrl(params: {
     scope: "openid email profile",
     state: params.state,
     access_type: "online",
-    prompt: "select_account",
+    prompt: "consent select_account",
   });
   return `${GOOGLE_AUTH_URL}?${query.toString()}`;
 }

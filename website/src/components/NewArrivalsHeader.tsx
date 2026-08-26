@@ -27,6 +27,10 @@ const copy = {
   },
 } as const;
 
+/** Shared Shop All CTA: black on desktop, compact chip on mobile. */
+export const shopAllLinkClassName =
+  "inline-flex shrink-0 items-center justify-center self-start rounded-full bg-ink px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-wide text-white transition hover:bg-ink/90 sm:self-auto sm:px-5 sm:py-3 sm:text-xs";
+
 export function NewArrivalsHeader() {
   const { locale } = useLanguage();
   const t = copy[locale];
@@ -45,10 +49,7 @@ export function NewArrivalsHeader() {
         </p>
       </div>
 
-      <Link
-        href="/loja?stock=in"
-        className="rounded-full border border-line bg-white px-5 py-3 text-xs font-bold uppercase tracking-wide text-ink transition hover:bg-cream"
-      >
+      <Link href="/loja?stock=in" className={shopAllLinkClassName}>
         {t.shopAll}
       </Link>
     </div>
