@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { CurrencyNote, CurrencyPrice, CurrencySelector } from "@/components/CurrencyDisplay";
 import { ProductDetailActions } from "@/components/ProductDetailActions";
@@ -64,16 +65,21 @@ export function ProductDetailClient({
 
   return (
     <>
-      <div className="relative mt-6 aspect-square overflow-hidden rounded-3xl border border-line bg-white p-6">
-        <Image
-          key={selectedVariant.id}
-          src={selectedVariant.imageUrl}
-          alt={templateName}
-          fill
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          className="object-contain p-6"
-          priority
-        />
+      <div>
+        <Link href="/loja" className="text-xs font-bold uppercase tracking-[0.2em] text-muted underline">
+          {copy.backToShop}
+        </Link>
+        <div className="relative mt-6 aspect-square overflow-hidden rounded-3xl border border-line bg-white p-6">
+          <Image
+            key={selectedVariant.id}
+            src={selectedVariant.imageUrl}
+            alt={templateName}
+            fill
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            className="object-contain p-6"
+            priority
+          />
+        </div>
       </div>
 
       <div>
