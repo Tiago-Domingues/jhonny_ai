@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { ForgotPasswordClient } from "@/components/PasswordResetClient";
 
 export const metadata: Metadata = {
@@ -19,7 +18,6 @@ export default function RecuperarPasswordPage() {
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

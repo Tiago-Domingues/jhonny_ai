@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { ResetPasswordClient } from "@/components/PasswordResetClient";
 
 export const metadata: Metadata = {
@@ -31,7 +30,6 @@ export default async function RedefinirPasswordPage({
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

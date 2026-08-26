@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { CheckoutConfirmClient } from "@/components/CheckoutConfirmClient";
 
 export const metadata: Metadata = {
@@ -25,7 +24,6 @@ export default function CheckoutConfirmPage() {
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

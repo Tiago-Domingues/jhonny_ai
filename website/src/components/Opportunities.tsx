@@ -2,6 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { CurrencyPrice } from "@/components/CurrencyDisplay";
 import { ProductCardsRail } from "@/components/ProductCardsRail";
+import {
+  OpportunitiesEmpty,
+  OpportunitiesHeader,
+  OpportunitiesSaleNote,
+} from "@/components/OpportunitiesHeader";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { listOpportunityProducts, type StoreProduct } from "@/lib/ecommerce/catalog";
 
@@ -47,9 +52,7 @@ function OpportunityCard({ product }: { product: StoreProduct }) {
             <p className={hasDiscount ? "font-display text-2xl font-extrabold text-red-600" : "font-display text-2xl font-extrabold text-ink"}>
               <CurrencyPrice cents={product.priceCents} />
             </p>
-            {!hasDiscount && (
-              <p className="text-xs text-muted">Opportunity price from Odoo</p>
-            )}
+            {!hasDiscount && <OpportunitiesSaleNote />}
           </div>
           <span className="rounded-full border border-line px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-muted">
             View
@@ -66,22 +69,7 @@ export async function Opportunities() {
   return (
     <section className="overflow-hidden bg-paper py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
-              Odoo opportunities
-            </p>
-            <h2 className="font-display text-4xl font-extrabold uppercase tracking-tight text-ink sm:text-5xl">
-              Opportunities
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-              Rolling selection of Odoo products tagged with the `Oportunidade` attribute.
-            </p>
-          </div>
-          <Link href="/loja?stock=in" className="rounded-full border border-line bg-white px-5 py-3 text-xs font-bold uppercase tracking-wide text-ink transition hover:bg-cream">
-            Shop all
-          </Link>
-        </div>
+        <OpportunitiesHeader />
       </div>
 
       {products.length ? (
@@ -91,14 +79,7 @@ export async function Opportunities() {
           ))}
         </ProductCardsRail>
       ) : (
-        <div className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
-          <div className="rounded-3xl border border-dashed border-line bg-white p-6 text-sm text-muted sm:p-8">
-            <p className="font-bold uppercase tracking-wide text-ink">Waiting for Odoo opportunities</p>
-            <p className="mt-2 max-w-2xl">
-              Add the `Oportunidade` product attribute in Odoo and sync the catalog. Products tagged there will appear here automatically with Odoo discount fields when available.
-            </p>
-          </div>
-        </div>
+        <OpportunitiesEmpty />
       )}
     </section>
   );

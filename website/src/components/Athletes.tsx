@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLanguage } from "@/components/LanguageProvider";
 import { ATHLETES, type Athlete } from "@/lib/athletes";
 import { InstagramIcon } from "@/components/icons";
+import { useMarqueeRail } from "@/hooks/useMarqueeRail";
 
 function AthleteCard({ a }: { a: Athlete }) {
   const [photoSrc, setPhotoSrc] = useState(a.photo);
@@ -30,21 +31,15 @@ function AthleteCard({ a }: { a: Athlete }) {
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
       />
 
-      {/* gradient for legibility */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
 
-      {/* Instagram badge */}
       <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-white group-hover:text-ink">
         <InstagramIcon className="h-4 w-4" />
       </span>
 
-      {/* text */}
       <div className="absolute inset-x-0 bottom-0 p-4">
         <p className="font-display text-xl font-extrabold uppercase leading-tight tracking-wide text-white drop-shadow">
           {a.name}
-        </p>
-        <p className="mt-2 inline-flex rounded-full bg-white/15 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-white">
-          10% code: {a.couponCode}
         </p>
         <p className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-white/55 transition group-hover:text-white">
           @{a.handle}
@@ -55,9 +50,38 @@ function AthleteCard({ a }: { a: Athlete }) {
   );
 }
 
+function AthleteRailArrow({
+  direction,
+  onClick,
+}: {
+  direction: "left" | "right";
+  onClick: () => void;
+}) {
+  const isLeft = direction === "left";
+  return (
+    <button
+      type="button"
+      aria-label={isLeft ? "Scroll athletes left" : "Scroll athletes right"}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerDown={(e) => e.stopPropagation()}
+      className={`pointer-events-auto absolute top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white text-ink shadow-lg transition hover:bg-cream focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white md:flex ${
+        isLeft ? "left-2 sm:left-4" : "right-2 sm:right-4"
+      }`}
+    >
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {isLeft ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
+      </svg>
+    </button>
+  );
+}
+
 export function Athletes() {
   const { t } = useLanguage();
   const loop = [...ATHLETES, ...ATHLETES];
+  const rail = useMarqueeRail(280);
 
   return (
     <section id="team" className="scroll-mt-20 overflow-hidden bg-ink py-20 text-white sm:py-28">
@@ -75,10 +99,25 @@ export function Athletes() {
         </div>
       </div>
 
-      <div className="group relative mt-12 flex overflow-hidden">
+      <div
+        className="group relative mt-12 flex overflow-hidden"
+        data-athletes-rail
+        onPointerEnter={rail.onPointerEnter}
+        onPointerLeave={rail.onPointerLeave}
+      >
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-ink to-transparent sm:w-24" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-ink to-transparent sm:w-24" />
-        <div className="flex w-max animate-[marquee_50s_linear_infinite] items-stretch group-hover:[animation-play-state:paused]">
+        {rail.showArrows && (
+          <>
+            <AthleteRailArrow direction="left" onClick={rail.nudgeLeft} />
+            <AthleteRailArrow direction="right" onClick={rail.nudgeRight} />
+          </>
+        )}
+        <div
+          ref={rail.trackRef}
+          className="flex w-max animate-[marquee_50s_linear_infinite] items-stretch group-hover:[animation-play-state:paused]"
+          style={rail.trackStyle}
+        >
           {loop.map((a, i) => (
             <AthleteCard key={`${a.handle}-${i}`} a={a} />
           ))}

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { ProductDetailClient } from "@/components/ProductDetailClient";
 import { ProductStarRating } from "@/components/ProductStarRating";
 import { ProductVideoPreview } from "@/components/ProductVideoPreview";
@@ -82,7 +81,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

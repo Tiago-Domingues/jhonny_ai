@@ -57,7 +57,7 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
   {
     key: "clothing",
     labelPt: "Vestuário",
-    labelEn: "Clothing",
+    labelEn: "Apparel",
     labelZh: "服装",
     // Footwear is nested under Clothing in Odoo; keep FOOTWEAR so root paths still match.
     // JSS Merch is its own top-level group (excluded in productMatchesCategoryGroup).

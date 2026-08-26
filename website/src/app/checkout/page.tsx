@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { CheckoutClient } from "@/components/CheckoutClient";
 import { CheckoutHeading } from "@/components/CheckoutHeading";
 
@@ -23,7 +22,6 @@ export default function CheckoutPage() {
         </section>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

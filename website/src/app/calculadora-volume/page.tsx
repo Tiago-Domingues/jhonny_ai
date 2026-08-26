@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { VolumeCalculatorClient } from "@/components/VolumeCalculatorClient";
 
 export const metadata: Metadata = {
@@ -38,7 +37,6 @@ export default function VolumeCalculatorPage() {
         </div>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }

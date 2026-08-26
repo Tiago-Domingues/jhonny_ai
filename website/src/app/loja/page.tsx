@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { ShopClient } from "@/components/ShopClient";
 import { ShopHero } from "@/components/ShopHero";
 import { listProducts } from "@/lib/ecommerce/catalog";
@@ -101,7 +100,6 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
         </Suspense>
       </main>
       <Footer />
-      <FloatingWhatsApp />
     </>
   );
 }
