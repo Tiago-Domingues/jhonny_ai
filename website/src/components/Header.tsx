@@ -14,6 +14,7 @@ import { CartDrawer } from "@/components/CartDrawer";
 import { AccessibilityPanel } from "@/components/AccessibilityPanel";
 import { VOLUME_CALCULATOR_PATH } from "@/lib/ecommerce/volumeCalculator";
 import { volumeCalculatorCopy } from "@/lib/volumeCalculatorCopy";
+import { userInitials } from "@/lib/userInitials";
 
 type Panel = "account" | null;
 
@@ -134,19 +135,6 @@ function LanguageSwitcher({
       )}
     </div>
   );
-}
-
-function userInitials(user: NonNullable<HeaderUser>) {
-  const name = user.fullName?.trim();
-  if (name) {
-    const parts = name.split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) {
-      return `${parts[0]![0] || ""}${parts[parts.length - 1]![0] || ""}`.toUpperCase();
-    }
-    return (parts[0]?.[0] || "?").toUpperCase();
-  }
-  const fallback = (user.username || user.email || "?").trim();
-  return (fallback[0] || "?").toUpperCase();
 }
 
 export function Header({ categories }: { categories?: MenuCategory[] }) {
@@ -482,13 +470,16 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
             >
               {user ? (
                 <span
+                  data-testid="header-account-initials"
                   aria-hidden
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[0.65rem] font-bold tracking-wide text-ink"
                 >
                   {userInitials(user)}
                 </span>
               ) : (
-                <UserIcon className="h-[1.375rem] w-[1.375rem]" />
+                <span data-testid="header-account-icon" className="flex items-center justify-center">
+                  <UserIcon className="h-[1.375rem] w-[1.375rem]" />
+                </span>
               )}
             </button>
             {panel === "account" && (
