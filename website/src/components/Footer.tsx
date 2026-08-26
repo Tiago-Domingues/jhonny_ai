@@ -136,7 +136,7 @@ export function Footer() {
             rel="noopener noreferrer"
             aria-label="Website developed and maintained by DatabyPassion AI solutions"
             title="Website developed and maintained by DatabyPassion AI solutions"
-            className="inline-flex items-center justify-center gap-2 text-white/50 transition hover:text-white"
+            className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 px-1 text-white/50 transition hover:text-white"
           >
             <img
               src="/brand/databy-passion.png"
