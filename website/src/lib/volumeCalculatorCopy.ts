@@ -25,6 +25,7 @@ export type VolumeCalculatorCopy = {
   recommendedVolume: string;
   noResult: string;
   seeBoards: string;
+  backLabel: string;
   menuLabel: string;
   menuHint: string;
   levels: OptionCopy<SurfLevel>[];
@@ -57,6 +58,7 @@ const pt: VolumeCalculatorCopy = {
   recommendedVolume: "Volume recomendado",
   noResult: "—",
   seeBoards: "Ver pranchas recomendadas",
+  backLabel: "Pranchas",
   menuLabel: "Calculadora de volume",
   menuHint: "Descobre o volume ideal para ti",
   levels: [
@@ -103,6 +105,7 @@ const en: VolumeCalculatorCopy = {
   recommendedVolume: "Recommended volume",
   noResult: "—",
   seeBoards: "See recommended boards",
+  backLabel: "Surfboards",
   menuLabel: "Volume calculator",
   menuHint: "Find your ideal board volume",
   levels: [
@@ -148,6 +151,7 @@ const zh: VolumeCalculatorCopy = {
   recommendedVolume: "推荐体积",
   noResult: "—",
   seeBoards: "查看推荐冲浪板",
+  backLabel: "冲浪板",
   menuLabel: "体积计算器",
   menuHint: "找到适合你的板体积",
   levels: [

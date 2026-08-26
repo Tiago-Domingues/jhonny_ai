@@ -136,6 +136,19 @@ function LanguageSwitcher({
   );
 }
 
+function userInitials(user: NonNullable<HeaderUser>) {
+  const name = user.fullName?.trim();
+  if (name) {
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0]![0] || ""}${parts[parts.length - 1]![0] || ""}`.toUpperCase();
+    }
+    return (parts[0]?.[0] || "?").toUpperCase();
+  }
+  const fallback = (user.username || user.email || "?").trim();
+  return (fallback[0] || "?").toUpperCase();
+}
+
 export function Header({ categories }: { categories?: MenuCategory[] }) {
   const { t, locale, setLocale } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
@@ -467,7 +480,16 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               aria-expanded={panel === "account"}
               className={iconButtonClass}
             >
-              <UserIcon className="h-[1.375rem] w-[1.375rem]" />
+              {user ? (
+                <span
+                  aria-hidden
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[0.65rem] font-bold tracking-wide text-ink"
+                >
+                  {userInitials(user)}
+                </span>
+              ) : (
+                <UserIcon className="h-[1.375rem] w-[1.375rem]" />
+              )}
             </button>
             {panel === "account" && (
               <div className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">

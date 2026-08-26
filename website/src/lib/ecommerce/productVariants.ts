@@ -1,4 +1,5 @@
 import type { StoreProduct } from "@/lib/ecommerce/catalog";
+import type { Locale } from "@/lib/i18n";
 
 export type VariantAttributeMap = Record<string, string>;
 
@@ -216,6 +217,23 @@ export type VariantAxis = {
   label: string;
   values: string[];
 };
+
+export function localizeVariantAxisLabel(key: string, locale: Locale): string {
+  const normalized = key.toLowerCase();
+  const isColor = /cor|colour|color/.test(normalized);
+  const isSize = /size|tamanho|\btam\b/.test(normalized);
+  if (isColor) {
+    if (locale === "pt") return "Cor";
+    if (locale === "zh") return "颜色";
+    return "Color";
+  }
+  if (isSize) {
+    if (locale === "pt") return "Tamanho";
+    if (locale === "zh") return "尺码";
+    return "Size";
+  }
+  return key;
+}
 
 export function buildVariantAxes(variants: StoreProduct[]): VariantAxis[] {
   const options = collectVariantAttributeOptions(variants);

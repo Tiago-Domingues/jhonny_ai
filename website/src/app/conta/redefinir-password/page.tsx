@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { ResetPasswordClient } from "@/components/PasswordResetClient";
+import { ResetPasswordClient, InvalidResetLink } from "@/components/PasswordResetClient";
 
 export const metadata: Metadata = {
   title: "Redefinir password",
@@ -23,9 +23,7 @@ export default async function RedefinirPasswordPage({
           {token ? (
             <ResetPasswordClient token={token} />
           ) : (
-            <p className="rounded-3xl border border-line bg-white p-6 text-sm text-muted">
-              Link inválido. Pede um novo em recuperar password.
-            </p>
+            <InvalidResetLink />
           )}
         </section>
       </main>
