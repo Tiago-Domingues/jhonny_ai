@@ -101,6 +101,7 @@ export function Athletes() {
 
       <div
         className="group relative mt-12 flex overflow-hidden"
+        data-athletes-rail
         onPointerEnter={rail.onPointerEnter}
         onPointerLeave={rail.onPointerLeave}
       >

@@ -7,7 +7,7 @@ const DEFAULT_NUDGE_PX = 320;
 
 function isDesktopFinePointer() {
   if (typeof window === "undefined") return false;
-  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  return window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 768px)").matches;
 }
 
 function readTranslateX(el: HTMLElement): number {
