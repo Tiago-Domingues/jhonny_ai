@@ -7,9 +7,22 @@ import { BRANDS, type Brand } from "@/lib/i18n";
 
 function BrandItem({ brand }: { brand: Brand }) {
   const [failed, setFailed] = useState(false);
+  const { locale } = useLanguage();
+  const siteLabel =
+    locale === "pt"
+      ? `${brand.name} — site oficial`
+      : locale === "zh"
+        ? `${brand.name} — 官方网站`
+        : `${brand.name} — official website`;
 
   return (
-    <div className="mx-8 flex h-14 w-40 shrink-0 items-center justify-center sm:mx-10 sm:w-44">
+    <a
+      href={brand.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={siteLabel}
+      className="mx-8 flex h-14 w-40 shrink-0 items-center justify-center sm:mx-10 sm:w-44"
+    >
       {failed ? (
         <span className="whitespace-nowrap font-display text-sm font-bold uppercase tracking-[0.18em] text-white/75 sm:text-base">
           {brand.name}
@@ -25,7 +38,7 @@ function BrandItem({ brand }: { brand: Brand }) {
           className="max-h-10 w-auto max-w-[160px] object-contain opacity-90 transition duration-300 hover:opacity-100 sm:max-h-11"
         />
       )}
-    </div>
+    </a>
   );
 }
 
@@ -40,7 +53,6 @@ export function Brands() {
       </p>
 
       <div className="group relative mt-8 flex overflow-hidden">
-        {/* edge fades */}
         <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-ink to-transparent sm:w-28" />
         <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-ink to-transparent sm:w-28" />
 

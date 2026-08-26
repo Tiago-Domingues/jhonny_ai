@@ -58,7 +58,13 @@ const artigoFieldCandidates = [
   "x_nome_artigo",
 ];
 
-const imagePresenceFieldCandidates = ["image_128", "image_256", "image_512"];
+const imagePresenceFieldCandidates = [
+  "image_variant_128",
+  "image_variant_512",
+  "image_128",
+  "image_256",
+  "image_512",
+];
 
 const fieldsGetCache = new Map<string, { at: number; fields: Record<string, unknown> }>();
 const FIELDS_GET_TTL_MS = 30 * 60 * 1000;

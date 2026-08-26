@@ -571,7 +571,7 @@ export function ShopClient({
   }
 
   const filterPanel = (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <div className="mb-4 flex items-center justify-between gap-3 border-b border-line pb-3 lg:border-0 lg:pb-0">
         <div>
           <p className="text-[0.65rem] font-bold uppercase tracking-[0.22em] text-muted">{t.filterBy}</p>
@@ -954,8 +954,8 @@ export function ShopClient({
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="hidden rounded-3xl border border-line bg-white p-5 shadow-sm lg:block">
+        <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
+          <aside className="hidden self-start rounded-3xl border border-line bg-white p-5 shadow-sm lg:block">
             {filterPanel}
             <div className="mt-4 border-t border-line pt-4">
               <CurrencyNote />
@@ -992,7 +992,7 @@ export function ShopClient({
                       key={product.slug || product.id}
                       className="overflow-hidden rounded-3xl border border-line bg-white shadow-sm"
                     >
-                      <Link href={`/loja/${product.slug}`} className="relative block h-44 bg-cream p-3 sm:h-52">
+                      <Link href={`/loja/${product.slug}`} className="relative block h-44 bg-white p-3 sm:h-52">
                         <Image
                           src={product.imageUrl}
                           alt={product.name}

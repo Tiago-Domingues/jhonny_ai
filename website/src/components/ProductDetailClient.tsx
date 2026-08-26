@@ -66,6 +66,7 @@ export function ProductDetailClient({
     <>
       <div className="relative mt-6 aspect-square overflow-hidden rounded-3xl border border-line bg-white p-6">
         <Image
+          key={selectedVariant.id}
           src={selectedVariant.imageUrl}
           alt={templateName}
           fill

@@ -34,23 +34,52 @@ export function whatsappHref(message = WHATSAPP_DEFAULT_MESSAGE) {
   return `https://wa.me/${STORE.phoneRaw}?text=${encodeURIComponent(message)}`;
 }
 
-export type Brand = { name: string; slug: string; domain: string };
+export type Brand = { name: string; slug: string; domain: string; url: string };
 
+/**
+ * Well-known brands with official websites (wordmark logos in /brand/brands).
+ * Local / no-site brands are intentionally omitted from the homepage marquee.
+ */
 export const BRANDS: Brand[] = [
-  { name: "O'Neill", slug: "oneill", domain: "oneill.com" },
-  { name: "YETI", slug: "yeti", domain: "yeti.com" },
-  { name: "Roark", slug: "roark", domain: "roark.com" },
-  { name: "Katin", slug: "katin", domain: "katin.com" },
-  { name: "Volcom", slug: "volcom", domain: "volcom.com" },
-  { name: "Billabong", slug: "billabong", domain: "billabong.com" },
-  { name: "Xcel", slug: "xcel", domain: "xcelwetsuits.com" },
-  { name: "Manera", slug: "manera", domain: "manera.com" },
-  { name: "Futures Fins", slug: "futures", domain: "futuresfins.com" },
-  { name: "Waveborn", slug: "waveborn", domain: "wavebornsunglasses.com" },
-  { name: "Firewire", slug: "firewire", domain: "firewiresurfboards.com" },
-  { name: "Sharp Eye", slug: "sharpeye", domain: "sharpeyesurfboards.com" },
-  { name: "Al Merrick", slug: "almerrick", domain: "cisurfboards.com" },
-  { name: "Lost", slug: "lost", domain: "lostsurfboards.com" },
+  { name: "Rip Curl", slug: "ripcurl", domain: "ripcurl.com", url: "https://www.ripcurl.com" },
+  { name: "O'Neill", slug: "oneill", domain: "oneill.com", url: "https://www.oneill.com" },
+  { name: "YETI", slug: "yeti", domain: "yeti.com", url: "https://www.yeti.com" },
+  { name: "Billabong", slug: "billabong", domain: "billabong.com", url: "https://www.billabong.com" },
+  { name: "Volcom", slug: "volcom", domain: "volcom.com", url: "https://www.volcom.com" },
+  { name: "Patagonia", slug: "patagonia", domain: "patagonia.com", url: "https://www.patagonia.com" },
+  { name: "Xcel", slug: "xcel", domain: "xcelwetsuits.com", url: "https://www.xcelwetsuits.com" },
+  { name: "Quiksilver", slug: "quiksilver", domain: "quiksilver.com", url: "https://www.quiksilver.com" },
+  { name: "Vissla", slug: "vissla", domain: "vissla.com", url: "https://www.vissla.com" },
+  { name: "Dakine", slug: "dakine", domain: "dakine.com", url: "https://www.dakine.com" },
+  { name: "Roark", slug: "roark", domain: "roark.com", url: "https://www.roark.com" },
+  { name: "Katin", slug: "katin", domain: "katinusa.com", url: "https://www.katinusa.com" },
+  { name: "RVCA", slug: "rvca", domain: "rvca.com", url: "https://www.rvca.com" },
+  { name: "Manera", slug: "manera", domain: "manera.com", url: "https://www.manera.com" },
+  { name: "Futures Fins", slug: "futures", domain: "futuresfins.com", url: "https://www.futuresfins.com" },
+  { name: "FCS", slug: "fcs", domain: "surffcs.com", url: "https://www.surffcs.com" },
+  { name: "Creatures", slug: "creatures", domain: "creatures.com.au", url: "https://www.creatures.com.au" },
+  { name: "Firewire", slug: "firewire", domain: "firewiresurfboards.com", url: "https://www.firewiresurfboards.com" },
+  { name: "Channel Islands", slug: "channelislands", domain: "cisurfboards.com", url: "https://www.cisurfboards.com" },
+  { name: "Lost", slug: "lost", domain: "lostsurfboards.com", url: "https://www.lostsurfboards.com" },
+  { name: "Sharp Eye", slug: "sharpeye", domain: "sharpeyesurfboards.com", url: "https://www.sharpeyesurfboards.com" },
+  { name: "Haydenshapes", slug: "haydenshapes", domain: "haydenshapes.com", url: "https://www.haydenshapes.com" },
+  { name: "Softech", slug: "softech", domain: "softechsurfboards.com", url: "https://www.softechsurfboards.com" },
+  { name: "NSP", slug: "nsp", domain: "nspsurfboards.com", url: "https://www.nspsurfboards.com" },
+  { name: "DHD", slug: "dhd", domain: "dhdsurf.com", url: "https://www.dhdsurf.com" },
+  { name: "Torq", slug: "torq", domain: "torq-surfboards.com", url: "https://www.torq-surfboards.com" },
+  { name: "Ocean & Earth", slug: "oceanearth", domain: "oceanearth.com", url: "https://www.oceanearth.com" },
+  { name: "Captain Fin", slug: "captainfin", domain: "captainfin.com", url: "https://www.captainfin.com" },
+  { name: "C-Skins", slug: "cskins", domain: "c-skins.com", url: "https://www.c-skins.com" },
+  { name: "Carver", slug: "carver", domain: "carverskateboards.com", url: "https://www.carverskateboards.com" },
+  { name: "Sun Bum", slug: "sunbum", domain: "trustthebum.com", url: "https://www.trustthebum.com" },
+  { name: "Olukai", slug: "olukai", domain: "olukai.com", url: "https://www.olukai.com" },
+  { name: "Reef", slug: "reef", domain: "reef.com", url: "https://www.reef.com" },
+  { name: "Teva", slug: "teva", domain: "teva.com", url: "https://www.teva.com" },
+  { name: "Stance", slug: "stance", domain: "stance.com", url: "https://www.stance.com" },
+  { name: "Blundstone", slug: "blundstone", domain: "blundstone.com", url: "https://www.blundstone.com" },
+  { name: "Salty Crew", slug: "saltycrew", domain: "saltycrew.com", url: "https://www.saltycrew.com" },
+  { name: "SurfEars", slug: "surfears", domain: "surfears.com", url: "https://www.surfears.com" },
+  { name: "Veia", slug: "veia", domain: "veiasupplies.com", url: "https://www.veiasupplies.com" },
 ];
 
 // Legal entity behind the Jhonny Surf Store brand (used in legal pages).

@@ -15,22 +15,57 @@ function firstImageUrl(imageUrlsJson?: string | null) {
   }
 }
 
-async function imageFromOdoo(odooProductId: number) {
-  if (!hasOdooConfig()) return null;
-
-  const [product] = await new OdooClient().searchRead(
-    "product.product",
-    [["id", "=", odooProductId]],
-    ["image_512"],
-    { limit: 1 }
-  );
-  const image = product?.image_512;
+function decodeOdooBinary(image: unknown): Buffer | null {
   if (typeof image !== "string" || !image) return null;
-
   const encoded = image.startsWith("data:image/") ? image.split(",", 2)[1] : image;
   if (!encoded) return null;
+  try {
+    return Buffer.from(encoded, "base64");
+  } catch {
+    return null;
+  }
+}
 
-  return Buffer.from(encoded, "base64");
+/**
+ * Prefer true per-variant artwork:
+ * 1) image_variant_512 (Odoo variant image)
+ * 2) product.image rows linked to this product_variant_id (extra media)
+ * 3) image_512 / image_128 (may be shared template image)
+ */
+async function imageFromOdoo(odooProductId: number) {
+  if (!hasOdooConfig()) return null;
+  const client = new OdooClient();
+
+  const [product] = await client.searchRead(
+    "product.product",
+    [["id", "=", odooProductId]],
+    ["image_variant_512", "image_variant_128", "image_512", "image_128"],
+    { limit: 1 }
+  );
+
+  const variantBinary =
+    decodeOdooBinary(product?.image_variant_512) || decodeOdooBinary(product?.image_variant_128);
+  if (variantBinary) return variantBinary;
+
+  try {
+    const extras = await client.searchRead(
+      "product.image",
+      [["product_variant_id", "=", odooProductId]],
+      ["image_512", "image_128", "image_1920"],
+      { limit: 4, order: "id asc" }
+    );
+    for (const extra of extras) {
+      const decoded =
+        decodeOdooBinary(extra?.image_512) ||
+        decodeOdooBinary(extra?.image_128) ||
+        decodeOdooBinary(extra?.image_1920);
+      if (decoded) return decoded;
+    }
+  } catch {
+    // product.image may be unavailable on some Odoo setups
+  }
+
+  return decodeOdooBinary(product?.image_512) || decodeOdooBinary(product?.image_128);
 }
 
 export async function GET(
@@ -56,7 +91,8 @@ export async function GET(
     return new Response(responseBody(odooImage), {
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+        // Variant artwork can change in Odoo; avoid week-long stale color mixes.
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
       },
     });
   }
@@ -67,7 +103,7 @@ export async function GET(
   return new Response(responseBody(Buffer.from(encoded, "base64")), {
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=604800, stale-while-revalidate=86400",
+      "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
     },
   });
 }

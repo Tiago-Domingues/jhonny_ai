@@ -36,7 +36,7 @@ export function About() {
               playsInline
               preload="metadata"
               controls
-              muted={false}
+              muted
               poster="/brand/jss-jhonny-poster.jpg"
             >
               <source src="/brand/jss-jhonny.mp4" type="video/mp4" />
