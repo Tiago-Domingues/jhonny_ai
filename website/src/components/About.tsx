@@ -11,8 +11,21 @@ export function About() {
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    // Don't autoplay (browsers block autoplay with sound). Just pause the
-    // video with audio when it scrolls out of view.
+    // User-gesture play is allowed with audio. Start unmuted so Play has sound;
+    // native controls still expose mute.
+    el.defaultMuted = false;
+    el.muted = false;
+    if (el.volume === 0) el.volume = 1;
+
+    const onPlay = () => {
+      if (el.dataset.started === "1") return;
+      el.dataset.started = "1";
+      el.muted = false;
+      if (el.volume === 0) el.volume = 1;
+    };
+
+    // Don't autoplay (browsers block autoplay with sound). Pause when it
+    // scrolls out of view; leave mute state as the viewer left it.
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting && !el.paused) {
@@ -22,7 +35,11 @@ export function About() {
       { threshold: 0.4 }
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    el.addEventListener("play", onPlay);
+    return () => {
+      obs.disconnect();
+      el.removeEventListener("play", onPlay);
+    };
   }, []);
 
   return (
@@ -36,7 +53,6 @@ export function About() {
               playsInline
               preload="metadata"
               controls
-              muted
               poster="/brand/jss-jhonny-poster.jpg"
             >
               <source src="/brand/jss-jhonny.mp4" type="video/mp4" />
