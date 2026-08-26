@@ -204,7 +204,11 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
     };
     refresh();
     window.addEventListener("jss-cart-updated", refresh);
-    return () => window.removeEventListener("jss-cart-updated", refresh);
+    window.addEventListener("jss-auth-updated", refresh);
+    return () => {
+      window.removeEventListener("jss-cart-updated", refresh);
+      window.removeEventListener("jss-auth-updated", refresh);
+    };
   }, []);
 
   useEffect(() => {
@@ -217,6 +221,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     setPanel(null);
+    window.dispatchEvent(new Event("jss-auth-updated"));
   }
 
   const togglePanel = (p: Panel) => setPanel((cur) => (cur === p ? null : p));
