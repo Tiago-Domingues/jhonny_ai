@@ -31,6 +31,7 @@ const notoSansSC = Noto_Sans_SC({
   display: "swap",
 });
 
+// deploy-bump: ensure Vercel ships merged storefront changes
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.jhonnysurfstore.pt"),
   title: {
