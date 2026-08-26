@@ -14,6 +14,7 @@ import { CartDrawer } from "@/components/CartDrawer";
 import { AccessibilityPanel } from "@/components/AccessibilityPanel";
 import { VOLUME_CALCULATOR_PATH } from "@/lib/ecommerce/volumeCalculator";
 import { volumeCalculatorCopy } from "@/lib/volumeCalculatorCopy";
+import { userInitials } from "@/lib/userInitials";
 
 type Panel = "account" | null;
 
@@ -203,7 +204,11 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
     };
     refresh();
     window.addEventListener("jss-cart-updated", refresh);
-    return () => window.removeEventListener("jss-cart-updated", refresh);
+    window.addEventListener("jss-auth-updated", refresh);
+    return () => {
+      window.removeEventListener("jss-cart-updated", refresh);
+      window.removeEventListener("jss-auth-updated", refresh);
+    };
   }, []);
 
   useEffect(() => {
@@ -216,6 +221,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     setPanel(null);
+    window.dispatchEvent(new Event("jss-auth-updated"));
   }
 
   const togglePanel = (p: Panel) => setPanel((cur) => (cur === p ? null : p));
@@ -467,7 +473,19 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
               aria-expanded={panel === "account"}
               className={iconButtonClass}
             >
-              <UserIcon className="h-[1.375rem] w-[1.375rem]" />
+              {user ? (
+                <span
+                  data-testid="header-account-initials"
+                  aria-hidden
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[0.65rem] font-bold tracking-wide text-ink"
+                >
+                  {userInitials(user)}
+                </span>
+              ) : (
+                <span data-testid="header-account-icon" className="flex items-center justify-center">
+                  <UserIcon className="h-[1.375rem] w-[1.375rem]" />
+                </span>
+              )}
             </button>
             {panel === "account" && (
               <div className="absolute right-0 mt-2 w-56 rounded-xl border border-line bg-paper p-2 text-ink shadow-xl">

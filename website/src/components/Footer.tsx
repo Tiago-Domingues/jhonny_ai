@@ -126,11 +126,28 @@ export function Footer() {
           <PaymentBadges />
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-2 pt-6 text-center text-xs text-white/40 sm:flex-row sm:text-left">
+        <div className="grid gap-3 pt-6 text-center text-[0.65rem] text-white/40 sm:grid-cols-3 sm:items-center sm:text-left">
           <p>
             © {year} {STORE.name}. {t.footer.rights}
           </p>
-          <p>{t.footer.madeWith}</p>
+          <a
+            href="https://www.databypaixao.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Website developed and maintained by DatabyPassion AI solutions"
+            title="Website developed and maintained by DatabyPassion AI solutions"
+            className="inline-flex items-center justify-center gap-2 text-white/50 transition hover:text-white"
+          >
+            <img
+              src="/brand/databy-passion.png"
+              alt=""
+              width={22}
+              height={22}
+              className="h-5 w-5 object-contain"
+            />
+            <span>{t.footer.developedBy}</span>
+          </a>
+          <p className="sm:text-right">{t.footer.madeWith}</p>
         </div>
       </div>
     </footer>

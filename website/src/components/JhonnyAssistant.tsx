@@ -7,8 +7,7 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { whatsappHref, WHATSAPP_MESSAGES } from "@/lib/i18n";
 
 const SEEN_KEY = "jss_jhonny_assistant_seen_v1";
-const TIP_DELAY_MS = 4500;
-const TIP_VISIBLE_MS = 6000;
+const TIP_CYCLE_MS = 5000;
 const TYPING_MS = 900;
 
 /**
@@ -108,19 +107,26 @@ export function JhonnyAssistant() {
   const [openedHere, setOpenedHere] = useState(false);
   const seen = seenBefore || openedHere;
 
-  // Nudge the tooltip out once so the assistant gets discovered, then retract.
+  // Pulse the tooltip 5s on / 5s off while idle. Hover/focus holds it visible.
   useEffect(() => {
-    if (seen || open) return;
-    const showTimer = window.setTimeout(() => setNudging(true), TIP_DELAY_MS);
-    const hideTimer = window.setTimeout(
-      () => setNudging(false),
-      TIP_DELAY_MS + TIP_VISIBLE_MS
-    );
-    return () => {
-      window.clearTimeout(showTimer);
-      window.clearTimeout(hideTimer);
-    };
-  }, [seen, open]);
+    if (open) {
+      setNudging(false);
+      return;
+    }
+    if (hovered) {
+      setNudging(true);
+      return;
+    }
+    if (prefersReducedMotion()) {
+      setNudging(false);
+      return;
+    }
+    setNudging(true);
+    const id = window.setInterval(() => {
+      setNudging((value) => !value);
+    }, TIP_CYCLE_MS);
+    return () => window.clearInterval(id);
+  }, [seen, open, hovered]);
 
   useEffect(() => {
     if (!open) return;
@@ -288,7 +294,7 @@ export function JhonnyAssistant() {
       >
         {!open && (nudging || hovered) && (
           <span
-            className="jss-assistant-tip hidden whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-black/20 sm:inline-block"
+            className="jss-assistant-tip hidden whitespace-nowrap rounded-full bg-ink px-3 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-black/20 transition-opacity duration-500 sm:inline-block"
             aria-hidden="true"
           >
             {t.tooltip}

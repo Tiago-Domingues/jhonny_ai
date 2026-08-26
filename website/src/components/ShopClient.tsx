@@ -94,6 +94,7 @@ const copy = {
     productsFound: "produtos encontrados",
     loadingCatalog: "A carregar catálogo",
     loadingSearch: "A procurar o melhor equipamento para ti...",
+    pageTitle: "Loja Online",
     searching: "A procurar produtos...",
     empty: "Nenhum produto encontrado com estes filtros.",
     loadMore: "Ver mais produtos",
@@ -142,6 +143,7 @@ const copy = {
     productsFound: "products found",
     loadingCatalog: "Loading catalog",
     loadingSearch: "Searching the best gear for you...",
+    pageTitle: "Online Shop",
     searching: "Searching products...",
     empty: "No products found with these filters.",
     loadMore: "Show more products",
@@ -190,6 +192,7 @@ const copy = {
     productsFound: "件商品",
     loadingCatalog: "正在加载目录",
     loadingSearch: "正在为你寻找最合适的装备...",
+    pageTitle: "网上商店",
     searching: "正在搜索商品...",
     empty: "没有符合这些筛选条件的商品。",
     loadMore: "查看更多商品",
@@ -394,6 +397,10 @@ export function ShopClient({
   const productCopy = storefrontText(locale).product;
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    document.title = `${t.pageTitle} · Jhonny Surf Store`;
+  }, [t.pageTitle]);
   const [products, setProducts] = useState<StoreProduct[]>(initialProducts);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(() =>
     coerceMenuCategories(

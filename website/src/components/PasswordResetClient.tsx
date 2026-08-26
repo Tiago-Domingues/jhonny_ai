@@ -41,6 +41,14 @@ export function ForgotPasswordClient() {
   );
 }
 
+export function InvalidResetLink() {
+  const { locale } = useLanguage();
+  const copy = storefrontText(locale).account;
+  return (
+    <p className="rounded-3xl border border-line bg-white p-6 text-sm text-muted">{copy.invalidResetLink}</p>
+  );
+}
+
 export function ResetPasswordClient({ token }: { token: string }) {
   const { locale } = useLanguage();
   const copy = storefrontText(locale).account;

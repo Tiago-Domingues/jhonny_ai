@@ -168,6 +168,7 @@ type StorefrontCopy = {
     verifySent: string;
     verifyOk: string;
     verifyFailed: string;
+    invalidResetLink: string;
   };
 };
 
@@ -342,6 +343,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       verifySent: "Se o email estiver certo, enviámos o link.",
       verifyOk: "Email confirmado. Completa agora o teu perfil.",
       verifyFailed: "Este link é inválido ou já expirou.",
+      invalidResetLink: "Link inválido. Pede um novo em recuperar password.",
     },
   },
   en: {
@@ -514,6 +516,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       verifySent: "If that email is right, we sent the link.",
       verifyOk: "Email confirmed. Complete your profile now.",
       verifyFailed: "This link is invalid or has expired.",
+      invalidResetLink: "This link is invalid. Request a new one from forgot password.",
     },
   },
   zh: {
@@ -685,6 +688,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       verifySent: "如果邮箱正确，我们已发送链接。",
       verifyOk: "邮箱已确认。请填写你的资料。",
       verifyFailed: "此链接无效或已过期。",
+      invalidResetLink: "链接无效。请通过忘记密码重新申请。",
     },
   },
 };

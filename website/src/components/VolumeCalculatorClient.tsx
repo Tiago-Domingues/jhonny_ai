@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import {
   calculateRecommendedVolume,
@@ -82,6 +82,10 @@ export function VolumeCalculatorClient() {
   const [frequency, setFrequency] = useState<SurfFrequency | "">("");
   const [waveQuality, setWaveQuality] = useState<WaveQuality | "">("");
 
+  useEffect(() => {
+    document.title = `${copy.pageTitle} · Jhonny Surf Store`;
+  }, [copy.pageTitle]);
+
   const volumeLiters = useMemo(
     () =>
       calculateRecommendedVolume({
@@ -97,7 +101,20 @@ export function VolumeCalculatorClient() {
   const shopHref = surfboardsShopHref(volumeLiters);
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10">
+    <div className="mx-auto max-w-6xl px-5 sm:px-8">
+      <Link
+        href="/loja?categoryGroup=surfboards"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted transition hover:text-ink"
+      >
+        <span aria-hidden>←</span> {copy.backLabel}
+      </Link>
+
+      <h1 className="font-display mt-6 text-3xl font-extrabold uppercase tracking-tight text-ink sm:text-4xl">
+        {copy.pageTitle}
+      </h1>
+      <p className="mt-4 max-w-3xl text-base leading-relaxed text-ink/75">{copy.pageIntro}</p>
+
+      <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10">
       <div className="space-y-8">
         <section className="rounded-3xl border border-line bg-cream/60 p-6 sm:p-8">
           <h2 className="font-display text-lg font-bold uppercase tracking-wide text-ink">
@@ -220,6 +237,7 @@ export function VolumeCalculatorClient() {
           )}
         </div>
       </aside>
+      </div>
     </div>
   );
 }

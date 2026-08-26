@@ -325,6 +325,7 @@ type Dict = {
     tagline: string;
     rights: string;
     madeWith: string;
+    developedBy: string;
     shopTitle: string;
     storeTitle: string;
     supportTitle: string;
@@ -578,6 +579,7 @@ export const translations: Record<Locale, Dict> = {
       tagline: "Onde os surfistas se tornam lendas.",
       rights: "Todos os direitos reservados.",
       madeWith: "Carcavelos · Cascais · Lisboa",
+      developedBy: "Desenvolvido por DatabyPassion",
       shopTitle: "Loja",
       storeTitle: "A Loja",
       supportTitle: "Apoio",
@@ -818,6 +820,7 @@ export const translations: Record<Locale, Dict> = {
       tagline: "Where surfers become legends.",
       rights: "All rights reserved.",
       madeWith: "Carcavelos · Cascais · Lisboa",
+      developedBy: "Developed by DatabyPassion",
       shopTitle: "Shop",
       storeTitle: "The Store",
       supportTitle: "Support",
@@ -1066,6 +1069,7 @@ export const translations: Record<Locale, Dict> = {
       tagline: "冲浪者在此成为传奇。",
       rights: "版权所有。",
       madeWith: "Carcavelos · Cascais · Lisboa",
+      developedBy: "由 DatabyPassion 开发维护",
       shopTitle: "商店",
       storeTitle: "门店",
       supportTitle: "支持",

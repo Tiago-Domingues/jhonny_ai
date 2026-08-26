@@ -12,6 +12,7 @@ import {
   buildVariantAxes,
   deriveTemplateDisplayName,
   findVariantByAttributes,
+  localizeVariantAxisLabel,
   variantAttributesForProduct,
   type VariantAttributeMap,
 } from "@/lib/ecommerce/productVariants";
@@ -110,7 +111,9 @@ export function ProductDetailClient({
           <div className="mt-8 space-y-5">
             {axes.map((axis) => (
               <div key={axis.key}>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{axis.label}</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
+                  {localizeVariantAxisLabel(axis.label, locale)}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {axis.values.map((value) => {
                     const selected = selection[axis.key] === value;

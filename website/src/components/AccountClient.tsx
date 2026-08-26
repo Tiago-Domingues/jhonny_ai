@@ -81,13 +81,18 @@ export function AccountClient() {
   const [googleConsentOpen, setGoogleConsentOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => setUser(data?.user || null))
-      .catch(() => undefined);
-
+    const load = () => {
+      fetch("/api/auth/me")
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setUser(data?.user || null))
+        .catch(() => undefined);
+    };
+    load();
+    window.addEventListener("jss-auth-updated", load);
     const error = new URLSearchParams(window.location.search).get("error");
-    if (!error) return;
+    if (!error) {
+      return () => window.removeEventListener("jss-auth-updated", load);
+    }
     const messages: Record<string, string> = {
       google_auth_failed: "Não foi possível entrar com Google. Tenta outra vez.",
       google_auth_denied: "Login com Google cancelado.",
@@ -96,6 +101,7 @@ export function AccountClient() {
     setMessageTone("error");
     setMessage(messages[error] || "Não foi possível entrar com Google.");
     window.history.replaceState({}, "", "/conta");
+    return () => window.removeEventListener("jss-auth-updated", load);
   }, []);
 
   useEffect(() => {
@@ -138,6 +144,7 @@ export function AccountClient() {
     setUser(data.user);
     setMessageTone("success");
     setMessage(copy.ready);
+    window.dispatchEvent(new Event("jss-auth-updated"));
     window.dispatchEvent(new Event("jss-cart-updated"));
   }
 
@@ -185,6 +192,7 @@ export function AccountClient() {
     setProfile(null);
     setSaveStatus("idle");
     setMessage(null);
+    window.dispatchEvent(new Event("jss-auth-updated"));
   }
 
   if (user) {
