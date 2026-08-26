@@ -458,21 +458,21 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     brandField,
     originalPriceFields,
     discountPercentFields,
-    imagePresenceField,
+    imagePresenceFields,
     artigoField,
     dimensionFields,
   ] = await Promise.all([
     availableField(client, "product.product", brandFieldCandidates),
     availableFields(client, "product.product", originalPriceFieldCandidates),
     availableFields(client, "product.product", discountPercentFieldCandidates),
-    availableField(client, "product.product", imagePresenceFieldCandidates),
+    availableFields(client, "product.product", imagePresenceFieldCandidates),
     resolveArtigoFieldName(client),
     availableFields(client, "product.product", dimensionFieldCandidates),
   ]);
   const fields = Array.from(new Set([
     ...productFields,
     ...(brandField ? [brandField] : []),
-    ...(imagePresenceField ? [imagePresenceField] : []),
+    ...imagePresenceFields,
     ...(artigoField ? [artigoField] : []),
     ...originalPriceFields,
     ...discountPercentFields,
@@ -528,7 +528,10 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     const brand = brandField ? many2oneName(product[brandField], "") || String(product[brandField] || "") : "";
     const sku = product.default_code ? String(product.default_code) : null;
     const templateId = Array.isArray(product.product_tmpl_id) ? Number(product.product_tmpl_id[0]) : null;
-    const imageUrl = hasOdooImage(imagePresenceField ? product[imagePresenceField] : null)
+    // Prefer any direct binary on product.product (variant or template). Extra
+    // media on product.image is resolved in a follow-up batch below.
+    const hasDirectImage = imagePresenceFields.some((field) => hasOdooImage(product[field]));
+    const imageUrl = hasDirectImage
       ? `/api/products/images/${product.id}`
       : "/brand/logo-stacked.svg";
     const name = resolveOdooArtigoName(product, artigoField);
@@ -618,6 +621,48 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
       lastOdooSyncAt: new Date(),
     };
   });
+
+  // Color-specific artwork is sometimes only on product.image (linked by
+  // product_variant_id), while product.product image_* binaries stay empty.
+  // Point those variants at the image API so the route can serve extras.
+  const missingImageIds = mappedProducts
+    .filter((product) => product.imageUrl === "/brand/logo-stacked.svg")
+    .map((product) => product.odooProductId);
+  if (missingImageIds.length) {
+    try {
+      const variantIdsWithExtras = new Set<number>();
+      const chunkSize = 200;
+      for (let i = 0; i < missingImageIds.length; i += chunkSize) {
+        const chunk = missingImageIds.slice(i, i + chunkSize);
+        const extras = await client.searchRead(
+          "product.image",
+          [["product_variant_id", "in", chunk]],
+          ["product_variant_id"],
+          { limit: chunk.length * 4 }
+        );
+        for (const extra of extras) {
+          const variantId = Array.isArray(extra.product_variant_id)
+            ? Number(extra.product_variant_id[0])
+            : Number(extra.product_variant_id);
+          if (Number.isFinite(variantId) && variantId > 0) {
+            variantIdsWithExtras.add(variantId);
+          }
+        }
+      }
+      for (const product of mappedProducts) {
+        if (
+          product.imageUrl === "/brand/logo-stacked.svg" &&
+          variantIdsWithExtras.has(product.odooProductId)
+        ) {
+          const imageUrl = `/api/products/images/${product.odooProductId}`;
+          product.imageUrl = imageUrl;
+          product.imageUrlsJson = JSON.stringify([imageUrl]);
+        }
+      }
+    } catch {
+      // product.image may be unavailable on some Odoo setups
+    }
+  }
 
   return {
     configured: true,
