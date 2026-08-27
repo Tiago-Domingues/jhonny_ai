@@ -534,6 +534,59 @@ export async function listProducts(filters: ProductFilters = {}): Promise<StoreP
   }
 }
 
+function collectBrandNames(products: Array<{ brand?: string | null }>) {
+  const names = new Set<string>();
+  for (const product of products) {
+    const brand = String(product.brand || "").trim();
+    if (brand) names.add(brand);
+  }
+  return [...names].sort((a, b) => a.localeCompare(b));
+}
+
+const catalogListingWhere = {
+  active: true,
+  excludedFromCatalog: false,
+} as const;
+
+/** Distinct brand labels from the live shop catalog (no full product download). */
+export async function listCatalogBrandNames(): Promise<string[]> {
+  if (!hasDatabaseUrl()) {
+    try {
+      const liveProducts = await listLiveOdooProducts();
+      if (liveProducts?.length) return collectBrandNames(liveProducts);
+    } catch {
+      // Fall through to mock brands if Odoo is temporarily unavailable.
+    }
+    return collectBrandNames(mockCatalogOrEmpty());
+  }
+
+  try {
+    const rows = await prisma.product.findMany({
+      where: {
+        ...catalogListingWhere,
+        ...(allowMockCatalog()
+          ? {}
+          : {
+              NOT: [{ sku: { startsWith: "DEMO-" } }, { slug: { contains: "-demo" } }],
+            }),
+      },
+      distinct: ["brand"],
+      select: { brand: true },
+    });
+    const names = collectBrandNames(rows);
+    if (names.length) return names;
+    return collectBrandNames(mockCatalogOrEmpty());
+  } catch {
+    try {
+      const liveProducts = await listLiveOdooProducts();
+      if (liveProducts?.length) return collectBrandNames(liveProducts);
+    } catch {
+      // Fall through to mock brands if both DB and Odoo fail.
+    }
+    return collectBrandNames(mockCatalogOrEmpty());
+  }
+}
+
 export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[]> {
   if (!hasDatabaseUrl()) {
     try {
