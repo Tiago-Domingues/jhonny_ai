@@ -21,17 +21,24 @@ type ShopPageProps = {
     categoryGroup?: string;
     subcategory?: string;
     q?: string;
+    brand?: string;
   }>;
 };
+
+function firstBrand(value?: string | null) {
+  return value?.split(",")[0]?.trim() || "";
+}
 
 async function ShopCatalog({
   categoryGroup,
   subcategory,
   q,
+  brand,
 }: {
   categoryGroup?: string;
   subcategory?: string;
   q?: string;
+  brand?: string;
 }) {
   // Server-render a lean first page so the shop never boots empty if the client fetch is slow.
   // Cap SSR props to keep the HTML/RSC payload small; ShopClient still fetches the full lean catalog.
@@ -40,6 +47,7 @@ async function ShopCatalog({
       categoryGroup: categoryGroup || null,
       subcategory: subcategory || null,
       query: q || null,
+      brand: brand || null,
     })
       .then((items) => items.slice(0, 60))
       .catch(() => []),
@@ -49,7 +57,7 @@ async function ShopCatalog({
   return (
     <ShopClient
       products={products}
-      catalogKey={[categoryGroup || "", subcategory || "", q || ""].join("|")}
+      catalogKey={[categoryGroup || "", subcategory || "", q || "", brand || ""].join("|")}
       menuCategories={menuCategories}
     />
   );
@@ -57,6 +65,7 @@ async function ShopCatalog({
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const params = (await searchParams) || {};
+  const brand = firstBrand(params.brand);
 
   return (
     <>
@@ -71,6 +80,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
             categoryGroup={params.categoryGroup}
             subcategory={params.subcategory}
             q={params.q}
+            brand={brand}
           />
         </Suspense>
       </main>
