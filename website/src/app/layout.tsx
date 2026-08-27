@@ -31,7 +31,7 @@ const notoSansSC = Noto_Sans_SC({
   display: "swap",
 });
 
-// deploy-bump: trigger Vercel production deploy after PR #151 merge
+// deploy-bump: brand logos open /loja?brand= after PR #154
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.jhonnysurfstore.pt"),
   title: {

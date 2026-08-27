@@ -13,6 +13,8 @@ import { Athletes } from "@/components/Athletes";
 import { Footer } from "@/components/Footer";
 import { listCatalogBrandNames } from "@/lib/ecommerce/catalog";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const catalogBrands = await listCatalogBrandNames();
 

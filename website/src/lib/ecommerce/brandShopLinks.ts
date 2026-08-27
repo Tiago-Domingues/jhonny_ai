@@ -40,11 +40,11 @@ export function shopBrandHref(catalogBrand: string) {
   return `/loja?brand=${encodeURIComponent(catalogBrand)}`;
 }
 
-export type ShopBrandLink = Brand & { catalogBrand: string };
+export type ShopBrandLink = { name: string; slug: string; catalogBrand: string };
 
 export function visibleShopBrands(carousel: Brand[], catalogBrands: string[]): ShopBrandLink[] {
   return carousel.flatMap((brand) => {
     const catalogBrand = matchCarouselBrandToCatalog(brand.name, catalogBrands);
-    return catalogBrand ? [{ ...brand, catalogBrand }] : [];
+    return catalogBrand ? [{ name: brand.name, slug: brand.slug, catalogBrand }] : [];
   });
 }
