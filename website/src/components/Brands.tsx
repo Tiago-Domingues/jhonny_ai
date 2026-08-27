@@ -4,23 +4,24 @@ import { useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/components/LanguageProvider";
 import { BRANDS, type Brand } from "@/lib/i18n";
+import { shopBrandHref, visibleShopBrands, type ShopBrandLink } from "@/lib/ecommerce/brandShopLinks";
 
-function BrandItem({ brand }: { brand: Brand }) {
+function shopBrandLabel(brand: Brand, locale: string) {
+  if (locale === "pt") return `${brand.name} — ver produtos na loja`;
+  if (locale === "zh") return `${brand.name} — 查看商店产品`;
+  return `Shop ${brand.name} products`;
+}
+
+function BrandItem({ brand }: { brand: ShopBrandLink }) {
   const [failed, setFailed] = useState(false);
   const { locale } = useLanguage();
-  const siteLabel =
-    locale === "pt"
-      ? `${brand.name} — site oficial`
-      : locale === "zh"
-        ? `${brand.name} — 官方网站`
-        : `${brand.name} — official website`;
+  const label = shopBrandLabel(brand, locale);
 
   return (
     <a
-      href={brand.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={siteLabel}
+      href={shopBrandHref(brand.catalogBrand)}
+      aria-label={label}
+      data-testid={`brand-link-${brand.slug}`}
       className="mx-8 flex h-14 w-40 shrink-0 items-center justify-center sm:mx-10 sm:w-44"
     >
       {failed ? (
@@ -42,12 +43,15 @@ function BrandItem({ brand }: { brand: Brand }) {
   );
 }
 
-export function Brands() {
+export function Brands({ catalogBrands }: { catalogBrands: string[] }) {
   const { t } = useLanguage();
-  const loop = [...BRANDS, ...BRANDS];
+  const visible = visibleShopBrands(BRANDS, catalogBrands);
+  if (!visible.length) return null;
+
+  const loop = [...visible, ...visible];
 
   return (
-    <section className="overflow-hidden bg-ink py-14">
+    <section className="overflow-hidden bg-ink py-14" data-testid="brands-we-carry">
       <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
         {t.brands.title}
       </p>

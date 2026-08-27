@@ -11,8 +11,11 @@ import { Visit } from "@/components/Visit";
 import { Contact } from "@/components/Contact";
 import { Athletes } from "@/components/Athletes";
 import { Footer } from "@/components/Footer";
+import { listCatalogBrandNames } from "@/lib/ecommerce/catalog";
 
-export default function Home() {
+export default async function Home() {
+  const catalogBrands = await listCatalogBrandNames();
+
   return (
     <>
       <SiteHeader />
@@ -23,7 +26,7 @@ export default function Home() {
         <About />
         <Products />
         <Services />
-        <Brands />
+        <Brands catalogBrands={catalogBrands} />
         <Opportunities />
         <Athletes />
         <Visit />
