@@ -253,7 +253,7 @@
         <p style="margin-bottom:0">
           Checkout, payments, fatura, shipping totals, coupons, email, and the security baseline are on <code>main</code>.
           The public still sees coming-soon until <code>SITE_PUBLIC_LAUNCH=open</code>.
-          Left: <strong>Odoo weights (P1.10)</strong>, optional <strong>photos (P1.8)</strong>, then the launch flag.
+          Left: <strong>Odoo weights (P1.10)</strong>, then the launch flag. Homepage photos (P1.8) are done.
         </p>
       </div>
 
@@ -262,7 +262,7 @@
           <tr><th>Area</th><th>Status</th></tr>
         </thead>
         <tbody>
-          <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready (imagery refresh still needed — P1.8)</td></tr>
+          <tr><td data-label="Area">Brand / homepage content</td><td data-label="Status" class="status-ok">Ready (recent store photos — P1.8)</td></tr>
           <tr><td data-label="Area">Product catalog (Odoo → site)</td><td data-label="Status" class="status-ok">Connected; cron + stale-kick sync (P0.18)</td></tr>
           <tr><td data-label="Area">Browse shop, filters, product pages</td><td data-label="Status" class="status-ok">Ready</td></tr>
           <tr><td data-label="Area">Cart + checkout</td><td data-label="Status" class="status-ok">Ready for preview; totals include coupon + Portes</td></tr>
@@ -349,7 +349,7 @@
       <p>Other remaining gaps:</p>
       <ul>
         <li>Most products have <strong>Odoo weight = 0</strong>, so shipping uses category fallbacks (P1.10).</li>
-        <li>Homepage / category heroes may be older photos (P1.8).</li>
+        <li>Homepage / category heroes use the recent store photos (P1.8 done).</li>
         <li>Until <code>SITE_PUBLIC_LAUNCH=open</code>, both .com and .pt show coming-soon; staff unlock via <code>/preview-access</code>.</li>
         <li>Unpaid pending orders are <strong>not</strong> reserved (stock drops only when paid).</li>
       </ul>
@@ -569,9 +569,9 @@
           <tr>
             <td data-label="#">P1.6</td>
             <td data-label="Item">Scripted paid-path tests</td>
-            <td data-label="Description">Automated checks that cart → pay → bank callback → paid/stock/email still work. Offline scripts exist; a full live-pay test is not in CI.</td>
-            <td data-label="Status">Partial</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Description">Owner completed live paid-path checks on every payment method (same bar as P1.7). Offline scripts remain; no extra CI live-pay job.</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> (ops)</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.7</td>
@@ -584,8 +584,8 @@
             <td data-label="#">P1.8</td>
             <td data-label="Item">Recent homepage + category photos</td>
             <td data-label="Description">Swap older hero / category pictures for new real store photos. Drop files in <code>website/public/brand/</code> when you have them.</td>
-            <td data-label="Status" class="status-bad"><strong>Open</strong></td>
-            <td data-label="Effort">S–M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> (#154)</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P1.9</td>
@@ -635,8 +635,8 @@
             <td data-label="#">P2.3</td>
             <td data-label="Item">Empty Odoo categories</td>
             <td data-label="Description">Hide (or fill in Odoo) categories that show 0 products, e.g. an empty women’s wetsuits group.</td>
-            <td data-label="Status">Open</td>
-            <td data-label="Effort">S–M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> — keep as-is by design</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P2.4</td>
@@ -718,8 +718,7 @@
       <h2>7. Suggested go-live sequence</h2>
       <ol class="sequence">
         <li><strong>P1.10</strong> — put real kg (and board cm) on Odoo products.</li>
-        <li>Optional <strong>P1.8</strong> — drop recent photos under <code>website/public/brand/</code>.</li>
-        <li><strong>P0.12</strong> — <code>SITE_PUBLIC_LAUNCH=open</code> on Vercel.</li>
+        <li><strong>P0.12</strong> — <code>SITE_PUBLIC_LAUNCH=open</code> on Vercel (also enables robots/sitemap).</li>
         <li>Announce.</li>
       </ol>
 

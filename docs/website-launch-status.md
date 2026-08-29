@@ -18,11 +18,11 @@ This document states whether the website is ready for **public online purchases*
 
 **Ready for staff / preview testing. Not ready to open .com and .pt to the public yet.**
 
-Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, FAQ, email verification, and the security baseline are on `main`. The public still sees coming-soon until `SITE_PUBLIC_LAUNCH=open`. What is left is **Odoo weights** (P1.10), optional **photos** (P1.8), then the launch flag.
+Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, FAQ, email verification, and the security baseline are on `main`. Homepage + category photos shipped (#154). The public still sees coming-soon until `SITE_PUBLIC_LAUNCH=open`. What is left before opening is **Odoo weights** (P1.10), then the launch flag.
 
 | Area | Status |
 |------|--------|
-| Brand / homepage content | Ready (imagery refresh still needed — P1.8) |
+| Brand / homepage content | Ready (recent store photos on homepage + shop heroes — P1.8) |
 | Product catalog (Odoo → site) | Connected; cron + stale-kick sync (P0.18) |
 | Browse shop, filters, product pages | Ready |
 | Cart + checkout | Ready for preview; totals include coupon + Portes |
@@ -34,8 +34,7 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, F
 ### What to tackle next
 
 1. **Ops in Odoo:** fill **Weight** (and L/W/H on boards). Most SKUs are still `0`, so portes use category guesses (0.8 kg default) — **P1.10**.
-2. Optional **P1.8** recent homepage / category photos (drop files under `website/public/brand/`).
-3. **Last:** `SITE_PUBLIC_LAUNCH=open` (**P0.12**). Do not set `true` — that value is ignored on purpose.
+2. **Last:** `SITE_PUBLIC_LAUNCH=open` (**P0.12**). Do not set `true` — that value is ignored on purpose. Flipping `open` also enables `robots.txt` / sitemap indexing (P3.2 is wired to this flag).
 
 ---
 
@@ -82,7 +81,7 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, F
 Other remaining gaps:
 
 - Most products have **Odoo weight = 0**, so shipping uses category fallbacks (see P1.10).
-- Homepage / category heroes may be older photos (P1.8).
+- Homepage / category heroes use the recent store photos (P1.8 done).
 - Public domains stay locked until **P0.12**.
 - Unpaid pending orders are **not** reserved (stock drops only when paid).
 
@@ -132,7 +131,7 @@ Other remaining gaps:
 | P0.9 | Full shipping address when ship-to-home | Delivery checkout requires street, postal code, city, and country. Pickup does not. | **Done** | — |
 | P0.10 | €100 free shipping | Merchandise orders at or above €100 (after coupon) get €0 portes. Pickup is always free. Shown on banner, checkout, and legal pages. | **Done** | — |
 | P0.11 | Shipping cost in checkout Total | Checkout Total = products − coupon + CTT portes (or €0 pickup / free-over-€100). Same portes line goes on the Odoo fatura. | **Done** | — |
-| P0.12 | Open public domains | Flip Vercel `SITE_PUBLIC_LAUNCH=open` so .com and .pt stop showing coming-soon. `true` is ignored on purpose. | **Ready to flip** after P1.10 (and P1.8 if you want new photos) | S |
+| P0.12 | Open public domains | Flip Vercel `SITE_PUBLIC_LAUNCH=open` so .com and .pt stop showing coming-soon. `true` is ignored on purpose. Also turns on public robots/sitemap. | **Ready to flip** after P1.10 | S |
 | P0.13 | Block mock catalog | Production cannot sell the 3 built-in demo products unless you explicitly allow it. | **Done** | — |
 | P0.14 | Refuse weak session secret | The live site will not start checkout/login if `SESSION_SECRET` is missing or still the default. | **Done** | — |
 | P0.15 | Rate-limit auth / checkout / coupon / callback | Too many login, register, checkout, coupon, or payment-callback hits from one IP get HTTP 429. | **Done** | — |
@@ -140,7 +139,7 @@ Other remaining gaps:
 | P0.17 | Security HTTP headers | Browser headers (no iframe embed, HSTS, nosniff, baseline CSP) reduce common web attacks. | **Done** | — |
 | P0.18 | Near real-time catalog sync | Odoo products, price, and stock refresh on the site about every 2 minutes (plus a catch-up if a page looks stale). | **Done** | — |
 
-**P0 left:** only **P0.12** (flip the launch flag). Do that after you are happy with portes (P1.10) and brand photos (P1.8).
+**P0 left:** only **P0.12** (flip the launch flag). Do that after you are happy with portes (P1.10).
 
 ### P1 — Launch ops and trust (active)
 
@@ -151,9 +150,9 @@ Other remaining gaps:
 | P1.3 | Password reset | “Forgot password” emails a 1-hour, single-use link. Google-only accounts stay on Google sign-in. | **Done** | — |
 | P1.4 | JHONNY10 first-purchase coupon | Signed-in customers get 10% on their **first paid** order only. The code does not stick if they never pay. | **Done** | — |
 | P1.5 | FAQ / trust copy | FAQ “Já posso comprar online?” must say the shop is live (MB WAY, Multibanco, card, PayPal, Klarna) — not “em preparação”. Also covers fatura, reset, JHONNY10. | **Done** | — |
-| P1.6 | Scripted paid-path tests | Automated checks that cart → pay → bank callback → paid/stock/email still work. Offline scripts exist; a full live-pay test is not in CI. | Partial | M |
+| P1.6 | Scripted paid-path tests | Owner completed live paid-path checks on every payment method (same bar as P1.7). Offline scripts remain; no extra CI live-pay job. | **Done** (ops) | — |
 | P1.7 | One live order per payment method | You already placed a real/sandbox paid order on Multibanco, MB WAY, and Stripe (card or PayPal/Klarna) and checked the fatura matches checkout. | **Done** (ops) | — |
-| P1.8 | Recent homepage + category photos | Swap older hero / category pictures for new real store photos. You drop files in `website/public/brand/` when you have them. | **Open** | S–M |
+| P1.8 | Recent homepage + category photos | Swap older hero / category pictures for new real store photos. You drop files in `website/public/brand/` when you have them. | **Done** (#154) | — |
 | P1.9 | Email HTML escape + spam limits | Order emails cannot inject HTML from names/addresses. Product ratings and “notify when available” are rate-limited. | **Done** | — |
 | P1.10 | Fill Odoo **weight + size** | In Odoo, put real kg (and board length/width/height) on products. The site uses that for CTT portes. Empty weight = a category guess (often 0.8 kg). | **Open — next ops** | S (ops) |
 | P1.11 | Email verification | Email/password signup stays pending until they click the 24h link. Then they are signed in and sent to `/conta` to fill the profile. Login is blocked until confirmed. Google-verified emails skip this. Guest checkout still works. | **Done** | — |
@@ -164,7 +163,7 @@ Other remaining gaps:
 |---|------|-------------|--------|--------|
 | P2.1 | Leftover Portuguese-only UI strings | Some shop / product / checkout labels are still hardcoded in PT when the customer picked EN or ZH. | Open | M |
 | P2.2 | Real cart drawer | Side cart that opens from the bag icon (qty, remove, go to cart/checkout) instead of only a full cart page. | **Done** | — |
-| P2.3 | Empty Odoo categories | Hide (or fill in Odoo) categories that show 0 products, e.g. an empty women’s wetsuits group. | Open | S–M |
+| P2.3 | Empty Odoo categories | Hide (or fill in Odoo) categories that show 0 products, e.g. an empty women’s wetsuits group. | **Done** — keep as-is by design | — |
 | P2.4 | Product image gallery | Product pages should show several photos you can click through, not only one thumbnail. Some products already have extra images. | Partial | M |
 | P2.5 | Bulky board shipping | Oversized boards that exceed CTT limits get a €29.90 quote plus a note that Jhonny will confirm. | **Done** | — |
 | P2.6 | Size / color variant UX | When Odoo has the same board in several sizes or colors, the product page should pick the variant cleanly. Basic support is live; polish can continue. | Partial | M |
@@ -185,16 +184,14 @@ Other remaining gaps:
 ## 7. Suggested go-live sequence (now)
 
 1. **P1.10** — put real kg (and board cm) on Odoo products; wait for sync.  
-2. Optional **P1.8** — drop recent photos under `website/public/brand/`.  
-3. **P0.12** — `SITE_PUBLIC_LAUNCH=open` on Vercel.  
-4. Announce.
+2. **P0.12** — `SITE_PUBLIC_LAUNCH=open` on Vercel (also enables robots/sitemap).  
+3. Announce.
 
 ```mermaid
 flowchart LR
   weights[P1.10_Odoo_weights]
-  photos[P1.8_optional_photos]
   open[P0.12_SITE_PUBLIC_LAUNCH_open]
-  weights --> photos --> open
+  weights --> open
 ```
 
 ---
@@ -214,7 +211,7 @@ flowchart LR
 - [x] Auth/checkout/callback rate-limited; Odoo sync not anonymous.  
 - [x] Production refuses weak `SESSION_SECRET`; security headers on.  
 - [x] Catalog sync on a short cron.  
-- [ ] Homepage + category heroes use **approved recent photos**.  
+- [x] Homepage + category heroes use **approved recent photos**.  
 
 Until P0.12 is green, treat the public internet as **coming-soon**, not an open webshop.
 
