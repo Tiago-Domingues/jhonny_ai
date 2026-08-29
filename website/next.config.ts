@@ -28,6 +28,14 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  images: {
+    localPatterns: [
+      { pathname: "/api/products/images/**", search: "?i=*" },
+      { pathname: "/api/products/images/**", search: "" },
+      { pathname: "/brand/**", search: "" },
+      { pathname: "/**", search: "" },
+    ],
+  },
   async headers() {
     return [
       {
