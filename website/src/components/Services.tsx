@@ -267,7 +267,7 @@ export function Services() {
         </div>
 
         {/* The Dudes — Surf Café highlight */}
-        <div className="mt-4 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1fr_0.9fr]">
+        <div className="mt-4 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
             <DudesAvatar openLabel={ui.openDudesInstagram} />
             <div>
@@ -292,7 +292,7 @@ export function Services() {
               </a>
             </div>
           </div>
-          <InstagramMediaStrip handle="dudes_surfcafe" label={ui.instagramPosts} />
+          <InstagramMediaStrip handle="dudes_surfcafe" label={ui.instagramPosts} limit={6} />
         </div>
       </div>
     </section>

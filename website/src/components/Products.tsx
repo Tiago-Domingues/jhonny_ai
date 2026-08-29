@@ -38,7 +38,7 @@ export function Products() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div data-category-grid className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {t.shop.items.map((item) => {
             const localImage = categoryImages[item.id] || categoryImages.surfboards;
             const photoFallback = categoryPhotoFallbacks[item.id] || categoryPhotoFallbacks.surfboards;
@@ -48,6 +48,7 @@ export function Products() {
                 key={item.id}
                 id={item.id}
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
+                data-category-card
                 className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-line-dark bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
               >
                 <div

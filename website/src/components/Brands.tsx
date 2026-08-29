@@ -36,7 +36,7 @@ function BrandItem({ brand }: { brand: ShopBrandLink }) {
       className="relative z-10 mx-8 flex h-14 w-40 shrink-0 cursor-pointer items-center justify-center pointer-events-auto sm:mx-10 sm:w-44"
     >
       {failed ? (
-        <span className="whitespace-nowrap font-display text-sm font-bold uppercase tracking-[0.18em] text-white/75 sm:text-base">
+        <span className="whitespace-nowrap font-display text-sm font-bold uppercase tracking-[0.18em] text-ink sm:text-base">
           {brand.name}
         </span>
       ) : (
@@ -47,7 +47,7 @@ function BrandItem({ brand }: { brand: ShopBrandLink }) {
           height={72}
           draggable={false}
           onError={() => setFailed(true)}
-          className="pointer-events-none max-h-10 w-auto max-w-[160px] object-contain opacity-90 transition duration-300 hover:opacity-100 sm:max-h-11"
+          className="pointer-events-none max-h-10 w-auto max-w-[160px] object-contain brightness-0 opacity-90 transition duration-300 hover:opacity-100 sm:max-h-11"
         />
       )}
     </Link>
@@ -62,14 +62,14 @@ export function Brands({ catalogBrands }: { catalogBrands: string[] }) {
   const loop = [...visible, ...visible];
 
   return (
-    <section className="overflow-hidden bg-ink py-14" data-testid="brands-we-carry">
-      <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-white/55">
+    <section className="overflow-hidden bg-white py-14" data-testid="brands-we-carry">
+      <p className="text-center text-xs font-semibold uppercase tracking-[0.25em] text-ink">
         {t.brands.title}
       </p>
 
       <div className="group relative mt-8 flex overflow-hidden">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-ink to-transparent sm:w-28" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-ink to-transparent sm:w-28" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-white to-transparent sm:w-28" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-white to-transparent sm:w-28" />
 
         <div className="flex w-max animate-[marquee_40s_linear_infinite] items-center group-hover:[animation-play-state:paused]">
           {loop.map((brand, i) => (

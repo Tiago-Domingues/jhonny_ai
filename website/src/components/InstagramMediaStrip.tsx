@@ -30,14 +30,34 @@ const staticDudesMedia: InstagramMedia[] = [
   },
 ];
 
+function padMedia(
+  items: InstagramMedia[],
+  handle: string,
+  limit: number
+): InstagramMedia[] {
+  const sliced = items.slice(0, limit);
+  if (sliced.length >= limit) return sliced;
+  return [
+    ...sliced,
+    ...Array.from({ length: limit - sliced.length }, (_, index) => ({
+      id: `${handle}-fallback-${sliced.length + index}`,
+      permalink: `https://www.instagram.com/${handle}/`,
+      mediaUrl: "",
+      fallback: true,
+    })),
+  ];
+}
+
 export function InstagramMediaStrip({
   handle,
   label,
   className = "",
+  limit = 3,
 }: {
   handle: string;
   label: string;
   className?: string;
+  limit?: number;
 }) {
   const [media, setMedia] = useState<InstagramMedia[]>([]);
   const [nearViewport, setNearViewport] = useState(false);
@@ -65,7 +85,7 @@ export function InstagramMediaStrip({
   useEffect(() => {
     if (!nearViewport) return;
     let cancelled = false;
-    fetch(`/api/instagram/${encodeURIComponent(handle)}`)
+    fetch(`/api/instagram/${encodeURIComponent(handle)}?limit=${limit}`)
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (!cancelled) setMedia(data?.media || []);
@@ -74,19 +94,19 @@ export function InstagramMediaStrip({
     return () => {
       cancelled = true;
     };
-  }, [handle, nearViewport]);
+  }, [handle, limit, nearViewport]);
 
-  const fallback = Array.from({ length: 3 }, (_, index) => ({
+  const fallback = Array.from({ length: limit }, (_, index) => ({
     id: `${handle}-fallback-${index}`,
     permalink: `https://www.instagram.com/${handle}/`,
     mediaUrl: "",
     fallback: true,
   }));
-  const items = media.length
-    ? media
-    : handle === "dudes_surfcafe"
-      ? staticDudesMedia
-      : fallback;
+  const items = padMedia(
+    media.length ? media : handle === "dudes_surfcafe" ? staticDudesMedia : fallback,
+    handle,
+    limit
+  );
 
   return (
     <div ref={rootRef} className={className}>
@@ -102,7 +122,7 @@ export function InstagramMediaStrip({
           @{handle}
         </a>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-4">
         {items.map((item, index) => (
           <a
             key={item.id}

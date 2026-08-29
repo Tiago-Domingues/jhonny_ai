@@ -89,6 +89,16 @@ html.jss-a11y-motion *::after {
   color: #0d0d0d;
 }
 
+#shop [data-category-card] .media-vivid {
+  transition: filter 300ms ease;
+}
+
+@media (hover: hover) {
+  #shop [data-category-grid]:hover [data-category-card]:not(:hover) .media-vivid {
+    filter: grayscale(1);
+  }
+}
+
 /* !important: Tailwind v4 puts these in @layer components, which loses to utilities. */
 #services a[data-partner-chip]:hover {
   background-color: #0d0d0d !important;
@@ -107,6 +117,30 @@ html.jss-a11y-motion *::after {
 
 a[data-google-reviews-chip]:hover {
   background-color: #0d0d0d !important;
+  color: #ffffff !important;
+}
+
+#contact a:hover [data-contact-disc="whatsapp"] {
+  background-color: #25d366 !important;
+  border-color: #25d366 !important;
+  color: #ffffff !important;
+}
+
+#contact a:hover [data-contact-disc="facebook"] {
+  background-color: #1877f2 !important;
+  border-color: #1877f2 !important;
+  color: #ffffff !important;
+}
+
+#contact a:hover [data-contact-disc="instagram"] {
+  background-image: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+#contact a:hover [data-contact-disc="email"] {
+  background-color: #ea4335 !important;
+  border-color: #ea4335 !important;
   color: #ffffff !important;
 }
 

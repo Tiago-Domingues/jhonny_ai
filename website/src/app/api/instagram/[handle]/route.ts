@@ -30,23 +30,30 @@ const staticDudesMedia: InstagramMedia[] = [
   },
 ];
 
-function mediaFromJson(handle: string): InstagramMedia[] {
+function clampMediaLimit(value: string | null) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 3;
+  return Math.min(6, Math.max(1, Math.floor(parsed)));
+}
+
+function mediaFromJson(handle: string, limit: number): InstagramMedia[] {
   const raw = process.env[envKey(handle, "MEDIA_JSON")];
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(0, 3) : [];
+    return Array.isArray(parsed) ? parsed.slice(0, limit) : [];
   } catch {
     return [];
   }
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ handle: string }> }
 ) {
   const { handle } = await context.params;
-  const configuredMedia = mediaFromJson(handle);
+  const limit = clampMediaLimit(new URL(request.url).searchParams.get("limit"));
+  const configuredMedia = mediaFromJson(handle, limit);
   if (configuredMedia.length) {
     return Response.json({ configured: true, source: "env_json", media: configuredMedia });
   }
@@ -54,12 +61,12 @@ export async function GET(
   const accountId = process.env[envKey(handle, "ACCOUNT_ID")];
   const accessToken = process.env.INSTAGRAM_GRAPH_ACCESS_TOKEN;
   if (!accountId || !accessToken) {
-    const publicMedia = await fetchPublicInstagramMedia(handle, 3);
+    const publicMedia = await fetchPublicInstagramMedia(handle, limit);
     if (publicMedia.length) {
       return Response.json({ configured: true, source: "instagram_public", media: publicMedia });
     }
     if (handle === "dudes_surfcafe") {
-      return Response.json({ configured: true, source: "static_shortcode", media: staticDudesMedia });
+      return Response.json({ configured: true, source: "static_shortcode", media: staticDudesMedia.slice(0, limit) });
     }
 
     return Response.json({
@@ -72,7 +79,7 @@ export async function GET(
 
   const url = new URL(`https://graph.facebook.com/v20.0/${accountId}/media`);
   url.searchParams.set("fields", "id,caption,media_type,media_url,permalink,thumbnail_url");
-  url.searchParams.set("limit", "3");
+  url.searchParams.set("limit", String(limit));
   url.searchParams.set("access_token", accessToken);
 
   const response = await fetch(url, { next: { revalidate: 900 } });
@@ -82,7 +89,7 @@ export async function GET(
 
   const data = await response.json();
   const media = Array.isArray(data.data)
-    ? data.data.map((item: Record<string, string>) => ({
+    ? data.data.slice(0, limit).map((item: Record<string, string>) => ({
         id: item.id,
         caption: item.caption,
         mediaType: item.media_type,
