@@ -46,6 +46,7 @@ function Reviews() {
         href={GOOGLE_REVIEWS_LINK}
         target="_blank"
         rel="noopener noreferrer"
+        data-google-reviews-chip
         className="group inline-flex items-center gap-2 self-start rounded-full border-2 border-ink bg-white px-5 py-2.5 text-sm font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
       >
         {t.reviews.cta}
