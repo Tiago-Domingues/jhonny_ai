@@ -129,11 +129,11 @@ export function StudentIcon(props: IconProps) {
 export function SurfSchoolIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
-      <path d="M5 12.5 12 6l7 6.5" />
-      <path d="M7 12.5v5h10v-5" />
-      <path d="M11 17.5v-3h2v3" />
-      <path d="M8.5 14.5h1.5M14 14.5h1.5" />
-      <path d="M2 20.5c2.5 0 2.5-2.2 5-2.2s2.5 2.2 5 2.2 2.5-2.2 5-2.2 2.5 2.2 5 2.2" />
+      <path d="M4.5 11.2 12 5l7.5 6.2" />
+      <path d="M6.5 11.2V16h11v-4.8" />
+      <path d="M11 16v-2.5h2V16" />
+      <path d="M8.2 13h1.5M14.3 13h1.5" />
+      <path d="M2 20.2c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3" />
     </svg>
   );
 }
