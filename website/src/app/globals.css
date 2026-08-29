@@ -89,6 +89,27 @@ html.jss-a11y-motion *::after {
   color: #0d0d0d;
 }
 
+/* !important: Tailwind v4 puts these in @layer components, which loses to utilities. */
+#services a[data-partner-chip]:hover {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+}
+
+#services a[data-partner-chip]:hover [data-wa-disc] {
+  background-color: #25d366 !important;
+  color: #ffffff !important;
+}
+
+#services a[data-dudes-chip]:hover {
+  background-color: #ffffff !important;
+  color: #0d0d0d !important;
+}
+
+a[data-google-reviews-chip]:hover {
+  background-color: #0d0d0d !important;
+  color: #ffffff !important;
+}
+
 /* Corner tab: flush with the visible bottom-left of the page (same
    containing block as the WhatsApp FAB). JS may raise `bottom` by the
    Safari *bottom* chrome only. Never use `100lvh - 100dvh` here — that
