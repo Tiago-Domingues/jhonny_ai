@@ -22,9 +22,27 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const variants = await listProductVariants(product);
   const displayName = variants.length > 1 ? deriveTemplateDisplayName(variants) : product.name;
 
+  const image = product.imageUrl?.startsWith("http")
+    ? product.imageUrl
+    : product.imageUrl
+      ? product.imageUrl
+      : "/brand/logo-stacked.png";
+
   return {
     title: displayName,
     description: product.description || `${displayName} at Jhonny Surf Store.`,
+    openGraph: {
+      title: displayName,
+      description: product.description || `${displayName} at Jhonny Surf Store.`,
+      images: [{ url: image }],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: displayName,
+      description: product.description || `${displayName} at Jhonny Surf Store.`,
+      images: [image],
+    },
   };
 }
 
