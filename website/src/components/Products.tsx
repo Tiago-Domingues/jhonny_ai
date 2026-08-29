@@ -57,8 +57,10 @@ export function Products() {
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
                 data-category-card
                 data-category-active={hoveredId === item.id ? "true" : undefined}
+                onMouseEnter={() => setHoveredId(item.id)}
                 onPointerEnter={(event) => {
-                  if (event.pointerType === "mouse") setHoveredId(item.id);
+                  if (event.pointerType === "touch") return;
+                  setHoveredId(item.id);
                 }}
                 className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-line-dark bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
               >
