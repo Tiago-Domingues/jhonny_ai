@@ -46,7 +46,7 @@ function Reviews() {
         href={GOOGLE_REVIEWS_LINK}
         target="_blank"
         rel="noopener noreferrer"
-        className="group inline-flex items-center gap-2 self-start rounded-full border border-white/30 px-5 py-2.5 text-sm font-semibold uppercase tracking-wide text-white transition hover:bg-white hover:text-ink"
+        className="group inline-flex items-center gap-2 self-start rounded-full border-2 border-ink bg-white px-5 py-2.5 text-sm font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
       >
         {t.reviews.cta}
         <ArrowIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
