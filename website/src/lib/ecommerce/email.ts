@@ -329,6 +329,94 @@ async function recordEmailEvent(input: {
   });
 }
 
+function abandonedCartCopy(locale: string) {
+  if (locale.startsWith("zh")) {
+    return {
+      subject: "你的购物车还在 Jhonny Surf Store",
+      heading: "购物车还在等你",
+      greeting: "嗨",
+      intro: "你把几件商品留在了购物车。随时回来结账——喜欢的尺码可能很快售罄。",
+      cta: "返回购物车",
+      total: "合计",
+      footer: "冲浪者在这里成为传奇。",
+    };
+  }
+  if (locale.startsWith("pt")) {
+    return {
+      subject: "O teu carrinho ainda está na Jhonny Surf Store",
+      heading: "O teu carrinho está à tua espera",
+      greeting: "Olá",
+      intro: "Deixaste artigos no carrinho. Volta quando quiseres — os tamanhos certos podem esgotar.",
+      cta: "Voltar ao carrinho",
+      total: "Total",
+      footer: "Onde os surfistas se tornam lendas.",
+    };
+  }
+  return {
+    subject: "Your cart is still at Jhonny Surf Store",
+    heading: "Your cart is waiting",
+    greeting: "Hi",
+    intro: "You left items in your cart. Come back whenever you like — the right sizes can sell out.",
+    cta: "Return to cart",
+    total: "Total",
+    footer: "Where surfers become legends.",
+  };
+}
+
+export async function sendAbandonedCartEmail(input: {
+  userId: string;
+  email: string;
+  fullName?: string | null;
+  locale?: string | null;
+  items: Array<{ name: string; quantity: number; unitPriceCents: number }>;
+  totalCents: number;
+}) {
+  const locale = (input.locale || "en").toLowerCase();
+  const copy = abandonedCartCopy(locale);
+  const cartUrl = `${publicSiteOrigin()}/carrinho`;
+  const toyUrl = jhonnyToyImageUrl();
+  const itemRows = input.items
+    .map(
+      (item) =>
+        `<li>${escapeHtml(item.name)} × ${item.quantity} — ${escapeHtml(formatEuro(item.unitPriceCents * item.quantity))}</li>`
+    )
+    .join("");
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      <h1>${copy.heading}</h1>
+      <p>${copy.greeting} ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>${copy.intro}</p>
+      <ul>${itemRows}</ul>
+      <p><strong>${copy.total}: ${escapeHtml(formatEuro(input.totalCents))}</strong></p>
+      <p><a href="${escapeHtml(cartUrl)}">${copy.cta}</a></p>
+      <p>${copy.footer}</p>
+      <p style="margin:28px 0 8px;text-align:left">
+        <img
+          src="${toyUrl}"
+          alt="Jhonny"
+          width="120"
+          height="182"
+          style="display:block;width:120px;height:auto;border:0;outline:none;text-decoration:none"
+        />
+      </p>
+    </div>
+  `;
+  const result = await sendEmail(input.email, copy.subject, html);
+  return prisma.emailEvent.create({
+    data: {
+      userId: input.userId,
+      type: "ABANDONED_CART",
+      recipientEmail: input.email,
+      subject: copy.subject,
+      status: result.status,
+      provider: emailProvider(),
+      providerId: result.providerId,
+      error: result.error,
+      sentAt: result.status === "SENT" ? new Date() : null,
+    },
+  });
+}
+
 export async function sendWelcomeEmail(input: { userId: string; email: string; fullName?: string | null }) {
   const subject = "Welcome to Jhonny Surf Store";
   const toyUrl = jhonnyToyImageUrl();
