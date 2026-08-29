@@ -7,6 +7,7 @@ import { ShopCatalogFallback } from "@/components/ShopCatalogFallback";
 import { ShopHero } from "@/components/ShopHero";
 import { listProducts } from "@/lib/ecommerce/catalog";
 import { listMenuCategories } from "@/lib/ecommerce/menuCategories";
+import { getProductRatingSummaries } from "@/lib/ecommerce/ratings";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -52,10 +53,14 @@ async function ShopCatalog({
       .catch(() => []),
     listMenuCategories().catch(() => []),
   ]);
+  const ratings = await getProductRatingSummaries(products.map((product) => product.id)).catch(
+    () => ({})
+  );
 
   return (
     <ShopClient
       products={products}
+      ratings={ratings}
       catalogKey={[categoryGroup || "", subcategory || "", q || "", brand || ""].join("|")}
       menuCategories={menuCategories}
     />

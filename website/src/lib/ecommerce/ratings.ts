@@ -1,6 +1,6 @@
 import "server-only";
 
-import { prisma } from "@/lib/ecommerce/db";
+import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { hashToken } from "@/lib/ecommerce/security";
 
 export type RatingIdentity = {
@@ -12,6 +12,11 @@ export type ProductRatingSummary = {
   average: number;
   count: number;
   myRating: number | null;
+};
+
+export type ProductRatingLite = {
+  average: number;
+  count: number;
 };
 
 function raterKeyFromIdentity(identity: RatingIdentity) {
@@ -48,6 +53,31 @@ export async function getProductRatingSummary(
     count,
     myRating: mine?.stars ?? null,
   };
+}
+
+/** Read-only averages for shop cards. Omits products with no ratings. */
+export async function getProductRatingSummaries(
+  productIds?: string[]
+): Promise<Record<string, ProductRatingLite>> {
+  if (!hasDatabaseUrl()) return {};
+  if (productIds && productIds.length === 0) return {};
+
+  const groups = await prisma.productRating.groupBy({
+    by: ["productId"],
+    where: productIds?.length ? { productId: { in: productIds } } : undefined,
+    _avg: { stars: true },
+    _count: { _all: true },
+  });
+
+  const summaries: Record<string, ProductRatingLite> = {};
+  for (const group of groups) {
+    if (group._count._all <= 0) continue;
+    summaries[group.productId] = {
+      average: Number((group._avg.stars || 0).toFixed(1)),
+      count: group._count._all,
+    };
+  }
+  return summaries;
 }
 
 export async function upsertProductRating(
