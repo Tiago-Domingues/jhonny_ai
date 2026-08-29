@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { ResetPasswordClient, InvalidResetLink } from "@/components/PasswordResetClient";
 
 export const metadata: Metadata = {
-  title: "Redefinir password",
+  title: "Reset password",
   robots: { index: false, follow: false },
 };
 

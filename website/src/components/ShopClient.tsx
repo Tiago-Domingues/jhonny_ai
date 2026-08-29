@@ -24,7 +24,8 @@ import {
   type ShopSortOption,
 } from "@/lib/ecommerce/shopFilters";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
-import { storefrontText } from "@/lib/storefrontCopy";
+import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
+import { storefrontGetJson } from "@/lib/storefrontFetch";
 
 type MenuSubcategory = {
   path: string;
@@ -79,6 +80,7 @@ const copy = {
     availability: "Disponibilidade",
     inStock: "Em stock",
     outOfStock: "Esgotado",
+    ref: "Ref",
     price: "Preço",
     from: "De",
     to: "Até",
@@ -106,6 +108,7 @@ const copy = {
     notify: "Avisar quando disponível",
     notifyOk: "Pedido registado. Avisamos-te quando voltar a estar disponível.",
     notifyFailed: "Não foi possível registar o pedido.",
+    ratings: "avaliações",
     sort: {
       featured: "Em destaque",
       relevance: "Mais relevantes",
@@ -128,6 +131,7 @@ const copy = {
     availability: "Availability",
     inStock: "In stock",
     outOfStock: "Out of stock",
+    ref: "Ref",
     price: "Price",
     from: "From",
     to: "To",
@@ -155,6 +159,7 @@ const copy = {
     notify: "Notify me when available",
     notifyOk: "Request saved. We’ll email you when it’s back.",
     notifyFailed: "Could not save the request.",
+    ratings: "ratings",
     sort: {
       featured: "Featured",
       relevance: "Most relevant",
@@ -177,6 +182,7 @@ const copy = {
     availability: "库存状态",
     inStock: "有货",
     outOfStock: "缺货",
+    ref: "编号",
     price: "价格",
     from: "从",
     to: "到",
@@ -204,6 +210,7 @@ const copy = {
     notify: "有货时通知我",
     notifyOk: "已登记。到货后我们会通知你。",
     notifyFailed: "无法登记请求。",
+    ratings: "条评分",
     sort: {
       featured: "精选",
       relevance: "最相关",
@@ -217,6 +224,37 @@ const copy = {
     } satisfies Record<ShopSortOption, string>,
   },
 } as const;
+
+type ShopCardRating = { average: number; count: number };
+
+function ShopCardStars({
+  average,
+  count,
+  ratingsLabel,
+}: {
+  average: number;
+  count: number;
+  ratingsLabel: string;
+}) {
+  const filled = Math.round(average);
+  return (
+    <p className="mt-2 flex items-center gap-1.5 text-[0.7rem] text-muted" aria-label={`${average.toFixed(1)} ${ratingsLabel}`}>
+      <span className="flex text-[#e3a008]" aria-hidden>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <svg key={star} viewBox="0 0 24 24" className="h-3.5 w-3.5" fill={star <= filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 3.5 14.6 9l6 .9-4.3 4.2 1 5.9L12 17.3 6.7 20l1-5.9L3.4 9.9l6-.9L12 3.5Z"
+            />
+          </svg>
+        ))}
+      </span>
+      <span className="font-bold text-ink">{average.toFixed(1)}</span>
+      <span>({count})</span>
+    </p>
+  );
+}
 
 function ProductSkeletonGrid() {
   return (
@@ -385,10 +423,12 @@ function countActiveFilters(filters: ShopFacetFilters) {
 
 export function ShopClient({
   products: initialProducts = [],
+  ratings: initialRatings = {},
   catalogKey: initialCatalogKey = "|||",
   menuCategories: initialMenuCategories,
 }: {
   products?: StoreProduct[];
+  ratings?: Record<string, ShopCardRating>;
   catalogKey?: string;
   menuCategories?: MenuCategory[];
 }) {
@@ -402,6 +442,7 @@ export function ShopClient({
     document.title = `${t.pageTitle} · Jhonny Surf Store`;
   }, [t.pageTitle]);
   const [products, setProducts] = useState<StoreProduct[]>(initialProducts);
+  const [ratings, setRatings] = useState<Record<string, ShopCardRating>>(initialRatings);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>(() =>
     coerceMenuCategories(
       initialMenuCategories?.length ? initialMenuCategories : MENU_CATEGORIES
@@ -414,15 +455,14 @@ export function ShopClient({
       return;
     }
     let cancelled = false;
-    fetch("/api/menu-categories")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        if (Array.isArray(data?.categories) && data.categories.length) {
-          setMenuCategories(coerceMenuCategories(data.categories));
-        }
-      })
-      .catch(() => undefined);
+    storefrontGetJson<{ categories?: Array<{ key: NavKey; anchor: string; items: Array<string | MenuSubcategory> }> }>(
+      "/api/menu-categories"
+    ).then((data) => {
+      if (cancelled) return;
+      if (Array.isArray(data?.categories) && data.categories.length) {
+        setMenuCategories(coerceMenuCategories(data.categories));
+      }
+    });
     return () => {
       cancelled = true;
     };
@@ -483,6 +523,15 @@ export function ShopClient({
 
     async function loadProducts() {
       // Keep SSR products visible while the full lean catalog downloads.
+      // When SSR already returned the entire filtered page (< 60), skip a second catalog hit.
+      if (
+        initialProducts.length > 0 &&
+        catalogKey === initialCatalogKey &&
+        initialProducts.length < 60
+      ) {
+        setLoadingProducts(false);
+        return;
+      }
       if (initialProducts.length === 0 || catalogKey !== initialCatalogKey) {
         setLoadingProducts(true);
       }
@@ -502,6 +551,11 @@ export function ShopClient({
         const data = await response.json();
         if (!cancelled) {
           setProducts(Array.isArray(data.products) ? data.products : []);
+          setRatings(
+            data.ratings && typeof data.ratings === "object" && !Array.isArray(data.ratings)
+              ? data.ratings
+              : {}
+          );
           setVisibleCount(60);
           setMessage(null);
         }
@@ -572,7 +626,7 @@ export function ShopClient({
     const data = await response.json();
     setAdding(null);
     if (!response.ok) {
-      setMessage(data.message || productCopy.addFailed);
+      setMessage(shopperStockError(data.message || productCopy.addFailed, locale));
       return;
     }
     setMessage(productCopy.added);
@@ -1019,16 +1073,19 @@ export function ShopClient({
                             {product.name}
                           </h2>
                         </Link>
+                        {ratings[product.id]?.count ? (
+                          <ShopCardStars
+                            average={ratings[product.id].average}
+                            count={ratings[product.id].count}
+                            ratingsLabel={t.ratings}
+                          />
+                        ) : null}
                         <dl className="mt-3 grid grid-cols-2 gap-2 text-[0.7rem] text-muted">
                           <div>
-                            <dt className="font-bold uppercase">Ref</dt>
+                            <dt className="font-bold uppercase">{t.ref}</dt>
                             <dd className="truncate">
                               {product.refId || product.sku || product.odooProductId || "-"}
                             </dd>
-                          </div>
-                          <div>
-                            <dt className="font-bold uppercase">Stock</dt>
-                            <dd>{product.stockQuantity > 0 ? `${product.stockQuantity}` : "0"}</dd>
                           </div>
                           {hasVariants ? (
                             <div className="col-span-2">

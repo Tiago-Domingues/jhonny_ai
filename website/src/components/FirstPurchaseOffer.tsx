@@ -8,6 +8,7 @@ import { Logo } from "@/components/Logo";
 import { useLanguage } from "@/components/LanguageProvider";
 import { PrizeWheel } from "@/components/PrizeWheel";
 import { RibbonSurfer } from "@/components/RibbonSurfer";
+import { storefrontGetJson } from "@/lib/storefrontFetch";
 
 const SESSION_DISMISSED_KEY = "jss_welcome_offer_dismissed_v1";
 const RIBBON_HIDDEN_KEY = "jss_welcome_ribbon_hidden_v1";
@@ -115,8 +116,7 @@ export function FirstPurchaseOffer() {
     const dismissed = window.sessionStorage.getItem(SESSION_DISMISSED_KEY) === "1";
 
     const loadAuth = () => {
-      fetch("/api/auth/me")
-        .then((response) => (response.ok ? response.json() : null))
+      storefrontGetJson<{ user?: unknown }>("/api/auth/me")
         .then((data) => {
           const member = Boolean(data?.user);
           setAuth(member ? "member" : "guest");
@@ -143,12 +143,9 @@ export function FirstPurchaseOffer() {
 
   useEffect(() => {
     if (auth !== "member") return;
-    const controller = new AbortController();
-    fetch("/api/wheel/status", { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => setWheelEligible(Boolean(data?.eligible)))
-      .catch(() => undefined);
-    return () => controller.abort();
+    storefrontGetJson<{ eligible?: boolean }>("/api/wheel/status").then((data) =>
+      setWheelEligible(Boolean(data?.eligible))
+    );
   }, [auth]);
 
   /**

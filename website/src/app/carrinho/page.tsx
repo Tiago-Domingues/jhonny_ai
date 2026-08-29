@@ -4,8 +4,8 @@ import { Footer } from "@/components/Footer";
 import { CartPageClient } from "@/components/CartPageClient";
 
 export const metadata: Metadata = {
-  title: "Carrinho",
-  description: "Carrinho Jhonny Surf Store — altera quantidades e continua para o checkout.",
+  title: "Cart",
+  description: "Jhonny Surf Store cart — change quantities and continue to checkout.",
 };
 
 export default function CartPage() {

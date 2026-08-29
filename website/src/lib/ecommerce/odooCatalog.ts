@@ -3,6 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/ecommerce/db";
 import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { buildSurfboardEnrichment } from "@/lib/ecommerce/surfboardEnrichment";
+import { productImageUrls } from "@/lib/ecommerce/odooProductImages";
 
 const brandFieldCandidates = [
   "x_studio_marcas",
@@ -622,46 +623,71 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     };
   });
 
-  // Color-specific artwork is sometimes only on product.image (linked by
-  // product_variant_id), while product.product image_* binaries stay empty.
-  // Point those variants at the image API so the route can serve extras.
-  const missingImageIds = mappedProducts
-    .filter((product) => product.imageUrl === "/brand/logo-stacked.svg")
-    .map((product) => product.odooProductId);
-  if (missingImageIds.length) {
-    try {
-      const variantIdsWithExtras = new Set<number>();
-      const chunkSize = 200;
-      for (let i = 0; i < missingImageIds.length; i += chunkSize) {
-        const chunk = missingImageIds.slice(i, i + chunkSize);
-        const extras = await client.searchRead(
-          "product.image",
-          [["product_variant_id", "in", chunk]],
-          ["product_variant_id"],
-          { limit: chunk.length * 4 }
-        );
-        for (const extra of extras) {
-          const variantId = Array.isArray(extra.product_variant_id)
-            ? Number(extra.product_variant_id[0])
-            : Number(extra.product_variant_id);
-          if (Number.isFinite(variantId) && variantId > 0) {
-            variantIdsWithExtras.add(variantId);
-          }
+  // Count extra Odoo media so the PDP can scroll through more than one photo.
+  try {
+    const variantIds = mappedProducts.map((product) => product.odooProductId);
+    const templateIds = Array.from(
+      new Set(
+        mappedProducts
+          .map((product) => product.odooProductTemplateId)
+          .filter((id): id is number => Number.isFinite(id) && Number(id) > 0)
+      )
+    );
+    const extraCountByVariant = new Map<number, number>();
+    const extraCountByTemplate = new Map<number, number>();
+    const chunkSize = 200;
+    for (let i = 0; i < variantIds.length; i += chunkSize) {
+      const chunk = variantIds.slice(i, i + chunkSize);
+      const extras = await client.searchRead(
+        "product.image",
+        [["product_variant_id", "in", chunk]],
+        ["product_variant_id"],
+        { limit: chunk.length * 8 }
+      );
+      for (const extra of extras) {
+        const variantId = Array.isArray(extra.product_variant_id)
+          ? Number(extra.product_variant_id[0])
+          : Number(extra.product_variant_id);
+        if (Number.isFinite(variantId) && variantId > 0) {
+          extraCountByVariant.set(variantId, (extraCountByVariant.get(variantId) || 0) + 1);
         }
       }
-      for (const product of mappedProducts) {
-        if (
-          product.imageUrl === "/brand/logo-stacked.svg" &&
-          variantIdsWithExtras.has(product.odooProductId)
-        ) {
-          const imageUrl = `/api/products/images/${product.odooProductId}`;
-          product.imageUrl = imageUrl;
-          product.imageUrlsJson = JSON.stringify([imageUrl]);
-        }
-      }
-    } catch {
-      // product.image may be unavailable on some Odoo setups
     }
+    for (let i = 0; i < templateIds.length; i += chunkSize) {
+      const chunk = templateIds.slice(i, i + chunkSize);
+      const extras = await client.searchRead(
+        "product.image",
+        [
+          ["product_tmpl_id", "in", chunk],
+          ["product_variant_id", "=", false],
+        ],
+        ["product_tmpl_id"],
+        { limit: chunk.length * 8 }
+      );
+      for (const extra of extras) {
+        const templateId = Array.isArray(extra.product_tmpl_id)
+          ? Number(extra.product_tmpl_id[0])
+          : Number(extra.product_tmpl_id);
+        if (Number.isFinite(templateId) && templateId > 0) {
+          extraCountByTemplate.set(templateId, (extraCountByTemplate.get(templateId) || 0) + 1);
+        }
+      }
+    }
+    for (const product of mappedProducts) {
+      const hasDirect = product.imageUrl !== "/brand/logo-stacked.svg";
+      const extraCount =
+        (extraCountByVariant.get(product.odooProductId) || 0) +
+        (product.odooProductTemplateId
+          ? extraCountByTemplate.get(product.odooProductTemplateId) || 0
+          : 0);
+      const slotCount = (hasDirect ? 1 : 0) + extraCount;
+      if (slotCount <= 0) continue;
+      const urls = productImageUrls(product.odooProductId, slotCount);
+      product.imageUrl = urls[0]!;
+      product.imageUrlsJson = JSON.stringify(urls);
+    }
+  } catch {
+    // product.image may be unavailable on some Odoo setups
   }
 
   return {

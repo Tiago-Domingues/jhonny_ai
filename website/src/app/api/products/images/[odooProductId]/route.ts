@@ -1,18 +1,9 @@
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
+import { MAX_PRODUCT_IMAGES, parseImageIndex } from "@/lib/ecommerce/odooProductImages";
 
 function responseBody(body: Buffer) {
   return new Uint8Array(body);
-}
-
-function firstImageUrl(imageUrlsJson?: string | null) {
-  if (!imageUrlsJson) return null;
-  try {
-    const parsed = JSON.parse(imageUrlsJson);
-    return Array.isArray(parsed) && typeof parsed[0] === "string" ? parsed[0] : null;
-  } catch {
-    return null;
-  }
 }
 
 function decodeOdooBinary(image: unknown): Buffer | null {
@@ -26,83 +17,129 @@ function decodeOdooBinary(image: unknown): Buffer | null {
   }
 }
 
-/**
- * Prefer true per-variant artwork:
- * 1) image_variant_512 (Odoo variant image)
- * 2) product.image rows linked to this product_variant_id (extra media)
- * 3) image_512 / image_128 (may be shared template image)
- */
-async function imageFromOdoo(odooProductId: number) {
-  if (!hasOdooConfig()) return null;
-  const client = new OdooClient();
+function many2oneId(value: unknown) {
+  if (Array.isArray(value)) return Number(value[0]);
+  return Number(value);
+}
 
+async function imagesFromOdoo(odooProductId: number) {
+  if (!hasOdooConfig()) return [];
+  const client = new OdooClient();
   const [product] = await client.searchRead(
     "product.product",
     [["id", "=", odooProductId]],
-    ["image_variant_512", "image_variant_128", "image_512", "image_128"],
+    ["image_variant_512", "image_variant_128", "image_512", "image_128", "product_tmpl_id"],
     { limit: 1 }
   );
+  if (!product) return [];
 
+  const slots: Buffer[] = [];
   const variantBinary =
-    decodeOdooBinary(product?.image_variant_512) || decodeOdooBinary(product?.image_variant_128);
-  if (variantBinary) return variantBinary;
+    decodeOdooBinary(product.image_variant_512) || decodeOdooBinary(product.image_variant_128);
+  if (variantBinary) slots.push(variantBinary);
 
   try {
     const extras = await client.searchRead(
       "product.image",
       [["product_variant_id", "=", odooProductId]],
       ["image_512", "image_128", "image_1920"],
-      { limit: 4, order: "id asc" }
+      { limit: MAX_PRODUCT_IMAGES, order: "id asc" }
     );
     for (const extra of extras) {
       const decoded =
         decodeOdooBinary(extra?.image_512) ||
         decodeOdooBinary(extra?.image_128) ||
         decodeOdooBinary(extra?.image_1920);
-      if (decoded) return decoded;
+      if (decoded) slots.push(decoded);
     }
   } catch {
     // product.image may be unavailable on some Odoo setups
   }
 
-  return decodeOdooBinary(product?.image_512) || decodeOdooBinary(product?.image_128);
+  const templateId = many2oneId(product.product_tmpl_id);
+  if (Number.isFinite(templateId) && templateId > 0) {
+    try {
+      const extras = await client.searchRead(
+        "product.image",
+        [
+          ["product_tmpl_id", "=", templateId],
+          ["product_variant_id", "=", false],
+        ],
+        ["image_512", "image_128", "image_1920"],
+        { limit: MAX_PRODUCT_IMAGES, order: "id asc" }
+      );
+      for (const extra of extras) {
+        const decoded =
+          decodeOdooBinary(extra?.image_512) ||
+          decodeOdooBinary(extra?.image_128) ||
+          decodeOdooBinary(extra?.image_1920);
+        if (decoded) slots.push(decoded);
+      }
+    } catch {
+      // template extras optional
+    }
+  }
+
+  if (!variantBinary) {
+    const shared = decodeOdooBinary(product.image_512) || decodeOdooBinary(product.image_128);
+    if (shared) slots.unshift(shared);
+  }
+
+  return slots.slice(0, MAX_PRODUCT_IMAGES);
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ odooProductId: string }> }
 ) {
   const { odooProductId } = await context.params;
   const id = Number(odooProductId);
   if (!Number.isFinite(id)) return new Response(null, { status: 404 });
-
-  const product = hasDatabaseUrl()
-    ? await prisma.product.findFirst({
-        where: { odooProductId: id },
-        select: { imageUrlsJson: true },
-      })
-    : null;
-
-  const firstImage = firstImageUrl(product?.imageUrlsJson);
-  if (!firstImage || typeof firstImage !== "string" || !firstImage.startsWith("data:image/")) {
-    const odooImage = await imageFromOdoo(id);
-    if (!odooImage) return new Response(null, { status: 404 });
-
-    return new Response(responseBody(odooImage), {
-      headers: {
-        "Content-Type": "image/jpeg",
-        // Variant artwork can change in Odoo; avoid week-long stale color mixes.
-        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
-      },
+  const url = new URL(request.url);
+  if (url.searchParams.get("list") === "1") {
+    const odooImages = await imagesFromOdoo(id);
+    return Response.json({
+      count: odooImages.length,
+      urls: odooImages.map((_, index) =>
+        index === 0 ? `/api/products/images/${id}` : `/api/products/images/${id}?i=${index}`
+      ),
     });
   }
+  const index = parseImageIndex(url.searchParams.get("i"));
 
-  const [meta, encoded] = firstImage.split(",", 2);
-  if (!encoded) return new Response(null, { status: 404 });
-  const contentType = meta.includes("png") ? "image/png" : "image/jpeg";
-  return new Response(responseBody(Buffer.from(encoded, "base64")), {
+  if (index === 0 && hasDatabaseUrl()) {
+    const product = await prisma.product.findFirst({
+      where: { odooProductId: id },
+      select: { imageUrlsJson: true },
+    });
+    const first = (() => {
+      try {
+        const parsed = product?.imageUrlsJson ? JSON.parse(product.imageUrlsJson) : null;
+        return Array.isArray(parsed) && typeof parsed[0] === "string" ? parsed[0] : null;
+      } catch {
+        return null;
+      }
+    })();
+    if (first?.startsWith("data:image/")) {
+      const [meta, encoded] = first.split(",", 2);
+      if (encoded) {
+        return new Response(responseBody(Buffer.from(encoded, "base64")), {
+          headers: {
+            "Content-Type": meta.includes("png") ? "image/png" : "image/jpeg",
+            "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+          },
+        });
+      }
+    }
+  }
+
+  const odooImages = await imagesFromOdoo(id);
+  const odooImage = odooImages[index] || odooImages[0];
+  if (!odooImage) return new Response(null, { status: 404 });
+
+  return new Response(responseBody(odooImage), {
     headers: {
-      "Content-Type": contentType,
+      "Content-Type": "image/jpeg",
       "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
     },
   });

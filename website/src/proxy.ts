@@ -19,7 +19,13 @@ export function proxy(request: NextRequest) {
   }
 
   // Always allow the public teaser + the private unlock page (and static/brand assets via matcher).
-  if (pathname === "/coming-soon" || pathname === "/preview-access") {
+  // robots/sitemap must stay reachable so crawlers see Disallow: / until public launch.
+  if (
+    pathname === "/coming-soon" ||
+    pathname === "/preview-access" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml"
+  ) {
     return NextResponse.next();
   }
 

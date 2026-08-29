@@ -4,6 +4,7 @@ import { CurrencyPrice } from "@/components/CurrencyDisplay";
 import { NewArrivalsHeader } from "@/components/NewArrivalsHeader";
 import { ProductCardsRail } from "@/components/ProductCardsRail";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
+import { UiText } from "@/components/UiText";
 import { listNewArrivalProducts, type StoreProduct } from "@/lib/ecommerce/catalog";
 
 function NewArrivalCard({ product }: { product: StoreProduct }) {
@@ -22,7 +23,7 @@ function NewArrivalCard({ product }: { product: StoreProduct }) {
           className="media-vivid object-contain p-4 transition duration-500 group-hover:scale-105"
         />
         <span className="absolute right-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-white shadow-sm">
-          New
+          <UiText k="newBadge" />
         </span>
       </div>
       <div className="flex flex-1 flex-col p-5">
@@ -37,10 +38,12 @@ function NewArrivalCard({ product }: { product: StoreProduct }) {
             <p className="font-display text-2xl font-extrabold text-ink">
               <CurrencyPrice cents={product.priceCents} />
             </p>
-            <p className="text-xs text-muted">Picked by Jhonny</p>
+            <p className="text-xs text-muted">
+              <UiText k="pickedByJhonny" />
+            </p>
           </div>
           <span className="rounded-full border border-line px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-muted">
-            View
+            <UiText k="view" />
           </span>
         </div>
       </div>
@@ -58,7 +61,7 @@ export async function NewArrivals() {
       </div>
 
       {products.length ? (
-        <ProductCardsRail label="New In products">
+        <ProductCardsRail labelKey="newInRail">
           {products.map((product) => (
             <NewArrivalCard key={`new-${product.id}`} product={product} />
           ))}
@@ -66,13 +69,14 @@ export async function NewArrivals() {
       ) : (
         <div className="mx-auto mt-10 max-w-7xl px-5 sm:px-8">
           <div className="rounded-3xl border border-dashed border-line bg-white p-6 text-sm text-muted sm:p-8">
-            <p className="font-bold uppercase tracking-wide text-ink">Novidades a caminho</p>
+            <p className="font-bold uppercase tracking-wide text-ink">
+              <UiText k="newEmptyTitle" />
+            </p>
             <p className="mt-2 max-w-2xl">
-              Estamos a atualizar o New In. Entretanto explora a{" "}
+              <UiText k="newEmptyBody" />{" "}
               <Link href="/loja" className="font-semibold text-ink underline underline-offset-2">
-                loja online
-              </Link>{" "}
-              ou fala connosco na loja.
+                <UiText k="shopOnline" />
+              </Link>
             </p>
           </div>
         </div>

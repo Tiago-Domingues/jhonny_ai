@@ -9,7 +9,7 @@ import { CHECKOUT_PAYMENT_METHODS, getCheckoutPaymentMethod, isLiveCheckoutPayme
 import { PaymentMethodMark } from "@/components/PaymentIcons";
 import { isValidOptionalNif } from "@/lib/ecommerce/nif";
 import { useCartSummary } from "@/lib/ecommerce/cartClient";
-import { storefrontText } from "@/lib/storefrontCopy";
+import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
 
 type CheckoutPayment = {
   method?: string;
@@ -157,7 +157,7 @@ export function CheckoutClient() {
               .flat()
               .find((value) => typeof value === "string" && value.trim())
           : null;
-        setMessage(fieldError || data.message || copy.failed);
+        setMessage(fieldError || shopperStockError(data.message || copy.failed, locale));
         return;
       }
       if (data.payment?.providerPaymentUrl) {

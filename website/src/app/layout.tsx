@@ -9,6 +9,7 @@ import { JhonnyAssistant } from "@/components/JhonnyAssistant";
 import { VisitBeacon } from "@/components/VisitBeacon";
 import {
   SITE_PREVIEW_COOKIE,
+  isSitePubliclyLaunched,
   isValidPreviewCookie,
   shouldEnforceComingSoon,
 } from "@/lib/ecommerce/siteAccess";
@@ -66,6 +67,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     type: "website",
   },
+  robots: isSitePubliclyLaunched()
+    ? { index: true, follow: true }
+    : { index: false, follow: false },
 };
 
 export default async function RootLayout({

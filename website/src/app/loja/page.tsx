@@ -7,11 +7,11 @@ import { ShopCatalogFallback } from "@/components/ShopCatalogFallback";
 import { ShopHero } from "@/components/ShopHero";
 import { listProducts } from "@/lib/ecommerce/catalog";
 import { listMenuCategories } from "@/lib/ecommerce/menuCategories";
+import { getProductRatingSummaries } from "@/lib/ecommerce/ratings";
 
 export const metadata: Metadata = {
-  title: "Loja Online",
-  description:
-    "Loja online Jhonny Surf Store com catálogo, stock, filtros e checkout preparados para Odoo.",
+  title: "Shop",
+  description: "Jhonny Surf Store online shop — catalog, stock, filters, and checkout.",
 };
 
 export const dynamic = "force-dynamic";
@@ -53,10 +53,14 @@ async function ShopCatalog({
       .catch(() => []),
     listMenuCategories().catch(() => []),
   ]);
+  const ratings = await getProductRatingSummaries(products.map((product) => product.id)).catch(
+    () => ({})
+  );
 
   return (
     <ShopClient
       products={products}
+      ratings={ratings}
       catalogKey={[categoryGroup || "", subcategory || "", q || "", brand || ""].join("|")}
       menuCategories={menuCategories}
     />

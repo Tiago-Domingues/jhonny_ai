@@ -1,5 +1,6 @@
 import { listProducts, toLeanStoreProduct, type StoreProduct } from "@/lib/ecommerce/catalog";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
+import { getProductRatingSummaries } from "@/lib/ecommerce/ratings";
 
 export const maxDuration = 30;
 
@@ -65,6 +66,9 @@ export async function GET(request: Request) {
 
   // Belt-and-suspenders: never ship enrichment blobs on the list endpoint.
   const leanProducts = products.map(toCompactListProduct);
+  const ratings = await getProductRatingSummaries(leanProducts.map((product) => product.id)).catch(
+    () => ({})
+  );
   const categories = Array.from(new Set(leanProducts.map((product) => product.category).filter(Boolean))).sort();
   const brands = Array.from(new Set(leanProducts.map((product) => product.brand).filter(Boolean))).sort();
   const sizes = Array.from(
@@ -85,6 +89,7 @@ export async function GET(request: Request) {
   return Response.json(
     {
       products: leanProducts,
+      ratings,
       filters: { categories, brands, sizes, colors },
       source: hasOdooConfig() ? "local_odoo_cache" : "local_or_mock",
       odooConfigured: hasOdooConfig(),

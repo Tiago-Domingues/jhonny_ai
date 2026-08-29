@@ -115,6 +115,60 @@ const en: InfoContent = {
   ],
 };
 
+const zh: InfoContent = {
+  title: "条款与条件",
+  updated: "最后更新：2026",
+  intro:
+    "本条款规范 Jhonny Surf Store 网站的使用，以及你与我们的商业关系，无论是实体店还是通过数字渠道。浏览网站或完成购买，即表示你接受以下所述条件。",
+  sections: [
+    {
+      heading: "1. 身份说明",
+      paragraphs: [
+        "Jhonny Surf Store 品牌由 Maori Surf Camp Unipessoal, Lda. 经营，注册地址为 Rua Machado dos Santos n.º 514, Loja A.B, 2775-236 Parede，税务识别号（NIF）516569783。",
+      ],
+    },
+    {
+      heading: "2. 产品与价格",
+      paragraphs: [
+        "我们尽可能准确地描述产品。图片与颜色可能因所用屏幕而略有差异。",
+        "价格含现行法定税率的增值税（IVA）。我们保留在确认任何订单前更正明显价格错误的权利。",
+      ],
+    },
+    {
+      heading: "3. 购买",
+      paragraphs: [
+        "网店支持使用客户账户购买，也可以访客身份购买。订单仅在付款已启动或已确认后成立，具体取决于所选支付方式。",
+        "库存与最终价格在结账时核验。在对接 Odoo 阶段，在线目录将与 Jhonny 的 Odoo 账户中的库存和产品同步。",
+      ],
+    },
+    {
+      heading: "3A. 客户账户与访客",
+      paragraphs: [
+        "你可以创建账户以保存个人资料、地址、偏好与购买记录，或以访客身份购买而无需密码。",
+        "营销通讯、购物车提醒以及到访未购买后的消息，仅在存在有效同意时才会发送。",
+      ],
+    },
+    {
+      heading: "4. 供应情况",
+      paragraphs: [
+        "我们库存有限，并有季节限定款。产品供应仅在与我们确认后方可保证。",
+      ],
+    },
+    {
+      heading: "5. 知识产权",
+      paragraphs: [
+        "网站内容（文字、图片、标志与视觉识别）归 Jhonny Surf Store 或其各自权利人所有，未经授权不得复制。",
+      ],
+    },
+    {
+      heading: "6. 适用法律与管辖",
+      paragraphs: [
+        "本条款受葡萄牙法律管辖。如发生争议，在不影响消费者权利的前提下，由里斯本（Lisboa）法院管辖。",
+      ],
+    },
+  ],
+};
+
 export default function Page() {
-  return <InfoPage pt={pt} en={en} />;
+  return <InfoPage pt={pt} en={en} zh={zh} />;
 }

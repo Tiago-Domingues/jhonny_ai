@@ -28,6 +28,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  images: {
+    localPatterns: [
+      // Gallery slots use ?i=0..11. Omit `search` so those indexes are allowed
+      // without opening every query string on the rest of the site.
+      { pathname: "/api/products/images/**" },
+      { pathname: "/brand/**", search: "" },
+      { pathname: "/**", search: "" },
+    ],
+  },
   async headers() {
     return [
       {

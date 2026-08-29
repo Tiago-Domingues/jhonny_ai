@@ -33,10 +33,10 @@ export async function createCheckout(
   }
   for (const item of cart.items) {
     if (!item.product.availableForSale || item.product.stockQuantity <= 0) {
-      throw new Error(`${item.product.name} is currently out of stock.`);
+      throw new Error("OUT_OF_STOCK");
     }
     if (item.quantity > item.product.stockQuantity) {
-      throw new Error(`Only ${item.product.stockQuantity} unit(s) of ${item.product.name} are available.`);
+      throw new Error("INSUFFICIENT_STOCK");
     }
   }
 
