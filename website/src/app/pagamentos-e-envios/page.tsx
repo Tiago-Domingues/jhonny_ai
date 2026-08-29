@@ -86,6 +86,45 @@ const en: InfoContent = {
   ],
 };
 
+const zh: InfoContent = {
+  title: "支付与配送",
+  updated: "最后更新：2026",
+  intro:
+    "这里说明如何付款以及如何收到装备。在线结账已准备支持 MB WAY、Multibanco、PayPal、Klarna、配送以及门店自取。",
+  sections: [
+    {
+      heading: "支付方式",
+      bullets: [
+        "通过 Ifthenpay 使用 MB WAY。",
+        "通过 Ifthenpay 使用 Multibanco 实体/参考码。",
+        "通过 Stripe 使用 Klarna、Google Pay、Apple Pay、银行卡、PayPal、Revolut Pay 和 Pix。",
+        "Payshop，待 Ifthenpay 合同接通后可用。",
+        "实体店现金。",
+        "特殊订单可通过银行转账。",
+      ],
+    },
+    {
+      heading: "安全支付",
+      paragraphs: [
+        "付款由经认证的供应商处理。Jhonny Surf Store 不会存储完整的银行卡信息。",
+      ],
+    },
+    {
+      heading: "配送",
+      paragraphs: [
+        "我们可向葡萄牙大陆、群岛及欧洲发货，需另行咨询。交货时间取决于目的地与承运商。",
+        `订单满 €${FREE_SHIPPING_THRESHOLD_EUROS} 免运费（冲浪板等大件商品可能有特殊条件——我们会在继续处理前始终与你确认费用）。`,
+      ],
+    },
+    {
+      heading: "门店自取",
+      paragraphs: [
+        "你可以在线付款，并在营业时间内到我们位于 Parede / Carcavelos 的门店免费自取。请务必等待确认邮件后再前来取货。",
+      ],
+    },
+  ],
+};
+
 export default function Page() {
-  return <InfoPage pt={pt} en={en} />;
+  return <InfoPage pt={pt} en={en} zh={zh} />;
 }

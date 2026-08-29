@@ -81,6 +81,43 @@ const en: InfoContent = {
   ],
 };
 
+const zh: InfoContent = {
+  title: "安全与欺诈",
+  intro:
+    "你的安全是我们的优先事项。本页帮助你识别并举报滥用 Jhonny Surf Store 名称或形象的欺诈企图。",
+  sections: [
+    {
+      heading: "我们的官方渠道",
+      paragraphs: [
+        "我们仅通过本页所列的官方网站、Instagram 和 WhatsApp 沟通。请警惕模仿我们品牌的账户、网店或个人资料。",
+      ],
+    },
+    {
+      heading: "警示信号",
+      bullets: [
+        "非我们官方的网站或个人资料上出现过低的价格。",
+        "要求通过不常见的方式付款，或付款至个人账户。",
+        "信息中有错误、异常催促或可疑链接。",
+        "索要敏感数据（密码、完整银行卡验证码）。",
+      ],
+    },
+    {
+      heading: "良好做法",
+      bullets: [
+        "付款前务必核对网站地址。",
+        "切勿分享 MB WAY 验证码或 PIN。",
+        "如有疑问，请在继续操作前直接联系我们。",
+      ],
+    },
+    {
+      heading: "如何举报",
+      paragraphs: [
+        "若发现对我们品牌的欺诈性使用，请通过官方渠道联系我们，并尽可能提供详情（截图、链接、联系方式）。情节严重时，也请向主管机关举报。",
+      ],
+    },
+  ],
+};
+
 export default function Page() {
-  return <InfoPage pt={pt} en={en} />;
+  return <InfoPage pt={pt} en={en} zh={zh} />;
 }
