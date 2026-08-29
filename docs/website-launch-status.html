@@ -225,7 +225,7 @@
       <p class="subtitle">Website Launch Status</p>
       <div class="meta">
         <div><strong>Audience:</strong> owner + shop/ops + technical team</div>
-        <div><strong>Last updated:</strong> 23 August 2026</div>
+        <div><strong>Last updated:</strong> 29 August 2026</div>
         <div>
           <strong>Live sites:</strong>
           <a href="https://www.jhonnysurfstore.com">jhonnysurfstore.com</a>
@@ -621,8 +621,8 @@
             <td data-label="#">P2.1</td>
             <td data-label="Item">Leftover Portuguese-only UI strings</td>
             <td data-label="Description">Some shop / product / checkout labels are still hardcoded in PT when the customer picked EN or ZH.</td>
-            <td data-label="Status">Open</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> — site-owned chrome only; Odoo titles stay as stored</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P2.2</td>
@@ -642,8 +642,8 @@
             <td data-label="#">P2.4</td>
             <td data-label="Item">Product image gallery</td>
             <td data-label="Description">Product pages should show several photos you can click through, not only one thumbnail. Some products already have extra images.</td>
-            <td data-label="Status">Partial</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P2.5</td>
@@ -656,15 +656,15 @@
             <td data-label="#">P2.6</td>
             <td data-label="Item">Size / color variant UX</td>
             <td data-label="Description">When Odoo has the same board in several sizes or colors, the product page should pick the variant cleanly. Basic support is live; polish can continue.</td>
-            <td data-label="Status">Partial</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> — Color/Size axes merged; gallery follows the selected variant</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P2.7</td>
             <td data-label="Item">Zero leftover negative Odoo stock</td>
             <td data-label="Description">Clean leftover negative on-hand quantities in Odoo (script in draft <code>#138</code>). Dry-run first — do not apply blindly.</td>
-            <td data-label="Status" class="status-bad">Open — dry-run first</td>
-            <td data-label="Effort">S–M (ops)</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> — live apply to 0; shoppers see in/out of stock only</td>
+            <td data-label="Effort">—</td>
           </tr>
         </tbody>
       </table>
@@ -679,15 +679,15 @@
             <td data-label="#">P3.1</td>
             <td data-label="Item">Chinese legal pages</td>
             <td data-label="Description">Terms, privacy, returns, and payments pages fully translated to ZH (shop UI already has ZH).</td>
-            <td data-label="Status">Open</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> — ZH from Portuguese on the six InfoPages</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P3.2</td>
             <td data-label="Item">SEO</td>
             <td data-label="Description">Public sitemap, robots.txt, and product share cards (title/image when you paste a link).</td>
-            <td data-label="Status">Open</td>
-            <td data-label="Effort">S–M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> — wired to <code>SITE_PUBLIC_LAUNCH=open</code>; coming-soon stays noindex</td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P3.3</td>
@@ -700,15 +700,15 @@
             <td data-label="#">P3.4</td>
             <td data-label="Item">Ratings on product cards</td>
             <td data-label="Description">Star scores on <code>/loja</code> tiles, not only on the product detail page.</td>
-            <td data-label="Status">Open</td>
-            <td data-label="Effort">S</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong></td>
+            <td data-label="Effort">—</td>
           </tr>
           <tr>
             <td data-label="#">P3.5</td>
             <td data-label="Item">Abandoned-cart emails</td>
             <td data-label="Description">Reminder email if someone leaves products in the cart and does not pay.</td>
-            <td data-label="Status">Open</td>
-            <td data-label="Effort">M</td>
+            <td data-label="Status" class="status-ok"><strong>Done</strong> — registered + marketing consent only; hourly cron + dedup</td>
+            <td data-label="Effort">—</td>
           </tr>
         </tbody>
       </table>

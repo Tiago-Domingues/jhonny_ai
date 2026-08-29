@@ -1,7 +1,7 @@
 # Jhonny Surf Store — Website Launch Status
 
 **Audience:** owner + shop/ops + technical team  
-**Last updated:** 23 August 2026  
+**Last updated:** 29 August 2026  
 **Live sites:** [jhonnysurfstore.com](https://www.jhonnysurfstore.com) · [jhonnysurfstore.pt](https://www.jhonnysurfstore.pt)  
 **HTML version:** [website-launch-status.html](./website-launch-status.html)  
 **PDF version:** [website-launch-status.pdf](./website-launch-status.pdf) *(may lag this markdown)*
@@ -161,23 +161,23 @@ Other remaining gaps:
 
 | # | Item | Description | Status | Effort |
 |---|------|-------------|--------|--------|
-| P2.1 | Leftover Portuguese-only UI strings | Some shop / product / checkout labels are still hardcoded in PT when the customer picked EN or ZH. | Open | M |
+| P2.1 | Leftover Portuguese-only UI strings | Some shop / product / checkout labels are still hardcoded in PT when the customer picked EN or ZH. | **Done** — site-owned chrome only; Odoo titles stay as stored | — |
 | P2.2 | Real cart drawer | Side cart that opens from the bag icon (qty, remove, go to cart/checkout) instead of only a full cart page. | **Done** | — |
 | P2.3 | Empty Odoo categories | Hide (or fill in Odoo) categories that show 0 products, e.g. an empty women’s wetsuits group. | **Done** — keep as-is by design | — |
-| P2.4 | Product image gallery | Product pages should show several photos you can click through, not only one thumbnail. Some products already have extra images. | Partial | M |
+| P2.4 | Product image gallery | Product pages should show several photos you can click through, not only one thumbnail. Some products already have extra images. | **Done** | — |
 | P2.5 | Bulky board shipping | Oversized boards that exceed CTT limits get a €29.90 quote plus a note that Jhonny will confirm. | **Done** | — |
-| P2.6 | Size / color variant UX | When Odoo has the same board in several sizes or colors, the product page should pick the variant cleanly. Basic support is live; polish can continue. | Partial | M |
-| P2.7 | Zero leftover negative Odoo stock | Clean leftover negative on-hand quantities in Odoo (script in draft `#138`). Dry-run first — do not apply blindly. | Open — dry-run first | S–M (ops) |
+| P2.6 | Size / color variant UX | When Odoo has the same board in several sizes or colors, the product page should pick the variant cleanly. Basic support is live; polish can continue. | **Done** — Color/Size axes merged; gallery follows the selected variant | — |
+| P2.7 | Zero leftover negative Odoo stock | Clean leftover negative on-hand quantities in Odoo (script in draft `#138`). Dry-run first — do not apply blindly. | **Done** — live apply to 0; shoppers see in/out of stock only | — |
 
 ### P3 — Later / growth
 
 | # | Item | Description | Status | Effort |
 |---|------|-------------|--------|--------|
-| P3.1 | Chinese legal pages | Terms, privacy, returns, and payments pages fully translated to ZH (shop UI already has ZH). | Open | M |
-| P3.2 | SEO | Public sitemap, robots.txt, and product share cards (title/image when you paste a link). | Open | S–M |
+| P3.1 | Chinese legal pages | Terms, privacy, returns, and payments pages fully translated to ZH (shop UI already has ZH). | **Done** — ZH from Portuguese on the six InfoPages | — |
+| P3.2 | SEO | Public sitemap, robots.txt, and product share cards (title/image when you paste a link). | **Done** — wired to `SITE_PUBLIC_LAUNCH=open`; coming-soon stays noindex | — |
 | P3.3 | First-party analytics | Cookie-consent pageviews, coupon uses, and admin dashboards. Google Analytics is optional later. | **Done** | — |
-| P3.4 | Ratings on product cards | Star scores on `/loja` tiles, not only on the product detail page. | Open | S |
-| P3.5 | Abandoned-cart emails | Reminder email if someone leaves products in the cart and does not pay. | Open | M |
+| P3.4 | Ratings on product cards | Star scores on `/loja` tiles, not only on the product detail page. | **Done** | — |
+| P3.5 | Abandoned-cart emails | Reminder email if someone leaves products in the cart and does not pay. | **Done** — registered + marketing consent only; hourly cron + dedup | — |
 
 ---
 
