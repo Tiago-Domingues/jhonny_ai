@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { InstagramIcon } from "@/components/icons";
 
@@ -40,8 +40,30 @@ export function InstagramMediaStrip({
   className?: string;
 }) {
   const [media, setMedia] = useState<InstagramMedia[]>([]);
+  const [nearViewport, setNearViewport] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const node = rootRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      setNearViewport(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "240px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!nearViewport) return;
     let cancelled = false;
     fetch(`/api/instagram/${encodeURIComponent(handle)}`)
       .then((response) => (response.ok ? response.json() : null))
@@ -52,7 +74,7 @@ export function InstagramMediaStrip({
     return () => {
       cancelled = true;
     };
-  }, [handle]);
+  }, [handle, nearViewport]);
 
   const fallback = Array.from({ length: 3 }, (_, index) => ({
     id: `${handle}-fallback-${index}`,
@@ -67,7 +89,7 @@ export function InstagramMediaStrip({
       : fallback;
 
   return (
-    <div className={className}>
+    <div ref={rootRef} className={className}>
       <div className="mb-3 flex items-center justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{label}</p>
         <a

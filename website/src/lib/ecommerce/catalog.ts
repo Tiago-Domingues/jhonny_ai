@@ -10,6 +10,7 @@ import { productMatchesCategoryGroup, productMatchesSubcategory } from "@/lib/ec
 import { applySurfboardReviewVideo } from "@/lib/ecommerce/surfboardEnrichment";
 import { groupStoreProductsForListing, type StoreProductListing } from "@/lib/ecommerce/productVariants";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
+import { unstable_cache } from "next/cache";
 
 type OdooProduct = Awaited<ReturnType<typeof fetchOdooProducts>>["products"][number];
 
@@ -569,8 +570,7 @@ const catalogListingWhere = {
   excludedFromCatalog: false,
 } as const;
 
-/** Distinct brand labels from the live shop catalog (no full product download). */
-export async function listCatalogBrandNames(): Promise<string[]> {
+async function listCatalogBrandNamesUncached(): Promise<string[]> {
   if (!hasDatabaseUrl()) {
     try {
       const liveProducts = await listLiveOdooProducts();
@@ -606,6 +606,13 @@ export async function listCatalogBrandNames(): Promise<string[]> {
     }
     return collectBrandNames(mockCatalogOrEmpty());
   }
+}
+
+/** Distinct brand labels from the live shop catalog (no full product download). */
+export async function listCatalogBrandNames(): Promise<string[]> {
+  return unstable_cache(listCatalogBrandNamesUncached, ["catalog-brand-names-v1"], {
+    revalidate: 60,
+  })();
 }
 
 export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[]> {

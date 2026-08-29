@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "@/components/LanguageProvider";
 import { WHEEL_LAYOUT, WHEEL_SEGMENT_COUNT } from "@/lib/ecommerce/prizeWheel";
+import { storefrontGetJson } from "@/lib/storefrontFetch";
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENT_COUNT;
 const FULL_TURNS = 5;
@@ -192,10 +193,8 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
   const pendingRef = useRef<{ segmentIndex: number; awarded: boolean } | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/wheel/status", { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: WheelStatusResponse | null) => {
+    storefrontGetJson<WheelStatusResponse>("/api/wheel/status")
+      .then((data) => {
         if (!data || data.signedIn === false) {
           setPhase("signedOut");
           return;
@@ -208,10 +207,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
         setEligible(Boolean(data.eligible));
         setPhase(data.eligible ? "ready" : "result");
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setPhase("signedOut");
-      });
-    return () => controller.abort();
+      .catch(() => setPhase("signedOut"));
   }, []);
 
   useEffect(() => {

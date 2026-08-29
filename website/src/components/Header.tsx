@@ -15,6 +15,7 @@ import { AccessibilityPanel } from "@/components/AccessibilityPanel";
 import { VOLUME_CALCULATOR_PATH } from "@/lib/ecommerce/volumeCalculator";
 import { volumeCalculatorCopy } from "@/lib/volumeCalculatorCopy";
 import { userInitials } from "@/lib/userInitials";
+import { bustStorefrontCache, storefrontGetJson } from "@/lib/storefrontFetch";
 
 type Panel = "account" | null;
 
@@ -163,14 +164,13 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       setMenuCategories(coerceMenuCategories(categories));
       return;
     }
-    fetch("/api/menu-categories")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (Array.isArray(data?.categories) && data.categories.length) {
-          setMenuCategories(coerceMenuCategories(data.categories));
-        }
-      })
-      .catch(() => undefined);
+    storefrontGetJson<{ categories?: Array<{ key: NavKey; anchor: string; items: Array<string | MenuSubcategory> }> }>(
+      "/api/menu-categories"
+    ).then((data) => {
+      if (Array.isArray(data?.categories) && data.categories.length) {
+        setMenuCategories(coerceMenuCategories(data.categories));
+      }
+    });
   }, [categories]);
 
   useEffect(() => {
@@ -192,22 +192,26 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
   }, [panel]);
 
   useEffect(() => {
-    const refresh = () => {
-      fetch("/api/auth/me")
-        .then((response) => (response.ok ? response.json() : null))
-        .then((data) => setUser(data?.user || null))
-        .catch(() => undefined);
-      fetch("/api/cart")
-        .then((response) => (response.ok ? response.json() : null))
-        .then((data) => setCartCount(data?.cart?.itemCount || 0))
-        .catch(() => undefined);
+    const refresh = (bust = false) => {
+      if (bust) {
+        bustStorefrontCache("/api/auth/me");
+        bustStorefrontCache("/api/cart");
+      }
+      storefrontGetJson<{ user?: HeaderUser }>("/api/auth/me", { bust }).then((data) =>
+        setUser(data?.user || null)
+      );
+      storefrontGetJson<{ cart?: { itemCount?: number } }>("/api/cart", { bust }).then((data) =>
+        setCartCount(data?.cart?.itemCount || 0)
+      );
     };
-    refresh();
-    window.addEventListener("jss-cart-updated", refresh);
-    window.addEventListener("jss-auth-updated", refresh);
+    refresh(false);
+    const onCart = () => refresh(true);
+    const onAuth = () => refresh(true);
+    window.addEventListener("jss-cart-updated", onCart);
+    window.addEventListener("jss-auth-updated", onAuth);
     return () => {
-      window.removeEventListener("jss-cart-updated", refresh);
-      window.removeEventListener("jss-auth-updated", refresh);
+      window.removeEventListener("jss-cart-updated", onCart);
+      window.removeEventListener("jss-auth-updated", onAuth);
     };
   }, []);
 

@@ -25,6 +25,7 @@ import {
 } from "@/lib/ecommerce/shopFilters";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
 import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
+import { storefrontGetJson } from "@/lib/storefrontFetch";
 
 type MenuSubcategory = {
   path: string;
@@ -454,15 +455,14 @@ export function ShopClient({
       return;
     }
     let cancelled = false;
-    fetch("/api/menu-categories")
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        if (Array.isArray(data?.categories) && data.categories.length) {
-          setMenuCategories(coerceMenuCategories(data.categories));
-        }
-      })
-      .catch(() => undefined);
+    storefrontGetJson<{ categories?: Array<{ key: NavKey; anchor: string; items: Array<string | MenuSubcategory> }> }>(
+      "/api/menu-categories"
+    ).then((data) => {
+      if (cancelled) return;
+      if (Array.isArray(data?.categories) && data.categories.length) {
+        setMenuCategories(coerceMenuCategories(data.categories));
+      }
+    });
     return () => {
       cancelled = true;
     };
@@ -523,6 +523,15 @@ export function ShopClient({
 
     async function loadProducts() {
       // Keep SSR products visible while the full lean catalog downloads.
+      // When SSR already returned the entire filtered page (< 60), skip a second catalog hit.
+      if (
+        initialProducts.length > 0 &&
+        catalogKey === initialCatalogKey &&
+        initialProducts.length < 60
+      ) {
+        setLoadingProducts(false);
+        return;
+      }
       if (initialProducts.length === 0 || catalogKey !== initialCatalogKey) {
         setLoadingProducts(true);
       }

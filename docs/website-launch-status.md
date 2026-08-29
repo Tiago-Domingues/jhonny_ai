@@ -215,6 +215,20 @@ flowchart LR
 
 Until P0.12 is green, treat the public internet as **coming-soon**, not an open webshop.
 
+### Performance / security pass (29 Aug 2026)
+
+Local curl (tiny seed catalog, warm Next 16):
+
+| Page | Before TTFB | After TTFB | Notes |
+|------|-------------|------------|--------|
+| `/` | 0.08–0.10s warm (0.69s first) | ~0.10s warm | Brand names now `unstable_cache` 60s |
+| `/loja` | 0.044s | similar | Client skips a second `/api/products` when SSR already has the full filtered page (< 60) |
+| PDP / cart | 0.03–0.09s | similar | Gallery `?i=` bounded; no extra Odoo sync on list |
+| `GET /api/products` | 1.1 KB here | same | Production catalog is larger; lean payload unchanged |
+| `GET /api/surf` | 0.014s | 0.011s | Dropped `force-dynamic` so the 30 min cache can apply |
+
+Client homepage no longer fires `/api/auth/me`, `/api/cart`, `/api/menu-categories`, and `/api/wheel/status` 2–3 times on first paint (shared 4s cache). Instagram media waits until the strip is near the viewport. Cron `/api/cron/abandoned-cart` stays 401 without `CRON_SECRET`. Coming-soon still `noindex`; `/robots.txt` is reachable and `Disallow: /` until `SITE_PUBLIC_LAUNCH=open`.
+
 ---
 
 ## 9. Key technical references

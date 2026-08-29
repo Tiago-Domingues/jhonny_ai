@@ -762,6 +762,14 @@
       <p>
         Until that checklist is green, treat the site as <strong>marketing + catalog preview</strong>, not an open webshop.
       </p>
+      <h3>Performance / security pass (29 Aug 2026)</h3>
+      <p>
+        Shared 4s client cache for <code>/api/auth/me</code>, <code>/api/cart</code>, <code>/api/menu-categories</code>, and <code>/api/wheel/status</code>.
+        Shop skips a second catalog download when SSR already has the full filtered page.
+        Homepage brand names cache 60s. Surf forecast dropped <code>force-dynamic</code> so the 30&nbsp;min cache can apply.
+        Instagram media loads when the strip is near the viewport.
+        Abandoned-cart cron stays 401 without <code>CRON_SECRET</code>. <code>/robots.txt</code> is reachable during coming-soon and still <code>Disallow: /</code> until <code>SITE_PUBLIC_LAUNCH=open</code>.
+      </p>
     </section>
 
     <section>
