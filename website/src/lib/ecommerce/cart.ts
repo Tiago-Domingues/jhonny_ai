@@ -54,14 +54,14 @@ export async function addCartItem(identity: CartIdentity, productId: string, qua
   const product = await ensureProduct(productId);
   if (!product) throw new Error("Product not found.");
   if (!product.availableForSale || product.stockQuantity <= 0) {
-    throw new Error("This product is currently out of stock. Use ask when available instead.");
+    throw new Error("OUT_OF_STOCK");
   }
 
   const cart = await getOrCreateCart(identity);
   const existing = cart.items.find((item) => item.productId === product.id);
   const nextQuantity = (existing?.quantity || 0) + quantity;
   if (nextQuantity > product.stockQuantity) {
-    throw new Error(`Only ${product.stockQuantity} unit(s) are available.`);
+    throw new Error("INSUFFICIENT_STOCK");
   }
 
   await prisma.cartItem.upsert({
@@ -94,10 +94,10 @@ export async function updateCartItem(identity: CartIdentity, itemId: string, qua
     await prisma.cartItem.delete({ where: { id: itemId } });
   } else {
     if (!item.product.availableForSale || item.product.stockQuantity <= 0) {
-      throw new Error("This product is currently out of stock. Use ask when available instead.");
+      throw new Error("OUT_OF_STOCK");
     }
     if (quantity > item.product.stockQuantity) {
-      throw new Error(`Only ${item.product.stockQuantity} unit(s) are available.`);
+      throw new Error("INSUFFICIENT_STOCK");
     }
     await prisma.cartItem.update({ where: { id: itemId }, data: { quantity } });
   }

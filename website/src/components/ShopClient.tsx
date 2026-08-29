@@ -24,7 +24,7 @@ import {
   type ShopSortOption,
 } from "@/lib/ecommerce/shopFilters";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
-import { storefrontText } from "@/lib/storefrontCopy";
+import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
 
 type MenuSubcategory = {
   path: string;
@@ -572,7 +572,7 @@ export function ShopClient({
     const data = await response.json();
     setAdding(null);
     if (!response.ok) {
-      setMessage(data.message || productCopy.addFailed);
+      setMessage(shopperStockError(data.message || productCopy.addFailed, locale));
       return;
     }
     setMessage(productCopy.added);
@@ -1025,10 +1025,6 @@ export function ShopClient({
                             <dd className="truncate">
                               {product.refId || product.sku || product.odooProductId || "-"}
                             </dd>
-                          </div>
-                          <div>
-                            <dt className="font-bold uppercase">Stock</dt>
-                            <dd>{product.stockQuantity > 0 ? `${product.stockQuantity}` : "0"}</dd>
                           </div>
                           {hasVariants ? (
                             <div className="col-span-2">

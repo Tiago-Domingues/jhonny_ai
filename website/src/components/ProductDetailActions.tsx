@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { NotifyWhenAvailable } from "@/components/NotifyWhenAvailable";
-import { storefrontText } from "@/lib/storefrontCopy";
+import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
 
 export function ProductDetailActions({
   productId,
@@ -30,7 +30,7 @@ export function ProductDetailActions({
     const data = await response.json();
     setAdding(false);
     if (!response.ok) {
-      setMessage(data.message || copy.addFailed);
+      setMessage(shopperStockError(data.message || copy.addFailed, locale));
       return;
     }
     setMessage(copy.added);

@@ -2,7 +2,7 @@
 
 import { updateCartQuantity } from "@/lib/ecommerce/cartClient";
 import { useLanguage } from "@/components/LanguageProvider";
-import { storefrontText } from "@/lib/storefrontCopy";
+import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
 
 export function CartQtyControls({
   itemId,
@@ -23,7 +23,7 @@ export function CartQtyControls({
     try {
       await updateCartQuantity(itemId, next);
     } catch (error) {
-      onError?.(error instanceof Error ? error.message : copy.remove);
+      onError?.(error instanceof Error ? shopperStockError(error.message, locale) : copy.remove);
     }
   }
 

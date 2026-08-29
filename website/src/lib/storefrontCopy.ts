@@ -14,6 +14,7 @@ type StorefrontCopy = {
     remove: string;
     unitPrice: string;
     items: string;
+    insufficientStock: string;
   };
   checkout: {
     kicker: string;
@@ -81,6 +82,7 @@ type StorefrontCopy = {
     notifyFailed: string;
     notifyCta: string;
     inStockCount: string;
+    inStock: string;
     outOfStock: string;
     backToShop: string;
     name: string;
@@ -187,6 +189,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       remove: "Remover",
       unitPrice: "Preço",
       items: "artigos",
+      insufficientStock: "Não há stock suficiente.",
     },
     checkout: {
       kicker: "Checkout",
@@ -253,7 +256,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyOk: "Pedido registado. Avisamos-te quando voltar a estar disponível.",
       notifyFailed: "Não foi possível registar o pedido.",
       notifyCta: "Pedir aviso",
-      inStockCount: "{n} em stock",
+      inStockCount: "Em stock",
+      inStock: "Em stock",
       outOfStock: "Esgotado",
       backToShop: "Voltar à loja",
       name: "Nome",
@@ -360,6 +364,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       remove: "Remove",
       unitPrice: "Price",
       items: "items",
+      insufficientStock: "Not enough stock is available.",
     },
     checkout: {
       kicker: "Checkout",
@@ -426,7 +431,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyOk: "Request saved. We’ll email you when it’s back.",
       notifyFailed: "Could not save the request.",
       notifyCta: "Notify me",
-      inStockCount: "{n} in stock",
+      inStockCount: "In stock",
+      inStock: "In stock",
       outOfStock: "Out of stock",
       backToShop: "Back to shop",
       name: "Name",
@@ -533,6 +539,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       remove: "移除",
       unitPrice: "单价",
       items: "件",
+      insufficientStock: "库存不足。",
     },
     checkout: {
       kicker: "结账",
@@ -599,7 +606,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       notifyOk: "已登记。到货后我们会通知你。",
       notifyFailed: "无法登记请求。",
       notifyCta: "登记通知",
-      inStockCount: "{n} 件库存",
+      inStockCount: "有货",
+      inStock: "有货",
       outOfStock: "缺货",
       backToShop: "返回商店",
       name: "姓名",
@@ -695,4 +703,20 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
 
 export function storefrontText(locale: Locale) {
   return storefrontCopy[locale] || storefrontCopy.en;
+}
+
+export const STOCK_ERROR = {
+  outOfStock: "OUT_OF_STOCK",
+  insufficientStock: "INSUFFICIENT_STOCK",
+} as const;
+
+export function shopperStockError(message: string, locale: Locale) {
+  const copy = storefrontText(locale);
+  if (message === STOCK_ERROR.outOfStock || /out of stock/i.test(message)) {
+    return copy.product.outOfStock;
+  }
+  if (message === STOCK_ERROR.insufficientStock || /^Only \d+ unit/i.test(message)) {
+    return copy.cart.insufficientStock;
+  }
+  return message;
 }

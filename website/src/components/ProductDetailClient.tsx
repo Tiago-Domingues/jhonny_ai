@@ -102,9 +102,7 @@ export function ProductDetailClient({
             availableForSale ? "bg-ink text-white" : "border border-dashed border-ink/30 text-muted"
           }`}
         >
-          {availableForSale
-            ? copy.inStockCount.replace("{n}", String(selectedVariant.stockQuantity))
-            : copy.outOfStock}
+          {availableForSale ? copy.inStock : copy.outOfStock}
         </p>
 
         {hasMultipleVariants && axes.length > 0 && (
