@@ -155,9 +155,9 @@ export function CheckoutClient() {
         const fieldError = data.fields
           ? Object.values(data.fields)
               .flat()
-              .find((value) => typeof value === "string" && value.trim())
+              .find((value): value is string => typeof value === "string" && Boolean(value.trim()))
           : null;
-        setMessage(fieldError || shopperStockError(data.message || copy.failed, locale));
+        setMessage(fieldError || shopperStockError(String(data.message || copy.failed), locale));
         return;
       }
       if (data.payment?.providerPaymentUrl) {
