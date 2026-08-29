@@ -203,6 +203,7 @@ const productDetailSelect = {
   contentSourceName: true,
   contentSourceUrl: true,
   opportunitySource: true,
+  imageUrlsJson: true,
 } as const;
 
 type ListedProduct = {
@@ -219,6 +220,7 @@ type ListedProduct = {
   color: string | null;
   variantAttributesJson?: string | null;
   imageUrl: string | null;
+  imageUrlsJson?: string | null;
   marketingDescription?: string | null;
   videoUrl?: string | null;
   contentSourceName?: string | null;
@@ -239,6 +241,26 @@ type ListedProduct = {
   odooProductTemplateId: number | null;
   createdAt?: Date | string | null;
 };
+
+function parseImageUrlsJson(raw?: string | null, fallback?: string | null) {
+  const urls: string[] = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        for (const value of parsed) {
+          if (typeof value === "string" && value && !urls.includes(value)) urls.push(value);
+        }
+      }
+    } catch {
+      // ignore malformed JSON
+    }
+  }
+  if (fallback && !urls.includes(fallback) && !fallback.includes("logo-stacked")) {
+    urls.unshift(fallback);
+  }
+  return urls.length ? urls : undefined;
+}
 
 function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boolean }): StoreProduct {
   const lean = options?.lean ?? false;
@@ -263,8 +285,7 @@ function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boo
     color: product.color,
     variantAttributesJson: product.variantAttributesJson,
     imageUrl: product.imageUrl || "/brand/logo-stacked.svg",
-    // Keep list responses lean; detail pages can still hydrate media separately.
-    imageUrls: undefined,
+    imageUrls: lean ? undefined : parseImageUrlsJson(product.imageUrlsJson, product.imageUrl),
     marketingDescription: lean ? undefined : product.marketingDescription,
     videoUrl: lean ? undefined : product.videoUrl,
     contentSourceName: lean ? undefined : product.contentSourceName,

@@ -31,13 +31,24 @@ export function parseVariantAttributesJson(raw?: string | null): VariantAttribut
   }
 }
 
+export function canonicalVariantAxisKey(key: string) {
+  const normalized = key.toLowerCase();
+  if (/cor|colour|color/.test(normalized)) return "Color";
+  if (/size|tamanho|\btam\b/.test(normalized)) return "Size";
+  return key;
+}
+
 export function variantAttributesForProduct(product: StoreProduct): VariantAttributeMap {
   const fromJson = parseVariantAttributesJson(product.variantAttributesJson);
-  if (Object.keys(fromJson).length) return fromJson;
-  const fallback: VariantAttributeMap = {};
-  if (product.size) fallback.Size = product.size;
-  if (product.color) fallback.Color = product.color;
-  return fallback;
+  const source = Object.keys(fromJson).length
+    ? fromJson
+    : {
+        ...(product.size ? { Size: product.size } : {}),
+        ...(product.color ? { Color: product.color } : {}),
+      };
+  return Object.fromEntries(
+    Object.entries(source).map(([key, value]) => [canonicalVariantAxisKey(key), value])
+  ) as VariantAttributeMap;
 }
 
 function normalizePart(value?: string | null) {
