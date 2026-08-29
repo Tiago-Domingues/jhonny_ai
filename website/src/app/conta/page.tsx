@@ -5,8 +5,8 @@ import { AccountClient } from "@/components/AccountClient";
 import { AccountHeading } from "@/components/AccountHeading";
 
 export const metadata: Metadata = {
-  title: "A Minha Conta",
-  description: "Conta de cliente Jhonny Surf Store para perfil, moradas, consentimentos e compras.",
+  title: "My account",
+  description: "Jhonny Surf Store account for profile, addresses, consents, and orders.",
 };
 
 export default function AccountPage() {

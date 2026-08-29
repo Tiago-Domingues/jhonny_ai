@@ -4,8 +4,8 @@ import { Footer } from "@/components/Footer";
 import { CheckoutConfirmClient } from "@/components/CheckoutConfirmClient";
 
 export const metadata: Metadata = {
-  title: "Pagamento",
-  description: "Confirmação de pagamento Stripe da Jhonny Surf Store.",
+  title: "Payment",
+  description: "Jhonny Surf Store Stripe payment confirmation.",
 };
 
 export default function CheckoutConfirmPage() {

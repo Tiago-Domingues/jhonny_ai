@@ -172,6 +172,38 @@ type StorefrontCopy = {
     verifyFailed: string;
     invalidResetLink: string;
   };
+  ui: {
+    newBadge: string;
+    view: string;
+    pickedByJhonny: string;
+    newInRail: string;
+    opportunityRail: string;
+    newEmptyTitle: string;
+    newEmptyBody: string;
+    shopOnline: string;
+    modelNotes: string;
+    specialistSource: string;
+    videoPreview: string;
+    openYoutube: string;
+    scrollLeft: string;
+    scrollRight: string;
+    previewAccess: string;
+    previewPassword: string;
+    wrongPassword: string;
+    unlockSite: string;
+    unlocking: string;
+    unlockFailed: string;
+    surfSchoolsTitle: string;
+    surfSchoolsDesc: string;
+    instagramPosts: string;
+    instagramProfileHint: string;
+    openDudesInstagram: string;
+    ref: string;
+    morePhotos: string;
+    previousPhoto: string;
+    nextPhoto: string;
+    spinFailed: string;
+  };
 };
 
 export const storefrontCopy: Record<Locale, StorefrontCopy> = {
@@ -349,6 +381,39 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       verifyFailed: "Este link é inválido ou já expirou.",
       invalidResetLink: "Link inválido. Pede um novo em recuperar password.",
     },
+    ui: {
+      newBadge: "Novo",
+      view: "Ver",
+      pickedByJhonny: "Escolhido pelo Jhonny",
+      newInRail: "Produtos New In",
+      opportunityRail: "Produtos em promoção",
+      newEmptyTitle: "Novidades a caminho",
+      newEmptyBody: "Estamos a atualizar o New In. Entretanto explora a loja online ou fala connosco na loja.",
+      shopOnline: "loja online",
+      modelNotes: "Notas do modelo e fonte do vídeo:",
+      specialistSource: "fonte de surf especializada",
+      videoPreview: "Pré-visualização de vídeo",
+      openYoutube: "Abrir no YouTube",
+      scrollLeft: "Deslizar cartões para a esquerda",
+      scrollRight: "Deslizar cartões para a direita",
+      previewAccess: "Acesso de pré-visualização",
+      previewPassword: "Password de pré-visualização",
+      wrongPassword: "Password errada.",
+      unlockSite: "Desbloquear site",
+      unlocking: "A desbloquear…",
+      unlockFailed: "Não foi possível desbloquear o site. Tenta outra vez.",
+      surfSchoolsTitle: "Escolas de surf",
+      surfSchoolsDesc:
+        "Parceiros de confiança em Carcavelos e Lisboa que ajudam novos surfistas a entrar na água em segurança.",
+      instagramPosts: "Últimas publicações no Instagram",
+      instagramProfileHint: "A foto de perfil vem do Instagram; os posts abrem o perfil do café.",
+      openDudesInstagram: "Abrir Instagram do The Dudes Surf Café",
+      ref: "Ref",
+      morePhotos: "Mais fotos",
+      previousPhoto: "Foto anterior",
+      nextPhoto: "Foto seguinte",
+      spinFailed: "Não foi possível girar a roda. Tenta outra vez.",
+    },
   },
   en: {
     cart: {
@@ -524,6 +589,39 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       verifyFailed: "This link is invalid or has expired.",
       invalidResetLink: "This link is invalid. Request a new one from forgot password.",
     },
+    ui: {
+      newBadge: "New",
+      view: "View",
+      pickedByJhonny: "Picked by Jhonny",
+      newInRail: "New In products",
+      opportunityRail: "Opportunity products",
+      newEmptyTitle: "New arrivals on the way",
+      newEmptyBody: "We are updating New In. Meanwhile explore the online shop or talk to us in store.",
+      shopOnline: "online shop",
+      modelNotes: "Model notes and video source:",
+      specialistSource: "specialist surf source",
+      videoPreview: "Product video preview",
+      openYoutube: "Open on YouTube",
+      scrollLeft: "Scroll cards left",
+      scrollRight: "Scroll cards right",
+      previewAccess: "Preview access",
+      previewPassword: "Preview password",
+      wrongPassword: "Wrong password.",
+      unlockSite: "Unlock site",
+      unlocking: "Unlocking…",
+      unlockFailed: "Could not unlock the site. Try again.",
+      surfSchoolsTitle: "Surf schools",
+      surfSchoolsDesc:
+        "Trusted school partners around Carcavelos and Lisbon that help new surfers get safely into the water.",
+      instagramPosts: "Latest Instagram posts",
+      instagramProfileHint: "Profile image loads from Instagram; post tiles open the café profile.",
+      openDudesInstagram: "Open The Dudes Surf Café Instagram",
+      ref: "Ref",
+      morePhotos: "More photos",
+      previousPhoto: "Previous photo",
+      nextPhoto: "Next photo",
+      spinFailed: "Could not spin the wheel. Please try again.",
+    },
   },
   zh: {
     cart: {
@@ -697,6 +795,38 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       verifyOk: "邮箱已确认。请填写你的资料。",
       verifyFailed: "此链接无效或已过期。",
       invalidResetLink: "链接无效。请通过忘记密码重新申请。",
+    },
+    ui: {
+      newBadge: "新品",
+      view: "查看",
+      pickedByJhonny: "Jhonny 精选",
+      newInRail: "New In 商品",
+      opportunityRail: "特惠商品",
+      newEmptyTitle: "新品即将上架",
+      newEmptyBody: "我们正在更新 New In。可先浏览网店或到店咨询。",
+      shopOnline: "网店",
+      modelNotes: "型号说明与视频来源：",
+      specialistSource: "冲浪专业来源",
+      videoPreview: "产品视频预览",
+      openYoutube: "在 YouTube 打开",
+      scrollLeft: "向左滑动卡片",
+      scrollRight: "向右滑动卡片",
+      previewAccess: "预览访问",
+      previewPassword: "预览密码",
+      wrongPassword: "密码错误。",
+      unlockSite: "解锁网站",
+      unlocking: "正在解锁…",
+      unlockFailed: "无法解锁网站。请再试一次。",
+      surfSchoolsTitle: "冲浪学校",
+      surfSchoolsDesc: "卡卡维洛斯和里斯本附近值得信赖的学校伙伴，帮助新手安全下水。",
+      instagramPosts: "最新 Instagram 动态",
+      instagramProfileHint: "头像来自 Instagram；帖子会打开咖啡馆主页。",
+      openDudesInstagram: "打开 The Dudes Surf Café 的 Instagram",
+      ref: "编号",
+      morePhotos: "更多照片",
+      previousPhoto: "上一张",
+      nextPhoto: "下一张",
+      spinFailed: "转盘失败。请再试一次。",
     },
   },
 };

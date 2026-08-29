@@ -2,6 +2,10 @@
 
 import type { ReactNode } from "react";
 import { useMarqueeRail } from "@/hooks/useMarqueeRail";
+import { useUiText } from "@/components/UiText";
+import { storefrontCopy } from "@/lib/storefrontCopy";
+
+type UiKey = keyof (typeof storefrontCopy)["en"]["ui"];
 
 type ProductCardsRailProps = {
   children: ReactNode;
@@ -9,20 +13,25 @@ type ProductCardsRailProps = {
   fadeFromClassName?: string;
   className?: string;
   label?: string;
+  labelKey?: UiKey;
 };
 
 function RailArrow({
   direction,
   onClick,
+  labelLeft,
+  labelRight,
 }: {
   direction: "left" | "right";
   onClick: () => void;
+  labelLeft: string;
+  labelRight: string;
 }) {
   const isLeft = direction === "left";
   return (
     <button
       type="button"
-      aria-label={isLeft ? "Scroll cards left" : "Scroll cards right"}
+      aria-label={isLeft ? labelLeft : labelRight}
       onClick={(e) => {
         e.stopPropagation();
         onClick();
@@ -48,14 +57,17 @@ export function ProductCardsRail({
   children,
   fadeFromClassName = "from-paper",
   className = "",
-  label = "Product cards",
+  label,
+  labelKey,
 }: ProductCardsRailProps) {
+  const ui = useUiText();
   const rail = useMarqueeRail(320);
+  const resolvedLabel = labelKey ? ui[labelKey] : label || ui.newInRail;
 
   return (
     <div
       className={`group relative mt-10 overflow-hidden ${className}`}
-      aria-label={label}
+      aria-label={resolvedLabel}
       onPointerEnter={rail.onPointerEnter}
       onPointerLeave={rail.onPointerLeave}
     >
@@ -67,8 +79,8 @@ export function ProductCardsRail({
       />
       {rail.showArrows && (
         <>
-          <RailArrow direction="left" onClick={rail.nudgeLeft} />
-          <RailArrow direction="right" onClick={rail.nudgeRight} />
+          <RailArrow direction="left" onClick={rail.nudgeLeft} labelLeft={ui.scrollLeft} labelRight={ui.scrollRight} />
+          <RailArrow direction="right" onClick={rail.nudgeRight} labelLeft={ui.scrollLeft} labelRight={ui.scrollRight} />
         </>
       )}
       <div

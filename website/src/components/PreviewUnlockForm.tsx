@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUiText } from "@/components/UiText";
 
 /** Compact unlock form for the public coming-soon page (both .com and .pt). */
 export function PreviewUnlockForm() {
@@ -10,6 +11,7 @@ export function PreviewUnlockForm() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [open, setOpen] = useState(false);
+  const ui = useUiText();
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,8 +28,8 @@ export function PreviewUnlockForm() {
       if (!response.ok) {
         setError(
           response.status === 503
-            ? "Preview password is not configured yet."
-            : "Wrong password."
+            ? ui.unlockFailed
+            : ui.wrongPassword
         );
         return;
       }
@@ -35,7 +37,7 @@ export function PreviewUnlockForm() {
       router.replace("/");
       router.refresh();
     } catch {
-      setError("Could not unlock the site. Try again.");
+      setError(ui.unlockFailed);
     } finally {
       setPending(false);
     }
@@ -48,7 +50,7 @@ export function PreviewUnlockForm() {
         onClick={() => setOpen(true)}
         className="mt-8 text-xs font-medium text-muted underline-offset-4 transition hover:text-ink hover:underline"
       >
-        Preview access
+        {ui.previewAccess}
       </button>
     );
   }
@@ -56,7 +58,7 @@ export function PreviewUnlockForm() {
   return (
     <form onSubmit={onSubmit} className="mt-8 w-full max-w-xs space-y-3 text-left">
       <label className="block text-xs font-semibold text-muted">
-        Preview password
+        {ui.previewPassword}
         <input
           type="password"
           name="password"
@@ -76,7 +78,7 @@ export function PreviewUnlockForm() {
         disabled={pending}
         className="w-full rounded-md bg-ink px-4 py-2.5 text-sm font-semibold text-cream disabled:opacity-60"
       >
-        {pending ? "Unlocking…" : "Unlock site"}
+        {pending ? ui.unlocking : ui.unlockSite}
       </button>
     </form>
   );

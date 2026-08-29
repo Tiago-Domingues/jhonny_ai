@@ -8,6 +8,7 @@ import {
   OpportunitiesSaleNote,
 } from "@/components/OpportunitiesHeader";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
+import { UiText } from "@/components/UiText";
 import { listOpportunityProducts, type StoreProduct } from "@/lib/ecommerce/catalog";
 
 function OpportunityCard({ product }: { product: StoreProduct }) {
@@ -55,7 +56,7 @@ function OpportunityCard({ product }: { product: StoreProduct }) {
             {!hasDiscount && <OpportunitiesSaleNote />}
           </div>
           <span className="rounded-full border border-line px-3 py-1 text-[0.65rem] font-bold uppercase tracking-wide text-muted">
-            View
+            <UiText k="view" />
           </span>
         </div>
       </div>
@@ -73,7 +74,7 @@ export async function Opportunities() {
       </div>
 
       {products.length ? (
-        <ProductCardsRail label="Opportunity products">
+        <ProductCardsRail labelKey="opportunityRail">
           {products.map((product) => (
             <OpportunityCard key={product.id} product={product} />
           ))}

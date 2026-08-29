@@ -1,5 +1,6 @@
 "use client";
 
+import { useUiText } from "@/components/UiText";
 import { youtubeVideoId } from "@/lib/ecommerce/surfboardModelCatalog";
 
 export function ProductVideoPreview({
@@ -9,6 +10,7 @@ export function ProductVideoPreview({
   videoUrl?: string | null;
   title: string;
 }) {
+  const ui = useUiText();
   if (!videoUrl) return null;
 
   const id = youtubeVideoId(videoUrl);
@@ -18,7 +20,7 @@ export function ProductVideoPreview({
     <div className="mt-6 overflow-hidden rounded-3xl border border-line bg-ink shadow-sm">
       <div className="relative aspect-video w-full bg-black">
         <iframe
-          title={`${title} — product video`}
+          title={`${title} — ${ui.videoPreview}`}
           src={`https://www.youtube-nocookie.com/embed/${id}?rel=0`}
           className="absolute inset-0 h-full w-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -29,7 +31,7 @@ export function ProductVideoPreview({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/70">
-          Product video preview
+          {ui.videoPreview}
         </p>
         <a
           href={videoUrl}
@@ -37,7 +39,7 @@ export function ProductVideoPreview({
           rel="noopener noreferrer"
           className="text-xs font-bold uppercase tracking-wide text-white underline underline-offset-4"
         >
-          Open on YouTube
+          {ui.openYoutube}
         </a>
       </div>
     </div>

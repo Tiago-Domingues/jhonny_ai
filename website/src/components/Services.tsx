@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { InstagramMediaStrip } from "@/components/InstagramMediaStrip";
 import { useLanguage } from "@/components/LanguageProvider";
+import { useUiText } from "@/components/UiText";
 import { whatsappHref } from "@/lib/i18n";
 import {
   AdviceIcon,
@@ -68,7 +69,7 @@ function instagramHandleFromHref(href: string) {
   }
 }
 
-function DudesAvatar() {
+function DudesAvatar({ openLabel }: { openLabel: string }) {
   const instagramAvatarUrl = "/brand/partners/instagram/dudes-surfcafe.jpg";
   const [photoSrc, setPhotoSrc] = useState(instagramAvatarUrl);
   return (
@@ -76,7 +77,7 @@ function DudesAvatar() {
       href="https://www.instagram.com/dudes_surfcafe/"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Open The Dudes Surf Café Instagram"
+      aria-label={openLabel}
       className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
     >
       {photoSrc ? (
@@ -155,6 +156,7 @@ function PartnerChip({ link }: { link: Link }) {
 
 export function Services() {
   const { t } = useLanguage();
+  const ui = useUiText();
 
   // Action links per service, indexed to t.services.items.
   const links: Link[][] = [
@@ -198,8 +200,8 @@ export function Services() {
       actions: links[i] ?? [],
     })),
     {
-      title: "Surf schools",
-      desc: "Trusted school partners around Carcavelos and Lisbon that help new surfers get safely into the water.",
+      title: ui.surfSchoolsTitle,
+      desc: ui.surfSchoolsDesc,
       Icon: StudentIcon,
       actions: surfSchoolLinks,
       wide: true,
@@ -258,7 +260,7 @@ export function Services() {
         {/* The Dudes — Surf Café highlight */}
         <div className="mt-12 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1fr_0.9fr]">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
-            <DudesAvatar />
+            <DudesAvatar openLabel={ui.openDudesInstagram} />
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-muted">
                 {t.dudes.eyebrow}
@@ -279,11 +281,11 @@ export function Services() {
                 @dudes_surfcafe
               </a>
               <p className="mt-2 text-xs text-muted">
-                Profile image loads from Instagram; post tiles open the café profile.
+                {ui.instagramProfileHint}
               </p>
             </div>
           </div>
-          <InstagramMediaStrip handle="dudes_surfcafe" label="Latest Instagram posts" />
+          <InstagramMediaStrip handle="dudes_surfcafe" label={ui.instagramPosts} />
         </div>
       </div>
     </section>

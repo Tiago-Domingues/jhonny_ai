@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { ForgotPasswordClient } from "@/components/PasswordResetClient";
 
 export const metadata: Metadata = {
-  title: "Recuperar password",
+  title: "Forgot password",
   robots: { index: false, follow: false },
 };
 

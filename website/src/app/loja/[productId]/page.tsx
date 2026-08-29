@@ -7,6 +7,7 @@ import { ProductStarRating } from "@/components/ProductStarRating";
 import { ProductVideoPreview } from "@/components/ProductVideoPreview";
 import { displayOdooCategoryName } from "@/lib/ecommerce/categoryGroups";
 import { getProduct, listProductVariants } from "@/lib/ecommerce/catalog";
+import { UiText } from "@/components/UiText";
 import { deriveTemplateDisplayName } from "@/lib/ecommerce/productVariants";
 
 type ProductPageProps = {
@@ -16,14 +17,14 @@ type ProductPageProps = {
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { productId } = await params;
   const product = await getProduct(decodeURIComponent(productId));
-  if (!product) return { title: "Produto" };
+  if (!product) return { title: "Product" };
 
   const variants = await listProductVariants(product);
   const displayName = variants.length > 1 ? deriveTemplateDisplayName(variants) : product.name;
 
   return {
     title: displayName,
-    description: product.description || `${displayName} na Jhonny Surf Store.`,
+    description: product.description || `${displayName} at Jhonny Surf Store.`,
   };
 }
 
@@ -52,9 +53,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <ProductVideoPreview videoUrl={product.videoUrl} title={displayName} />
       {product.contentSourceUrl && (
         <p className="mt-3 text-xs text-muted">
-          Model notes & video source:{" "}
+          <UiText k="modelNotes" />{" "}
           <a href={product.contentSourceUrl} target="_blank" rel="noopener noreferrer" className="font-bold underline">
-            {product.contentSourceName || "specialist surf source"}
+            {product.contentSourceName || <UiText k="specialistSource" />}
           </a>
         </p>
       )}

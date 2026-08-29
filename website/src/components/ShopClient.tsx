@@ -79,6 +79,7 @@ const copy = {
     availability: "Disponibilidade",
     inStock: "Em stock",
     outOfStock: "Esgotado",
+    ref: "Ref",
     price: "Preço",
     from: "De",
     to: "Até",
@@ -128,6 +129,7 @@ const copy = {
     availability: "Availability",
     inStock: "In stock",
     outOfStock: "Out of stock",
+    ref: "Ref",
     price: "Price",
     from: "From",
     to: "To",
@@ -177,6 +179,7 @@ const copy = {
     availability: "库存状态",
     inStock: "有货",
     outOfStock: "缺货",
+    ref: "编号",
     price: "价格",
     from: "从",
     to: "到",
@@ -1021,7 +1024,7 @@ export function ShopClient({
                         </Link>
                         <dl className="mt-3 grid grid-cols-2 gap-2 text-[0.7rem] text-muted">
                           <div>
-                            <dt className="font-bold uppercase">Ref</dt>
+                            <dt className="font-bold uppercase">{t.ref}</dt>
                             <dd className="truncate">
                               {product.refId || product.sku || product.odooProductId || "-"}
                             </dd>

@@ -102,6 +102,7 @@ const copy = {
     fineprint: "Um cupão por mês, só para a tua conta. Não acumulável com outras campanhas.",
     close: "Fechar",
     loading: "A carregar…",
+    spinFailed: "Não foi possível girar a roda. Tenta outra vez.",
     wheelLabel: "Roda de prémios com cupões de 5%, 10% e 20% de desconto",
   },
   en: {
@@ -125,6 +126,7 @@ const copy = {
     fineprint: "One coupon a month, tied to your account. Not combinable with other offers.",
     close: "Close",
     loading: "Loading…",
+    spinFailed: "Could not spin the wheel. Please try again.",
     wheelLabel: "Prize wheel with 5%, 10% and 20% off coupons",
   },
   zh: {
@@ -148,6 +150,7 @@ const copy = {
     fineprint: "每月一张，仅限本人账户使用，不可与其他活动叠加。",
     close: "关闭",
     loading: "加载中…",
+    spinFailed: "转盘失败。请再试一次。",
     wheelLabel: "含 5%、10% 和 20% 折扣的幸运转盘",
   },
 } as const;
@@ -280,7 +283,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
       const data = (await response.json()) as WheelStatusResponse & { message?: string };
       if (!response.ok || !data.prize) {
         setPhase(prize ? "result" : "ready");
-        setError(data.message || "Could not spin the wheel. Please try again.");
+        setError(data.message || t.spinFailed);
         return;
       }
       setPrize(data.prize);
@@ -288,7 +291,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
       runSpin(data.prize.segmentIndex, true);
     } catch {
       setPhase(prize ? "result" : "ready");
-      setError("Could not spin the wheel. Please try again.");
+      setError(t.spinFailed);
     }
   }
 

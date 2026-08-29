@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { VerifyEmailClient } from "@/components/VerifyEmailClient";
 
 export const metadata: Metadata = {
-  title: "Confirmar email",
+  title: "Confirm email",
   robots: { index: false, follow: false },
 };
 
