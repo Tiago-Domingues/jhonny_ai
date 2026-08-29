@@ -125,6 +125,19 @@ export function StudentIcon(props: IconProps) {
   );
 }
 
+/** School building sitting on a wave — used only on the Surf schools card. */
+export function SurfSchoolIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4.5 11.2 12 5l7.5 6.2" />
+      <path d="M6.5 11.2V16h11v-4.8" />
+      <path d="M11 16v-2.5h2V16" />
+      <path d="M8.2 13h1.5M14.3 13h1.5" />
+      <path d="M2 20.2c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3 2.5 3 5 3" />
+    </svg>
+  );
+}
+
 export function PinIcon(props: IconProps) {
   return (
     <svg {...base} {...props}>
