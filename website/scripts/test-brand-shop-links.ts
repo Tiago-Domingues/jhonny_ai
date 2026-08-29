@@ -39,5 +39,6 @@ assert(visible.every((brand) => !["volcom", "katin"].includes(brand.slug)), "bra
 
 assert(shopBrandHref("Rip Curl") === "/loja?brand=Rip%20Curl", "shop URL must encode the catalog brand");
 assert(shopBrandHref("YETI") === "/loja?brand=YETI", "plain brand names stay unescaped");
+assert(!("url" in (visible[0] || {})), "shop brand links must not carry official website urls");
 
 console.log("brand shop link tests passed");

@@ -385,7 +385,7 @@ function countActiveFilters(filters: ShopFacetFilters) {
 
 export function ShopClient({
   products: initialProducts = [],
-  catalogKey: initialCatalogKey = "||",
+  catalogKey: initialCatalogKey = "|||",
   menuCategories: initialMenuCategories,
 }: {
   products?: StoreProduct[];
@@ -472,11 +472,12 @@ export function ShopClient({
     searchParams.get("categoryGroup") || "",
     searchParams.get("subcategory") || "",
     searchParams.get("q") || "",
+    searchParams.get("brand") || "",
   ].join("|");
 
   useEffect(() => {
     let cancelled = false;
-    const [group, sub, q] = catalogKey.split("|");
+    const [group, sub, q, brand] = catalogKey.split("|");
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 25000);
 
@@ -486,11 +487,12 @@ export function ShopClient({
         setLoadingProducts(true);
       }
       try {
-        // Fetch the category-scoped catalog; facet filters/sort apply client-side (Pukas-style facets).
+        // Fetch the category-scoped catalog; remaining facet filters/sort apply client-side.
         const requestParams = new URLSearchParams();
         if (group) requestParams.set("categoryGroup", group);
         if (sub) requestParams.set("subcategory", sub);
         if (q) requestParams.set("q", q);
+        if (brand) requestParams.set("brand", brand.split(",")[0] || "");
 
         const response = await fetch(
           `/api/products${requestParams.toString() ? `?${requestParams.toString()}` : ""}`,
