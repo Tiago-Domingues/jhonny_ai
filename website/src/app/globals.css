@@ -93,10 +93,9 @@ html.jss-a11y-motion *::after {
   transition: filter 300ms ease;
 }
 
-@media (hover: hover) {
-  #shop [data-category-grid]:hover [data-category-card]:not(:hover) .media-vivid {
-    filter: grayscale(1);
-  }
+/* Pointer-driven (not :hover) so this is not wrapped in hover:hover. */
+#shop [data-category-grid][data-category-focus] [data-category-card]:not([data-category-active]) .media-vivid {
+  filter: grayscale(1) !important;
 }
 
 /* !important: Tailwind v4 puts these in @layer components, which loses to utilities. */
