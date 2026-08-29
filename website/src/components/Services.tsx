@@ -12,6 +12,7 @@ import {
   BuybackIcon,
   TravelIcon,
   StudentIcon,
+  SurfSchoolIcon,
   WaveIcon,
   ArrowIcon,
   InstagramIcon,
@@ -125,7 +126,11 @@ function PartnerChip({ link }: { link: Link }) {
       href={link.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/25 py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
+      className={
+        link.wa
+          ? "inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink/25 py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
+          : "inline-flex max-w-full items-center gap-1.5 rounded-full border border-ink bg-ink py-1.5 pl-1.5 pr-3.5 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white hover:text-ink"
+      }
     >
       <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-ink/5">
         {logoSrc ? (
@@ -143,7 +148,7 @@ function PartnerChip({ link }: { link: Link }) {
             className="h-7 w-7 object-cover"
           />
         ) : link.wa ? (
-          <WhatsappIcon className="h-3.5 w-3.5" />
+          <WhatsappIcon className="h-3.5 w-3.5 text-[#25D366]" />
         ) : (
           <InstagramIcon className="h-3.5 w-3.5" />
         )}
@@ -169,10 +174,10 @@ export function Services() {
         logo: "/brand/partners/instagram/asbrepairs.jpg",
       },
     ],
-    [{ label: t.services.buyback, href: wa(t.services.buybackMsg), wa: true }],
+    [{ label: t.services.ask, href: wa(t.services.buybackMsg), wa: true }],
     [
       ...wavePoolLinks,
-      { label: t.services.wavePool.ask, href: wa(t.services.wavePool.askMsg), wa: true },
+      { label: t.services.ask, href: wa(t.services.wavePool.askMsg), wa: true },
     ],
     [
       {
@@ -202,7 +207,7 @@ export function Services() {
     {
       title: ui.surfSchoolsTitle,
       desc: ui.surfSchoolsDesc,
-      Icon: StudentIcon,
+      Icon: SurfSchoolIcon,
       actions: surfSchoolLinks,
       wide: true,
     },
@@ -258,7 +263,7 @@ export function Services() {
         </div>
 
         {/* The Dudes — Surf Café highlight */}
-        <div className="mt-12 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1fr_0.9fr]">
+        <div className="mt-4 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1fr_0.9fr]">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
             <DudesAvatar openLabel={ui.openDudesInstagram} />
             <div>
@@ -275,14 +280,11 @@ export function Services() {
                 href="https://www.instagram.com/dudes_surfcafe/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-ink/30 px-5 py-2 text-xs font-semibold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-ink bg-ink px-5 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-white hover:text-ink"
               >
                 <InstagramIcon className="h-4 w-4" />
                 @dudes_surfcafe
               </a>
-              <p className="mt-2 text-xs text-muted">
-                {ui.instagramProfileHint}
-              </p>
             </div>
           </div>
           <InstagramMediaStrip handle="dudes_surfcafe" label={ui.instagramPosts} />

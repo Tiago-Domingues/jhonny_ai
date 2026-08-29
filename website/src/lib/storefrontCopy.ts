@@ -196,7 +196,6 @@ type StorefrontCopy = {
     surfSchoolsTitle: string;
     surfSchoolsDesc: string;
     instagramPosts: string;
-    instagramProfileHint: string;
     openDudesInstagram: string;
     ref: string;
     morePhotos: string;
@@ -406,7 +405,6 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       surfSchoolsDesc:
         "Parceiros de confiança em Carcavelos e Lisboa que ajudam novos surfistas a entrar na água em segurança.",
       instagramPosts: "Últimas publicações no Instagram",
-      instagramProfileHint: "A foto de perfil vem do Instagram; os posts abrem o perfil do café.",
       openDudesInstagram: "Abrir Instagram do The Dudes Surf Café",
       ref: "Ref",
       morePhotos: "Mais fotos",
@@ -614,7 +612,6 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       surfSchoolsDesc:
         "Trusted school partners around Carcavelos and Lisbon that help new surfers get safely into the water.",
       instagramPosts: "Latest Instagram posts",
-      instagramProfileHint: "Profile image loads from Instagram; post tiles open the café profile.",
       openDudesInstagram: "Open The Dudes Surf Café Instagram",
       ref: "Ref",
       morePhotos: "More photos",
@@ -820,7 +817,6 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       surfSchoolsTitle: "冲浪学校",
       surfSchoolsDesc: "卡卡维洛斯和里斯本附近值得信赖的学校伙伴，帮助新手安全下水。",
       instagramPosts: "最新 Instagram 动态",
-      instagramProfileHint: "头像来自 Instagram；帖子会打开咖啡馆主页。",
       openDudesInstagram: "打开 The Dudes Surf Café 的 Instagram",
       ref: "编号",
       morePhotos: "更多照片",
