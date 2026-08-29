@@ -487,14 +487,14 @@ export const translations: Record<Locale, Dict> = {
       p1: "A Jhonny Surf Store é um ponto de encontro da comunidade de surf em Parede e Carcavelos. Aqui encontras tudo para a água — e uma equipa que te trata como parte da família, seja qual for o teu nível.",
       p2: "O Jhonny é conhecido pela honestidade e pelo conhecimento técnico acima da média. Aconselha-te sobre as ondas da zona, ajuda-te a escolher a prancha certa e prepara-te para a próxima sessão.",
       stats: [
-        { value: "82+", label: "avaliações da comunidade" },
+        { value: "133", label: "avaliações da comunidade" },
         { value: "5★", label: "referência local" },
         { value: "10–19h", label: "Segunda a Sábado" },
       ],
     },
     reviews: {
       title: "O que dizem na Google",
-      summary: "5,0 ★ · 82+ avaliações da comunidade de surf",
+      summary: "5,0 ★ · 133 avaliações da comunidade de surf",
       cta: "Ver avaliações na Google",
     },
     newsletter: {
@@ -728,14 +728,14 @@ export const translations: Record<Locale, Dict> = {
       p1: "Jhonny Surf Store is a meeting point for the surf community in Parede and Carcavelos. You'll find everything for the water — and a team that treats you like family, whatever your level.",
       p2: "Jhonny is known for his honesty and above-average technical knowledge. He'll advise you on the local waves, help you pick the right board and get you ready for your next session.",
       stats: [
-        { value: "82+", label: "community reviews" },
+        { value: "133", label: "community reviews" },
         { value: "5★", label: "local legend" },
         { value: "10–19h", label: "Monday to Saturday" },
       ],
     },
     reviews: {
       title: "What people say on Google",
-      summary: "5.0 ★ · 82+ reviews from the surf community",
+      summary: "5.0 ★ · 133 reviews from the surf community",
       cta: "Read reviews on Google",
     },
     newsletter: {
@@ -979,14 +979,14 @@ export const translations: Record<Locale, Dict> = {
       p1: "Jhonny Surf Store 是 Parede 与 Carcavelos 冲浪社区的聚会点。这里有你下水所需的一切——以及一支无论水平高低都把你当家人的团队。",
       p2: "Jhonny 以诚实与扎实的技术知识著称。他会告诉你本地浪点、帮你选对板，并助你准备好下一场冲浪。",
       stats: [
-        { value: "82+", label: "社区评价" },
+        { value: "133", label: "社区评价" },
         { value: "5★", label: "本地口碑" },
         { value: "10–19h", label: "周一至周六" },
       ],
     },
     reviews: {
       title: "Google 上大家怎么说",
-      summary: "5.0 ★ · 来自冲浪社区的 82+ 条评价",
+      summary: "5.0 ★ · 来自冲浪社区的 133 条评价",
       cta: "查看 Google 评价",
     },
     newsletter: {
