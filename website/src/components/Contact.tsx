@@ -70,7 +70,7 @@ export function Contact() {
               >
                 <div
                   data-contact-disc={c.channel}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink transition"
+                  className={`contact-disc-${c.channel} flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink transition`}
                 >
                   <Icon className="h-6 w-6" />
                 </div>

@@ -120,25 +120,26 @@ a[data-google-reviews-chip]:hover {
   color: #ffffff !important;
 }
 
-#contact a:hover [data-contact-disc="whatsapp"] {
+/* Get in Touch: official channel colors on card hover only. */
+#contact a:hover .contact-disc-whatsapp {
   background-color: #25d366 !important;
   border-color: #25d366 !important;
   color: #ffffff !important;
 }
 
-#contact a:hover [data-contact-disc="facebook"] {
+#contact a:hover .contact-disc-facebook {
   background-color: #1877f2 !important;
   border-color: #1877f2 !important;
   color: #ffffff !important;
 }
 
-#contact a:hover [data-contact-disc="instagram"] {
+#contact a:hover .contact-disc-instagram {
   background-image: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888) !important;
   border-color: transparent !important;
   color: #ffffff !important;
 }
 
-#contact a:hover [data-contact-disc="email"] {
+#contact a:hover .contact-disc-email {
   background-color: #ea4335 !important;
   border-color: #ea4335 !important;
   color: #ffffff !important;
