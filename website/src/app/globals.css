@@ -77,6 +77,18 @@ html.jss-a11y-motion *::after {
   scroll-behavior: auto !important;
 }
 
+/* Gear for every wave: invert the category name banner on card hover. */
+#shop a:hover [data-category-banner] {
+  background-color: #ffffff;
+  color: #0d0d0d;
+}
+
+#shop a:hover [data-category-banner] h3,
+#shop a:hover [data-category-banner] p,
+#shop a:hover [data-category-banner] span {
+  color: #0d0d0d;
+}
+
 /* !important: Tailwind v4 puts these in @layer components, which loses to utilities. */
 #services a[data-partner-chip]:hover {
   background-color: #0d0d0d !important;
