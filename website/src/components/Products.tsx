@@ -59,14 +59,14 @@ export function Products() {
                   aria-label={item.title}
                 />
 
-                <div className="flex flex-1 flex-col bg-ink px-5 py-5 text-white transition group-hover:bg-ink-soft">
-                  <h3 className="font-display text-xl font-bold uppercase tracking-wide text-white">
+                <div className="flex flex-1 flex-col border border-ink bg-ink px-5 py-5 text-white transition-colors duration-300 group-hover:bg-white group-hover:text-ink">
+                  <h3 className="font-display text-xl font-bold uppercase tracking-wide text-white transition-colors duration-300 group-hover:text-ink">
                     {item.title}
                   </h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/80">
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/80 transition-colors duration-300 group-hover:text-ink">
                     {item.desc}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white transition-colors duration-300 group-hover:text-ink">
                     {t.shop.explore}
                     <ArrowIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                   </span>
