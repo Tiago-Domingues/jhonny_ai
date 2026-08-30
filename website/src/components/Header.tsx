@@ -745,17 +745,18 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                 </p>
                 <Link
                   href={VOLUME_CALCULATOR_PATH}
+                  data-testid="volume-calculator-menu"
                   onClick={() => {
                     setDesktopCat(null);
                     setActiveSubPath(null);
                     setActiveNestedPath(null);
                   }}
-                  className="inline-flex max-w-xl flex-col rounded-2xl border border-line bg-cream/70 px-4 py-3 transition hover:border-ink hover:bg-cream"
+                  className="group inline-flex max-w-xl flex-col rounded-2xl border border-ink bg-ink px-4 py-3 text-white transition hover:bg-cream hover:text-ink active:bg-cream active:text-ink"
                 >
-                  <span className="text-sm font-bold uppercase tracking-[0.08em] text-ink">
+                  <span className="text-sm font-bold uppercase tracking-[0.08em]">
                     {volumeCopy.menuLabel}
                   </span>
-                  <span className="mt-1 text-xs normal-case tracking-normal text-muted">
+                  <span className="mt-1 text-xs font-normal normal-case tracking-normal text-white/70 transition group-hover:text-ink/60 group-active:text-ink/60">
                     {volumeCopy.menuHint}
                   </span>
                 </Link>
