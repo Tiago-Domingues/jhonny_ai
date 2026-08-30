@@ -46,4 +46,10 @@ assert(adminPage.includes("AdminShell"), "single admin page exists");
 const clientes = readFileSync(resolve(__dirname, "../src/app/admin/clientes/page.tsx"), "utf8");
 assert(clientes.includes("/admin?tab=clientes"), "old clientes route redirects");
 
+const header = readFileSync(resolve(__dirname, "../src/components/Header.tsx"), "utf8");
+assert(header.includes('href="/admin"'), "profile menu has one Admin link");
+assert(!header.includes("Admin · Clientes"), "profile menu does not list Admin · Clientes");
+assert(!header.includes("Admin · Encomendas"), "profile menu does not list Admin · Encomendas");
+assert(!header.includes("Admin · Analytics"), "profile menu does not list Admin · Analytics");
+
 console.log("account admin plan checks ok");
