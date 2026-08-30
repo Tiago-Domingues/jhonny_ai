@@ -85,6 +85,31 @@ export function pickRepresentativeVariant(variants: StoreProduct[]) {
   })[0]!;
 }
 
+/**
+ * Drop leftover empty wrappers and trailing punctuation after variant
+ * attributes (color/size) are removed from an Odoo title.
+ * Keeps meaningful tails such as "(Kids)", "8'2", or "Vol. 2".
+ */
+export function cleanProductDisplayName(name: string) {
+  let title = String(name || "").replace(/\s+/g, " ").trim();
+  let previous = "";
+  while (title && title !== previous) {
+    previous = title;
+    title = title
+      .replace(/\(\s*\)/g, " ")
+      .replace(/\[\s*\]/g, " ")
+      .replace(/\{\s*\}/g, " ")
+      .replace(/（\s*）/g, " ")
+      .replace(/【\s*】/g, " ")
+      .replace(/[/|\\]+\s*$/g, "")
+      .replace(/[-–—,;:·•*]+\s*$/g, "")
+      .replace(/\.+$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  return title;
+}
+
 function stripKnownAttributeValues(name: string, variants: StoreProduct[]) {
   let title = name.trim();
   for (const variant of variants) {
@@ -92,15 +117,19 @@ function stripKnownAttributeValues(name: string, variants: StoreProduct[]) {
       const trimmed = value.trim();
       if (trimmed.length < 2) continue;
       const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      title = title.replace(new RegExp(`\\(\\s*${escaped}\\s*\\)`, "ig"), " ");
+      title = title.replace(new RegExp(`\\[\\s*${escaped}\\s*\\]`, "ig"), " ");
+      title = title.replace(new RegExp(`([(/|,]|[-–—])\\s*${escaped}\\b`, "ig"), "$1");
+      title = title.replace(new RegExp(`\\b${escaped}\\s*([)/|,]|[-–—])`, "ig"), "$1");
       title = title.replace(new RegExp(`\\b${escaped}\\b`, "ig"), " ");
     }
   }
-  return title.replace(/\s+/g, " ").replace(/[-–|,]\s*$/g, "").trim();
+  return cleanProductDisplayName(title);
 }
 
 export function deriveTemplateDisplayName(variants: StoreProduct[]) {
   if (!variants.length) return "";
-  if (variants.length === 1) return variants[0]!.name;
+  if (variants.length === 1) return cleanProductDisplayName(variants[0]!.name);
 
   const sharedRef = variants.every(
     (variant) => normalizePart(variant.refId || variant.sku) === normalizePart(variants[0]!.refId || variants[0]!.sku)
@@ -119,7 +148,7 @@ export function deriveTemplateDisplayName(variants: StoreProduct[]) {
   }
 
   const names = variants.map((variant) => variant.name.trim()).filter(Boolean);
-  if (!names.length) return variants[0]!.name;
+  if (!names.length) return cleanProductDisplayName(variants[0]!.name);
 
   let prefix = names[0]!;
   for (const name of names.slice(1)) {
@@ -127,8 +156,8 @@ export function deriveTemplateDisplayName(variants: StoreProduct[]) {
       prefix = prefix.slice(0, -1).trim();
     }
   }
-  prefix = prefix.replace(/[-–|,]\s*$/g, "").trim();
-  return prefix.length >= 3 ? prefix : pickRepresentativeVariant(variants).name;
+  prefix = cleanProductDisplayName(prefix);
+  return prefix.length >= 3 ? prefix : cleanProductDisplayName(pickRepresentativeVariant(variants).name);
 }
 
 function uniqueSorted(values: Array<string | null | undefined>) {
@@ -210,11 +239,21 @@ export function groupStoreProductsForListing(products: StoreProduct[]): StorePro
     groups.set(key, bucket);
   }
 
-  const grouped: StoreProductListing[] = singles.map((product) => ({ ...product, variantCount: 1, hasVariants: false }));
+  const grouped: StoreProductListing[] = singles.map((product) => ({
+    ...product,
+    name: cleanProductDisplayName(product.name),
+    variantCount: 1,
+    hasVariants: false,
+  }));
 
   for (const variants of groups.values()) {
     if (variants.length <= 1) {
-      grouped.push({ ...variants[0]!, variantCount: 1, hasVariants: false });
+      grouped.push({
+        ...variants[0]!,
+        name: cleanProductDisplayName(variants[0]!.name),
+        variantCount: 1,
+        hasVariants: false,
+      });
       continue;
     }
     grouped.push(buildTemplateListingProduct(variants));

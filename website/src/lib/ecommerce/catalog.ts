@@ -8,7 +8,7 @@ import { fetchOdooProducts, syncOdooProducts } from "@/lib/ecommerce/odooCatalog
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { productMatchesCategoryGroup, productMatchesSubcategory } from "@/lib/ecommerce/categoryGroups";
 import { applySurfboardReviewVideo } from "@/lib/ecommerce/surfboardEnrichment";
-import { groupStoreProductsForListing, type StoreProductListing } from "@/lib/ecommerce/productVariants";
+import { cleanProductDisplayName, groupStoreProductsForListing, type StoreProductListing } from "@/lib/ecommerce/productVariants";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 import { unstable_cache } from "next/cache";
 
@@ -278,7 +278,7 @@ function toStoreProduct(product: ListedProduct | Product, options?: { lean?: boo
     sku: product.sku,
     barcode: lean ? undefined : product.barcode,
     refId: product.refId,
-    name: product.name,
+    name: cleanProductDisplayName(product.name),
     description: lean ? "" : product.description || "",
     category: product.category,
     brand: product.brand || "",
@@ -321,7 +321,7 @@ export function toLeanStoreProduct(product: StoreProduct): StoreProduct {
     slug: product.slug,
     sku: product.sku ?? null,
     refId: product.refId ?? null,
-    name: product.name,
+    name: cleanProductDisplayName(product.name),
     description: "",
     category: product.category,
     brand: product.brand || "",

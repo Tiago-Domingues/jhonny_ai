@@ -4,6 +4,7 @@
  */
 import {
   buildTemplateListingProduct,
+  cleanProductDisplayName,
   deriveTemplateDisplayName,
   groupStoreProductsForListing,
 } from "../src/lib/ecommerce/productVariants.ts";
@@ -51,6 +52,36 @@ if (!listing.hasVariants || listing.variantCount !== 4) {
 const displayName = deriveTemplateDisplayName(airFreshVariants);
 if (!displayName.toLowerCase().includes("air fresh")) {
   throw new Error(`Unexpected display name: ${displayName}`);
+}
+
+const toteVariants = [
+  variant("t1", 9002, "TOTE PACK PATAGONIA TERRAVIA (Black)", "Black", 4999, 2),
+  variant("t2", 9002, "TOTE PACK PATAGONIA TERRAVIA (White)", "White", 4999, 1),
+];
+toteVariants.forEach((item) => {
+  item.refId = "TERRAVIA";
+});
+const toteName = deriveTemplateDisplayName(toteVariants);
+if (toteName !== "TOTE PACK PATAGONIA TERRAVIA") {
+  throw new Error(`Tote display name should drop leftover parens, got: ${toteName}`);
+}
+
+const emptyParenName = cleanProductDisplayName("TOTE PACK PATAGONIA TERRAVIA ( )");
+if (emptyParenName !== "TOTE PACK PATAGONIA TERRAVIA") {
+  throw new Error(`Empty parens should be stripped, got: ${emptyParenName}`);
+}
+
+if (cleanProductDisplayName("Board 8'2") !== "Board 8'2") {
+  throw new Error("surfboard length must stay intact");
+}
+if (cleanProductDisplayName("Wax (Tropical)") !== "Wax (Tropical)") {
+  throw new Error("meaningful parentheticals must stay");
+}
+if (cleanProductDisplayName("NAME -") !== "NAME") {
+  throw new Error("trailing dash should be stripped");
+}
+if (cleanProductDisplayName("Air Fresh") !== "Air Fresh") {
+  throw new Error("clean names should stay unchanged");
 }
 
 if (listing.stockQuantity !== 6) {
