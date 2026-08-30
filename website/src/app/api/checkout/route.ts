@@ -5,6 +5,7 @@ import { CART_COOKIE } from "@/lib/ecommerce/cart";
 import { createCheckout } from "@/lib/ecommerce/checkout";
 import { assertSessionSecretConfigured, readSessionUser } from "@/lib/ecommerce/session";
 import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
+import { assertGoogleUserCanShop } from "@/lib/ecommerce/googleShopGate";
 
 export async function POST(request: Request) {
   if (!hasDatabaseUrl()) return unavailableError();
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
   try {
     assertSessionSecretConfigured();
     const session = await readSessionUser();
+    await assertGoogleUserCanShop(session?.id);
     const cookieStore = await cookies();
     const guestToken = cookieStore.get(CART_COOKIE)?.value;
     const result = await createCheckout(

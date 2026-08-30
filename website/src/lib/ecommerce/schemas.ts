@@ -53,7 +53,7 @@ export const loginSchema = z.object({
 export const profileSchema = z.object({
   fullName: z.string().min(2).max(120),
   phoneCountryCode: z.string().min(2).max(8).default("+351"),
-  phone: z.string().max(40).optional().or(z.literal("")),
+  phone: z.string().min(6).max(40),
   birthDate: z.union([birthDateSchema, z.literal("")]).optional(),
   gender: z.enum(genders).optional().or(z.literal("")),
   customerType: z.enum(customerTypes),
@@ -74,6 +74,9 @@ export const profileSchema = z.object({
 }).superRefine((data, ctx) => {
   if (!isValidOptionalNif(data.nif)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["nif"], message: "Invalid NIF / VAT." });
+  }
+  if (data.phone.replace(/\D/g, "").length < 6) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["phone"], message: "Phone is required." });
   }
 });
 

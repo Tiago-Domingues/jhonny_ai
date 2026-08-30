@@ -35,6 +35,8 @@ export type SessionUser = {
   role: "CUSTOMER" | "ADMIN";
   fullName?: string;
   emailVerifiedAt?: string | null;
+  hasGoogle?: boolean;
+  hasPassword?: boolean;
 };
 
 export async function createSessionToken(userId: string) {
@@ -82,6 +84,8 @@ export async function readSessionUser(): Promise<SessionUser | null> {
       role: effectiveRole,
       fullName: user.profile?.fullName,
       emailVerifiedAt: user.emailVerifiedAt?.toISOString() || null,
+      hasGoogle: Boolean(user.googleSub),
+      hasPassword: Boolean(user.passwordHash),
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes("SESSION_SECRET")) {
