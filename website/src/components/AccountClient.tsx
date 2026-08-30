@@ -519,7 +519,7 @@ export function AccountClient() {
               <label className="flex items-start gap-3 text-sm text-muted md:col-span-2">
                 <input
                   name="marketingOptIn"
-                  defaultChecked={Boolean(profile?.marketingOptIn)}
+                  defaultChecked={profile?.marketingOptIn !== false}
                   type="checkbox"
                   className="mt-1 size-4 shrink-0 accent-ink"
                 />
@@ -632,6 +632,15 @@ export function AccountClient() {
             <input name="username" required placeholder={copy.username} className={fieldClass} />
             <input name="email" required type="email" placeholder="Email" className={fieldClass} />
             <input name="password" required type="password" placeholder={copy.password} minLength={8} className={fieldClass} />
+            <label className="flex items-start gap-3 text-sm text-muted">
+              <input
+                name="marketingOptIn"
+                type="checkbox"
+                defaultChecked
+                className="mt-1 size-4 shrink-0 accent-ink"
+              />
+              <span>{copy.marketing}</span>
+            </label>
             <p className="text-sm text-muted">{copy.registerCheckEmail}</p>
             <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98]">
               {copy.register}

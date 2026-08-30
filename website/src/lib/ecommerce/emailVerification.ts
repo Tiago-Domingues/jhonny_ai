@@ -60,12 +60,14 @@ export async function startPendingRegistration(input: unknown, origin?: string |
       passwordHash,
       tokenHash: hashToken(token),
       expiresAt,
+      marketingOptIn: data.marketingOptIn,
     },
     update: {
       username,
       passwordHash,
       tokenHash: hashToken(token),
       expiresAt,
+      marketingOptIn: data.marketingOptIn,
     },
   });
 
@@ -175,6 +177,7 @@ export async function completeRegistrationWithToken(token: string) {
             profile: {
               create: {
                 fullName: pending.username,
+                marketingOptIn: pending.marketingOptIn,
               },
             },
           },

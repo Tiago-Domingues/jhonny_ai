@@ -55,6 +55,7 @@ async function main() {
 
     const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
     assert(pending, "pending registration exists");
+    assert(pending.marketingOptIn === true, "register defaults marketing opt-in");
     const verifyEvent = await prisma.emailEvent.findFirst({
       where: { recipientEmail: email, type: "EMAIL_VERIFICATION" },
       orderBy: { createdAt: "desc" },
@@ -92,8 +93,9 @@ async function main() {
     });
     assert(second.ok, "the same verify link still works the second time");
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email }, include: { profile: true } });
     assert(user?.emailVerifiedAt, "account is verified");
+    assert(user.profile?.marketingOptIn === true, "verified account keeps marketing opt-in");
     const welcomeBefore = await prisma.emailEvent.count({
       where: { userId: user.id, type: "WELCOME_CUSTOMER" },
     });
@@ -160,6 +162,43 @@ async function main() {
     assert(welcomeSms, "welcome SMS event is recorded after the phone is saved");
     assert(["SENT", "SKIPPED"].includes(welcomeEmail.status), "welcome email is sent or skipped when SMTP is blank");
     assert(["SENT", "SKIPPED"].includes(welcomeSms.status), "welcome SMS is sent or skipped when Twilio is blank");
+
+    const optOutEmail = `flow-out-${stamp}@example.com`;
+    const optOutUsername = `flowout${stamp}`.slice(0, 32);
+    const optOutToken = randomToken(32);
+    const optOutRegister = await fetch(`${base}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: base },
+      body: JSON.stringify({
+        email: optOutEmail,
+        username: optOutUsername,
+        password: "surflegend1",
+        marketingOptIn: false,
+      }),
+    });
+    assert(optOutRegister.ok, "register with marketing unselected works");
+    const optOutPending = await prisma.pendingRegistration.findUnique({ where: { email: optOutEmail } });
+    assert(optOutPending?.marketingOptIn === false, "unselected marketing is stored on pending signup");
+    await prisma.pendingRegistration.update({
+      where: { id: optOutPending.id },
+      data: { tokenHash: hashToken(optOutToken) },
+    });
+    const optOutVerify = await fetch(`${base}/api/auth/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: optOutToken }),
+    });
+    assert(optOutVerify.ok, "opt-out verify works");
+    const optOutUser = await prisma.user.findUnique({
+      where: { email: optOutEmail },
+      include: { profile: true },
+    });
+    assert(optOutUser?.profile?.marketingOptIn === false, "unselected marketing is kept after verify");
+    await prisma.emailEvent.deleteMany({ where: { userId: optOutUser.id } });
+    await prisma.emailVerificationToken.deleteMany({ where: { userId: optOutUser.id } });
+    await prisma.customerProfile.deleteMany({ where: { userId: optOutUser.id } });
+    await prisma.user.delete({ where: { id: optOutUser.id } });
+    await prisma.pendingRegistration.deleteMany({ where: { email: optOutEmail } });
 
     const spin = await fetch(`${base}/api/wheel/spin`, {
       method: "POST",

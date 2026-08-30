@@ -26,6 +26,16 @@ const parsed = pendingRegisterSchema.parse({
   password: "surflegend",
 });
 assert(parsed.email === "ana@example.com", "pending register keeps email");
+assert(parsed.marketingOptIn === true, "signup marketing defaults to opted in");
+assert(
+  pendingRegisterSchema.parse({
+    email: "ana@example.com",
+    username: "ana.silva",
+    password: "surflegend",
+    marketingOptIn: false,
+  }).marketingOptIn === false,
+  "signup can unselect marketing"
+);
 assert(
   !pendingRegisterSchema.safeParse({
     email: "ana@example.com",
@@ -96,7 +106,9 @@ async function main() {
     await tx.pendingRegistration.delete({ where: { id: pending.id } });
     return created;
   });
+  const createdProfile = await prisma.customerProfile.findUnique({ where: { userId: user.id } });
   assert(user.emailVerifiedAt, "account is created already verified");
+  assert(createdProfile?.marketingOptIn === true, "new profile defaults to marketing opt-in");
   assert(!(await prisma.pendingRegistration.findUnique({ where: { email } })), "pending row is consumed");
 
   const leftoverPending = await prisma.pendingRegistration.findUnique({
