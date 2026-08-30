@@ -594,6 +594,28 @@ export function AccountClient() {
             <input name="username" required placeholder={copy.username} className={fieldClass} />
             <input name="email" required type="email" placeholder="Email" className={fieldClass} />
             <input name="password" required type="password" placeholder={copy.password} minLength={8} className={fieldClass} />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(7.5rem,9rem)_minmax(0,1fr)]">
+              <select
+                name="phoneCountryCode"
+                aria-label="Country code"
+                defaultValue="+351"
+                className={selectClass}
+                style={{ backgroundImage: selectChevron }}
+              >
+                {dialCodes.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <input
+                name="phone"
+                placeholder={copy.mobile}
+                inputMode="tel"
+                className={fieldClass}
+              />
+            </div>
+            <p className="text-sm text-muted">{copy.registerPhoneHint}</p>
             <p className="text-sm text-muted">{copy.registerCheckEmail}</p>
             <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98]">
               {copy.register}

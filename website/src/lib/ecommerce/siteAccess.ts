@@ -24,6 +24,17 @@ export function shouldEnforceComingSoon() {
   return true;
 }
 
+const PUBLIC_EMAIL_AUTH_PATHS = new Set([
+  "/conta/verificar-email",
+  "/conta/redefinir-password",
+  "/conta/recuperar-password",
+]);
+
+/** Email links must work without the staff preview cookie. */
+export function isPublicEmailAuthPath(pathname: string) {
+  return PUBLIC_EMAIL_AUTH_PATHS.has(pathname);
+}
+
 export function previewAccessToken(password: string) {
   return createHash("sha256").update(`jss-preview:${password}`).digest("hex");
 }

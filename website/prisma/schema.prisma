@@ -608,13 +608,15 @@ model EmailVerificationToken {
 
 /// Signup held until the customer clicks the email link. No User row yet.
 model PendingRegistration {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  username     String
-  passwordHash String
-  tokenHash    String   @unique
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  email            String   @unique
+  username         String
+  passwordHash     String
+  tokenHash        String   @unique
+  phoneCountryCode String   @default("+351")
+  phone            String?
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
 
   @@index([username])
   @@index([expiresAt])

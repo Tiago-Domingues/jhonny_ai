@@ -147,6 +147,7 @@ type StorefrontCopy = {
     username: string;
     ready: string;
     registerCheckEmail: string;
+    registerPhoneHint: string;
     submitFailed: string;
     preferNot: string;
     male: string;
@@ -355,6 +356,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       username: "Username",
       ready: "Conta pronta.",
       registerCheckEmail: "Enviámos um link para o teu email. Clica nele para terminares o registo e preencheres o perfil.",
+      registerPhoneHint: "Opcional. Usamos o telemóvel para o SMS de boas-vindas.",
       submitFailed: "Não foi possível concluir o pedido.",
       preferNot: "Prefiro não dizer",
       male: "Masculino",
@@ -562,6 +564,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       username: "Username",
       ready: "Account ready.",
       registerCheckEmail: "We sent a link to your email. Click it to finish registration and fill in your profile.",
+      registerPhoneHint: "Optional. We use this number for the welcome SMS.",
       submitFailed: "Could not complete the request.",
       preferNot: "Prefer not to say",
       male: "Male",
@@ -768,6 +771,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       username: "用户名",
       ready: "账户已就绪。",
       registerCheckEmail: "我们已发送确认链接。点击后即可完成注册并填写资料。",
+      registerPhoneHint: "选填。用于发送欢迎短信。",
       submitFailed: "无法完成请求。",
       preferNot: "不愿透露",
       male: "男",

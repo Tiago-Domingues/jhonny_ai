@@ -2,6 +2,7 @@ import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
 import { getProfile, updateProfile } from "@/lib/ecommerce/auth";
 import { readSessionUser } from "@/lib/ecommerce/session";
+import { sendWelcomeSmsIfNeeded } from "@/lib/ecommerce/sms";
 
 export async function GET() {
   if (!hasDatabaseUrl()) return unavailableError();
@@ -19,6 +20,16 @@ export async function PATCH(request: Request) {
 
   try {
     const profile = await updateProfile(session.id, await readJson(request));
+    try {
+      await sendWelcomeSmsIfNeeded({
+        userId: session.id,
+        fullName: profile.fullName,
+        phoneCountryCode: profile.phoneCountryCode,
+        phone: profile.phone,
+      });
+    } catch {
+      // logged via SmsEvent when possible
+    }
     return Response.json({ profile });
   } catch (error) {
     return apiError(error);

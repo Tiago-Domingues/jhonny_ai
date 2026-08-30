@@ -3,7 +3,8 @@ import { z } from "zod";
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
 import { sendWelcomeEmail } from "@/lib/ecommerce/email";
-import { sendWelcomeSms } from "@/lib/ecommerce/sms";
+import { sendWelcomeSmsIfNeeded } from "@/lib/ecommerce/sms";
+import { originFromRequest } from "@/lib/ecommerce/stripeCheckout";
 import {
   completeRegistrationWithToken,
   isVerifyTokenFormat,
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     if (payload.resend) {
       const session = await readSessionUser();
       if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-      await requestEmailVerification(session.id);
+      await requestEmailVerification(session.id, originFromRequest(request));
       return NextResponse.json({ ok: true });
     }
     const token = payload.token || "";
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
         // EmailEvent SKIPPED when SMTP is blank
       }
       try {
-        await sendWelcomeSms({
+        await sendWelcomeSmsIfNeeded({
           userId: user.id,
           fullName: user.profile?.fullName,
           phoneCountryCode: user.profile?.phoneCountryCode,

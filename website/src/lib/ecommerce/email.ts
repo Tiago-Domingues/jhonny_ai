@@ -467,6 +467,7 @@ export async function sendEmailVerificationEmail(input: {
       <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
       <p>Clica no link para confirmares o email e terminares o registo. Depois podes preencher o perfil. Expira em 24 horas.</p>
       <p><a href="${escapeHtml(input.verifyUrl)}">Confirmar email e continuar</a></p>
+      <p style="word-break:break-all;font-size:12px;color:#555">${escapeHtml(input.verifyUrl)}</p>
       <p>Se não pediste esta conta, ignora este email.</p>
     </div>
   `;

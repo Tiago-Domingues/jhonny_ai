@@ -5,7 +5,7 @@ import { unavailableError } from "@/lib/ecommerce/api";
 import { upsertGoogleCustomer } from "@/lib/ecommerce/auth";
 import { CART_COOKIE, mergeGuestCartIntoUser } from "@/lib/ecommerce/cart";
 import { sendWelcomeEmail } from "@/lib/ecommerce/email";
-import { sendWelcomeSms } from "@/lib/ecommerce/sms";
+import { sendWelcomeSmsIfNeeded } from "@/lib/ecommerce/sms";
 import {
   GOOGLE_OAUTH_STATE_COOKIE,
   exchangeGoogleCode,
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
         // ignore hard failures
       }
       try {
-        await sendWelcomeSms({
+        await sendWelcomeSmsIfNeeded({
           userId: user.id,
           fullName: user.profile?.fullName,
           phoneCountryCode: user.profile?.phoneCountryCode,
