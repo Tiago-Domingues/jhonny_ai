@@ -237,14 +237,9 @@ type Dict = {
     subtitle: string;
     ctaVisit: string;
     ctaWhatsapp: string;
-    storeEyebrow: string;
-    storeTitle1: string;
-    storeTitle2: string;
-    storeSubtitle: string;
     loopLabel: string;
     videoLabel: string;
-    storeLabel: string;
-    storeChats: { jhonny: string; client: string }[];
+    inkLabel: string;
   };
   surf: {
     label: string;
@@ -460,19 +455,9 @@ export const translations: Record<Locale, Dict> = {
         "Equipamento escolhido para a água, a praia e a vida depois da sessão — com o aconselhamento honesto do Jhonny.",
       ctaVisit: "Visitar a loja",
       ctaWhatsapp: "WhatsApp",
-      storeEyebrow: "Parede · Carcavelos",
-      storeTitle1: "Entra",
-      storeTitle2: "na loja",
-      storeSubtitle:
-        "Pranchas no rack, fatos no cabide, e o Jhonny a tratar das coisas — a versão simples da loja.",
       loopLabel: "Ecrã inicial",
       videoLabel: "Filme de surf",
-      storeLabel: "A loja",
-      storeChats: [
-        { jhonny: "Esta serve-te.", client: "Levo esta." },
-        { jhonny: "Precisas de wax?", client: "Sim, o tropical." },
-        { jhonny: "Queres experimentar?", client: "Vou à água." },
-      ],
+      inkLabel: "Ecrã preto",
     },
     surf: {
       label: "Condições ao vivo",
@@ -714,19 +699,9 @@ export const translations: Record<Locale, Dict> = {
         "Gear for the water, the beach and life after the session — with Jhonny's honest advice.",
       ctaVisit: "Visit the store",
       ctaWhatsapp: "WhatsApp",
-      storeEyebrow: "Parede · Carcavelos",
-      storeTitle1: "Come in",
-      storeTitle2: "the store",
-      storeSubtitle:
-        "Boards on the rack, rubber on the hanger, and Jhonny minding the shop — the simple version of the room.",
       loopLabel: "Home screen",
       videoLabel: "Surf film",
-      storeLabel: "The store",
-      storeChats: [
-        { jhonny: "This one's yours.", client: "I'll take it." },
-        { jhonny: "Need wax?", client: "Yes — the tropical." },
-        { jhonny: "Want to try it?", client: "Going in." },
-      ],
+      inkLabel: "Black",
     },
     surf: {
       label: "Live conditions",
@@ -979,18 +954,9 @@ export const translations: Record<Locale, Dict> = {
       subtitle: "为海上、海滩与下浪后的生活精选装备——还有 Jhonny 真诚专业的建议。",
       ctaVisit: "到店逛逛",
       ctaWhatsapp: "WhatsApp",
-      storeEyebrow: "Parede · Carcavelos",
-      storeTitle1: "请进",
-      storeTitle2: "店里",
-      storeSubtitle: "板上架，湿衣挂着，Jhonny 在店里忙活——这是店铺的简笔版本。",
       loopLabel: "首页画面",
       videoLabel: "冲浪影片",
-      storeLabel: "店内",
-      storeChats: [
-        { jhonny: "这支适合你。", client: "我要这支。" },
-        { jhonny: "要蜡吗？", client: "要，热带那款。" },
-        { jhonny: "要试试吗？", client: "下水。" },
-      ],
+      inkLabel: "黑底",
     },
     surf: {
       label: "实时浪况",

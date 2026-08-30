@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { HeroStoreScene } from "@/components/HeroStoreScene";
 import { HERO_LOOP, type HeroPanel } from "@/lib/heroLoop";
 
 function prefersReducedMotion() {
@@ -28,14 +27,14 @@ export function Hero() {
   }, []);
 
   useEffect(() => {
-    remainingRef.current = panel === "video" ? HERO_LOOP.videoMs : HERO_LOOP.storeMs;
+    remainingRef.current = panel === "video" ? HERO_LOOP.videoMs : HERO_LOOP.inkMs;
   }, [panel]);
 
   useEffect(() => {
     if (!canLoop || incoming || paused) return;
     startedAtRef.current = Date.now();
     const id = window.setTimeout(() => {
-      setIncoming(panel === "video" ? "store" : "video");
+      setIncoming(panel === "video" ? "ink" : "video");
     }, remainingRef.current);
     return () => {
       window.clearTimeout(id);
@@ -69,7 +68,7 @@ export function Hero() {
 
   function goTo(next: HeroPanel) {
     if (next === panel || incoming) return;
-    remainingRef.current = next === "video" ? HERO_LOOP.videoMs : HERO_LOOP.storeMs;
+    remainingRef.current = next === "video" ? HERO_LOOP.videoMs : HERO_LOOP.inkMs;
     setIncoming(next);
   }
 
@@ -82,13 +81,15 @@ export function Hero() {
     return "hero-panel";
   }
 
+  const copy = <HeroCopy eyebrow={t.hero.eyebrow} title1={t.hero.title1} title2={t.hero.title2} subtitle={t.hero.subtitle} />;
+
   return (
     <section
       id="top"
       data-hero-panel={incoming ?? panel}
       data-hero-loop={canLoop ? "on" : "off"}
       data-hero-paused={paused ? "true" : undefined}
-      className={`relative flex min-h-[100svh] items-center overflow-hidden bg-paper ${
+      className={`relative flex min-h-[100svh] items-center overflow-hidden bg-ink ${
         paused ? "hero-loop-paused" : ""
       }`}
       onPointerEnter={(event) => {
@@ -116,49 +117,21 @@ export function Hero() {
           <div className="absolute inset-0 bg-black/5" />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/55 via-transparent to-ink/10" />
           <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-ink/35 via-ink/10 to-transparent sm:w-2/3 lg:w-1/2" />
-
-          <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-24 pt-36 sm:px-8">
-            <p className="mb-6 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-white/90 sm:text-xs">
-              {t.hero.eyebrow}
-            </p>
-            <h1 className="font-display text-4xl font-extrabold uppercase leading-[0.92] tracking-tight text-white text-balance drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)] sm:text-6xl lg:text-[5.25rem]">
-              {t.hero.title1}
-              <br />
-              {t.hero.title2}
-            </h1>
-            <p className="mt-7 max-w-xl text-base leading-relaxed text-white sm:text-lg">
-              {t.hero.subtitle}
-            </p>
-          </div>
+          {copy}
         </div>
       )}
 
-      {shown.includes("store") && (
+      {shown.includes("ink") && (
         <div
-          className={`${panelClass("store")} hero-panel--store flex`}
-          aria-hidden={(incoming ?? panel) !== "store"}
+          className={`${panelClass("ink")} hero-panel--ink`}
+          aria-hidden={(incoming ?? panel) !== "ink"}
         >
-          <HeroStoreScene />
-          <div className="hero-store-copy relative z-10 mx-auto flex h-full w-full max-w-3xl flex-col items-center justify-end px-5 pb-24 pt-36 text-center sm:px-8">
-            <p className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-ink/55 sm:text-xs">
-              {t.hero.eyebrow}
-            </p>
-            <h2 className="font-display text-3xl font-extrabold uppercase leading-[0.92] tracking-tight text-ink text-balance sm:text-5xl lg:text-6xl">
-              {t.hero.title1}
-              <br />
-              {t.hero.title2}
-            </h2>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-ink/70 sm:text-base">
-              {t.hero.subtitle}
-            </p>
-          </div>
+          {copy}
         </div>
       )}
 
       <nav
-        className={`absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 ${
-          (incoming ?? panel) === "store" ? "text-ink" : "text-white"
-        }`}
+        className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 text-white"
         aria-label={t.hero.loopLabel}
       >
         <PanelDot
@@ -167,12 +140,40 @@ export function Hero() {
           onClick={() => goTo("video")}
         />
         <PanelDot
-          active={(incoming ?? panel) === "store"}
-          label={t.hero.storeLabel}
-          onClick={() => goTo("store")}
+          active={(incoming ?? panel) === "ink"}
+          label={t.hero.inkLabel}
+          onClick={() => goTo("ink")}
         />
       </nav>
     </section>
+  );
+}
+
+function HeroCopy({
+  eyebrow,
+  title1,
+  title2,
+  subtitle,
+}: {
+  eyebrow: string;
+  title1: string;
+  title2: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="relative z-10 mx-auto w-full max-w-7xl px-5 pb-24 pt-36 sm:px-8">
+      <p className="mb-6 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-white/90 sm:text-xs">
+        {eyebrow}
+      </p>
+      <h1 className="font-display text-4xl font-extrabold uppercase leading-[0.92] tracking-tight text-white text-balance drop-shadow-[0_2px_18px_rgba(0,0,0,0.35)] sm:text-6xl lg:text-[5.25rem]">
+        {title1}
+        <br />
+        {title2}
+      </h1>
+      <p className="mt-7 max-w-xl text-base leading-relaxed text-white sm:text-lg">
+        {subtitle}
+      </p>
+    </div>
   );
 }
 
