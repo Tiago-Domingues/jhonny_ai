@@ -879,6 +879,7 @@ a[data-google-reviews-chip]:hover {
 }
 
 .hero-store-chats {
+  /* sit over the balcão, not the left-hand shopper */
   position: absolute;
   left: 56%;
   top: 24%;
