@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FaturaAttachment } from "@/components/FaturaAttachment";
+import { formatEuro } from "@/lib/ecommerce/money";
 
 type AdminCustomer = {
   id: string;
@@ -17,8 +19,18 @@ type AdminCustomer = {
     phone: string | null;
     customerType: string;
     preferredLanguage: string;
+    addressLine1: string | null;
+    addressLine2: string | null;
+    postalCode: string | null;
     city: string | null;
     country: string;
+    billingSameAsShipping: boolean;
+    billingAddressLine1: string | null;
+    billingAddressLine2: string | null;
+    billingPostalCode: string | null;
+    billingCity: string | null;
+    billingCountry: string | null;
+    nif: string | null;
     marketingOptIn: boolean;
     odooPartnerId: number | null;
     odooSyncStatus: string;
@@ -30,6 +42,17 @@ type Stats = {
   googleSignups: number;
   marketingOptIn: number;
   newLast7Days: number;
+  topSpender: { name: string; spentCents: number } | null;
+};
+
+type CustomerOrder = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  fulfillmentMethod: string;
+  createdAt: string;
+  totalCents: number;
+  hasFaturaRecibo?: boolean;
 };
 
 const customerTypeLabels: Record<string, string> = {
@@ -71,6 +94,7 @@ export function AdminCustomersClient() {
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrder[]>([]);
   const [purging, setPurging] = useState(false);
   const [purgeConfirm, setPurgeConfirm] = useState("");
 
@@ -121,6 +145,17 @@ export function AdminCustomersClient() {
     return () => window.clearTimeout(timer);
   }, [load]);
 
+  useEffect(() => {
+    if (!selectedId) {
+      setCustomerOrders([]);
+      return;
+    }
+    fetch(`/api/admin/customers/${selectedId}/orders`)
+      .then((response) => (response.ok ? response.json() : { orders: [] }))
+      .then((data) => setCustomerOrders(data.orders || []))
+      .catch(() => setCustomerOrders([]));
+  }, [selectedId]);
+
   async function saveSelected(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selected) return;
@@ -128,8 +163,15 @@ export function AdminCustomersClient() {
     const payload = {
       fullName: String(form.get("fullName") || ""),
       phoneCountryCode: String(form.get("phoneCountryCode") || "+351"),
-      phone: String(form.get("phone") || "") || null,
+      phone: String(form.get("phone") || ""),
       customerType: String(form.get("customerType") || "SURFER"),
+      preferredLanguage: String(form.get("preferredLanguage") || "en"),
+      addressLine1: String(form.get("addressLine1") || "") || null,
+      addressLine2: String(form.get("addressLine2") || "") || null,
+      postalCode: String(form.get("postalCode") || "") || null,
+      city: String(form.get("city") || "") || null,
+      country: String(form.get("country") || "PT"),
+      nif: String(form.get("nif") || "") || null,
       marketingOptIn: form.get("marketingOptIn") === "on",
       role: String(form.get("role") || "CUSTOMER") as "CUSTOMER" | "ADMIN",
     };
@@ -253,6 +295,14 @@ export function AdminCustomersClient() {
               <p className="font-display mt-2 text-3xl font-extrabold text-ink">{value}</p>
             </div>
           ))}
+          <div className="border-b border-line pb-3 sm:col-span-2 lg:col-span-4">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Top spender</p>
+            <p className="font-display mt-2 text-3xl font-extrabold text-ink">
+              {stats.topSpender
+                ? `${stats.topSpender.name} · ${formatEuro(stats.topSpender.spentCents)}`
+                : "—"}
+            </p>
+          </div>
         </div>
       )}
 
@@ -386,6 +436,8 @@ export function AdminCustomersClient() {
                   <span className="text-xs font-bold uppercase tracking-wide text-muted">Telefone</span>
                   <input
                     name="phone"
+                    required
+                    minLength={6}
                     defaultValue={selected.profile?.phone || ""}
                     className="rounded-2xl border border-line px-4 py-3"
                   />
@@ -415,6 +467,42 @@ export function AdminCustomersClient() {
                 </select>
               </label>
 
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted">Idioma</span>
+                <select name="preferredLanguage" defaultValue={selected.profile?.preferredLanguage || "en"} className="rounded-2xl border border-line px-4 py-3">
+                  <option value="en">English</option>
+                  <option value="pt">Português</option>
+                  <option value="zh">中文</option>
+                </select>
+              </label>
+
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted">Morada</span>
+                <input name="addressLine1" defaultValue={selected.profile?.addressLine1 || ""} className="rounded-2xl border border-line px-4 py-3" />
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted">Detalhe morada</span>
+                <input name="addressLine2" defaultValue={selected.profile?.addressLine2 || ""} className="rounded-2xl border border-line px-4 py-3" />
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="grid gap-1 text-sm">
+                  <span className="text-xs font-bold uppercase tracking-wide text-muted">Código postal</span>
+                  <input name="postalCode" defaultValue={selected.profile?.postalCode || ""} className="rounded-2xl border border-line px-4 py-3" />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-xs font-bold uppercase tracking-wide text-muted">Cidade</span>
+                  <input name="city" defaultValue={selected.profile?.city || ""} className="rounded-2xl border border-line px-4 py-3" />
+                </label>
+              </div>
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted">País</span>
+                <input name="country" maxLength={2} defaultValue={selected.profile?.country || "PT"} className="rounded-2xl border border-line px-4 py-3" />
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted">NIF</span>
+                <input name="nif" defaultValue={selected.profile?.nif || ""} className="rounded-2xl border border-line px-4 py-3" />
+              </label>
+
               <label className="flex items-center gap-2 text-sm text-muted">
                 <input name="marketingOptIn" type="checkbox" defaultChecked={Boolean(selected.profile?.marketingOptIn)} />
                 Marketing opt-in
@@ -430,6 +518,31 @@ export function AdminCustomersClient() {
                   {selected.profile?.odooPartnerId ? ` (#${selected.profile.odooPartnerId})` : ""}
                 </p>
                 <p>Encomendas: {selected.orderCount}</p>
+              </div>
+
+              <div className="grid gap-3 rounded-2xl border border-line p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Histórico de compras</p>
+                {customerOrders.length === 0 && <p className="text-sm text-muted">Sem encomendas.</p>}
+                {customerOrders.map((order) => (
+                  <div key={order.id} className="grid gap-2 border-b border-line pb-3 last:border-0 last:pb-0">
+                    <div className="flex flex-wrap justify-between gap-2 text-sm">
+                      <span className="font-semibold text-ink">{order.orderNumber}</span>
+                      <span className="text-muted">{formatEuro(order.totalCents)}</span>
+                    </div>
+                    <p className="text-xs uppercase tracking-wide text-muted">
+                      {formatDate(order.createdAt)} · {order.status} · {order.fulfillmentMethod}
+                    </p>
+                    <FaturaAttachment
+                      orderId={order.id}
+                      orderNumber={order.orderNumber}
+                      hasFaturaRecibo={Boolean(order.hasFaturaRecibo)}
+                      downloadHref={`/api/admin/orders/${order.id}/fatura-recibo`}
+                      label="Fatura-recibo"
+                      downloadLabel="Descarregar"
+                      unavailableLabel="ainda não disponível"
+                    />
+                  </div>
+                ))}
               </div>
 
               <button className="rounded-full bg-ink px-5 py-3 text-sm font-bold uppercase tracking-wide text-white">

@@ -96,6 +96,14 @@ type StorefrontCopy = {
     hello: string;
     signOut: string;
     shopNow: string;
+    myData: string;
+    editData: string;
+    emailLabel: string;
+    usernameLabel: string;
+    googlePhoneBanner: string;
+    faturaLabel: string;
+    faturaDownload: string;
+    faturaUnavailable: string;
     profileKicker: string;
     profileIntro: string;
     fullName: string;
@@ -302,7 +310,15 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       hello: "Olá",
       signOut: "Sair",
       shopNow: "Ir às compras",
-      profileKicker: "Perfil",
+      myData: "Os meus dados",
+      editData: "Editar dados",
+      emailLabel: "Email",
+      usernameLabel: "Username",
+      googlePhoneBanner: "Adiciona o teu telemóvel em Os meus dados para poderes comprar.",
+      faturaLabel: "Fatura-recibo",
+      faturaDownload: "Descarregar fatura-recibo",
+      faturaUnavailable: "ainda não disponível",
+      profileKicker: "Os meus dados",
       profileIntro: "Depois de confirmares o email, preenche aqui o perfil, moradas e NIF para checkouts mais rápidos.",
       fullName: "Nome completo",
       birthDate: "Data de nascimento",
@@ -509,7 +525,15 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       hello: "Hi",
       signOut: "Sign out",
       shopNow: "Go shopping",
-      profileKicker: "Profile",
+      myData: "My Data",
+      editData: "Edit data",
+      emailLabel: "Email",
+      usernameLabel: "Username",
+      googlePhoneBanner: "Add your phone in My Data before you can shop.",
+      faturaLabel: "Fatura-recibo",
+      faturaDownload: "Download fatura-recibo",
+      faturaUnavailable: "not available yet",
+      profileKicker: "My Data",
       profileIntro: "After you confirm your email, fill in your profile, addresses, and tax ID for faster checkouts.",
       fullName: "Full name",
       birthDate: "Birth date",
@@ -716,7 +740,15 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       hello: "你好",
       signOut: "退出",
       shopNow: "去购物",
-      profileKicker: "个人资料",
+      myData: "我的资料",
+      editData: "编辑资料",
+      emailLabel: "邮箱",
+      usernameLabel: "用户名",
+      googlePhoneBanner: "请先在“我的资料”中填写手机号，然后才能购物。",
+      faturaLabel: "发票收据",
+      faturaDownload: "下载发票收据",
+      faturaUnavailable: "尚未生成",
+      profileKicker: "我的资料",
       profileIntro: "确认邮箱后，请在此填写资料、地址和税号，以便更快结账。",
       fullName: "姓名",
       birthDate: "出生日期",

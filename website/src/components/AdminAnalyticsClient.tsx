@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AdminDailyChart } from "@/components/AdminDailyChart";
+import { formatEuro } from "@/lib/ecommerce/money";
+import type { DailyMetrics } from "@/lib/ecommerce/analyticsDaily";
 
 type Bucket = { key: string; count: number };
 type CouponRow = Bucket & {
@@ -15,10 +18,12 @@ type Summary = {
   days: number;
   totalViews: number;
   uniqueCountries: number;
+  allTimeSalesCents: number;
+  allTimeOrderCount: number;
   byCountry: Bucket[];
   byCity: Bucket[];
   byPath: Bucket[];
-  byDay: Bucket[];
+  byDay: DailyMetrics[];
   byLocationSource?: Bucket[];
   coupons?: CouponRow[];
   recent: Array<{
@@ -58,7 +63,7 @@ function BarList({ title, rows }: { title: string; rows: Bucket[] }) {
 }
 
 export function AdminAnalyticsClient() {
-  const [days, setDays] = useState(30);
+  const [days, setDays] = useState(90);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
@@ -109,22 +114,34 @@ export function AdminAnalyticsClient() {
   return (
     <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="border-b border-line pb-3 pr-8">
+        <div className="grid w-full flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="border-b border-line pb-3 pr-6">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Pageviews</p>
             <p className="font-display mt-2 text-3xl font-extrabold text-ink">
               {loading ? "…" : summary?.totalViews ?? 0}
             </p>
           </div>
-          <div className="border-b border-line pb-3 pr-8">
+          <div className="border-b border-line pb-3 pr-6">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Países</p>
             <p className="font-display mt-2 text-3xl font-extrabold text-ink">
               {loading ? "…" : summary?.uniqueCountries ?? 0}
             </p>
           </div>
-          <div className="border-b border-line pb-3">
+          <div className="border-b border-line pb-3 pr-6">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Janela</p>
             <p className="font-display mt-2 text-3xl font-extrabold text-ink">{days}d</p>
+          </div>
+          <div className="border-b border-line pb-3 pr-6">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Vendas totais</p>
+            <p className="font-display mt-2 text-3xl font-extrabold text-ink">
+              {loading ? "…" : formatEuro(summary?.allTimeSalesCents || 0)}
+            </p>
+          </div>
+          <div className="border-b border-line pb-3">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Encomendas</p>
+            <p className="font-display mt-2 text-3xl font-extrabold text-ink">
+              {loading ? "…" : summary?.allTimeOrderCount ?? 0}
+            </p>
           </div>
         </div>
         <select
@@ -142,16 +159,20 @@ export function AdminAnalyticsClient() {
 
       <p className="max-w-3xl text-sm leading-relaxed text-muted">
         Dados first-party (país/cidade via Vercel, GPS só com consentimento de analytics).
-        Cupões contam apenas compras pagas.
+        Cupões e a janela 7/30/90 aplicam-se às tabelas. Vendas totais e o gráfico são desde 1 Jul 2026 / day 0.
       </p>
+
+      <AdminDailyChart byDay={summary?.byDay || []} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <BarList title="Cupões usados em compras" rows={summary?.coupons || []} />
         <BarList title="Localização (GPS vs IP)" rows={summary?.byLocationSource || []} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
         <BarList title="Por país" rows={summary?.byCountry || []} />
         <BarList title="Por cidade" rows={summary?.byCity || []} />
         <BarList title="Páginas mais vistas" rows={summary?.byPath || []} />
-        <BarList title="Por dia" rows={summary?.byDay || []} />
       </div>
 
       {(summary?.coupons?.length || 0) > 0 && (

@@ -2,6 +2,13 @@ import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
 import { aggregateCouponUsages } from "@/lib/ecommerce/couponAnalytics";
+import {
+  ANALYTICS_CHART_START,
+  fillDailyRange,
+  todayLisbonDateKey,
+  type DailyMetrics,
+} from "@/lib/ecommerce/analyticsDaily";
+import { PAID_PLUS_STATUSES } from "@/lib/ecommerce/orderKpis";
 
 export async function recordPageView(input: {
   path: string;
@@ -67,37 +74,66 @@ export async function getCouponUsageSummary(days = 30) {
   );
 }
 
-export async function getAnalyticsSummary(days = 30) {
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const views = await prisma.pageView.findMany({
-    where: { createdAt: { gte: since } },
-    select: {
-      path: true,
-      country: true,
-      city: true,
-      referrer: true,
-      createdAt: true,
-      locationSource: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 5000,
-  });
-  const coupons = await getCouponUsageSummary(days);
+async function countByLisbonDay(table: "PageView" | "User", since: Date) {
+  return prisma.$queryRawUnsafe<Array<{ day: string; count: number }>>(
+    `SELECT to_char(timezone('Europe/Lisbon', "createdAt"), 'YYYY-MM-DD') AS day, COUNT(*)::int AS count
+     FROM "${table}"
+     WHERE "createdAt" >= $1
+     GROUP BY 1`,
+    since
+  );
+}
+
+export async function getAnalyticsSummary(days = 90) {
+  const windowDays = [7, 30, 90].includes(days) ? days : 90;
+  const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+  const chartSince = new Date(`${ANALYTICS_CHART_START}T00:00:00+01:00`);
+
+  const [views, coupons, allTimeSales, viewDays, userDays, saleDays] = await Promise.all([
+    prisma.pageView.findMany({
+      where: { createdAt: { gte: since } },
+      select: {
+        path: true,
+        country: true,
+        city: true,
+        referrer: true,
+        createdAt: true,
+        locationSource: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5000,
+    }),
+    getCouponUsageSummary(windowDays),
+    prisma.order.aggregate({
+      where: { status: { in: [...PAID_PLUS_STATUSES] } },
+      _sum: { totalCents: true },
+      _count: true,
+    }),
+    countByLisbonDay("PageView", chartSince),
+    countByLisbonDay("User", chartSince),
+    prisma.$queryRawUnsafe<Array<{ day: string; sales_count: number; sales_cents: number }>>(
+      `SELECT to_char(timezone('Europe/Lisbon', COALESCE("paidAt", "createdAt")), 'YYYY-MM-DD') AS day,
+              COUNT(*)::int AS sales_count,
+              COALESCE(SUM("totalCents"), 0)::int AS sales_cents
+       FROM "Order"
+       WHERE status IN ('PAID','PREPARING','READY_FOR_PICKUP','SHIPPED','DELIVERED')
+         AND COALESCE("paidAt", "createdAt") >= $1
+       GROUP BY 1`,
+      chartSince
+    ),
+  ]);
 
   const byCountry = new Map<string, number>();
   const byPath = new Map<string, number>();
-  const byDay = new Map<string, number>();
   const byCity = new Map<string, number>();
   const byLocationSource = new Map<string, number>();
 
   for (const view of views) {
     const country = view.country || "Unknown";
     const path = view.path || "/";
-    const day = view.createdAt.toISOString().slice(0, 10);
     const city = view.city && view.country ? `${view.city}, ${view.country}` : view.city || country;
     byCountry.set(country, (byCountry.get(country) || 0) + 1);
     byPath.set(path, (byPath.get(path) || 0) + 1);
-    byDay.set(day, (byDay.get(day) || 0) + 1);
     byCity.set(city, (byCity.get(city) || 0) + 1);
     const source = view.locationSource || "ip";
     byLocationSource.set(source, (byLocationSource.get(source) || 0) + 1);
@@ -108,14 +144,38 @@ export async function getAnalyticsSummary(days = 30) {
       .map(([key, count]) => ({ key, count }))
       .sort((a, b) => b.count - a.count);
 
+  const dailyMap = new Map<string, DailyMetrics>();
+  for (const row of viewDays) {
+    dailyMap.set(row.day, {
+      key: row.day,
+      views: Number(row.count) || 0,
+      newClients: 0,
+      salesCount: 0,
+      salesCents: 0,
+    });
+  }
+  for (const row of userDays) {
+    const current = dailyMap.get(row.day) || { key: row.day, views: 0, newClients: 0, salesCount: 0, salesCents: 0 };
+    current.newClients = Number(row.count) || 0;
+    dailyMap.set(row.day, current);
+  }
+  for (const row of saleDays) {
+    const current = dailyMap.get(row.day) || { key: row.day, views: 0, newClients: 0, salesCount: 0, salesCents: 0 };
+    current.salesCount = Number(row.sales_count) || 0;
+    current.salesCents = Number(row.sales_cents) || 0;
+    dailyMap.set(row.day, current);
+  }
+
   return {
-    days,
+    days: windowDays,
     totalViews: views.length,
     uniqueCountries: byCountry.size,
+    allTimeSalesCents: allTimeSales._sum.totalCents || 0,
+    allTimeOrderCount: allTimeSales._count || 0,
     byCountry: sortCount(byCountry).slice(0, 20),
     byCity: sortCount(byCity).slice(0, 20),
     byPath: sortCount(byPath).slice(0, 20),
-    byDay: sortCount(byDay).sort((a, b) => a.key.localeCompare(b.key)),
+    byDay: fillDailyRange(ANALYTICS_CHART_START, todayLisbonDateKey(), [...dailyMap.values()]),
     byLocationSource: sortCount(byLocationSource),
     coupons: coupons.map((coupon) => ({
       key: `${coupon.code} (−${coupon.percentOff}%)`,

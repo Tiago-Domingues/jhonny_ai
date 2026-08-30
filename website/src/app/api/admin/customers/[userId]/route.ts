@@ -9,7 +9,7 @@ const patchSchema = z.object({
   marketingOptIn: z.boolean().optional(),
   fullName: z.string().min(2).max(120).optional(),
   phoneCountryCode: z.string().min(2).max(8).optional(),
-  phone: z.string().max(40).nullable().optional(),
+  phone: z.string().min(6).max(40),
   customerType: z
     .enum([
       "PROFESSIONAL",
@@ -24,6 +24,19 @@ const patchSchema = z.object({
       "LONGBOARDER",
     ])
     .optional(),
+  preferredLanguage: z.enum(["pt", "en", "zh"]).optional(),
+  addressLine1: z.string().max(160).nullable().optional(),
+  addressLine2: z.string().max(160).nullable().optional(),
+  postalCode: z.string().max(20).nullable().optional(),
+  city: z.string().max(80).nullable().optional(),
+  country: z.string().length(2).optional(),
+  billingSameAsShipping: z.boolean().optional(),
+  billingAddressLine1: z.string().max(160).nullable().optional(),
+  billingAddressLine2: z.string().max(160).nullable().optional(),
+  billingPostalCode: z.string().max(20).nullable().optional(),
+  billingCity: z.string().max(80).nullable().optional(),
+  billingCountry: z.string().max(2).nullable().optional(),
+  nif: z.string().max(20).nullable().optional(),
   role: z.enum(["CUSTOMER", "ADMIN"]).optional(),
 });
 

@@ -13,6 +13,7 @@ import {
 } from "@/lib/ecommerce/cart";
 import { randomToken } from "@/lib/ecommerce/security";
 import { readSessionUser } from "@/lib/ecommerce/session";
+import { assertGoogleUserCanShop } from "@/lib/ecommerce/googleShopGate";
 
 async function identity(createToken = false) {
   const session = hasDatabaseUrl() ? await readSessionUser() : null;
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
   try {
     const payload = cartAddSchema.parse(await readJson(request));
     const { session, guestToken, createdToken } = await identity(true);
+    await assertGoogleUserCanShop(session?.id);
     const cart = await addCartItem(
       { userId: session?.id, guestToken },
       payload.productId,

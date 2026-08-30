@@ -12,6 +12,8 @@ type SessionUser = {
   username: string;
   fullName?: string;
   emailVerifiedAt?: string | null;
+  hasGoogle?: boolean;
+  hasPassword?: boolean;
 } | null;
 
 const customerTypes = [
@@ -79,6 +81,7 @@ export function AccountClient() {
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<string | null>(null);
   const [googleConsentOpen, setGoogleConsentOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     const load = () => {
@@ -174,6 +177,7 @@ export function AccountClient() {
       }
       setProfile(data.profile);
       setUser(user ? { ...user, fullName: data.profile.fullName } : user);
+      setEditing(false);
       setSaveStatus("success");
       setMessageTone("success");
       setMessage(copy.saved);
@@ -230,6 +234,12 @@ export function AccountClient() {
           )}
           <div className="mt-6 grid gap-3">
             <a
+              href="#dados"
+              className="rounded-2xl border border-line px-5 py-4 text-center text-sm font-bold uppercase tracking-wide transition hover:bg-cream active:scale-[0.98]"
+            >
+              {copy.myData}
+            </a>
+            <a
               href="#encomendas"
               className="rounded-2xl border border-line px-5 py-4 text-center text-sm font-bold uppercase tracking-wide transition hover:bg-cream active:scale-[0.98]"
             >
@@ -250,15 +260,31 @@ export function AccountClient() {
           </div>
         </aside>
 
+        <section id="dados" className="min-w-0">
         <form
           key={String(profile?.id || (profileLoading ? "loading" : "empty"))}
           onSubmit={saveProfile}
-          className="min-w-0 rounded-3xl border border-line bg-white p-6 shadow-sm"
+          className="rounded-3xl border border-line bg-white p-6 shadow-sm"
         >
-          <div className="mb-6">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.profileKicker}</p>
-            <p className="mt-2 text-sm text-muted">{copy.profileIntro}</p>
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">{copy.profileKicker}</p>
+              <p className="mt-2 text-sm text-muted">{copy.profileIntro}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              disabled={editing}
+              className="rounded-full border border-line px-4 py-2 text-xs font-bold uppercase tracking-wide transition hover:bg-cream disabled:opacity-50"
+            >
+              {copy.editData}
+            </button>
           </div>
+          {user.hasGoogle && !String(profile?.phone || "").trim() && (
+            <p className="mb-5 rounded-2xl bg-cream px-4 py-3 text-sm font-semibold text-ink">
+              {copy.googlePhoneBanner}
+            </p>
+          )}
 
           {profileLoading ? (
             <div className="grid gap-4 md:grid-cols-2" aria-busy="true">
@@ -267,18 +293,25 @@ export function AccountClient() {
               ))}
             </div>
           ) : (
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className={`grid gap-5 md:grid-cols-2 ${editing ? "" : "pointer-events-none"}`}>
+              <Field label={copy.emailLabel}>
+                <input value={user.email} readOnly disabled className={`${fieldClass} bg-cream`} />
+              </Field>
+              <Field label={copy.usernameLabel}>
+                <input value={user.username} readOnly disabled className={`${fieldClass} bg-cream`} />
+              </Field>
               <Field label={copy.fullName} htmlFor="fullName">
                 <input
                   id="fullName"
                   name="fullName"
                   required
+                  readOnly={!editing}
                   defaultValue={String(profile?.fullName || user.fullName || "")}
                   placeholder={copy.fullName}
-                  className={fieldClass}
+                  className={`${fieldClass} ${editing ? "" : "bg-cream"}`}
                 />
               </Field>
-              <Field label={copy.birthDate} className="md:col-span-2">
+              <Field label={copy.birthDate} className={`md:col-span-2 ${editing ? "" : "pointer-events-none"}`}>
                 <BirthDateFields
                   defaultValue={profile?.birthDate ? String(profile.birthDate).slice(0, 10) : ""}
                   locale={locale === "zh" ? "zh" : locale === "en" ? "en" : "pt"}
@@ -493,7 +526,7 @@ export function AccountClient() {
                 <span>{copy.marketing}</span>
               </label>
 
-              <div className="grid gap-3 md:col-span-2">
+              <div className="grid gap-3 pointer-events-auto md:col-span-2">
                 <button
                   type="submit"
                   disabled={saving}
@@ -518,6 +551,7 @@ export function AccountClient() {
             </div>
           )}
         </form>
+        </section>
 
         <AccountOrders locale={locale} />
       </div>

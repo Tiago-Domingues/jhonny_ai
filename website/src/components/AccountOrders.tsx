@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CurrencyPrice } from "@/components/CurrencyDisplay";
+import { FaturaAttachment } from "@/components/FaturaAttachment";
 import type { Locale } from "@/lib/i18n";
 import { storefrontText } from "@/lib/storefrontCopy";
 
@@ -25,6 +26,7 @@ type AccountOrder = {
     multibancoEntity: string | null;
     multibancoReference: string | null;
   } | null;
+  hasFaturaRecibo?: boolean;
 };
 
 function statusLabel(status: string, locale: Locale) {
@@ -104,6 +106,15 @@ export function AccountOrders({ locale }: { locale: Locale }) {
               <p className="font-semibold">
                 Total <CurrencyPrice cents={order.totalCents} />
               </p>
+              <FaturaAttachment
+                orderId={order.id}
+                orderNumber={order.orderNumber}
+                hasFaturaRecibo={Boolean(order.hasFaturaRecibo)}
+                downloadHref={`/api/account/orders/${order.id}/fatura-recibo`}
+                label={copy.faturaLabel}
+                downloadLabel={copy.faturaDownload}
+                unavailableLabel={copy.faturaUnavailable}
+              />
               {order.status === "PENDING_PAYMENT" && order.payment && (
                 <div className="rounded-2xl bg-cream px-4 py-3 text-sm">
                   <p className="font-semibold">{copy.orderPendingPay}</p>

@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, unavailableError } from "@/lib/ecommerce/api";
 import { requireAdminSession } from "@/lib/ecommerce/admin";
-import { getAnalyticsSummary } from "@/lib/ecommerce/analytics";
+import { listOrdersForCustomerAdmin } from "@/lib/ecommerce/orders";
 
-export async function GET(request: Request) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ userId: string }> }
+) {
   if (!hasDatabaseUrl()) return unavailableError();
   const session = await requireAdminSession();
   if (!session) {
@@ -12,9 +15,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    const days = Number(new URL(request.url).searchParams.get("days") || 90);
-    const summary = await getAnalyticsSummary(Number.isFinite(days) ? days : 90);
-    return NextResponse.json(summary);
+    const { userId } = await context.params;
+    const orders = await listOrdersForCustomerAdmin(userId);
+    if (!orders) {
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+    return NextResponse.json({ orders });
   } catch (error) {
     return apiError(error);
   }
