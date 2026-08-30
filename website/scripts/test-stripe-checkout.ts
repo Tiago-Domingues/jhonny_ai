@@ -1,5 +1,7 @@
 import {
+  buildVerifyEmailUrl,
   isAllowedCheckoutOrigin,
+  originFromRequest,
   resolveCheckoutOrigin,
   stripeLineItems,
   stripeLineItemsTotalCents,
@@ -44,5 +46,26 @@ assert(stripePaymentMethodTypes("APPLE_PAY")?.join() === "card", "Apple Pay uses
 assert(stripePaymentMethodTypes("CARD")?.join() === "card", "card checkout uses Stripe");
 assert(stripePaymentMethodTypes("PAYPAL")?.join() === "paypal", "PayPal uses Stripe Checkout");
 assert(stripePaymentMethodTypes("PIX")?.join() === "pix", "Pix uses Stripe Checkout");
+
+assert(
+  buildVerifyEmailUrl("tok_abc", "https://www.jhonnysurfstore.pt") ===
+    "https://www.jhonnysurfstore.pt/conta/verificar-email?token=tok_abc",
+  "verify URL uses the request origin"
+);
+assert(
+  buildVerifyEmailUrl("tok+plus", "https://www.jhonnysurfstore.com").includes("tok%2Bplus"),
+  "verify URL encodes the token"
+);
+assert(
+  !buildVerifyEmailUrl("tok_abc", "https://evil.example").includes("evil.example"),
+  "unknown origin must not be written into the verify email"
+);
+assert(
+  originFromRequest({
+    headers: new Headers({ origin: "https://www.jhonnysurfstore.pt" }),
+    url: "https://www.jhonnysurfstore.com/api/auth/register",
+  }) === "https://www.jhonnysurfstore.pt",
+  "register origin prefers the browser Origin header"
+);
 
 console.log("stripe checkout helpers ok");

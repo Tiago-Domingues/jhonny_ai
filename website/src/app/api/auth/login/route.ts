@@ -5,6 +5,7 @@ import { mergeGuestCartIntoUser, CART_COOKIE } from "@/lib/ecommerce/cart";
 import { remindPendingRegistration, requestEmailVerification } from "@/lib/ecommerce/emailVerification";
 import { createSessionToken, setSessionCookie } from "@/lib/ecommerce/session";
 import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
+import { originFromRequest } from "@/lib/ecommerce/stripeCheckout";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
     try {
       const user = await loginCustomer(payload);
       if (!user.emailVerifiedAt) {
-        await requestEmailVerification(user.id).catch(() => null);
+        await requestEmailVerification(user.id, originFromRequest(request)).catch(() => null);
         return NextResponse.json({ error: "email_unverified", message: UNVERIFIED_MESSAGE }, { status: 403 });
       }
 
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
       return response;
     } catch (error) {
       const identifier = typeof payload?.emailOrUsername === "string" ? payload.emailOrUsername : "";
-      if (identifier.includes("@") && (await remindPendingRegistration(identifier))) {
+      if (identifier.includes("@") && (await remindPendingRegistration(identifier, originFromRequest(request)))) {
         return NextResponse.json({ error: "email_unverified", message: UNVERIFIED_MESSAGE }, { status: 403 });
       }
       return apiError(error, 401);

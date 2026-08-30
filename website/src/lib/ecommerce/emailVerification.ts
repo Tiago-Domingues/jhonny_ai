@@ -6,7 +6,7 @@ import { isAdminEmail } from "@/lib/ecommerce/admin";
 import { pendingRegisterSchema } from "@/lib/ecommerce/schemas";
 import { hashPassword, hashToken, normalizeEmail, randomToken } from "@/lib/ecommerce/security";
 import { sendEmailVerificationEmail } from "@/lib/ecommerce/email";
-import { publicSiteOrigin } from "@/lib/ecommerce/stripeCheckout";
+import { buildVerifyEmailUrl } from "@/lib/ecommerce/stripeCheckout";
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -14,11 +14,20 @@ export function isVerifyTokenFormat(token: string) {
   return typeof token === "string" && token.length >= 20 && token.length <= 200;
 }
 
-function verifyUrl(token: string) {
-  return `${publicSiteOrigin()}/conta/verificar-email?token=${encodeURIComponent(token)}`;
+async function deliverVerificationEmail(input: {
+  userId?: string | null;
+  email: string;
+  fullName?: string | null;
+  verifyUrl: string;
+}) {
+  const event = await sendEmailVerificationEmail(input);
+  if (event.status === "FAILED") {
+    throw new Error("We could not send the confirmation email. Please try again.");
+  }
+  return event;
 }
 
-export async function startPendingRegistration(input: unknown) {
+export async function startPendingRegistration(input: unknown, origin?: string | null) {
   const data = pendingRegisterSchema.parse(input);
   const email = normalizeEmail(data.email);
   const username = data.username.trim();
@@ -60,16 +69,16 @@ export async function startPendingRegistration(input: unknown) {
     },
   });
 
-  await sendEmailVerificationEmail({
+  await deliverVerificationEmail({
     email,
     fullName: username,
-    verifyUrl: verifyUrl(token),
-  }).catch(() => null);
+    verifyUrl: buildVerifyEmailUrl(token, origin),
+  });
 
   return { pending: true as const };
 }
 
-export async function remindPendingRegistration(email: string) {
+export async function remindPendingRegistration(email: string, origin?: string | null) {
   const pending = await prisma.pendingRegistration.findUnique({
     where: { email: normalizeEmail(email) },
   });
@@ -82,15 +91,15 @@ export async function remindPendingRegistration(email: string) {
       expiresAt: new Date(Date.now() + VERIFY_TTL_MS),
     },
   });
-  await sendEmailVerificationEmail({
+  await deliverVerificationEmail({
     email: pending.email,
     fullName: pending.username,
-    verifyUrl: verifyUrl(token),
-  }).catch(() => null);
+    verifyUrl: buildVerifyEmailUrl(token, origin),
+  });
   return true;
 }
 
-export async function requestEmailVerification(userId: string) {
+export async function requestEmailVerification(userId: string, origin?: string | null) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { profile: true },
@@ -106,12 +115,12 @@ export async function requestEmailVerification(userId: string) {
       expiresAt: new Date(Date.now() + VERIFY_TTL_MS),
     },
   });
-  await sendEmailVerificationEmail({
+  await deliverVerificationEmail({
     userId: user.id,
     email: user.email,
     fullName: user.profile?.fullName,
-    verifyUrl: verifyUrl(token),
-  }).catch(() => null);
+    verifyUrl: buildVerifyEmailUrl(token, origin),
+  });
   return { accepted: true };
 }
 
@@ -121,7 +130,13 @@ export async function verifyEmailWithToken(token: string) {
     where: { tokenHash },
     include: { user: { include: { profile: true } } },
   });
-  if (!row || row.usedAt || row.expiresAt.getTime() < Date.now()) {
+  if (!row) {
+    throw new Error("This verification link is invalid or has expired.");
+  }
+  if (row.usedAt) {
+    return { user: row.user, created: false };
+  }
+  if (row.expiresAt.getTime() < Date.now()) {
     throw new Error("This verification link is invalid or has expired.");
   }
   const [user] = await prisma.$transaction([
@@ -165,12 +180,27 @@ export async function completeRegistrationWithToken(token: string) {
           },
           include: { profile: true },
         });
+        await tx.emailVerificationToken.create({
+          data: {
+            userId: created.id,
+            tokenHash,
+            expiresAt: pending.expiresAt,
+            usedAt: new Date(),
+          },
+        });
         await tx.pendingRegistration.delete({ where: { id: pending.id } });
         return created;
       });
       return { user, created: true as const };
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        const existing = await prisma.user.findUnique({
+          where: { email: pending.email },
+          include: { profile: true },
+        });
+        if (existing?.emailVerifiedAt) {
+          return { user: existing, created: false as const };
+        }
         throw new Error("Email or username is already registered.");
       }
       throw error;

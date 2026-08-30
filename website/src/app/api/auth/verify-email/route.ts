@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
-import { sendWelcomeEmail } from "@/lib/ecommerce/email";
-import { sendWelcomeSms } from "@/lib/ecommerce/sms";
+import { originFromRequest } from "@/lib/ecommerce/stripeCheckout";
 import {
   completeRegistrationWithToken,
   isVerifyTokenFormat,
@@ -26,14 +25,14 @@ export async function POST(request: Request) {
     if (payload.resend) {
       const session = await readSessionUser();
       if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-      await requestEmailVerification(session.id);
+      await requestEmailVerification(session.id, originFromRequest(request));
       return NextResponse.json({ ok: true });
     }
     const token = payload.token || "";
     if (!isVerifyTokenFormat(token)) {
       return NextResponse.json({ error: "invalid_token" }, { status: 400 });
     }
-    const { user, created } = await completeRegistrationWithToken(token);
+    const { user } = await completeRegistrationWithToken(token);
     const sessionToken = await createSessionToken(user.id);
     const response = NextResponse.json({
       ok: true,
@@ -47,29 +46,6 @@ export async function POST(request: Request) {
       },
     });
     setSessionCookie(response, sessionToken);
-
-    if (created) {
-      try {
-        await sendWelcomeEmail({
-          userId: user.id,
-          email: user.email,
-          fullName: user.profile?.fullName,
-        });
-      } catch {
-        // EmailEvent SKIPPED when SMTP is blank
-      }
-      try {
-        await sendWelcomeSms({
-          userId: user.id,
-          fullName: user.profile?.fullName,
-          phoneCountryCode: user.profile?.phoneCountryCode,
-          phone: user.profile?.phone,
-        });
-      } catch {
-        // logged via SmsEvent when possible
-      }
-    }
-
     return response;
   } catch (error) {
     return apiError(error);
