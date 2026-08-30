@@ -2,7 +2,9 @@ import "server-only";
 
 import type { CustomerType } from "@prisma/client";
 import { Prisma } from "@prisma/client";
+import { adminEmailAllowlist, canAdminRemoveCustomer, PRIMARY_ADMIN_EMAIL } from "@/lib/ecommerce/admin";
 import { prisma } from "@/lib/ecommerce/db";
+import { normalizeEmail } from "@/lib/ecommerce/security";
 
 export type AdminCustomerListInput = {
   q?: string;
@@ -126,6 +128,100 @@ export async function getCustomerForAdmin(userId: string) {
   return user ? mapCustomer(user) : null;
 }
 
+async function deleteCustomerRelatedData(tx: Prisma.TransactionClient, user: { id: string; email: string }) {
+  await tx.cart.deleteMany({ where: { userId: user.id } });
+  await tx.consentEvent.deleteMany({ where: { userId: user.id } });
+  await tx.emailEvent.deleteMany({ where: { userId: user.id } });
+  await tx.smsEvent.deleteMany({ where: { userId: user.id } });
+  await tx.couponUsage.updateMany({ where: { userId: user.id }, data: { userId: null } });
+  await tx.pendingRegistration.deleteMany({ where: { email: user.email } });
+  await tx.availabilityRequest.deleteMany({ where: { email: user.email } });
+  await tx.user.delete({ where: { id: user.id } });
+}
+
+export async function deleteCustomerForAdmin(
+  userId: string,
+  actor: { id: string; email: string }
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true },
+  });
+  if (!user) return null;
+
+  const allowed = canAdminRemoveCustomer({
+    actorId: actor.id,
+    targetId: user.id,
+    targetEmail: user.email,
+    protectedEmails: adminEmailAllowlist(),
+  });
+  if (!allowed.ok) {
+    throw new Error(allowed.message);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await deleteCustomerRelatedData(tx, user);
+  });
+  return { ok: true as const, email: user.email };
+}
+
+export async function purgeCustomersKeeping(keepEmail = PRIMARY_ADMIN_EMAIL) {
+  const keep = normalizeEmail(keepEmail);
+  const users = await prisma.user.findMany({
+    select: { id: true, email: true },
+  });
+
+  let removed = 0;
+  const kept: string[] = [];
+
+  for (const user of users) {
+    if (normalizeEmail(user.email) === keep) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: "ADMIN", emailVerifiedAt: new Date() },
+      });
+      kept.push(user.email);
+      continue;
+    }
+    await prisma.$transaction(async (tx) => {
+      await deleteCustomerRelatedData(tx, user);
+    });
+    removed += 1;
+  }
+
+  const [pending, guests, availability, orphanEmails, orphanSms] = await Promise.all([
+    prisma.pendingRegistration.deleteMany({
+      where: { NOT: { email: { equals: keep, mode: "insensitive" } } },
+    }),
+    prisma.guestCheckout.deleteMany({
+      where: { NOT: { email: { equals: keep, mode: "insensitive" } } },
+    }),
+    prisma.availabilityRequest.deleteMany({
+      where: { NOT: { email: { equals: keep, mode: "insensitive" } } },
+    }),
+    prisma.emailEvent.deleteMany({
+      where: {
+        userId: null,
+        NOT: { recipientEmail: { equals: keep, mode: "insensitive" } },
+      },
+    }),
+    prisma.smsEvent.deleteMany({
+      where: { userId: null },
+    }),
+  ]);
+
+  return {
+    keptEmail: keep,
+    keptAccounts: kept.length,
+    removedAccounts: removed,
+    removedPending: pending.count,
+    removedGuestCheckouts: guests.count,
+    removedAvailabilityRequests: availability.count,
+    removedOrphanEmailEvents: orphanEmails.count,
+    removedOrphanSmsEvents: orphanSms.count,
+  };
+}
+
 export async function updateCustomerForAdmin(
   userId: string,
   input: {
@@ -138,6 +234,13 @@ export async function updateCustomerForAdmin(
   }
 ) {
   if (input.role) {
+    const existing = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    if (existing && input.role !== "ADMIN" && adminEmailAllowlist().has(normalizeEmail(existing.email))) {
+      throw new Error("This admin account is protected.");
+    }
     await prisma.user.update({
       where: { id: userId },
       data: { role: input.role },
