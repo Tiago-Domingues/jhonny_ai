@@ -244,6 +244,7 @@ type Dict = {
     loopLabel: string;
     videoLabel: string;
     storeLabel: string;
+    storeChats: { jhonny: string; client: string }[];
   };
   surf: {
     label: string;
@@ -467,6 +468,11 @@ export const translations: Record<Locale, Dict> = {
       loopLabel: "Ecrã inicial",
       videoLabel: "Filme de surf",
       storeLabel: "A loja",
+      storeChats: [
+        { jhonny: "Esta serve-te.", client: "Levo esta." },
+        { jhonny: "Precisas de wax?", client: "Sim, o tropical." },
+        { jhonny: "Queres experimentar?", client: "Vou à água." },
+      ],
     },
     surf: {
       label: "Condições ao vivo",
@@ -716,6 +722,11 @@ export const translations: Record<Locale, Dict> = {
       loopLabel: "Home screen",
       videoLabel: "Surf film",
       storeLabel: "The store",
+      storeChats: [
+        { jhonny: "This one's yours.", client: "I'll take it." },
+        { jhonny: "Need wax?", client: "Yes — the tropical." },
+        { jhonny: "Want to try it?", client: "Going in." },
+      ],
     },
     surf: {
       label: "Live conditions",
@@ -975,6 +986,11 @@ export const translations: Record<Locale, Dict> = {
       loopLabel: "首页画面",
       videoLabel: "冲浪影片",
       storeLabel: "店内",
+      storeChats: [
+        { jhonny: "这支适合你。", client: "我要这支。" },
+        { jhonny: "要蜡吗？", client: "要，热带那款。" },
+        { jhonny: "要试试吗？", client: "下水。" },
+      ],
     },
     surf: {
       label: "实时浪况",
