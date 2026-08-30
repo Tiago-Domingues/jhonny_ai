@@ -320,6 +320,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       checkout: "Checkout",
       subtotal: "Subtotal",
       signOut: "Sair",
+      admin: "Admin",
       menu: "Menu",
       changeLanguage: "Mudar idioma",
       openSubcategories: "Abrir subcategorias",
@@ -341,6 +342,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       checkout: "Checkout",
       subtotal: "Subtotal",
       signOut: "Sign out",
+      admin: "Admin",
       menu: "Menu",
       changeLanguage: "Change language",
       openSubcategories: "Open subcategories",
@@ -362,6 +364,7 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
       checkout: "结算",
       subtotal: "小计",
       signOut: "退出",
+      admin: "Admin",
       menu: "菜单",
       changeLanguage: "切换语言",
       openSubcategories: "打开子分类",
@@ -555,26 +558,12 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                   {t.account.orders}
                 </a>
                 {user?.role === "ADMIN" && (
-                  <>
-                    <a
-                      href="/admin?tab=clientes"
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                    >
-                      Admin · Clientes
-                    </a>
-                    <a
-                      href="/admin?tab=encomendas"
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                    >
-                      Admin · Encomendas
-                    </a>
-                    <a
-                      href="/admin?tab=analytics"
-                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
-                    >
-                      Admin · Analytics
-                    </a>
-                  </>
+                  <a
+                    href="/admin"
+                    className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
+                  >
+                    {headerCopy.admin}
+                  </a>
                 )}
                 {user && (
                   <button
