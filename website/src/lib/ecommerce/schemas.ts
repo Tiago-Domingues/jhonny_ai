@@ -139,7 +139,7 @@ export const checkoutSchema = z
     billingPostalCode: z.string().max(20).optional().or(z.literal("")),
     billingCity: z.string().max(80).optional().or(z.literal("")),
     billingCountry: countryCode.default("PT"),
-    couponCode: z.string().max(40).optional().or(z.literal("")),
+    couponCode: z.string().max(80).optional().or(z.literal("")),
     returnOrigin: z.string().url().max(200).optional().or(z.literal("")),
     nif: z.string().max(20).optional().or(z.literal("")),
   })
@@ -160,7 +160,7 @@ export const checkoutSchema = z
   });
 
 export const couponValidationSchema = z.object({
-  code: z.string().min(2).max(40),
+  code: z.string().min(2).max(80),
 });
 
 export const consentSchema = z.object({

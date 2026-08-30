@@ -6,6 +6,7 @@ import {
   drawPrize,
   generateWheelCode,
   periodExpiresAt,
+  persistWheelCode,
   segmentForPercent,
 } from "@/lib/ecommerce/prizeWheel";
 
@@ -17,7 +18,6 @@ export type WheelStatus = {
 };
 
 const UNIQUE_VIOLATION = "P2002";
-const CODE_ATTEMPTS = 5;
 
 function isUniqueViolation(error: unknown) {
   return (
@@ -72,57 +72,62 @@ export async function spinWheel(userId: string): Promise<WheelStatus> {
     return { periodKey, eligible: false, prize: toPrize(existing, periodKey) };
   }
 
-  const { percent, segmentIndex } = drawPrize();
-  const expiresAt = periodExpiresAt(periodKey);
-
-  for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt += 1) {
-    const code = generateWheelCode(percent);
-
-    try {
-      const spin = await prisma.$transaction(async (tx) => {
-        const coupon = await tx.coupon.create({
-          data: {
-            code,
-            label: `Prize wheel ${percent}% (${periodKey})`,
-            percentOff: percent,
-            active: true,
-            maxUses: 1,
-            maxUsesPerCustomer: 1,
-            expiresAt,
-          },
-        });
-
-        return tx.wheelSpin.create({
-          data: {
-            userId,
-            periodKey,
-            prizePercent: percent,
-            couponId: coupon.id,
-            code: coupon.code,
-          },
-          select: { prizePercent: true, code: true },
-        });
-      });
-
-      return {
-        periodKey,
-        eligible: false,
-        prize: { ...toPrize(spin, periodKey), segmentIndex },
-      };
-    } catch (error) {
-      if (!isUniqueViolation(error)) throw error;
-
-      // Either the month was claimed by a concurrent request, or the generated
-      // code collided. Only the former leaves a row behind.
-      const claimed = await prisma.wheelSpin.findUnique({
-        where: { userId_periodKey: { userId, periodKey } },
-        select: { prizePercent: true, code: true },
-      });
-      if (claimed) {
-        return { periodKey, eligible: false, prize: toPrize(claimed, periodKey) };
-      }
-    }
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { username: true },
+  });
+  if (!user?.username) {
+    throw new Error("Account is missing a username.");
   }
 
-  throw new Error("Could not allocate a unique coupon code. Please try again.");
+  const { percent, segmentIndex } = drawPrize();
+  const expiresAt = periodExpiresAt(periodKey);
+  const code = persistWheelCode(
+    generateWheelCode({ percent, periodKey, username: user.username })
+  );
+
+  try {
+    const spin = await prisma.$transaction(async (tx) => {
+      const coupon = await tx.coupon.create({
+        data: {
+          code,
+          label: `Prize wheel ${percent}% (${periodKey})`,
+          percentOff: percent,
+          active: true,
+          maxUses: 1,
+          maxUsesPerCustomer: 1,
+          expiresAt,
+        },
+      });
+
+      return tx.wheelSpin.create({
+        data: {
+          userId,
+          periodKey,
+          prizePercent: percent,
+          couponId: coupon.id,
+          code: coupon.code,
+        },
+        select: { prizePercent: true, code: true },
+      });
+    });
+
+    return {
+      periodKey,
+      eligible: false,
+      prize: { ...toPrize(spin, periodKey), segmentIndex },
+    };
+  } catch (error) {
+    if (!isUniqueViolation(error)) throw error;
+
+    // A concurrent request claimed the month. Return that prize untouched.
+    const claimed = await prisma.wheelSpin.findUnique({
+      where: { userId_periodKey: { userId, periodKey } },
+      select: { prizePercent: true, code: true },
+    });
+    if (claimed) {
+      return { periodKey, eligible: false, prize: toPrize(claimed, periodKey) };
+    }
+    throw error;
+  }
 }
