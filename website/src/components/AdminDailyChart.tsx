@@ -42,7 +42,7 @@ export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
     const id = window.requestAnimationFrame(() => {
       if (!node) return;
       const todayX = todayIndex * COL_WIDTH;
-      node.scrollLeft = Math.max(0, todayX - node.clientWidth + COL_WIDTH * 3);
+      node.scrollLeft = Math.max(0, todayX - node.clientWidth * 0.65);
     });
     return () => window.cancelAnimationFrame(id);
   }, [bucket, todayIndex, rows.length]);
