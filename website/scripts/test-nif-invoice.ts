@@ -36,6 +36,8 @@ assert(normalizeNif("") === "", "empty NIF stays empty");
 const profile = profileSchema.parse({
   fullName: "Ana Silva",
   customerType: "SURFER",
+  phoneCountryCode: "+351",
+  phone: "912345678",
   nif: "123456789",
 });
 assert(profile.nif === "123456789", "profile schema accepts optional NIF");
@@ -43,8 +45,11 @@ assert(profile.nif === "123456789", "profile schema accepts optional NIF");
 const badProfile = profileSchema.safeParse({
   fullName: "Ana Silva",
   customerType: "SURFER",
+  phoneCountryCode: "+351",
+  phone: "912345678",
   nif: "xx",
 });
+assert(!profileSchema.safeParse({ fullName: "Ana Silva", customerType: "SURFER" }).success, "profile schema requires phone");
 assert(!badProfile.success, "profile schema rejects invalid NIF");
 
 const pdfHeader = Buffer.from(`%PDF-1.4\n${"x".repeat(120)}`).toString("base64");

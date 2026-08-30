@@ -12,8 +12,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const days = Number(new URL(request.url).searchParams.get("days") || 30);
-    const summary = await getAnalyticsSummary(Number.isFinite(days) ? days : 30);
+    const days = Number(new URL(request.url).searchParams.get("days") || 90);
+    const summary = await getAnalyticsSummary(Number.isFinite(days) ? days : 90);
     return NextResponse.json(summary);
   } catch (error) {
     return apiError(error);

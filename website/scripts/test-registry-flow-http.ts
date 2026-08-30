@@ -99,7 +99,7 @@ async function main() {
     });
     assert(welcomeBefore === 0, "welcome email waits until the profile is filled");
 
-    const incomplete = await fetch(`${base}/api/profile`, {
+    const missingPhone = await fetch(`${base}/api/profile`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Cookie: cookie.split(";")[0] },
       body: JSON.stringify({
@@ -110,10 +110,25 @@ async function main() {
         billingSameAsShipping: true,
       }),
     });
-    assert(incomplete.ok, `incomplete profile save failed ${incomplete.status}`);
+    assert(!missingPhone.ok, "profile save without phone is rejected");
+
+    const phoneOnly = await fetch(`${base}/api/profile`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Cookie: cookie.split(";")[0] },
+      body: JSON.stringify({
+        fullName: "Ana Flow",
+        phoneCountryCode: "+351",
+        phone: "912345678",
+        customerType: "SURFER",
+        preferredLanguage: "en",
+        country: "PT",
+        billingSameAsShipping: true,
+      }),
+    });
+    assert(phoneOnly.ok, `profile save with phone failed ${phoneOnly.status}`);
     assert(
       (await prisma.emailEvent.count({ where: { userId: user.id, type: "WELCOME_CUSTOMER" } })) === 0,
-      "welcome still waits for phone and address"
+      "welcome still waits for address"
     );
 
     const complete = await fetch(`${base}/api/profile`, {
