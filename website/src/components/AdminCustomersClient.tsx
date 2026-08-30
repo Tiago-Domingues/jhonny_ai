@@ -2,6 +2,8 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { FaturaAttachment } from "@/components/FaturaAttachment";
+import { TrashIcon } from "@/components/icons";
+import { PRIMARY_ADMIN_EMAIL, canAdminRemoveCustomer } from "@/lib/ecommerce/adminAccess";
 import { formatEuro } from "@/lib/ecommerce/money";
 
 type AdminCustomer = {
@@ -97,6 +99,7 @@ export function AdminCustomersClient() {
   const [customerOrders, setCustomerOrders] = useState<CustomerOrder[]>([]);
   const [purging, setPurging] = useState(false);
   const [purgeConfirm, setPurgeConfirm] = useState("");
+  const [actor, setActor] = useState<{ id: string; email: string; role: string } | null>(null);
 
   const selected = useMemo(
     () => customers.find((customer) => customer.id === selectedId) || null,
@@ -146,6 +149,23 @@ export function AdminCustomersClient() {
   }, [load]);
 
   useEffect(() => {
+    fetch("/api/auth/me")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setActor(data?.user || null))
+      .catch(() => setActor(null));
+  }, []);
+
+  function canRemoveCustomer(customer: AdminCustomer) {
+    if (actor?.role !== "ADMIN") return false;
+    return canAdminRemoveCustomer({
+      actorId: actor.id,
+      targetId: customer.id,
+      targetEmail: customer.email,
+      protectedEmails: [PRIMARY_ADMIN_EMAIL],
+    }).ok;
+  }
+
+  useEffect(() => {
     if (!selectedId) {
       setCustomerOrders([]);
       return;
@@ -189,28 +209,28 @@ export function AdminCustomersClient() {
     setMessage("Cliente atualizado.");
   }
 
-  async function removeSelected() {
-    if (!selected || removing) return;
-    const label = selected.profile?.fullName || selected.email;
+  async function removeCustomer(customer: AdminCustomer) {
+    if (removing || !canRemoveCustomer(customer)) return;
+    const label = customer.profile?.fullName || customer.email;
     if (!window.confirm(`Remover ${label} e os dados desta conta? Esta ação não se desfaz.`)) {
       return;
     }
     setRemoving(true);
     setMessage(null);
     try {
-      const response = await fetch(`/api/admin/customers/${selected.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/admin/customers/${customer.id}`, { method: "DELETE" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         setMessage(data.message || data.error || "Não foi possível remover o cliente.");
         return;
       }
-      setCustomers((prev) => prev.filter((item) => item.id !== selected.id));
-      setSelectedId(null);
+      setCustomers((prev) => prev.filter((item) => item.id !== customer.id));
+      if (selectedId === customer.id) setSelectedId(null);
       setTotal((value) => Math.max(0, value - 1));
       setStats((current) =>
         current ? { ...current, totalCustomers: Math.max(0, current.totalCustomers - 1) } : current
       );
-      setMessage(`Cliente ${data.email || selected.email} removido.`);
+      setMessage(`Cliente ${data.email || customer.email} removido.`);
     } finally {
       setRemoving(false);
     }
@@ -363,29 +383,46 @@ export function AdminCustomersClient() {
           <div className="divide-y divide-line">
             {customers.map((customer) => {
               const active = customer.id === selectedId;
+              const removable = canRemoveCustomer(customer);
               return (
-                <button
+                <div
                   key={customer.id}
-                  type="button"
-                  onClick={() => setSelectedId(customer.id)}
-                  className={`grid w-full gap-1 px-5 py-4 text-left transition hover:bg-cream/60 ${active ? "bg-cream" : ""}`}
+                  className={`flex items-stretch gap-2 px-3 py-2 ${active ? "bg-cream" : ""}`}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-display text-lg font-extrabold uppercase text-ink">
-                      {customer.profile?.fullName || customer.username}
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-wide text-muted">{formatDate(customer.createdAt)}</p>
-                  </div>
-                  <p className="text-sm text-muted">{customer.email}</p>
-                  <div className="mt-1 flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-wide text-muted">
-                    <span>{phoneLabel(customer)}</span>
-                    <span>{customerTypeLabels[customer.profile?.customerType || ""] || "—"}</span>
-                    <span>{customer.hasGoogle ? "Google" : null}{customer.hasGoogle && customer.hasPassword ? " · " : null}{customer.hasPassword ? "Password" : null}</span>
-                    <span>{customer.orderCount} enc.</span>
-                    {customer.profile?.marketingOptIn ? <span className="text-ink">Marketing</span> : null}
-                    {customer.role === "ADMIN" ? <span className="text-ink">Admin</span> : null}
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(customer.id)}
+                    className="grid min-w-0 flex-1 gap-1 rounded-2xl px-2 py-2 text-left transition hover:bg-cream/60"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-display text-lg font-extrabold uppercase text-ink">
+                        {customer.profile?.fullName || customer.username}
+                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wide text-muted">{formatDate(customer.createdAt)}</p>
+                    </div>
+                    <p className="text-sm text-muted">{customer.email}</p>
+                    <div className="mt-1 flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-wide text-muted">
+                      <span>{phoneLabel(customer)}</span>
+                      <span>{customerTypeLabels[customer.profile?.customerType || ""] || "—"}</span>
+                      <span>{customer.hasGoogle ? "Google" : null}{customer.hasGoogle && customer.hasPassword ? " · " : null}{customer.hasPassword ? "Password" : null}</span>
+                      <span>{customer.orderCount} enc.</span>
+                      {customer.profile?.marketingOptIn ? <span className="text-ink">Marketing</span> : null}
+                      {customer.role === "ADMIN" ? <span className="text-ink">Admin</span> : null}
+                    </div>
+                  </button>
+                  {removable ? (
+                    <button
+                      type="button"
+                      disabled={removing}
+                      onClick={() => void removeCustomer(customer)}
+                      aria-label={`Remover ${customer.profile?.fullName || customer.email}`}
+                      title="Remover cliente"
+                      className="mt-2 mr-1 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line text-ink transition hover:border-ink hover:bg-cream disabled:opacity-50"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </div>
               );
             })}
             {!loading && customers.length === 0 && (
@@ -405,12 +442,26 @@ export function AdminCustomersClient() {
             </div>
           ) : (
             <form key={selected.id} onSubmit={saveSelected} className="grid gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Gerir cliente</p>
-                <h2 className="font-display mt-2 text-3xl font-extrabold uppercase text-ink">
-                  {selected.profile?.fullName || selected.username}
-                </h2>
-                <p className="mt-1 text-sm text-muted">{selected.email}</p>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Gerir cliente</p>
+                  <h2 className="font-display mt-2 text-3xl font-extrabold uppercase text-ink">
+                    {selected.profile?.fullName || selected.username}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted">{selected.email}</p>
+                </div>
+                {canRemoveCustomer(selected) ? (
+                  <button
+                    type="button"
+                    disabled={removing}
+                    onClick={() => void removeCustomer(selected)}
+                    aria-label={`Remover ${selected.profile?.fullName || selected.email}`}
+                    title="Remover cliente"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line text-ink transition hover:border-ink hover:bg-cream disabled:opacity-50"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                ) : null}
               </div>
 
               <label className="grid gap-1 text-sm">
@@ -548,14 +599,19 @@ export function AdminCustomersClient() {
               <button className="rounded-full bg-ink px-5 py-3 text-sm font-bold uppercase tracking-wide text-white">
                 Guardar alterações
               </button>
-              <button
-                type="button"
-                disabled={removing}
-                onClick={() => void removeSelected()}
-                className="rounded-full border border-line px-5 py-3 text-sm font-bold uppercase tracking-wide text-ink transition hover:bg-cream disabled:opacity-60"
-              >
-                {removing ? "A remover…" : "Remover cliente"}
-              </button>
+              {canRemoveCustomer(selected) ? (
+                <button
+                  type="button"
+                  disabled={removing}
+                  onClick={() => void removeCustomer(selected)}
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-line px-5 py-3 text-sm font-bold uppercase tracking-wide text-ink transition hover:bg-cream disabled:opacity-60"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                  {removing ? "A remover…" : "Remover cliente"}
+                </button>
+              ) : (
+                <p className="text-xs text-muted">Esta conta não pode ser removida.</p>
+              )}
             </form>
           )}
         </aside>

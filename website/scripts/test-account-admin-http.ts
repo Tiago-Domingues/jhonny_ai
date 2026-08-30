@@ -212,6 +212,73 @@ async function main() {
     const historyBody = await history.json();
     assert((historyBody.orders || []).some((row: { id: string }) => row.id === paid.id), "client history lists the order");
 
+    const patch = await fetch(`${base}/api/admin/customers/${customer.user.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Cookie: adminCookie },
+      body: JSON.stringify({
+        fullName: "Ana Admin Edit",
+        phoneCountryCode: "+351",
+        phone: "919999999",
+        customerType: "LOCAL_CUSTOMER",
+        preferredLanguage: "pt",
+        marketingOptIn: true,
+      }),
+    });
+    assert(patch.ok, `admin edit failed ${patch.status} ${await patch.text()}`);
+    const patched = await prisma.customerProfile.findUnique({ where: { userId: customer.user.id } });
+    assert(patched?.fullName === "Ana Admin Edit", "admin can edit client name");
+    assert(patched?.phone === "919999999", "admin can edit client phone");
+
+    const doomed = await registerAndVerify(
+      base,
+      prisma,
+      `bin-${stamp}@example.com`,
+      `bin${stamp}`.slice(0, 32),
+      "surflegend1"
+    );
+    const doomedOrder = await prisma.order.create({
+      data: {
+        orderNumber: `JSS-BIN-${stamp}`,
+        status: "PAID",
+        fulfillmentMethod: "PICKUP_IN_STORE",
+        userId: doomed.user.id,
+        customerEmail: doomed.user.email,
+        customerName: "Bin Test",
+        customerPhone: "910000000",
+        customerPhoneCountryCode: "+351",
+        subtotalCents: 1000,
+        shippingCents: 0,
+        discountCents: 0,
+        totalCents: 1000,
+        currency: "EUR",
+        paidAt: new Date(),
+        items: { create: [{ name: "Wax", quantity: 1, unitPriceCents: 1000, totalCents: 1000 }] },
+      },
+    });
+    const customerCannotDelete = await fetch(`${base}/api/admin/customers/${doomed.user.id}`, {
+      method: "DELETE",
+      headers: { Cookie: customer.cookie },
+    });
+    assert(customerCannotDelete.status === 401, "only admins can delete clients");
+
+    const selfDelete = await fetch(`${base}/api/admin/customers/${admin.user.id}`, {
+      method: "DELETE",
+      headers: { Cookie: adminCookie },
+    });
+    assert(!selfDelete.ok, "admin cannot delete their own account");
+
+    const adminDelete = await fetch(`${base}/api/admin/customers/${doomed.user.id}`, {
+      method: "DELETE",
+      headers: { Cookie: adminCookie },
+    });
+    assert(adminDelete.ok, `admin delete failed ${adminDelete.status} ${await adminDelete.text()}`);
+    const gone = await prisma.user.findUnique({ where: { id: doomed.user.id } });
+    assert(!gone, "removed client is gone from the registry");
+    const keptOrder = await prisma.order.findUnique({ where: { id: doomedOrder.id } });
+    assert(keptOrder, "orders stay after client removal");
+    assert(keptOrder.userId === null, "removed client is detached from leftover orders");
+    await prisma.order.delete({ where: { id: doomedOrder.id } });
+
     const csv = await fetch(`${base}/api/admin/orders/export.csv`, { headers: { Cookie: adminCookie } });
     assert(csv.ok, `csv failed ${csv.status}`);
     const csvText = await csv.text();

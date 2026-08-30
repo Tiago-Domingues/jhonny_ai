@@ -45,6 +45,10 @@ import { resolve } from "node:path";
 const clientSource = readFileSync(resolve(__dirname, "../src/components/AdminCustomersClient.tsx"), "utf8");
 assert(clientSource.includes('method: "DELETE"'), "admin client list can remove a customer");
 assert(clientSource.includes("Remover cliente"), "admin UI has a remove-customer action");
+assert(clientSource.includes("TrashIcon"), "admin UI has a bin button to remove a client");
+assert(clientSource.includes("canRemoveCustomer"), "bin is gated to removable admin targets");
+assert(clientSource.includes("/api/auth/me"), "bin visibility uses the signed-in admin");
 assert(clientSource.includes("/api/admin/customers/purge"), "admin UI can purge all clients");
+assert(!clientSource.includes("actor?.role !== \"CUSTOMER\""), "customers never unlock the bin");
 
 console.log("admin customer access helpers ok");
