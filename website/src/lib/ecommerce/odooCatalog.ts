@@ -4,6 +4,7 @@ import { prisma } from "@/lib/ecommerce/db";
 import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { buildSurfboardEnrichment } from "@/lib/ecommerce/surfboardEnrichment";
 import { productImageUrls } from "@/lib/ecommerce/odooProductImages";
+import { cleanProductDisplayName } from "@/lib/ecommerce/productVariants";
 
 const brandFieldCandidates = [
   "x_studio_marcas",
@@ -247,7 +248,7 @@ function resolveOdooArtigoName(product: OdooRow, artigoField: string | null) {
       title = title.replace(new RegExp(`^\\[${escaped}\\]\\s*`, "i"), "").trim();
     }
     title = title.replace(/^\[[^\]]+\]\s*/, "").trim();
-    if (title) return title;
+    if (title) return cleanProductDisplayName(title);
   }
   return "Unnamed product";
 }
