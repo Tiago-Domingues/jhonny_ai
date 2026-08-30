@@ -306,7 +306,9 @@ async function recordEmailEvent(input: {
     | "PICKUP_READY"
     | "REVIEW_REQUEST"
     | "ABANDONED_CART"
-    | "BROWSE_REMINDER";
+    | "BROWSE_REMINDER"
+    | "WHEEL_PRIZE"
+    | "WHEEL_REMINDER";
   recipientEmail: string;
   subject: string;
   status: "PENDING" | "SENT" | "FAILED" | "SKIPPED";
@@ -454,6 +456,19 @@ export async function sendWelcomeEmail(input: { userId: string; email: string; f
   });
 }
 
+export async function sendWelcomeEmailIfNeeded(input: {
+  userId: string;
+  email: string;
+  fullName?: string | null;
+}) {
+  const already = await prisma.emailEvent.findFirst({
+    where: { userId: input.userId, type: "WELCOME_CUSTOMER" },
+    select: { id: true, status: true },
+  });
+  if (already) return already;
+  return sendWelcomeEmail(input);
+}
+
 export async function sendEmailVerificationEmail(input: {
   userId?: string | null;
   email: string;
@@ -467,6 +482,7 @@ export async function sendEmailVerificationEmail(input: {
       <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
       <p>Clica no link para confirmares o email e terminares o registo. Depois podes preencher o perfil. Expira em 24 horas.</p>
       <p><a href="${escapeHtml(input.verifyUrl)}">Confirmar email e continuar</a></p>
+      <p style="word-break:break-all;font-size:12px;color:#555">${escapeHtml(input.verifyUrl)}</p>
       <p>Se não pediste esta conta, ignora este email.</p>
     </div>
   `;
@@ -627,19 +643,7 @@ export async function sendPaymentConfirmedEmails(orderId: string, options?: { fo
     return { skipped: true, reason: "already_sent" };
   }
   const invoice = await loadPaidInvoicePdf(order);
-  if (!invoice) {
-    await recordEmailEvent({
-      orderId,
-      userId: order.userId,
-      type: "PAYMENT_CONFIRMED",
-      recipientEmail: order.customerEmail,
-      subject: `Pagamento confirmado — ${order.orderNumber}`,
-      status: "SKIPPED",
-      error: "missing_odoo_fatura_pdf",
-    });
-    return { skipped: true, reason: "missing_odoo_fatura_pdf" };
-  }
-  const attachments = [invoice];
+  const attachments = invoice ? [invoice] : undefined;
 
   try {
     const customerSubject = `Pagamento confirmado — ${order.orderNumber}`;
@@ -694,6 +698,83 @@ export async function sendPaymentConfirmedEmails(orderId: string, options?: { fo
     }).catch(() => null);
     return { skipped: true, reason: "failed" };
   }
+}
+
+export async function sendWheelPrizeEmail(input: {
+  userId: string;
+  email: string;
+  fullName?: string | null;
+  percent: number;
+  code: string;
+  expiresAt: Date;
+  shopUrl: string;
+}) {
+  const already = await prisma.emailEvent.findFirst({
+    where: {
+      userId: input.userId,
+      type: "WHEEL_PRIZE",
+      subject: { contains: input.code },
+    },
+    select: { id: true, status: true },
+  });
+  if (already) return already;
+
+  const name = escapeHtml(input.fullName || "Legend");
+  const subject = `Jhonny Surf Store — ganhaste ${input.percent}% na roda`;
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      <h1>Ganhaste ${input.percent}% na roda</h1>
+      <p>Hi ${name},</p>
+      <p>A tua volta deste mês está pronta. Usa o cupão <strong>${escapeHtml(input.code)}</strong> no checkout até ${escapeHtml(input.expiresAt.toLocaleDateString("pt-PT"))}.</p>
+      <p><a href="${escapeHtml(input.shopUrl)}">Ir à loja</a></p>
+    </div>
+  `;
+  const result = await sendEmail(input.email, subject, html);
+  return prisma.emailEvent.create({
+    data: {
+      userId: input.userId,
+      type: "WHEEL_PRIZE",
+      recipientEmail: input.email,
+      subject,
+      status: result.status,
+      provider: emailProvider(),
+      providerId: result.providerId,
+      error: result.error,
+      sentAt: result.status === "SENT" ? new Date() : null,
+    },
+  });
+}
+
+export async function sendWheelReminderEmail(input: {
+  userId: string;
+  email: string;
+  fullName?: string | null;
+  periodKey: string;
+  shopUrl: string;
+}) {
+  const subject = "Jhonny Surf Store — a roda do mês está à tua espera";
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      <h1>A roda do mês</h1>
+      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Ainda não giraste a roda este mês. Entra na conta e tira o teu desconto de 5%, 10% ou 20%.</p>
+      <p><a href="${escapeHtml(input.shopUrl)}">Girar a roda</a></p>
+    </div>
+  `;
+  const result = await sendEmail(input.email, subject, html);
+  return prisma.emailEvent.create({
+    data: {
+      userId: input.userId,
+      type: "WHEEL_REMINDER",
+      recipientEmail: input.email,
+      subject: `${subject} (${input.periodKey})`,
+      status: result.status,
+      provider: emailProvider(),
+      providerId: result.providerId,
+      error: result.error,
+      sentAt: result.status === "SENT" ? new Date() : null,
+    },
+  });
 }
 
 export async function scheduleReviewRequest(orderId: string) {

@@ -333,6 +333,7 @@ export function AccountClient() {
                   </select>
                   <input
                     name="phone"
+                    required
                     defaultValue={String(profile?.phone || "")}
                     placeholder={copy.mobile}
                     inputMode="tel"
@@ -382,6 +383,7 @@ export function AccountClient() {
                 <input
                   id="addressLine1"
                   name="addressLine1"
+                  required
                   defaultValue={String(profile?.addressLine1 || "")}
                   placeholder={copy.address}
                   className={fieldClass}
@@ -400,6 +402,7 @@ export function AccountClient() {
                 <input
                   id="postalCode"
                   name="postalCode"
+                  required
                   defaultValue={String(profile?.postalCode || "")}
                   placeholder={copy.postalCode}
                   className={fieldClass}
@@ -409,6 +412,7 @@ export function AccountClient() {
                 <input
                   id="city"
                   name="city"
+                  required
                   defaultValue={String(profile?.city || "")}
                   placeholder={copy.city}
                   className={fieldClass}

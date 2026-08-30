@@ -42,6 +42,15 @@ export function resolveCheckoutOrigin(candidate?: string | null, requestOrigin?:
   return publicSiteOrigin();
 }
 
+export function originFromRequest(request: { headers: Headers; url: string }) {
+  return resolveCheckoutOrigin(request.headers.get("origin"), new URL(request.url).origin);
+}
+
+export function buildVerifyEmailUrl(token: string, origin?: string | null) {
+  const base = origin && isAllowedCheckoutOrigin(origin) ? origin.replace(/\/$/, "") : publicSiteOrigin();
+  return `${base}/conta/verificar-email?token=${encodeURIComponent(token)}`;
+}
+
 export type StripeOrderLine = {
   name: string;
   quantity: number;

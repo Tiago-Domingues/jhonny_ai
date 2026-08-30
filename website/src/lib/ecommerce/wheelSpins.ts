@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
+import { sendWheelPrizeEmail } from "@/lib/ecommerce/email";
 import {
   currentPeriodKey,
   drawPrize,
@@ -9,6 +10,7 @@ import {
   persistWheelCode,
   segmentForPercent,
 } from "@/lib/ecommerce/prizeWheel";
+import { publicSiteOrigin } from "@/lib/ecommerce/stripeCheckout";
 
 export type WheelStatus = {
   periodKey: string;
@@ -74,7 +76,7 @@ export async function spinWheel(userId: string): Promise<WheelStatus> {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { username: true },
+    select: { username: true, email: true, profile: { select: { fullName: true } } },
   });
   if (!user?.username) {
     throw new Error("Account is missing a username.");
@@ -112,10 +114,21 @@ export async function spinWheel(userId: string): Promise<WheelStatus> {
       });
     });
 
+    const prize = { ...toPrize(spin, periodKey), segmentIndex };
+    await sendWheelPrizeEmail({
+      userId,
+      email: user.email,
+      fullName: user.profile?.fullName,
+      percent: prize.percent,
+      code: prize.code,
+      expiresAt: periodExpiresAt(periodKey),
+      shopUrl: `${publicSiteOrigin()}/`,
+    }).catch(() => null);
+
     return {
       periodKey,
       eligible: false,
-      prize: { ...toPrize(spin, periodKey), segmentIndex },
+      prize,
     };
   } catch (error) {
     if (!isUniqueViolation(error)) throw error;

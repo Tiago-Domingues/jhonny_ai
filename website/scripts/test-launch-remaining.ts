@@ -41,10 +41,16 @@ async function verifyEmailWithToken(prisma: PrismaClient, token: string) {
     where: { tokenHash },
     include: { user: true },
   });
-  if (!row || row.usedAt || row.expiresAt.getTime() < Date.now()) {
+  if (!row) {
     throw new Error("This verification link is invalid or has expired.");
   }
-  await prisma.$transaction([
+  if (row.usedAt) {
+    return row.user;
+  }
+  if (row.expiresAt.getTime() < Date.now()) {
+    throw new Error("This verification link is invalid or has expired.");
+  }
+  const [user] = await prisma.$transaction([
     prisma.user.update({
       where: { id: row.userId },
       data: { emailVerifiedAt: row.user.emailVerifiedAt || new Date() },
@@ -54,6 +60,7 @@ async function verifyEmailWithToken(prisma: PrismaClient, token: string) {
       data: { usedAt: new Date() },
     }),
   ]);
+  return user;
 }
 
 function checkOrdersFilter() {
@@ -152,12 +159,8 @@ async function checkVerificationTokens(prisma: PrismaClient) {
   const updated = await prisma.user.findUnique({ where: { id: user.id } });
   assert(updated?.emailVerifiedAt, "emailVerifiedAt is set after a valid token");
 
-  try {
-    await verifyEmailWithToken(prisma, token);
-    throw new Error("used token should have failed");
-  } catch (error) {
-    assert(String(error).includes("invalid or has expired"), "used token is rejected");
-  }
+  const replayed = await verifyEmailWithToken(prisma, token);
+  assert(replayed.id === user.id, "a second click on the same verify link still succeeds");
 
   await prisma.emailVerificationToken.deleteMany({ where: { userId: user.id } });
   await prisma.customerProfile.deleteMany({ where: { userId: user.id } }).catch(() => null);

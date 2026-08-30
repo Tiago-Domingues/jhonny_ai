@@ -3,11 +3,11 @@ import "server-only";
 import { prisma } from "@/lib/ecommerce/db";
 import { hashPassword, hashToken, normalizeEmail, randomToken } from "@/lib/ecommerce/security";
 import { sendPasswordResetEmail } from "@/lib/ecommerce/email";
-import { publicSiteOrigin } from "@/lib/ecommerce/stripeCheckout";
+import { isAllowedCheckoutOrigin, publicSiteOrigin } from "@/lib/ecommerce/stripeCheckout";
 
 const RESET_TTL_MS = 60 * 60 * 1000;
 
-export async function requestPasswordReset(emailRaw: string) {
+export async function requestPasswordReset(emailRaw: string, requestOrigin?: string | null) {
   const email = normalizeEmail(emailRaw);
   const user = await prisma.user.findUnique({
     where: { email },
@@ -15,7 +15,10 @@ export async function requestPasswordReset(emailRaw: string) {
   });
   if (!user) return { accepted: true };
 
-  const origin = publicSiteOrigin();
+  const origin =
+    requestOrigin && isAllowedCheckoutOrigin(requestOrigin)
+      ? requestOrigin.replace(/\/$/, "")
+      : publicSiteOrigin();
   if (!user.passwordHash) {
     await sendPasswordResetEmail({
       userId: user.id,

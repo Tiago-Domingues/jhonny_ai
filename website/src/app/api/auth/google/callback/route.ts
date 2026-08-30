@@ -4,8 +4,7 @@ import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { unavailableError } from "@/lib/ecommerce/api";
 import { upsertGoogleCustomer } from "@/lib/ecommerce/auth";
 import { CART_COOKIE, mergeGuestCartIntoUser } from "@/lib/ecommerce/cart";
-import { sendWelcomeEmail } from "@/lib/ecommerce/email";
-import { sendWelcomeSms } from "@/lib/ecommerce/sms";
+import { sendWelcomeNotificationsIfProfileReady } from "@/lib/ecommerce/welcomeNotifications";
 import {
   GOOGLE_OAUTH_STATE_COOKIE,
   exchangeGoogleCode,
@@ -69,25 +68,16 @@ export async function GET(request: Request) {
     const { user, created } = await upsertGoogleCustomer(info);
 
     if (created) {
-      try {
-        await sendWelcomeEmail({
-          userId: user.id,
-          email: user.email,
-          fullName: user.profile?.fullName,
-        });
-      } catch {
-        // ignore hard failures
-      }
-      try {
-        await sendWelcomeSms({
-          userId: user.id,
-          fullName: user.profile?.fullName,
-          phoneCountryCode: user.profile?.phoneCountryCode,
-          phone: user.profile?.phone,
-        });
-      } catch {
-        // ignore hard failures (Google signup often has no phone yet)
-      }
+      await sendWelcomeNotificationsIfProfileReady({
+        userId: user.id,
+        email: user.email,
+        fullName: user.profile?.fullName,
+        phoneCountryCode: user.profile?.phoneCountryCode,
+        phone: user.profile?.phone,
+        addressLine1: user.profile?.addressLine1,
+        city: user.profile?.city,
+        postalCode: user.profile?.postalCode,
+      }).catch(() => null);
     }
 
     const guestToken = cookieStore.get(CART_COOKIE)?.value;

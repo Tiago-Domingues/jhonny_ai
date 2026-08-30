@@ -4,6 +4,7 @@ import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
 import { requestPasswordReset } from "@/lib/ecommerce/passwordReset";
 import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
+import { originFromRequest } from "@/lib/ecommerce/stripeCheckout";
 
 const schema = z.object({
   email: z.string().email(),
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
   if (limited) return limited;
   try {
     const payload = schema.parse(await readJson(request));
-    await requestPasswordReset(payload.email);
+    await requestPasswordReset(payload.email, originFromRequest(request));
     return NextResponse.json({
       ok: true,
       message: "If that email is registered, we sent reset instructions.",
