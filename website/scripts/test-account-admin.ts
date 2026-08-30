@@ -1,5 +1,5 @@
 import { profileSchema } from "../src/lib/ecommerce/schemas";
-import { bucketDailyMetrics, fillDailyRange, periodLabel } from "../src/lib/ecommerce/analyticsDaily";
+import { addDaysToKey, bucketDailyMetrics, fillDailyRange, padFutureDays, periodLabel } from "../src/lib/ecommerce/analyticsDaily";
 import { isPaidPlusStatus } from "../src/lib/ecommerce/orderKpis";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -33,6 +33,11 @@ assert(weekly.length === 1, "july 1-3 2026 is one week");
 assert(weekly[0].views === (0 + 10 + 0) / 3, "weekly views are the daily mean");
 assert(periodLabel(weekly[0], "week").includes("2026-06-29"), "week label uses monday");
 
+const padded = padFutureDays(filled, 2, "2026-07-03");
+assert(padded.length === 5, "pads two future days after today");
+assert(padded[3].key === "2026-07-04" && padded[3].views === 0, "future days are zero");
+assert(addDaysToKey("2026-07-01", 14) === "2026-07-15", "adds calendar days");
+
 const account = readFileSync(resolve(__dirname, "../src/components/AccountClient.tsx"), "utf8");
 assert(account.includes('href="#dados"'), "account nav has My Data");
 assert(account.includes('id="dados"'), "My Data section id exists");
@@ -53,5 +58,17 @@ assert(header.includes('href="/admin"'), "profile menu has one Admin link");
 assert(!header.includes("Admin · Clientes"), "profile menu does not list Admin · Clientes");
 assert(!header.includes("Admin · Encomendas"), "profile menu does not list Admin · Encomendas");
 assert(!header.includes("Admin · Analytics"), "profile menu does not list Admin · Analytics");
+
+const chart = readFileSync(resolve(__dirname, "../src/components/AdminDailyChart.tsx"), "utf8");
+assert(chart.includes("overflow-x-auto"), "chart scrolls inside its card");
+assert(chart.includes("overscroll-x-contain"), "chart scroll does not drag the page");
+assert(chart.includes("hoje"), "chart marks today");
+
+const analyticsClient = readFileSync(resolve(__dirname, "../src/components/AdminAnalyticsClient.tsx"), "utf8");
+assert(analyticsClient.includes("/api/admin/analytics/export.csv"), "analytics has CSV export");
+assert(analyticsClient.includes("truncate"), "visit rows truncate long URLs");
+
+const exportRoute = readFileSync(resolve(__dirname, "../src/app/api/admin/analytics/export.csv/route.ts"), "utf8");
+assert(exportRoute.includes("jhonny-analytics-"), "CSV filename is dated");
 
 console.log("account admin plan checks ok");

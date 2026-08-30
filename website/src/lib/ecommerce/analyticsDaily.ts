@@ -33,6 +33,10 @@ export function todayLisbonDateKey(now = new Date()) {
   }).format(now);
 }
 
+export function addDaysToKey(key: string, days: number) {
+  return formatDay(parseDay(key).utc + days * 86_400_000);
+}
+
 export function fillDailyRange(startKey: string, endKey: string, rows: DailyMetrics[]): DailyMetrics[] {
   const byKey = new Map(rows.map((row) => [row.key, row]));
   const start = parseDay(startKey).utc;
@@ -45,6 +49,14 @@ export function fillDailyRange(startKey: string, endKey: string, rows: DailyMetr
     );
   }
   return filled;
+}
+
+export function padFutureDays(rows: DailyMetrics[], extraDays = 14, todayKey = todayLisbonDateKey()) {
+  if (!rows.length || extraDays <= 0) return rows;
+  const lastKey = rows[rows.length - 1].key;
+  const endKey = addDaysToKey(todayKey, extraDays);
+  if (parseDay(endKey).utc <= parseDay(lastKey).utc) return rows;
+  return fillDailyRange(rows[0].key, endKey, rows);
 }
 
 function mondayOf(key: string) {

@@ -28,7 +28,7 @@ export function AdminShell() {
   const copy = titles[tab];
 
   return (
-    <section className="mx-auto max-w-6xl px-5 sm:px-8">
+    <section className="mx-auto min-w-0 max-w-6xl overflow-x-hidden px-5 sm:px-8">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-muted">Admin Jhonny</p>
       <h1 className="font-display mt-3 text-5xl font-extrabold uppercase tracking-tight text-ink sm:text-6xl">
         {copy.title}
