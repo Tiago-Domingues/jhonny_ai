@@ -1,16 +1,17 @@
 import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
+import { defaultAdminEmails } from "@/lib/ecommerce/adminAccess";
 import { normalizeEmail } from "@/lib/ecommerce/security";
 
-const DEFAULT_ADMIN_EMAILS = ["jhonnysurfstore@gmail.com"];
+export { PRIMARY_ADMIN_EMAIL, canAdminRemoveCustomer } from "@/lib/ecommerce/adminAccess";
 
 export function adminEmailAllowlist() {
   const fromEnv = (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean);
-  return new Set([...DEFAULT_ADMIN_EMAILS, ...fromEnv].map((email) => email.toLowerCase()));
+  return new Set([...defaultAdminEmails(), ...fromEnv].map((email) => email.toLowerCase()));
 }
 
 export function isAdminEmail(email: string) {

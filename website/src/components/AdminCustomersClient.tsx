@@ -70,6 +70,9 @@ export function AdminCustomersClient() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [purging, setPurging] = useState(false);
+  const [purgeConfirm, setPurgeConfirm] = useState("");
 
   const selected = useMemo(
     () => customers.find((customer) => customer.id === selectedId) || null,
@@ -142,6 +145,59 @@ export function AdminCustomersClient() {
     }
     setCustomers((prev) => prev.map((item) => (item.id === selected.id ? data.customer : item)));
     setMessage("Cliente atualizado.");
+  }
+
+  async function removeSelected() {
+    if (!selected || removing) return;
+    const label = selected.profile?.fullName || selected.email;
+    if (!window.confirm(`Remover ${label} e os dados desta conta? Esta ação não se desfaz.`)) {
+      return;
+    }
+    setRemoving(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/admin/customers/${selected.id}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage(data.message || data.error || "Não foi possível remover o cliente.");
+        return;
+      }
+      setCustomers((prev) => prev.filter((item) => item.id !== selected.id));
+      setSelectedId(null);
+      setTotal((value) => Math.max(0, value - 1));
+      setStats((current) =>
+        current ? { ...current, totalCustomers: Math.max(0, current.totalCustomers - 1) } : current
+      );
+      setMessage(`Cliente ${data.email || selected.email} removido.`);
+    } finally {
+      setRemoving(false);
+    }
+  }
+
+  async function purgeAllClients() {
+    if (purging) return;
+    setPurging(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/admin/customers/purge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmEmail: purgeConfirm }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage(data.message || data.error || "Não foi possível limpar os clientes.");
+        return;
+      }
+      setPurgeConfirm("");
+      setSelectedId(null);
+      setMessage(
+        `Base de clientes limpa. Mantido ${data.result?.keptEmail || "o admin"}. Removidas ${data.result?.removedAccounts ?? 0} contas.`
+      );
+      await load();
+    } finally {
+      setPurging(false);
+    }
   }
 
   function exportCsv() {
@@ -379,9 +435,41 @@ export function AdminCustomersClient() {
               <button className="rounded-full bg-ink px-5 py-3 text-sm font-bold uppercase tracking-wide text-white">
                 Guardar alterações
               </button>
+              <button
+                type="button"
+                disabled={removing}
+                onClick={() => void removeSelected()}
+                className="rounded-full border border-line px-5 py-3 text-sm font-bold uppercase tracking-wide text-ink transition hover:bg-cream disabled:opacity-60"
+              >
+                {removing ? "A remover…" : "Remover cliente"}
+              </button>
             </form>
           )}
         </aside>
+      </div>
+
+      <div className="rounded-3xl border border-line bg-white p-6">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Limpar base de clientes</p>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+          Remove todas as contas registadas e dados de cliente, e mantém só{" "}
+          <code className="text-ink">tiagopaixaodomingues@gmail.com</code> como admin.
+        </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            value={purgeConfirm}
+            onChange={(event) => setPurgeConfirm(event.target.value)}
+            placeholder="Escreve o email do admin para confirmar"
+            className="min-w-0 flex-1 rounded-2xl border border-line px-4 py-3"
+          />
+          <button
+            type="button"
+            disabled={purging}
+            onClick={() => void purgeAllClients()}
+            className="rounded-full border border-line px-5 py-3 text-sm font-bold uppercase tracking-wide text-ink transition hover:bg-cream disabled:opacity-60"
+          >
+            {purging ? "A limpar…" : "Remover todos os clientes"}
+          </button>
+        </div>
       </div>
     </div>
   );

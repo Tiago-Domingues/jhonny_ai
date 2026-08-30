@@ -32,6 +32,8 @@
     "test:user-initials": "npx tsx scripts/test-user-initials.ts",
     "test:registry-notifications": "npx tsx scripts/test-registry-notifications.ts",
     "test:registry-flow-http": "npx tsx scripts/test-registry-flow-http.ts",
+    "test:admin-customers": "npx tsx scripts/test-admin-customers.ts",
+    "purge:customers": "npx tsx scripts/purge-customers.ts",
     "live:odoo-pos": "python3 scripts/live-odoo-pos.py",
     "lint": "eslint"
   },

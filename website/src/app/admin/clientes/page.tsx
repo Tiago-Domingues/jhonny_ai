@@ -21,7 +21,7 @@ export default function AdminClientesPage() {
             Clientes
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted">
-            Vê quem se registou na loja, pesquisa por contacto, filtra por Google/password e atualiza dados de perfil.
+            Vê quem se registou na loja, pesquisa por contacto, atualiza dados de perfil e remove clientes da lista.
           </p>
           <AdminNav />
           <div className="mt-10">

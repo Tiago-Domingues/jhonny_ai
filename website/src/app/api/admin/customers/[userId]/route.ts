@@ -3,7 +3,7 @@ import { z } from "zod";
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { apiError, readJson, unavailableError } from "@/lib/ecommerce/api";
 import { requireAdminSession } from "@/lib/ecommerce/admin";
-import { updateCustomerForAdmin } from "@/lib/ecommerce/customers";
+import { deleteCustomerForAdmin, updateCustomerForAdmin } from "@/lib/ecommerce/customers";
 
 const patchSchema = z.object({
   marketingOptIn: z.boolean().optional(),
@@ -45,6 +45,28 @@ export async function PATCH(
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
     return NextResponse.json({ customer });
+  } catch (error) {
+    return apiError(error);
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ userId: string }> }
+) {
+  if (!hasDatabaseUrl()) return unavailableError();
+  const session = await requireAdminSession();
+  if (!session) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { userId } = await context.params;
+    const result = await deleteCustomerForAdmin(userId, { id: session.id, email: session.email });
+    if (!result) {
+      return NextResponse.json({ error: "not_found" }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, email: result.email });
   } catch (error) {
     return apiError(error);
   }
