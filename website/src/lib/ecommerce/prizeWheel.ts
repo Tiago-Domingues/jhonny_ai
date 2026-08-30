@@ -124,23 +124,60 @@ export function periodExpiresAt(periodKey: string) {
   return new Date(periodStart(nextYear, nextMonth).getTime() - 1);
 }
 
-const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const ENGLISH_MONTHS = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+] as const;
+
+/** English month name for a Lisbon period key such as "2026-08" → "august". */
+export function periodMonthName(periodKey: string) {
+  const month = Number(periodKey.split("-")[1]);
+  return ENGLISH_MONTHS[month - 1] ?? "january";
+}
 
 /**
- * Unique per-spin code, e.g. "RODA20-7K3QP1".
+ * Per-spin code in the public form:
+ * `roda-20%-august-2026-tiago.domingues`
  *
- * The alphabet drops 0/O/1/I so codes survive being read aloud or retyped,
- * and its length (32) divides 256, so the byte-to-character mapping is unbiased.
+ * Checkout looks codes up after `normalizeCouponCode` (uppercase, no spaces),
+ * so persist the return value of `persistWheelCode`, not this display string.
  */
-export function generateWheelCode(percent: number, length = 6) {
-  const bytes = new Uint8Array(length);
-  globalThis.crypto.getRandomValues(bytes);
-  let suffix = "";
-  for (const byte of bytes) suffix += CODE_ALPHABET[byte % CODE_ALPHABET.length];
-  return `RODA${percent}-${suffix}`;
+export function generateWheelCode(input: {
+  percent: number;
+  periodKey: string;
+  username: string;
+}) {
+  const year = input.periodKey.split("-")[0] || "";
+  const month = periodMonthName(input.periodKey);
+  const username = input.username.trim();
+  return `roda-${input.percent}%-${month}-${year}-${username}`.toLowerCase();
 }
+
+/** DB / checkout form of a wheel code. */
+export function persistWheelCode(code: string) {
+  return code.trim().toUpperCase().replace(/\s+/g, "");
+}
+
+/** Customer-facing form of a stored wheel code. */
+export function displayWheelCode(code: string) {
+  return code.trim().toLowerCase();
+}
+
+const NEW_WHEEL_CODE = /^RODA-(5|10|20)%-[A-Z]+-\d{4}-[A-Z0-9_.-]+$/;
+const LEGACY_WHEEL_CODE = /^RODA(5|10|20)-[A-Z0-9]{4,}$/;
 
 /** True for any code minted by the wheel, used to key off wheel-specific rules. */
 export function isWheelCode(code: string) {
-  return /^RODA(5|10|20)-[A-Z0-9]{4,}$/.test(code.trim().toUpperCase());
+  const normalized = persistWheelCode(code);
+  return NEW_WHEEL_CODE.test(normalized) || LEGACY_WHEEL_CODE.test(normalized);
 }

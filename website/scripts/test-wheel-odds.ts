@@ -12,9 +12,11 @@ import {
   WHEEL_LAYOUT,
   currentPeriodKey,
   drawPrize,
+  displayWheelCode,
   generateWheelCode,
   isWheelCode,
   periodExpiresAt,
+  persistWheelCode,
   segmentForPercent,
 } from "../src/lib/ecommerce/prizeWheel";
 
@@ -123,20 +125,48 @@ function testPeriodBoundaries() {
 }
 
 function testCodes() {
-  const codes = new Set<string>();
-  for (let i = 0; i < 5_000; i += 1) codes.add(generateWheelCode(20));
-  assert(codes.size === 5_000, `expected 5000 distinct codes, got ${codes.size}`);
+  const fixture = { periodKey: "2026-08", username: "tiago.domingues" };
+  for (const percent of [5, 10, 20] as const) {
+    const expected = `roda-${percent}%-august-2026-tiago.domingues`;
+    const sample = generateWheelCode({ percent, ...fixture });
+    assert(sample === expected, `unexpected code shape: ${sample}`);
+    assert(isWheelCode(sample), `isWheelCode rejected its own output: ${sample}`);
+    assert(
+      persistWheelCode(sample) === expected.toUpperCase(),
+      `persistWheelCode should uppercase ${sample}`
+    );
+    assert(
+      displayWheelCode(persistWheelCode(sample)) === expected,
+      "display form should round-trip through persist"
+    );
+  }
 
-  const sample = generateWheelCode(5);
-  assert(sample.startsWith("RODA5-"), `unexpected code shape: ${sample}`);
-  assert(isWheelCode(sample), `isWheelCode rejected its own output: ${sample}`);
+  assert(
+    generateWheelCode({ percent: 20, periodKey: "2026-01", username: "wheel1" }) ===
+      "roda-20%-january-2026-wheel1",
+    "January should use the English month name"
+  );
+  assert(
+    generateWheelCode({ percent: 10, periodKey: "2026-09", username: "Ana.Silva" }) ===
+      "roda-10%-september-2026-ana.silva",
+    "username should be lowercased in the display form"
+  );
+
   assert(!isWheelCode("JHONNY10"), "the fixed welcome coupon is not a wheel code");
   assert(!isWheelCode("RODA10"), "the retired fixed wheel coupon is not a per-spin code");
-  // 0/O/1/I are excluded so codes survive being read aloud or retyped.
   assert(
-    !/[01OI]/.test(sample.split("-")[1]!),
-    `ambiguous characters leaked into ${sample}`
+    isWheelCode("roda-20%-august-2026-nobody"),
+    "isWheelCode only classifies shape — invented codes still look like wheel codes"
   );
+  assert(
+    isWheelCode("RODA-20%-AUGUST-2026-TIAGO.DOMINGUES"),
+    "checkout-normalized new codes must classify as wheel codes"
+  );
+  assert(
+    isWheelCode("RODA20-7K3QP1"),
+    "legacy per-spin codes already in production must still classify"
+  );
+  assert(!isWheelCode("roda-15%-august-2026-tiago.domingues"), "15% is not a wheel prize");
 }
 
 function main() {
