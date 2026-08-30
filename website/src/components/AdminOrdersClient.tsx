@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FaturaAttachment } from "@/components/FaturaAttachment";
 import { formatEuro } from "@/lib/ecommerce/money";
 
 type AdminOrder = {
@@ -22,6 +23,7 @@ type AdminOrder = {
     multibancoEntity: string | null;
     multibancoReference: string | null;
   } | null;
+  hasFaturaRecibo?: boolean;
 };
 
 const statuses = [
@@ -47,7 +49,15 @@ function formatDate(value: string) {
 
 export function AdminOrdersClient() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
-  const [stats, setStats] = useState<{ openCount: number; paidCount: number; totalOrders: number } | null>(null);
+  const [stats, setStats] = useState<{
+    openCount: number;
+    paidCount: number;
+    totalOrders: number;
+    revenueCents?: number;
+    averagePurchaseCents?: number;
+    addressCount?: number;
+    pickupCount?: number;
+  } | null>(null);
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
@@ -129,10 +139,14 @@ export function AdminOrdersClient() {
   return (
     <div className="grid gap-8">
       {stats && (
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["Total encomendas", stats.totalOrders],
+            ["Receita total", formatEuro(stats.revenueCents || 0)],
+            ["Ticket médio", formatEuro(stats.averagePurchaseCents || 0)],
             ["Em curso", stats.openCount],
+            ["Envio morada", stats.addressCount ?? 0],
+            ["Levantamento", stats.pickupCount ?? 0],
             ["Pagas", stats.paidCount],
           ].map(([label, value]) => (
             <div key={String(label)} className="border-b border-line pb-3">
@@ -144,7 +158,7 @@ export function AdminOrdersClient() {
       )}
 
       <form
-        className="grid gap-3 sm:grid-cols-[1.4fr_0.9fr_auto]"
+        className="grid gap-3 sm:grid-cols-[1.4fr_0.9fr_auto_auto]"
         onSubmit={(event) => {
           event.preventDefault();
           void load();
@@ -171,6 +185,12 @@ export function AdminOrdersClient() {
         <button type="submit" className="rounded-full bg-ink px-5 py-3 text-sm font-bold uppercase tracking-wide text-white">
           Filtrar
         </button>
+        <a
+          href="/api/admin/orders/export.csv"
+          className="rounded-full border border-line bg-white px-5 py-3 text-center text-sm font-bold uppercase tracking-wide text-ink"
+        >
+          Export CSV
+        </a>
       </form>
 
       {message && <p className="rounded-xl bg-white p-3 text-sm text-muted">{message}</p>}
@@ -244,6 +264,16 @@ export function AdminOrdersClient() {
                   </p>
                 )}
               </div>
+
+              <FaturaAttachment
+                orderId={selected.id}
+                orderNumber={selected.orderNumber}
+                hasFaturaRecibo={Boolean(selected.hasFaturaRecibo)}
+                downloadHref={`/api/admin/orders/${selected.id}/fatura-recibo`}
+                label="Fatura-recibo"
+                downloadLabel="Descarregar"
+                unavailableLabel="ainda não disponível"
+              />
 
               <ul className="grid gap-2 text-sm text-muted">
                 {selected.items.map((item) => (

@@ -557,19 +557,19 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                 {user?.role === "ADMIN" && (
                   <>
                     <a
-                      href="/admin/clientes"
+                      href="/admin?tab=clientes"
                       className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                     >
                       Admin · Clientes
                     </a>
                     <a
-                      href="/admin/encomendas"
+                      href="/admin?tab=encomendas"
                       className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                     >
                       Admin · Encomendas
                     </a>
                     <a
-                      href="/admin/analytics"
+                      href="/admin?tab=analytics"
                       className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-cream"
                     >
                       Admin · Analytics

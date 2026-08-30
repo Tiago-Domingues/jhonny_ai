@@ -1,30 +1,32 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 
-const tabs = [
-  { href: "/admin/clientes", label: "Clientes" },
-  { href: "/admin/encomendas", label: "Encomendas" },
-  { href: "/admin/analytics", label: "Analytics" },
+export type AdminTab = "clientes" | "encomendas" | "analytics";
+
+const tabs: Array<{ id: AdminTab; label: string }> = [
+  { id: "clientes", label: "Clientes" },
+  { id: "encomendas", label: "Encomendas" },
+  { id: "analytics", label: "Analytics" },
 ];
 
-export function AdminNav() {
-  const pathname = usePathname();
+export function AdminNav({ tab }: { tab: AdminTab }) {
+  const router = useRouter();
   return (
     <nav className="mt-8 flex flex-wrap gap-2">
-      {tabs.map((tab) => {
-        const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+      {tabs.map((item) => {
+        const active = tab === item.id;
         return (
-          <Link
-            key={tab.href}
-            href={tab.href}
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => router.replace(`/admin?tab=${item.id}`, { scroll: false })}
             className={`rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
               active ? "bg-ink text-white" : "border border-line bg-white text-ink hover:bg-cream"
             }`}
           >
-            {tab.label}
-          </Link>
+            {item.label}
+          </button>
         );
       })}
     </nav>

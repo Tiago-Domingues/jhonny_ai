@@ -4,6 +4,7 @@ import type { CustomerType } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { adminEmailAllowlist, canAdminRemoveCustomer, PRIMARY_ADMIN_EMAIL } from "@/lib/ecommerce/admin";
 import { prisma } from "@/lib/ecommerce/db";
+import { PAID_PLUS_STATUSES } from "@/lib/ecommerce/orderKpis";
 import { normalizeEmail } from "@/lib/ecommerce/security";
 
 export type AdminCustomerListInput = {
@@ -22,8 +23,18 @@ function mapCustomer(
       phone: string | null;
       customerType: CustomerType;
       preferredLanguage: string;
+      addressLine1: string | null;
+      addressLine2: string | null;
+      postalCode: string | null;
       city: string | null;
       country: string;
+      billingSameAsShipping: boolean;
+      billingAddressLine1: string | null;
+      billingAddressLine2: string | null;
+      billingPostalCode: string | null;
+      billingCity: string | null;
+      billingCountry: string | null;
+      nif: string | null;
       marketingOptIn: boolean;
       odooPartnerId: number | null;
       odooSyncStatus: string;
@@ -49,8 +60,18 @@ function mapCustomer(
           phone: user.profile.phone,
           customerType: user.profile.customerType,
           preferredLanguage: user.profile.preferredLanguage,
+          addressLine1: user.profile.addressLine1,
+          addressLine2: user.profile.addressLine2,
+          postalCode: user.profile.postalCode,
           city: user.profile.city,
           country: user.profile.country,
+          billingSameAsShipping: user.profile.billingSameAsShipping,
+          billingAddressLine1: user.profile.billingAddressLine1,
+          billingAddressLine2: user.profile.billingAddressLine2,
+          billingPostalCode: user.profile.billingPostalCode,
+          billingCity: user.profile.billingCity,
+          billingCountry: user.profile.billingCountry,
+          nif: user.profile.nif,
           marketingOptIn: user.profile.marketingOptIn,
           odooPartnerId: user.profile.odooPartnerId,
           odooSyncStatus: user.profile.odooSyncStatus,
@@ -91,7 +112,7 @@ export async function listCustomersForAdmin(input: AdminCustomerListInput = {}) 
 
   const where: Prisma.UserWhereInput = and.length ? { AND: and } : {};
 
-  const [total, users, totalCustomers, googleSignups, marketingOptIn, newLast7Days] = await Promise.all([
+  const [total, users, totalCustomers, googleSignups, marketingOptIn, newLast7Days, topSpender] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
       where,
@@ -109,14 +130,38 @@ export async function listCustomersForAdmin(input: AdminCustomerListInput = {}) 
     prisma.user.count({
       where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
     }),
+    getTopSpender(),
   ]);
 
   return {
     total,
     limit,
     offset,
-    stats: { totalCustomers, googleSignups, marketingOptIn, newLast7Days },
+    stats: { totalCustomers, googleSignups, marketingOptIn, newLast7Days, topSpender },
     customers: users.map((user) => mapCustomer(user)),
+  };
+}
+
+export async function getTopSpender() {
+  const grouped = await prisma.order.groupBy({
+    by: ["userId"],
+    where: { userId: { not: null }, status: { in: [...PAID_PLUS_STATUSES] } },
+    _sum: { totalCents: true },
+    orderBy: { _sum: { totalCents: "desc" } },
+    take: 1,
+  });
+  const winner = grouped[0];
+  if (!winner?.userId || !winner._sum.totalCents) return null;
+  const user = await prisma.user.findUnique({
+    where: { id: winner.userId },
+    include: { profile: { select: { fullName: true } } },
+  });
+  if (!user) return null;
+  return {
+    userId: user.id,
+    name: user.profile?.fullName || user.username,
+    email: user.email,
+    spentCents: winner._sum.totalCents,
   };
 }
 
@@ -230,6 +275,19 @@ export async function updateCustomerForAdmin(
     phoneCountryCode?: string;
     phone?: string | null;
     customerType?: CustomerType;
+    preferredLanguage?: string;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    country?: string;
+    billingSameAsShipping?: boolean;
+    billingAddressLine1?: string | null;
+    billingAddressLine2?: string | null;
+    billingPostalCode?: string | null;
+    billingCity?: string | null;
+    billingCountry?: string | null;
+    nif?: string | null;
     role?: "CUSTOMER" | "ADMIN";
   }
 ) {
@@ -247,12 +305,20 @@ export async function updateCustomerForAdmin(
     });
   }
 
+  if (input.phone !== undefined && !String(input.phone || "").replace(/\D/g, "").match(/\d{6,}/)) {
+    throw new Error("Phone is required.");
+  }
+
   const hasProfilePatch =
     typeof input.marketingOptIn === "boolean" ||
     typeof input.fullName === "string" ||
     typeof input.phoneCountryCode === "string" ||
     input.phone !== undefined ||
-    typeof input.customerType === "string";
+    typeof input.customerType === "string" ||
+    typeof input.preferredLanguage === "string" ||
+    input.addressLine1 !== undefined ||
+    input.nif !== undefined ||
+    typeof input.billingSameAsShipping === "boolean";
 
   if (hasProfilePatch) {
     await prisma.customerProfile.update({
@@ -263,6 +329,19 @@ export async function updateCustomerForAdmin(
         ...(typeof input.phoneCountryCode === "string" ? { phoneCountryCode: input.phoneCountryCode } : {}),
         ...(input.phone !== undefined ? { phone: input.phone?.trim() || null } : {}),
         ...(typeof input.customerType === "string" ? { customerType: input.customerType } : {}),
+        ...(typeof input.preferredLanguage === "string" ? { preferredLanguage: input.preferredLanguage } : {}),
+        ...(input.addressLine1 !== undefined ? { addressLine1: input.addressLine1?.trim() || null } : {}),
+        ...(input.addressLine2 !== undefined ? { addressLine2: input.addressLine2?.trim() || null } : {}),
+        ...(input.postalCode !== undefined ? { postalCode: input.postalCode?.trim() || null } : {}),
+        ...(input.city !== undefined ? { city: input.city?.trim() || null } : {}),
+        ...(typeof input.country === "string" ? { country: input.country } : {}),
+        ...(typeof input.billingSameAsShipping === "boolean" ? { billingSameAsShipping: input.billingSameAsShipping } : {}),
+        ...(input.billingAddressLine1 !== undefined ? { billingAddressLine1: input.billingAddressLine1?.trim() || null } : {}),
+        ...(input.billingAddressLine2 !== undefined ? { billingAddressLine2: input.billingAddressLine2?.trim() || null } : {}),
+        ...(input.billingPostalCode !== undefined ? { billingPostalCode: input.billingPostalCode?.trim() || null } : {}),
+        ...(input.billingCity !== undefined ? { billingCity: input.billingCity?.trim() || null } : {}),
+        ...(input.billingCountry !== undefined ? { billingCountry: input.billingCountry?.trim() || "PT" } : {}),
+        ...(input.nif !== undefined ? { nif: input.nif?.trim() || null } : {}),
       },
     });
   }
