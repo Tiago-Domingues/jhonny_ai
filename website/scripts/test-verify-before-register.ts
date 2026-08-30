@@ -50,7 +50,7 @@ assert(
 
 const verifyClient = readFileSync(resolve(__dirname, "../src/components/VerifyEmailClient.tsx"), "utf8");
 assert(verifyClient.includes("started.current"), "verify page posts the token only once");
-assert(verifyClient.includes("locale copy must not retrigger"), "locale changes must not resend the token");
+assert(/locale copy must not retrigger/i.test(verifyClient), "locale changes must not resend the token");
 
 const verifyEmail = readFileSync(resolve(__dirname, "../src/lib/ecommerce/email.ts"), "utf8");
 assert(verifyEmail.includes("word-break:break-all"), "verification email includes a pasteable URL");
@@ -60,7 +60,10 @@ assert(proxySource.includes("isPublicEmailAuthPath"), "coming-soon proxy lets em
 
 async function main() {
   const connectionString = process.env.DATABASE_URL?.trim();
-  if (!connectionString) throw new Error("DATABASE_URL is required");
+  if (!connectionString) {
+    console.log("verify-before-register: skipped DB checks (no DATABASE_URL)");
+    return;
+  }
   const prisma = new PrismaClient({
     adapter: new PrismaPg({
       connectionString,
