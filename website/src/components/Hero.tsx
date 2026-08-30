@@ -16,7 +16,7 @@ function prefersReducedMotion() {
 export function Hero() {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const remainingRef = useRef(HERO_LOOP.videoMs);
+  const remainingRef = useRef<number>(HERO_LOOP.videoMs);
   const startedAtRef = useRef(0);
   const [panel, setPanel] = useState<HeroPanel>("video");
   const [incoming, setIncoming] = useState<HeroPanel | null>(null);
