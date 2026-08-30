@@ -148,6 +148,14 @@ async function main() {
     assert(typeof analyticsBody.allTimeSalesCents === "number", "all-time sales KPI");
     assert(typeof analyticsBody.allTimeOrderCount === "number", "all-time encomendas KPI");
 
+    const analyticsCsv = await fetch(`${base}/api/admin/analytics/export.csv?days=90`, {
+      headers: { Cookie: adminCookie },
+    });
+    assert(analyticsCsv.ok, `analytics csv failed ${analyticsCsv.status}`);
+    const analyticsCsvText = await analyticsCsv.text();
+    assert(analyticsCsvText.includes("kind,date,views"), "analytics csv header");
+    assert(analyticsCsvText.includes("2026-07-01"), "analytics csv includes day 0");
+
     const paid = await prisma.order.create({
       data: {
         orderNumber: `JSS-TEST-${stamp}`,
