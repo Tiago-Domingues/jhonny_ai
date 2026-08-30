@@ -144,7 +144,7 @@ export async function upsertGoogleCustomer(info: GoogleUserInfo): Promise<{
             fullName,
             customerType: "SURFER",
             preferredLanguage: "en",
-            marketingOptIn: false,
+            marketingOptIn: true,
           },
         },
       },

@@ -37,6 +37,8 @@ const account = readFileSync(resolve(__dirname, "../src/components/AccountClient
 assert(account.includes('href="#dados"'), "account nav has My Data");
 assert(account.includes('id="dados"'), "My Data section id exists");
 assert(account.includes("editData"), "Edit data control exists");
+assert(account.includes('name="marketingOptIn"'), "account has marketing opt-in");
+assert(account.includes("defaultChecked"), "marketing is selected by default on register");
 
 const orders = readFileSync(resolve(__dirname, "../src/components/AccountOrders.tsx"), "utf8");
 assert(orders.includes("FaturaAttachment"), "orders show fatura attachment");

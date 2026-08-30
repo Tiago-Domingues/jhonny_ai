@@ -33,7 +33,7 @@ export const registerSchema = z.object({
   phoneCountryCode: z.string().min(2).max(8).default("+351"),
   phone: z.string().max(40).optional().or(z.literal("")),
   customerType: z.enum(customerTypes).default("SURFER"),
-  marketingOptIn: z.boolean().default(false),
+  marketingOptIn: z.boolean().default(true),
   preferredLanguage: z.enum(["pt", "en", "zh"]).default("en"),
   birthDate: birthDateSchema,
 });
@@ -43,6 +43,7 @@ export const pendingRegisterSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3).max(40).regex(/^[a-zA-Z0-9_.-]+$/),
   password: z.string().min(8).max(128),
+  marketingOptIn: z.boolean().default(true),
 });
 
 export const loginSchema = z.object({

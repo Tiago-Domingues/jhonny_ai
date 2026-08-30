@@ -189,7 +189,7 @@ model CustomerProfile {
   billingCity        String?
   billingCountry     String       @default("PT")
   nif                String?
-  marketingOptIn     Boolean      @default(false)
+  marketingOptIn     Boolean      @default(true)
   odooPartnerId      Int?
   odooSyncStatus     SyncStatus   @default(NOT_SYNCED)
   odooSyncError      String?
@@ -610,13 +610,14 @@ model EmailVerificationToken {
 
 /// Signup held until the customer clicks the email link. No User row yet.
 model PendingRegistration {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  username     String
-  passwordHash String
-  tokenHash    String   @unique
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  id             String   @id @default(cuid())
+  email          String   @unique
+  username       String
+  passwordHash   String
+  tokenHash      String   @unique
+  expiresAt      DateTime
+  marketingOptIn Boolean  @default(true)
+  createdAt      DateTime @default(now())
 
   @@index([username])
   @@index([expiresAt])
