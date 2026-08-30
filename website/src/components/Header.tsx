@@ -37,6 +37,39 @@ type MenuCategory = {
   items: MenuSubcategory[];
 };
 
+function VolumeCalculatorMenuLink({
+  href,
+  label,
+  hint,
+  onNavigate,
+}: {
+  href: string;
+  label: string;
+  hint: string;
+  onNavigate: () => void;
+}) {
+  const [invert, setInvert] = useState(false);
+  return (
+    <Link
+      href={href}
+      data-testid="volume-calculator-menu"
+      data-inverted={invert ? "true" : "false"}
+      onClick={onNavigate}
+      onMouseEnter={() => setInvert(true)}
+      onMouseLeave={() => setInvert(false)}
+      onMouseDown={() => setInvert(true)}
+      className={`inline-flex max-w-xl flex-col rounded-2xl border px-4 py-3 transition ${
+        invert ? "border-ink bg-white text-ink" : "border-ink bg-ink text-white"
+      }`}
+    >
+      <span className="text-sm font-bold uppercase tracking-[0.08em]">{label}</span>
+      <span className={`mt-1 text-xs font-normal normal-case tracking-normal ${invert ? "text-ink/60" : "text-white/70"}`}>
+        {hint}
+      </span>
+    </Link>
+  );
+}
+
 function coerceMenuCategories(
   categories: Array<{ key: NavKey; anchor: string; items: Array<string | MenuSubcategory> }>
 ): MenuCategory[] {
@@ -743,26 +776,16 @@ export function Header({ categories }: { categories?: MenuCategory[] }) {
                 <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-[0.2em] text-ink">
                   {headerCopy.tools}
                 </p>
-                <Link
+                <VolumeCalculatorMenuLink
                   href={VOLUME_CALCULATOR_PATH}
-                  data-testid="volume-calculator-menu"
-                  onClick={() => {
+                  label={volumeCopy.menuLabel}
+                  hint={volumeCopy.menuHint}
+                  onNavigate={() => {
                     setDesktopCat(null);
                     setActiveSubPath(null);
                     setActiveNestedPath(null);
                   }}
-                  className="inline-flex max-w-xl flex-col rounded-2xl border px-4 py-3 transition"
-                >
-                  <span className="text-sm font-bold uppercase tracking-[0.08em]">
-                    {volumeCopy.menuLabel}
-                  </span>
-                  <span
-                    data-volume-hint
-                    className="mt-1 text-xs font-normal normal-case tracking-normal text-white/70"
-                  >
-                    {volumeCopy.menuHint}
-                  </span>
-                </Link>
+                />
               </div>
             )}
 
