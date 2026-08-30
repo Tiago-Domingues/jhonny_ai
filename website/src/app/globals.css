@@ -795,11 +795,18 @@ a[data-google-reviews-chip]:hover {
   overflow: hidden;
 }
 
-.hero-store__stage {
+.hero-store__stage,
+.hero-store-people {
   position: absolute;
-  inset: 0;
-  height: 100%;
+  top: 6%;
+  left: 0;
   width: 100%;
+  height: 62%;
+}
+
+.hero-store-people {
+  z-index: 2;
+  pointer-events: none;
 }
 
 .hero-store__swell {
@@ -832,7 +839,7 @@ a[data-google-reviews-chip]:hover {
 }
 
 .hero-store-copy {
-  background: linear-gradient(to top, var(--color-paper) 38%, transparent 100%);
+  background: linear-gradient(to top, var(--color-paper) 42%, transparent 100%);
 }
 
 .hero-store-jhonny {
@@ -842,9 +849,20 @@ a[data-google-reviews-chip]:hover {
 }
 
 .hero-store-client {
-  /* view-box + % keeps walks in SVG units so 390px does not throw them off-canvas */
-  transform-box: view-box;
-  transform-origin: 0 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.75rem;
+  height: 4.5rem;
+  margin-left: -1.35rem;
+  margin-top: -3.6rem;
+}
+
+.hero-store-client__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
 .hero-store-client--shopper {
@@ -929,7 +947,8 @@ a[data-google-reviews-chip]:hover {
 }
 
 @media (max-width: 639px) {
-  .hero-store__stage {
+  .hero-store__stage,
+  .hero-store-people {
     top: 14%;
     left: 0;
     width: 100%;
@@ -937,7 +956,14 @@ a[data-google-reviews-chip]:hover {
   }
 
   .hero-store-chats {
-    top: 18%;
+    top: 20%;
+  }
+
+  .hero-store-client {
+    width: 2.15rem;
+    height: 3.6rem;
+    margin-left: -1.05rem;
+    margin-top: -2.9rem;
   }
 
   .hero-store-client--shopper {

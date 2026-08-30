@@ -112,12 +112,12 @@ export function HeroStoreScene() {
 
         {/* Balcão — drawn over Jhonny so he stands behind it */}
         <g className="hero-store__counter">
-          <path d="M430 470 H1180 V620 H430 Z" fill="#f3f0e8" stroke="#0d0d0d" strokeWidth="2.4" />
+          <path d="M430 470 H1180 V620 H430 Z" fill="#e8e2d0" stroke="#0d0d0d" strokeWidth="2.6" />
           <path
             d="M430 494 H1180 M430 518 H1180 M430 542 H1180 M430 566 H1180 M430 590 H1180"
             stroke="#0d0d0d"
-            strokeWidth="1"
-            opacity="0.28"
+            strokeWidth="1.15"
+            opacity="0.42"
           />
           <text
             x="498"
@@ -168,14 +168,16 @@ export function HeroStoreScene() {
           opacity="0.18"
         />
 
-        {/* Clients */}
-        <g className="hero-store-client hero-store-client--shopper">
-          <LineClient bag={false} />
-        </g>
-        <g className="hero-store-client hero-store-client--buyer">
-          <LineClient bag />
-        </g>
       </svg>
+
+      <div className="hero-store-people">
+        <div className="hero-store-client hero-store-client--shopper">
+          <LineClient bag={false} />
+        </div>
+        <div className="hero-store-client hero-store-client--buyer">
+          <LineClient bag />
+        </div>
+      </div>
 
       <div className="hero-store-chats">
         {chats.map((chat, index) => (
@@ -191,9 +193,15 @@ export function HeroStoreScene() {
 
 function LineClient({ bag }: { bag: boolean }) {
   return (
-    <>
+    <svg viewBox="-22 -52 64 92" className="hero-store-client__svg" aria-hidden>
       <circle cx="0" cy="-38" r="11" fill="none" stroke="#0d0d0d" strokeWidth="2" />
-      <path d="M0 -26 V8 M0 -12 L-16 4 M0 -12 L16 4 M0 8 L-12 34 M0 8 L12 34" fill="none" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M0 -26 V8 M0 -12 L-16 4 M0 -12 L16 4 M0 8 L-12 34 M0 8 L12 34"
+        fill="none"
+        stroke="#0d0d0d"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
       {bag ? (
         <path
           className="hero-store-client__bag"
@@ -203,6 +211,6 @@ function LineClient({ bag }: { bag: boolean }) {
           strokeWidth="1.6"
         />
       ) : null}
-    </>
+    </svg>
   );
 }
