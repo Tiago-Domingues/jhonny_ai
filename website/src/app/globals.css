@@ -759,6 +759,367 @@ a[data-google-reviews-chip]:hover {
   animation: shop-hero-in 0.7s ease-out both;
 }
 
+/* Homepage hero: surf film ↔ store illustration */
+.hero-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 900ms ease;
+}
+
+.hero-panel--under {
+  z-index: 1;
+  opacity: 1;
+}
+
+.hero-panel--active {
+  z-index: 2;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hero-panel--incoming {
+  z-index: 3;
+}
+
+.hero-panel--store {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.hero-store {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.hero-store__stage {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.hero-store__swell {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-store-swell 4.8s ease-in-out infinite;
+}
+
+.hero-store__swell--late {
+  animation-delay: -1.6s;
+}
+
+.hero-store__sun {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hero-store-sun 8s ease-in-out infinite;
+}
+
+.hero-store__palm {
+  transform-box: fill-box;
+  transform-origin: 20% 100%;
+  animation: hero-store-palm 5.5s ease-in-out infinite;
+}
+
+.hero-store__suit {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: hero-store-sway 3.8s ease-in-out infinite;
+}
+
+.hero-store__suit--1 {
+  animation-delay: -0.7s;
+}
+
+.hero-store__suit--2 {
+  animation-delay: -1.4s;
+}
+
+.hero-store__suit--3 {
+  animation-delay: -2.1s;
+}
+
+.hero-store__board {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: hero-store-board 6s ease-in-out infinite;
+}
+
+.hero-store__board--1,
+.hero-store__board--4,
+.hero-store__board--7 {
+  animation-delay: -1.8s;
+}
+
+.hero-store__lamp--a {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: hero-store-lamp 5.2s ease-in-out infinite;
+}
+
+.hero-store__lamp--b {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: hero-store-lamp 6.4s ease-in-out infinite reverse;
+}
+
+.hero-store__steam path {
+  animation: hero-store-steam 2.4s ease-in-out infinite;
+}
+
+.hero-store__steam path:last-child {
+  animation-delay: -0.8s;
+}
+
+.hero-store__gull {
+  animation: hero-store-gull 14s linear infinite;
+}
+
+.hero-store-toy {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  pointer-events: none;
+}
+
+.hero-store-toy__img {
+  height: auto;
+  width: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(13, 13, 13, 0.12));
+}
+
+.hero-store-copy {
+  background: linear-gradient(to top, var(--color-paper) 42%, transparent 100%);
+}
+
+.hero-store-toy--greet {
+  left: 8%;
+  bottom: 11%;
+  width: 5.5rem;
+  animation: toy-bob 4.5s ease-in-out infinite;
+}
+
+.hero-store-toy--ride {
+  bottom: 8%;
+  width: 3.6rem;
+  animation: hero-store-ride 11s linear infinite;
+}
+
+.hero-store-toy--hang {
+  top: 34%;
+  right: 18%;
+  width: 2.8rem;
+  animation: hero-store-hang 3.6s ease-in-out infinite;
+}
+
+.hero-store-toy--peek {
+  left: 46%;
+  bottom: 22%;
+  width: 3.2rem;
+  animation: hero-store-peek 5s ease-in-out infinite;
+}
+
+.hero-store-toy__board {
+  position: absolute;
+  z-index: 1;
+  bottom: 7.2%;
+  height: 0.55rem;
+  width: 4.6rem;
+  border-radius: 999px;
+  background: #0d0d0d;
+  animation: hero-store-ride 11s linear infinite;
+}
+
+@media (min-width: 640px) {
+  .hero-store-toy--greet {
+    width: 7.25rem;
+  }
+
+  .hero-store-toy--ride {
+    width: 4.5rem;
+  }
+
+  .hero-store-toy--hang {
+    width: 3.4rem;
+  }
+
+  .hero-store-toy--peek {
+    width: 3.8rem;
+  }
+
+  .hero-store-toy__board {
+    width: 5.6rem;
+    height: 0.65rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .hero-store__stage {
+    top: 16%;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    transform: none;
+  }
+
+  .hero-store-toy--hang,
+  .hero-store-toy--peek,
+  .hero-store-toy--ride,
+  .hero-store-toy__board {
+    display: none;
+  }
+
+  .hero-store-toy--greet {
+    left: calc(50% - 2.1rem);
+    bottom: 31%;
+    width: 4.2rem;
+  }
+}
+
+@keyframes hero-store-swell {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes hero-store-sun {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@keyframes hero-store-palm {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes hero-store-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes hero-store-board {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1.4deg);
+  }
+}
+
+@keyframes hero-store-lamp {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2.5deg);
+  }
+}
+
+@keyframes hero-store-steam {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes hero-store-gull {
+  0% {
+    transform: translate(80px, 250px);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(1480px, 210px);
+    opacity: 0;
+  }
+}
+
+@keyframes hero-store-ride {
+  0% {
+    left: 6%;
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    left: 72%;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-store-hang {
+  0%,
+  100% {
+    transform: rotate(-18deg) translateY(0);
+  }
+  50% {
+    transform: rotate(12deg) translateY(8px);
+  }
+}
+
+@keyframes hero-store-peek {
+  0%,
+  100% {
+    transform: translateY(10px);
+    opacity: 0.2;
+  }
+  40%,
+  70% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.jss-a11y-motion .hero-store__swell,
+.jss-a11y-motion .hero-store__sun,
+.jss-a11y-motion .hero-store__palm,
+.jss-a11y-motion .hero-store__suit,
+.jss-a11y-motion .hero-store__board,
+.jss-a11y-motion .hero-store__lamp--a,
+.jss-a11y-motion .hero-store__lamp--b,
+.jss-a11y-motion .hero-store__steam path,
+.jss-a11y-motion .hero-store__gull,
+.jss-a11y-motion .hero-store-toy,
+.jss-a11y-motion .hero-store-toy__board {
+  animation: none;
+}
+
 /* Motion-off parity: features must still read as finished, not broken.
    The surfer is a pure flourish, so it is removed rather than frozen —
    frozen it would park mid-air over the page. */
@@ -826,5 +1187,21 @@ a[data-google-reviews-chip]:hover {
     bottom: 3px;
     opacity: 0.9;
     transform: none;
+  }
+  .hero-panel {
+    transition: none;
+  }
+  .hero-store__swell,
+  .hero-store__sun,
+  .hero-store__palm,
+  .hero-store__suit,
+  .hero-store__board,
+  .hero-store__lamp--a,
+  .hero-store__lamp--b,
+  .hero-store__steam path,
+  .hero-store__gull,
+  .hero-store-toy,
+  .hero-store-toy__board {
+    animation: none;
   }
 }
