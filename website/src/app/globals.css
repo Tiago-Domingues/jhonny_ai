@@ -763,14 +763,25 @@ a[data-google-reviews-chip]:hover {
 .hero-panel {
   position: absolute;
   inset: 0;
+  z-index: 1;
   opacity: 0;
   pointer-events: none;
   transition: opacity 900ms ease;
 }
 
+.hero-panel--under {
+  z-index: 1;
+  opacity: 1;
+}
+
 .hero-panel--active {
+  z-index: 2;
   opacity: 1;
   pointer-events: auto;
+}
+
+.hero-panel--incoming {
+  z-index: 3;
 }
 
 .hero-panel--store {
@@ -947,6 +958,14 @@ a[data-google-reviews-chip]:hover {
 }
 
 @media (max-width: 639px) {
+  .hero-store__stage {
+    top: 22%;
+    height: 58%;
+    width: 175%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .hero-store-toy--hang,
   .hero-store-toy--peek {
     display: none;
