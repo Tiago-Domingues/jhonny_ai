@@ -1,12 +1,15 @@
 "use client";
 
-import Image from "next/image";
+import { useLanguage } from "@/components/LanguageProvider";
 
 /**
- * Modular second homepage: cream paper + black line store, Jhonny toys inside.
- * Visual language matches the Terms page (paper ground, ink marks, open space).
+ * Second homepage: line-art of the Surf Essentials aisle.
+ * Jhonny stays behind the balcão; clients enter, talk, and leave.
  */
 export function HeroStoreScene() {
+  const { t } = useLanguage();
+  const chats = t.hero.storeChats;
+
   return (
     <div className="hero-store" aria-hidden>
       <svg
@@ -15,220 +18,191 @@ export function HeroStoreScene() {
         preserveAspectRatio="xMidYMid meet"
         role="presentation"
       >
-        <defs>
-          <pattern id="hero-store-floor" width="48" height="48" patternUnits="userSpaceOnUse">
-            <path d="M0 48 H48" stroke="#0d0d0d" strokeWidth="0.6" opacity="0.12" />
-          </pattern>
-        </defs>
+        {/* Ceiling beams + hung longboards */}
+        <path d="M80 70 H1520 M80 118 H1520 M80 166 H1520" stroke="#0d0d0d" strokeWidth="2.2" />
+        <g className="hero-store__hung">
+          <rect x="220" y="78" width="380" height="28" rx="14" fill="#0d0d0d" />
+          <rect x="640" y="126" width="420" height="26" rx="13" fill="none" stroke="#0d0d0d" strokeWidth="2" />
+          <rect x="1100" y="86" width="340" height="24" rx="12" fill="#0d0d0d" />
+        </g>
 
-        {/* Floor */}
-        <polygon
-          className="hero-store__floor"
-          points="0,620 1600,620 1600,900 0,900"
-          fill="url(#hero-store-floor)"
-        />
-        <path d="M0 620 H1600" stroke="#0d0d0d" strokeWidth="2" />
-        <path
-          d="M180 620 L80 900 M500 620 L420 900 M820 620 L820 900 M1140 620 L1220 900 M1460 620 L1560 900"
-          stroke="#0d0d0d"
-          strokeWidth="1"
-          opacity="0.22"
-        />
-
-        {/* Back wall + hanging sign */}
-        <path d="M70 210 H1530" stroke="#0d0d0d" strokeWidth="1.6" />
-        <rect x="620" y="128" width="360" height="58" fill="none" stroke="#0d0d0d" strokeWidth="2" />
-        <text
-          x="800"
-          y="166"
-          textAnchor="middle"
-          fill="#0d0d0d"
-          fontFamily="var(--font-montserrat), Montserrat, sans-serif"
-          fontSize="22"
-          fontWeight="800"
-          letterSpacing="6"
-        >
-          JHONNY SURF STORE
-        </text>
-
-        {/* Street window — ocean line drawing */}
-        <g className="hero-store__window">
-          <rect x="96" y="230" width="420" height="340" fill="none" stroke="#0d0d0d" strokeWidth="2.4" />
-          <path d="M306 230 V570 M96 400 H516" stroke="#0d0d0d" strokeWidth="1.4" />
+        {/* Left pillar + ladder + bottle shelf */}
+        <rect x="118" y="180" width="46" height="430" fill="none" stroke="#0d0d0d" strokeWidth="2" />
+        <g className="hero-store__ladder">
+          <path d="M200 250 L248 610 M278 250 L326 610" stroke="#0d0d0d" strokeWidth="2" />
           <path
-            className="hero-store__horizon"
-            d="M112 392 H500"
-            stroke="#0d0d0d"
-            strokeWidth="1.2"
-            opacity="0.55"
-          />
-          <path
-            className="hero-store__swell"
-            d="M118 430 C170 412, 220 448, 274 428 C328 408, 378 446, 430 424 C470 410, 492 428, 500 434"
-            fill="none"
+            d="M214 300 H292 M222 360 H300 M230 420 H308 M238 480 H316 M246 540 H324"
             stroke="#0d0d0d"
             strokeWidth="1.6"
           />
-          <path
-            className="hero-store__swell hero-store__swell--late"
-            d="M118 468 C176 452, 228 486, 286 466 C344 446, 392 484, 500 470"
-            fill="none"
-            stroke="#0d0d0d"
-            strokeWidth="1.3"
-            opacity="0.7"
-          />
-          <circle className="hero-store__sun" cx="430" cy="286" r="18" fill="none" stroke="#0d0d0d" strokeWidth="1.6" />
-          <path
-            className="hero-store__palm"
-            d="M168 568 C168 500, 156 470, 148 430 M148 448 C118 430, 112 456, 128 470 M148 440 C178 418, 196 448, 176 468"
-            fill="none"
-            stroke="#0d0d0d"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
+          <path d="M218 292 H288 M226 352 H296 M234 412 H304" stroke="#0d0d0d" strokeWidth="6" opacity="0.18" />
         </g>
-
-        {/* Door */}
         <g>
-          <rect x="1388" y="268" width="132" height="352" fill="none" stroke="#0d0d0d" strokeWidth="2.2" />
-          <rect x="1404" y="286" width="100" height="200" fill="none" stroke="#0d0d0d" strokeWidth="1.3" />
-          <circle cx="1502" cy="450" r="5" fill="#0d0d0d" />
-        </g>
-
-        {/* Board rack */}
-        <g className="hero-store__rack">
-          <path d="M1088 250 V610 M1336 250 V610" stroke="#0d0d0d" strokeWidth="2.2" />
-          <path d="M1074 268 H1350 M1074 596 H1350" stroke="#0d0d0d" strokeWidth="2" />
-          {[
-            [1102, 292, 22, 286],
-            [1134, 276, 20, 302],
-            [1164, 304, 21, 274],
-            [1194, 268, 19, 310],
-            [1222, 288, 22, 290],
-            [1254, 274, 18, 304],
-            [1282, 298, 21, 280],
-            [1310, 282, 17, 296],
-          ].map(([x, y, w, h], i) => (
-            <g key={x} className={`hero-store__board hero-store__board--${i}`}>
-              <rect x={x} y={y} width={w} height={h} rx={w / 2} fill="#0d0d0d" />
-              <path
-                d={`M${x + w / 2} ${y + 18} V${y + h - 18}`}
-                stroke="#f3f0e8"
-                strokeWidth="1"
-                opacity="0.35"
-              />
+          <path d="M348 250 V610 M430 250 V610" stroke="#0d0d0d" strokeWidth="1.8" />
+          {[270, 330, 390, 450, 510, 570].map((y) => (
+            <g key={y}>
+              <path d={`M348 ${y} H430`} stroke="#0d0d0d" strokeWidth="1.4" />
+              <circle cx="372" cy={y - 14} r="7" fill="none" stroke="#0d0d0d" strokeWidth="1.3" />
+              <circle cx="406" cy={y - 16} r="6" fill="none" stroke="#0d0d0d" strokeWidth="1.3" />
             </g>
           ))}
         </g>
 
-        {/* Wetsuit rail */}
-        <g className="hero-store__suits">
-          <path d="M560 248 H980" stroke="#0d0d0d" strokeWidth="2" />
-          {[0, 1, 2, 3].map((i) => {
-            const x = 600 + i * 96;
-            return (
-              <g key={i} className={`hero-store__suit hero-store__suit--${i}`} transform={`translate(${x} 248)`}>
-                <path d="M0 0 V18" stroke="#0d0d0d" strokeWidth="1.6" />
-                <path
-                  d="M-22 22 C-26 70, -18 118, -10 168 M22 22 C26 70, 18 118, 10 168 M-22 22 H22 M-8 86 H8"
-                  fill="none"
-                  stroke="#0d0d0d"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-              </g>
-            );
-          })}
+        {/* Back shelves */}
+        <path
+          d="M470 250 H1080 M470 310 H1080 M470 370 H1080"
+          stroke="#0d0d0d"
+          strokeWidth="1.2"
+          opacity="0.45"
+        />
+
+        {/* Vertical boards behind / right of balcão */}
+        <g className="hero-store__rack">
+          {[
+            [1090, 220, 20, 300],
+            [1118, 208, 18, 312],
+            [1142, 228, 22, 292],
+            [1172, 200, 19, 320],
+            [1198, 216, 21, 304],
+            [1226, 206, 17, 314],
+            [1250, 230, 20, 290],
+            [1278, 212, 18, 308],
+            [1302, 224, 22, 296],
+            [1332, 204, 16, 316],
+          ].map(([x, y, w, h], i) => (
+            <rect
+              key={x}
+              className={`hero-store__board hero-store__board--${i}`}
+              x={x}
+              y={y}
+              width={w}
+              height={h}
+              rx={w / 2}
+              fill={i % 3 === 0 ? "#0d0d0d" : "none"}
+              stroke="#0d0d0d"
+              strokeWidth="1.6"
+            />
+          ))}
         </g>
 
-        {/* Counter + coffee kiosk nod */}
+        {/* Apparel rail */}
+        <g>
+          <path d="M1388 250 H1540 M1388 250 V610" stroke="#0d0d0d" strokeWidth="1.8" />
+          {[0, 1, 2, 3].map((i) => (
+            <path
+              key={i}
+              className={`hero-store__suit hero-store__suit--${i}`}
+              d={`M${1410 + i * 32} 250 V278 C${1400 + i * 32} 330, ${1402 + i * 32} 390, ${1410 + i * 32} 430 C${1420 + i * 32} 390, ${1422 + i * 32} 330, ${1412 + i * 32} 278`}
+              fill="none"
+              stroke="#0d0d0d"
+              strokeWidth="1.6"
+            />
+          ))}
+        </g>
+
+        <g className="hero-store-jhonny">
+          <image
+            href="/brand/jhonny-character-cut.png"
+            x="755"
+            y="332"
+            width="92"
+            height="140"
+          />
+        </g>
+
+        {/* Balcão — drawn over Jhonny so he stands behind it */}
         <g className="hero-store__counter">
-          <path d="M540 548 H980 V620 H540 Z" fill="none" stroke="#0d0d0d" strokeWidth="2.2" />
-          <path d="M560 548 V500 H780 V548" fill="none" stroke="#0d0d0d" strokeWidth="1.6" />
-          <rect x="790" y="508" width="72" height="40" fill="none" stroke="#0d0d0d" strokeWidth="1.5" />
-          <path d="M804 508 V492 M826 508 V488 M848 508 V494" stroke="#0d0d0d" strokeWidth="1.4" />
-          <g className="hero-store__steam">
-            <path d="M814 486 C808 476, 820 468, 814 458" fill="none" stroke="#0d0d0d" strokeWidth="1.2" />
-            <path d="M832 482 C826 472, 838 464, 832 454" fill="none" stroke="#0d0d0d" strokeWidth="1.2" />
-          </g>
+          <path d="M430 470 H1180 V620 H430 Z" fill="#f3f0e8" stroke="#0d0d0d" strokeWidth="2.4" />
+          <path
+            d="M430 494 H1180 M430 518 H1180 M430 542 H1180 M430 566 H1180 M430 590 H1180"
+            stroke="#0d0d0d"
+            strokeWidth="1"
+            opacity="0.28"
+          />
           <text
-            x="760"
-            y="590"
-            textAnchor="middle"
+            x="498"
+            y="568"
             fill="#0d0d0d"
             fontFamily="var(--font-montserrat), Montserrat, sans-serif"
-            fontSize="13"
-            fontWeight="700"
-            letterSpacing="3"
+            fontSize="54"
+            fontWeight="800"
+            letterSpacing="-2"
           >
-            WAX · FINS · ADVICE
+            JH
           </text>
+          <rect x="620" y="492" width="500" height="108" fill="none" stroke="#0d0d0d" strokeWidth="2" />
+          <path
+            className="hero-store__swell"
+            d="M640 560 C700 530, 760 590, 820 552 C880 516, 940 588, 1000 548 C1048 520, 1088 566, 1104 558"
+            fill="none"
+            stroke="#0d0d0d"
+            strokeWidth="2"
+          />
+          <path
+            className="hero-store__swell hero-store__swell--late"
+            d="M648 582 C720 562, 790 600, 860 574 C930 548, 1000 602, 1096 580"
+            fill="none"
+            stroke="#0d0d0d"
+            strokeWidth="1.4"
+            opacity="0.7"
+          />
         </g>
 
-        {/* Ceiling lamps */}
-        <g className="hero-store__lamp hero-store__lamp--a">
-          <path d="M250 0 V96" stroke="#0d0d0d" strokeWidth="1.4" />
-          <path d="M222 96 H278 L264 128 H236 Z" fill="#0d0d0d" />
+        {/* Round tables + rug */}
+        <ellipse cx="800" cy="760" rx="210" ry="70" fill="none" stroke="#0d0d0d" strokeWidth="1.5" />
+        <ellipse cx="800" cy="760" rx="168" ry="52" fill="none" stroke="#0d0d0d" strokeWidth="1" opacity="0.4" />
+        <g className="hero-store__table">
+          <ellipse cx="640" cy="708" rx="78" ry="22" fill="none" stroke="#0d0d0d" strokeWidth="2" />
+          <path d="M590 708 V748 M640 730 V756 M690 708 V748" stroke="#0d0d0d" strokeWidth="1.6" />
         </g>
-        <g className="hero-store__lamp hero-store__lamp--b">
-          <path d="M1350 0 V88" stroke="#0d0d0d" strokeWidth="1.4" />
-          <path d="M1324 88 H1376 L1364 118 H1336 Z" fill="#0d0d0d" />
+        <g className="hero-store__table">
+          <ellipse cx="960" cy="708" rx="78" ry="22" fill="none" stroke="#0d0d0d" strokeWidth="2" />
+          <path d="M910 708 V748 M960 730 V756 M1010 708 V748" stroke="#0d0d0d" strokeWidth="1.6" />
         </g>
 
-        {/* Seagull */}
+        {/* Floor lines */}
         <path
-          className="hero-store__gull"
-          d="M0 0 C12 -10, 22 -4, 28 0 C36 -12, 48 -8, 56 2"
-          fill="none"
+          d="M80 620 H1520 M200 700 H1400 M320 780 H1280"
           stroke="#0d0d0d"
-          strokeWidth="1.6"
-          strokeLinecap="round"
+          strokeWidth="1"
+          opacity="0.18"
         />
+
+        {/* Clients */}
+        <g className="hero-store-client hero-store-client--shopper">
+          <LineClient bag={false} />
+        </g>
+        <g className="hero-store-client hero-store-client--buyer">
+          <LineClient bag />
+        </g>
       </svg>
 
-      <JhonnyToy
-        className="hero-store-toy hero-store-toy--greet"
-        width={118}
-        height={178}
-      />
-      <JhonnyToy
-        className="hero-store-toy hero-store-toy--ride"
-        width={72}
-        height={108}
-      />
-      <span className="hero-store-toy__board" />
-      <JhonnyToy
-        className="hero-store-toy hero-store-toy--hang"
-        width={56}
-        height={84}
-      />
-      <JhonnyToy
-        className="hero-store-toy hero-store-toy--peek"
-        width={64}
-        height={96}
-      />
+      <div className="hero-store-chats">
+        {chats.map((chat, index) => (
+          <div key={chat.jhonny} className={`hero-store-chat hero-store-chat--${index}`}>
+            <p className="hero-store-balloon hero-store-balloon--jhonny">{chat.jhonny}</p>
+            <p className="hero-store-balloon hero-store-balloon--client">{chat.client}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function JhonnyToy({
-  className,
-  width,
-  height,
-}: {
-  className: string;
-  width: number;
-  height: number;
-}) {
+function LineClient({ bag }: { bag: boolean }) {
   return (
-    <span className={className}>
-      <Image
-        src="/brand/jhonny-character-cut.png"
-        alt=""
-        width={width}
-        height={height}
-        className="hero-store-toy__img"
-      />
-    </span>
+    <>
+      <circle cx="0" cy="-38" r="11" fill="none" stroke="#0d0d0d" strokeWidth="2" />
+      <path d="M0 -26 V8 M0 -12 L-16 4 M0 -12 L16 4 M0 8 L-12 34 M0 8 L12 34" fill="none" stroke="#0d0d0d" strokeWidth="2" strokeLinecap="round" />
+      {bag ? (
+        <path
+          className="hero-store-client__bag"
+          d="M18 6 H34 V28 H18 Z M20 6 C20 -2, 32 -2, 32 6"
+          fill="none"
+          stroke="#0d0d0d"
+          strokeWidth="1.6"
+        />
+      ) : null}
+    </>
   );
 }

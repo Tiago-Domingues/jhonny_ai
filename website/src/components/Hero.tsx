@@ -16,22 +16,35 @@ function prefersReducedMotion() {
 export function Hero() {
   const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const remainingRef = useRef(HERO_LOOP.videoMs);
+  const startedAtRef = useRef(0);
   const [panel, setPanel] = useState<HeroPanel>("video");
   const [incoming, setIncoming] = useState<HeroPanel | null>(null);
   const [canLoop, setCanLoop] = useState(false);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     setCanLoop(!prefersReducedMotion());
   }, []);
 
   useEffect(() => {
-    if (!canLoop || incoming) return;
-    const hold = panel === "video" ? HERO_LOOP.videoMs : HERO_LOOP.storeMs;
+    remainingRef.current = panel === "video" ? HERO_LOOP.videoMs : HERO_LOOP.storeMs;
+  }, [panel]);
+
+  useEffect(() => {
+    if (!canLoop || incoming || paused) return;
+    startedAtRef.current = Date.now();
     const id = window.setTimeout(() => {
       setIncoming(panel === "video" ? "store" : "video");
-    }, hold);
-    return () => window.clearTimeout(id);
-  }, [panel, canLoop, incoming]);
+    }, remainingRef.current);
+    return () => {
+      window.clearTimeout(id);
+      remainingRef.current = Math.max(
+        400,
+        remainingRef.current - (Date.now() - startedAtRef.current)
+      );
+    };
+  }, [panel, canLoop, incoming, paused]);
 
   useEffect(() => {
     if (!incoming) return;
@@ -56,6 +69,7 @@ export function Hero() {
 
   function goTo(next: HeroPanel) {
     if (next === panel || incoming) return;
+    remainingRef.current = next === "video" ? HERO_LOOP.videoMs : HERO_LOOP.storeMs;
     setIncoming(next);
   }
 
@@ -73,7 +87,14 @@ export function Hero() {
       id="top"
       data-hero-panel={incoming ?? panel}
       data-hero-loop={canLoop ? "on" : "off"}
-      className="relative flex min-h-[100svh] items-center overflow-hidden bg-paper"
+      data-hero-paused={paused ? "true" : undefined}
+      className={`relative flex min-h-[100svh] items-center overflow-hidden bg-paper ${
+        paused ? "hero-loop-paused" : ""
+      }`}
+      onPointerEnter={(event) => {
+        if (event.pointerType !== "touch") setPaused(true);
+      }}
+      onPointerLeave={() => setPaused(false)}
     >
       {shown.includes("video") && (
         <div
@@ -120,15 +141,15 @@ export function Hero() {
           <HeroStoreScene />
           <div className="hero-store-copy relative z-10 mx-auto flex h-full w-full max-w-3xl flex-col items-center justify-end px-5 pb-24 pt-36 text-center sm:px-8">
             <p className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-ink/55 sm:text-xs">
-              {t.hero.storeEyebrow}
+              {t.hero.eyebrow}
             </p>
             <h2 className="font-display text-3xl font-extrabold uppercase leading-[0.92] tracking-tight text-ink text-balance sm:text-5xl lg:text-6xl">
-              {t.hero.storeTitle1}
+              {t.hero.title1}
               <br />
-              {t.hero.storeTitle2}
+              {t.hero.title2}
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-ink/70 sm:text-base">
-              {t.hero.storeSubtitle}
+              {t.hero.subtitle}
             </p>
           </div>
         </div>
