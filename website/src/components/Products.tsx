@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { categoryGroupHref, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
 import { ArrowIcon } from "@/components/icons";
@@ -22,6 +23,7 @@ const categoryPhotoFallbacks: Record<string, string> = { ...categoryImages };
 
 export function Products() {
   const { t } = useLanguage();
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
     <section id="shop" className="scroll-mt-20 bg-paper py-20 text-ink sm:py-28">
@@ -38,7 +40,12 @@ export function Products() {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          data-category-grid
+          data-category-focus={hoveredId ? "true" : undefined}
+          onPointerLeave={() => setHoveredId(null)}
+          className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {t.shop.items.map((item) => {
             const localImage = categoryImages[item.id] || categoryImages.surfboards;
             const photoFallback = categoryPhotoFallbacks[item.id] || categoryPhotoFallbacks.surfboards;
@@ -48,6 +55,13 @@ export function Products() {
                 key={item.id}
                 id={item.id}
                 href={categoryGroupHref(item.id as CategoryGroupKey)}
+                data-category-card
+                data-category-active={hoveredId === item.id ? "true" : undefined}
+                onMouseEnter={() => setHoveredId(item.id)}
+                onPointerEnter={(event) => {
+                  if (event.pointerType === "touch") return;
+                  setHoveredId(item.id);
+                }}
                 className="group flex scroll-mt-24 flex-col overflow-hidden rounded-2xl border border-line-dark bg-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
               >
                 <div

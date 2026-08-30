@@ -28,9 +28,9 @@ export default async function Home() {
         <About />
         <Products />
         <Services />
-        <Brands catalogBrands={catalogBrands} />
         <Opportunities />
         <Athletes />
+        <Brands catalogBrands={catalogBrands} />
         <Visit />
         <Contact />
       </main>

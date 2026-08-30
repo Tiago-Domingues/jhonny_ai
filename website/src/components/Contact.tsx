@@ -15,30 +15,34 @@ export function Contact() {
 
   const cards = [
     {
+      channel: "whatsapp",
       icon: WhatsappIcon,
       label: t.contact.whatsapp,
       value: STORE.phoneDisplay,
       href: whatsappHref(WHATSAPP_MESSAGES[locale]),
     },
     {
+      channel: "email",
       icon: MailIcon,
       label: t.contact.email,
       value: STORE.email,
       href: `mailto:${STORE.email}`,
     },
     {
+      channel: "instagram",
       icon: InstagramIcon,
       label: t.contact.follow,
       value: "@jhonnysurfstore",
       href: STORE.instagram,
     },
     {
+      channel: "facebook",
       icon: FacebookIcon,
       label: "Facebook",
       value: "Jhonny Surf Store",
       href: STORE.facebook,
     },
-  ];
+  ] as const;
 
   return (
     <section id="contact" className="scroll-mt-20 bg-paper py-20 text-ink sm:py-28">
@@ -64,7 +68,10 @@ export function Contact() {
                 rel="noopener noreferrer"
                 className="group flex items-center gap-4 rounded-2xl border border-line bg-white p-6 text-left transition hover:-translate-y-0.5 hover:border-ink/40"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink transition group-hover:bg-ink group-hover:text-white">
+                <div
+                  data-contact-disc={c.channel}
+                  className={`contact-disc-${c.channel} flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-ink/25 text-ink transition`}
+                >
                   <Icon className="h-6 w-6" />
                 </div>
                 <div className="min-w-0 flex-1">
