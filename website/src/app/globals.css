@@ -959,30 +959,24 @@ a[data-google-reviews-chip]:hover {
 
 @media (max-width: 639px) {
   .hero-store__stage {
-    top: 22%;
-    height: 58%;
-    width: 175%;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 16%;
+    left: 0;
+    width: 100%;
+    height: 40%;
+    transform: none;
   }
 
   .hero-store-toy--hang,
-  .hero-store-toy--peek {
+  .hero-store-toy--peek,
+  .hero-store-toy--ride,
+  .hero-store-toy__board {
     display: none;
   }
 
   .hero-store-toy--greet {
-    left: 6%;
-    bottom: 28%;
-    width: 4.6rem;
-  }
-
-  .hero-store-toy--ride {
-    bottom: 26%;
-  }
-
-  .hero-store-toy__board {
-    bottom: 25.2%;
+    left: calc(50% - 2.1rem);
+    bottom: 31%;
+    width: 4.2rem;
   }
 }
 

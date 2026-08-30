@@ -12,7 +12,7 @@ export function HeroStoreScene() {
       <svg
         className="hero-store__stage"
         viewBox="0 0 1600 900"
-        preserveAspectRatio="xMidYMax slice"
+        preserveAspectRatio="xMidYMid meet"
         role="presentation"
       >
         <defs>
