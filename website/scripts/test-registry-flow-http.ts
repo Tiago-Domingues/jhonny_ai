@@ -1,9 +1,21 @@
 import { createHash, randomBytes } from "node:crypto";
+import Module from "node:module";
+import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import { currentPeriodKey } from "../src/lib/ecommerce/prizeWheel";
+
+const originalResolve = (Module as typeof Module & { _resolveFilename: (...args: unknown[]) => string })
+  ._resolveFilename;
+(Module as typeof Module & { _resolveFilename: (...args: unknown[]) => string })._resolveFilename = function (
+  request: string,
+  ...rest: unknown[]
+) {
+  if (request === "server-only") {
+    return path.join(__dirname, "server-only-stub.cjs");
+  }
+  return originalResolve.call(this, request, ...rest);
+};
 
 dotenv.config({ path: ".env.local" });
 dotenv.config();
@@ -43,10 +55,25 @@ async function main() {
 
     const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
     assert(pending, "pending registration exists");
+    const verifyEvent = await prisma.emailEvent.findFirst({
+      where: { recipientEmail: email, type: "EMAIL_VERIFICATION" },
+      orderBy: { createdAt: "desc" },
+    });
+    assert(verifyEvent, "verification email event is recorded");
+    assert(["SENT", "SKIPPED"].includes(verifyEvent.status), "verification email is sent or skipped when SMTP is blank");
+
     await prisma.pendingRegistration.update({
       where: { id: pending.id },
       data: { tokenHash: hashToken(token) },
     });
+
+    const verifyPage = await fetch(`${base}/conta/verificar-email?token=${encodeURIComponent(token)}`);
+    const verifyHtml = await verifyPage.text();
+    assert(verifyPage.ok, `verify page is reachable ${verifyPage.status}`);
+    assert(
+      verifyHtml.includes(token) || verifyHtml.includes("verificar-email") || verifyHtml.includes("VerifyEmail"),
+      "verify page renders the clickable confirmation flow"
+    );
 
     const first = await fetch(`${base}/api/auth/verify-email`, {
       method: "POST",
@@ -103,6 +130,7 @@ async function main() {
         postalCode: "2775-236",
         city: "Carcavelos",
         billingSameAsShipping: true,
+        marketingOptIn: true,
       }),
     });
     assert(complete.ok, `complete profile save failed ${complete.status} ${await complete.text()}`);
