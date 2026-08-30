@@ -122,7 +122,7 @@ export function InstagramMediaStrip({
           @{handle}
         </a>
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+      <div className="grid grid-cols-3 gap-2">
         {items.map((item, index) => (
           <a
             key={item.id}
@@ -137,7 +137,7 @@ export function InstagramMediaStrip({
                 src={item.mediaUrl}
                 alt={`${handle} Instagram post ${index + 1}`}
                 fill
-                sizes="(min-width: 640px) 180px, 50vw"
+                sizes="(min-width: 1024px) 180px, 33vw"
                 unoptimized
                 className="object-cover transition duration-500 group-hover:scale-105"
               />
