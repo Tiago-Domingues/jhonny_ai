@@ -23,7 +23,10 @@ export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
   useEffect(() => {
     setSelected(Math.max(0, rows.length - 1));
     const node = scroller.current;
-    if (node) node.scrollLeft = node.scrollWidth;
+    const id = window.requestAnimationFrame(() => {
+      if (node) node.scrollLeft = node.scrollWidth;
+    });
+    return () => window.cancelAnimationFrame(id);
   }, [bucket, rows.length]);
 
   const maxes = useMemo(
@@ -45,7 +48,7 @@ export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
 
   return (
     <div className="rounded-3xl border border-line bg-white p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="grid gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Por dia</p>
           <p className="mt-2 text-sm text-muted">

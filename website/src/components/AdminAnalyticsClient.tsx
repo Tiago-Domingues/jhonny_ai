@@ -114,7 +114,7 @@ export function AdminAnalyticsClient() {
   return (
     <div className="grid gap-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid w-full flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <div className="border-b border-line pb-3 pr-6">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.2em] text-muted">Pageviews</p>
             <p className="font-display mt-2 text-3xl font-extrabold text-ink">
