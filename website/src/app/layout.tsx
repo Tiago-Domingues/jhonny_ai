@@ -97,17 +97,17 @@ export default async function RootLayout({
           publicComingSoon ? "bg-cream" : "bg-paper"
         }`}
       >
-        {publicComingSoon ? (
-          children
-        ) : (
-          <LanguageProvider>
-            {children}
-            <VisitBeacon />
-            <CookieConsent initialVisible={showCookieBanner} />
-            <FirstPurchaseOffer />
-            <JhonnyAssistant />
-          </LanguageProvider>
-        )}
+        <LanguageProvider>
+          {children}
+          {!publicComingSoon && (
+            <>
+              <VisitBeacon />
+              <CookieConsent initialVisible={showCookieBanner} />
+              <FirstPurchaseOffer />
+              <JhonnyAssistant />
+            </>
+          )}
+        </LanguageProvider>
       </body>
     </html>
   );

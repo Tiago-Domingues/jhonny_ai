@@ -336,7 +336,7 @@ export async function markPaymentPaid(
         const result = await finalizeOdooOrderAfterPayment(payment.orderId);
         invoiceId = result.invoiceId || invoiceId;
       }
-      if (invoiceId && !(await hasSentPaidFaturaEmail(payment.orderId))) {
+      if (!(await hasSentPaidFaturaEmail(payment.orderId))) {
         await sendPaymentConfirmedEmails(payment.orderId);
       }
     } catch {
@@ -376,10 +376,8 @@ export async function markPaymentPaid(
     // Payment already succeeded; coupon accounting can be retried from the paid order.
   }
 
-  let invoiceReady = false;
   try {
     const result = await finalizeOdooOrderAfterPayment(payment.orderId);
-    invoiceReady = Boolean(result.invoiceId);
     if (!result.stockRefreshed) {
       await decrementLocalStockForPaidOrder(payment.orderId);
     }
@@ -391,12 +389,10 @@ export async function markPaymentPaid(
     }
   }
 
-  if (invoiceReady) {
-    try {
-      await sendPaymentConfirmedEmails(payment.orderId);
-    } catch {
-      // Never roll back payment because of email failures.
-    }
+  try {
+    await sendPaymentConfirmedEmails(payment.orderId);
+  } catch {
+    // Never roll back payment because of email failures.
   }
 
   try {

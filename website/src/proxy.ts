@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   SITE_PREVIEW_COOKIE,
+  isPublicEmailAuthPath,
   isValidPreviewCookie,
   shouldEnforceComingSoon,
 } from "@/lib/ecommerce/siteAccess";
@@ -24,7 +25,8 @@ export function proxy(request: NextRequest) {
     pathname === "/coming-soon" ||
     pathname === "/preview-access" ||
     pathname === "/robots.txt" ||
-    pathname === "/sitemap.xml"
+    pathname === "/sitemap.xml" ||
+    isPublicEmailAuthPath(pathname)
   ) {
     return NextResponse.next();
   }

@@ -82,6 +82,31 @@ async function sendTwilioSms(to: string, body: string): Promise<SendSmsResult> {
   }
 }
 
+export async function sendWelcomeSmsIfNeeded(input: {
+  userId: string;
+  fullName?: string | null;
+  phoneCountryCode?: string | null;
+  phone?: string | null;
+}) {
+  const alreadySent = await prisma.smsEvent.findFirst({
+    where: { userId: input.userId, type: "WELCOME_CUSTOMER", status: "SENT" },
+    select: { id: true },
+  });
+  if (alreadySent) return alreadySent;
+
+  const to =
+    input.phoneCountryCode && input.phone ? toE164(input.phoneCountryCode, input.phone) : null;
+  if (!to) {
+    const alreadySkipped = await prisma.smsEvent.findFirst({
+      where: { userId: input.userId, type: "WELCOME_CUSTOMER", status: "SKIPPED" },
+      select: { id: true },
+    });
+    if (alreadySkipped) return alreadySkipped;
+  }
+
+  return sendWelcomeSms(input);
+}
+
 export async function sendWelcomeSms(input: {
   userId: string;
   fullName?: string | null;

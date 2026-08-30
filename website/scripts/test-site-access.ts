@@ -1,4 +1,5 @@
 import {
+  isPublicEmailAuthPath,
   isSitePubliclyLaunched,
   isValidPreviewCookie,
   isValidPreviewPassword,
@@ -63,6 +64,12 @@ try {
     !isValidPreviewCookie(previewAccessToken("stale-vercel-preview-password")),
     "cookie derived from the stale Vercel password is rejected"
   );
+
+  assert(isPublicEmailAuthPath("/conta/verificar-email"), "verify-email link stays public");
+  assert(isPublicEmailAuthPath("/conta/redefinir-password"), "reset-password link stays public");
+  assert(isPublicEmailAuthPath("/conta/recuperar-password"), "forgot-password link stays public");
+  assert(!isPublicEmailAuthPath("/conta"), "account page stays gated");
+  assert(!isPublicEmailAuthPath("/loja"), "shop stays gated");
 
   console.log("site access helpers ok");
 } finally {
