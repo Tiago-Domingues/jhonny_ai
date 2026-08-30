@@ -175,17 +175,15 @@ async function main() {
       data: {
         orderNumber: `JSS-FLOW-${stamp}`,
         userId: user.id,
-        status: "PAID",
+        status: "PENDING_PAYMENT",
         customerEmail: email,
         customerName: "Ana Flow",
         customerPhoneCountryCode: "+351",
         customerPhone: "912345678",
         subtotalCents: 5000,
         totalCents: 5000,
-        paidAt: new Date(),
         items: {
           create: {
-            productId: product?.id,
             name: product?.name || "Wax",
             quantity: 1,
             unitPriceCents: 5000,
@@ -196,19 +194,16 @@ async function main() {
           create: {
             provider: "MANUAL",
             method: "MANUAL",
-            status: "PAID",
+            status: "PENDING",
             amountCents: 5000,
-            paidAt: new Date(),
+            providerReference: `manual-flow-${stamp}`,
           },
         },
       },
     });
 
-    const { sendPaymentConfirmedEmails } = await import("../src/lib/ecommerce/email");
-    const { sendPaymentConfirmedSms } = await import("../src/lib/ecommerce/sms");
-    const paidEmail = await sendPaymentConfirmedEmails(order.id);
-    assert(!paidEmail.skipped || paidEmail.reason !== "missing_odoo_fatura_pdf", "paid email is not blocked by a missing fatura");
-    await sendPaymentConfirmedSms(order.id);
+    const { markPaymentPaid } = await import("../src/lib/ecommerce/payments");
+    await markPaymentPaid(`manual-flow-${stamp}`);
     assert(
       await prisma.emailEvent.findFirst({ where: { orderId: order.id, type: "PAYMENT_CONFIRMED" } }),
       "paid-order email event exists"

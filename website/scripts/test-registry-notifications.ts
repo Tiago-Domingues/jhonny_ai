@@ -53,5 +53,6 @@ assert(proxy.includes("isPublicEmailAuthPath"), "coming-soon proxy lets email au
 const payments = readFileSync(resolve(__dirname, "../src/lib/ecommerce/payments.ts"), "utf8");
 assert(payments.includes("sendPaymentConfirmedEmails"), "purchase flow sends confirmation emails");
 assert(payments.includes("sendPaymentConfirmedSms"), "purchase flow sends confirmation SMS");
+assert(!/if \(invoiceReady\)/.test(payments), "paid emails are not gated on an Odoo fatura");
 
 console.log("registry-notifications: verify link, welcome-after-profile, wheel and purchase hooks ok");
