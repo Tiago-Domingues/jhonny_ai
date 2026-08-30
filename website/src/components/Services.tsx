@@ -218,7 +218,7 @@ export function Services() {
   ];
 
   return (
-    <section id="services" className="scroll-mt-20 bg-ink pt-20 pb-32 text-white sm:py-28">
+    <section id="services" className="scroll-mt-20 bg-ink py-20 text-white sm:py-28">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="max-w-2xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-white/50">
@@ -267,7 +267,7 @@ export function Services() {
         </div>
 
         {/* The Dudes — Surf Café highlight */}
-        <div className="mt-4 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+        <div className="mt-4 grid gap-6 rounded-2xl border border-line bg-white p-6 text-ink sm:p-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
           <div className="flex flex-col items-center gap-6 text-center sm:flex-row sm:gap-8 sm:text-left">
             <DudesAvatar openLabel={ui.openDudesInstagram} />
             <div>
@@ -292,7 +292,7 @@ export function Services() {
               </a>
             </div>
           </div>
-          <InstagramMediaStrip handle="dudes_surfcafe" label={ui.instagramPosts} limit={6} />
+          <InstagramMediaStrip handle="dudes_surfcafe" label={ui.instagramPosts} />
         </div>
       </div>
     </section>
