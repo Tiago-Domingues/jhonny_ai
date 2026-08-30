@@ -880,10 +880,10 @@ a[data-google-reviews-chip]:hover {
 
 .hero-store-chats {
   position: absolute;
-  left: 50%;
-  top: 32%;
+  left: 56%;
+  top: 24%;
   z-index: 3;
-  width: min(22rem, 86vw);
+  width: min(16rem, 58vw);
   transform: translateX(-50%);
   pointer-events: none;
 }

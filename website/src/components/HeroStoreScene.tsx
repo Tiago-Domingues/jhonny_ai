@@ -206,9 +206,9 @@ function LineClient({ bag }: { bag: boolean }) {
         <path
           className="hero-store-client__bag"
           d="M18 6 H34 V28 H18 Z M20 6 C20 -2, 32 -2, 32 6"
-          fill="none"
+          fill="#0d0d0d"
           stroke="#0d0d0d"
-          strokeWidth="1.6"
+          strokeWidth="1.4"
         />
       ) : null}
     </svg>
