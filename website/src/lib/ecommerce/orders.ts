@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
 import { ordersWhereForUser } from "@/lib/ecommerce/orderAccess";
+import { PAID_PLUS_STATUSES } from "@/lib/ecommerce/orderKpis";
 
 export function normalizeOrderNumber(orderNumber: string) {
   return orderNumber.trim().toUpperCase();
@@ -30,6 +31,7 @@ export function serializeOrderPublic(order: {
   notes: string | null;
   createdAt: Date;
   paidAt: Date | null;
+  odooInvoiceId?: number | null;
   shippingAddressJson: unknown;
   items: Array<{
     id: string;
@@ -69,6 +71,7 @@ export function serializeOrderPublic(order: {
     notes: order.notes,
     createdAt: order.createdAt.toISOString(),
     paidAt: order.paidAt?.toISOString() || null,
+    hasFaturaRecibo: Boolean(order.odooInvoiceId),
     shippingAddress: order.shippingAddressJson || null,
     items: order.items.map((item) => ({
       id: item.id,
@@ -112,7 +115,7 @@ export async function listOrdersForAdmin(input: {
       : {}),
   };
 
-  const [total, orders, openCount, paidCount] = await Promise.all([
+  const [total, orders, openCount, paidCount, kpis] = await Promise.all([
     prisma.order.count({ where }),
     prisma.order.findMany({
       where,
@@ -126,13 +129,56 @@ export async function listOrdersForAdmin(input: {
       },
     }),
     prisma.order.count({ where: { status: "PAID" } }),
+    getAdminOrderKpis(),
   ]);
 
   return {
     total,
-    stats: { openCount, paidCount, totalOrders: await prisma.order.count() },
+    stats: { openCount, paidCount, totalOrders: await prisma.order.count(), ...kpis },
     orders: orders.map(serializeOrderPublic),
   };
+}
+
+export async function getAdminOrderKpis() {
+  const paidWhere = { status: { in: [...PAID_PLUS_STATUSES] } };
+  const [paid, addressCount, pickupCount, totals] = await Promise.all([
+    prisma.order.findMany({
+      where: paidWhere,
+      select: { totalCents: true, fulfillmentMethod: true },
+    }),
+    prisma.order.count({ where: { ...paidWhere, fulfillmentMethod: "SHIP_TO_ADDRESS" } }),
+    prisma.order.count({ where: { ...paidWhere, fulfillmentMethod: "PICKUP_IN_STORE" } }),
+    prisma.order.aggregate({ where: paidWhere, _sum: { totalCents: true }, _count: true }),
+  ]);
+  const revenueCents = totals._sum.totalCents || 0;
+  const paidCount = totals._count || paid.length;
+  return {
+    revenueCents,
+    averagePurchaseCents: paidCount ? Math.round(revenueCents / paidCount) : 0,
+    addressCount,
+    pickupCount,
+    paidPlusCount: paidCount,
+  };
+}
+
+export async function listAllOrdersForAdminExport() {
+  const orders = await prisma.order.findMany({
+    include: orderInclude,
+    orderBy: { createdAt: "desc" },
+  });
+  return orders.map((order) => ({
+    ...serializeOrderPublic(order),
+    itemCount: order.items.length,
+  }));
+}
+
+export async function listOrdersForCustomerAdmin(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true },
+  });
+  if (!user) return null;
+  return listOrdersForUser(user.id, user.email);
 }
 
 export async function listOrdersForUser(userId: string, email: string) {
