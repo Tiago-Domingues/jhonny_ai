@@ -881,9 +881,13 @@ a[data-google-reviews-chip]:hover {
   filter: drop-shadow(0 8px 10px rgba(13, 13, 13, 0.12));
 }
 
+.hero-store-copy {
+  background: linear-gradient(to top, var(--color-paper) 42%, transparent 100%);
+}
+
 .hero-store-toy--greet {
-  left: 9%;
-  bottom: 7%;
+  left: 8%;
+  bottom: 11%;
   width: 5.5rem;
   animation: toy-bob 4.5s ease-in-out infinite;
 }
@@ -946,6 +950,20 @@ a[data-google-reviews-chip]:hover {
   .hero-store-toy--hang,
   .hero-store-toy--peek {
     display: none;
+  }
+
+  .hero-store-toy--greet {
+    left: 6%;
+    bottom: 28%;
+    width: 4.6rem;
+  }
+
+  .hero-store-toy--ride {
+    bottom: 26%;
+  }
+
+  .hero-store-toy__board {
+    bottom: 25.2%;
   }
 }
 

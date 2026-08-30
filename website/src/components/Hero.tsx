@@ -90,7 +90,7 @@ export function Hero() {
         aria-hidden={panel !== "store"}
       >
         <HeroStoreScene />
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-3xl flex-col items-center justify-end px-5 pb-24 pt-36 text-center sm:px-8">
+        <div className="hero-store-copy relative z-10 mx-auto flex h-full w-full max-w-3xl flex-col items-center justify-end px-5 pb-24 pt-36 text-center sm:px-8">
           <p className="mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.3em] text-ink/55 sm:text-xs">
             {t.hero.storeEyebrow}
           </p>
