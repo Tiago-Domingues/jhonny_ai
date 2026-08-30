@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Logo } from "@/components/Logo";
@@ -12,10 +11,10 @@ import { storefrontGetJson } from "@/lib/storefrontFetch";
 
 const SESSION_DISMISSED_KEY = "jss_welcome_offer_dismissed_v1";
 const RIBBON_HIDDEN_KEY = "jss_welcome_ribbon_hidden_v1";
-/** Stops the monthly wheel prompt reopening on every homepage visit in one session. */
-const WHEEL_PROMPTED_KEY = "jss_wheel_prompted_v1";
+/** Guest 50/50 between the 10% card and the wheel, sticky for the tab. */
+const GUEST_CAMPAIGN_KEY = "jss_guest_campaign_v1";
 const COUPON_CODE = "JHONNY10";
-const SHOW_AFTER_MS = 7000;
+const SHOW_AFTER_MS = 5000;
 const RIBBON_ROTATE_MS = 7000;
 const RIBBON_SLIDES = [
   ["Join", "the", "family"],
@@ -66,6 +65,15 @@ function hasConsentCookie() {
   return typeof document !== "undefined" && document.cookie.includes("jss_consent=");
 }
 
+function readGuestCampaign(): "welcome" | "wheel" {
+  if (typeof window === "undefined") return "welcome";
+  const stored = window.sessionStorage.getItem(GUEST_CAMPAIGN_KEY);
+  if (stored === "welcome" || stored === "wheel") return stored;
+  const pick = Math.random() < 0.5 ? "welcome" : "wheel";
+  window.sessionStorage.setItem(GUEST_CAMPAIGN_KEY, pick);
+  return pick;
+}
+
 /**
  * Keep the corner tab flush with the *visible* page bottom.
  *
@@ -103,11 +111,9 @@ export function FirstPurchaseOffer() {
   const [ribbonTheme, setRibbonTheme] = useState<"dark" | "light">("dark");
   const [copied, setCopied] = useState(false);
   const [auth, setAuth] = useState<"unknown" | "guest" | "member">("unknown");
-  const [wheelEligible, setWheelEligible] = useState(false);
   const [consentTick, setConsentTick] = useState(0);
   const shownThisLoad = useRef(false);
   const widgetRef = useRef<HTMLDivElement>(null);
-  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -141,35 +147,21 @@ export function FirstPurchaseOffer() {
     };
   }, []);
 
-  useEffect(() => {
-    if (auth !== "member") return;
-    storefrontGetJson<{ eligible?: boolean }>("/api/wheel/status").then((data) =>
-      setWheelEligible(Boolean(data?.eligible))
-    );
-  }, [auth]);
-
   /**
-   * Guests get the register-and-save invite; members get their monthly wheel on
-   * the homepage. Nothing is scheduled until we know which, so a member never
-   * briefly sees a prompt to register.
+   * Guests get one auto card 5s after cookie consent: a 50/50 between the 10%
+   * welcome offer and the wheel. The coin-flip is stored for the tab so a
+   * refresh cannot flip campaigns. Members are never auto-prompted.
    */
   useEffect(() => {
-    if (auth === "unknown" || shownThisLoad.current) return;
+    if (auth !== "guest" || shownThisLoad.current) return;
     if (typeof window === "undefined" || !hasConsentCookie()) return;
-
-    const member = auth === "member";
-    if (member) {
-      if (pathname !== "/") return;
-      if (!wheelEligible) return;
-      if (window.sessionStorage.getItem(WHEEL_PROMPTED_KEY) === "1") return;
-    } else if (window.sessionStorage.getItem(SESSION_DISMISSED_KEY) === "1") {
-      return;
-    }
+    if (window.sessionStorage.getItem(SESSION_DISMISSED_KEY) === "1") return;
 
     const timer = window.setTimeout(() => {
+      if (shownThisLoad.current) return;
       shownThisLoad.current = true;
-      if (member) {
-        window.sessionStorage.setItem(WHEEL_PROMPTED_KEY, "1");
+      const campaign = readGuestCampaign();
+      if (campaign === "wheel") {
         setWheelOpen(true);
         return;
       }
@@ -179,7 +171,7 @@ export function FirstPurchaseOffer() {
     }, SHOW_AFTER_MS);
 
     return () => window.clearTimeout(timer);
-  }, [auth, wheelEligible, pathname, consentTick]);
+  }, [auth, consentTick]);
 
   useLayoutEffect(() => {
     if (!ribbonVisible || open) return;
@@ -227,18 +219,22 @@ export function FirstPurchaseOffer() {
     }
   }
 
-  function openFromRibbon() {
-    // Members are already registered, so the welcome offer means nothing to
-    // them: the triangle is their way back to the monthly wheel, on any slide.
-    // Guests get the register invite instead, since the wheel is members-only.
-    // PrizeWheel owns its own scroll lock, and the ribbon stays mounted behind it.
-    if (auth === "member") {
-      setWheelOpen(true);
-      return;
+  function closeWheel() {
+    setWheelOpen(false);
+    if (auth === "guest") {
+      window.sessionStorage.setItem(SESSION_DISMISSED_KEY, "1");
+      if (window.sessionStorage.getItem(RIBBON_HIDDEN_KEY) !== "1") {
+        setRibbonVisible(true);
+      }
     }
-    setRibbonVisible(false);
-    setOpen(true);
-    document.body.style.overflow = "hidden";
+  }
+
+  function openFromRibbon() {
+    // Triangle always opens the wheel: guests see it with a register CTA,
+    // members spin or see this month's prize. PrizeWheel owns the scroll lock.
+    shownThisLoad.current = true;
+    window.sessionStorage.setItem(SESSION_DISMISSED_KEY, "1");
+    setWheelOpen(true);
   }
 
   function hideRibbon() {
@@ -261,7 +257,7 @@ export function FirstPurchaseOffer() {
 
   return (
     <>
-      {wheelOpen && <PrizeWheel onClose={() => setWheelOpen(false)} />}
+      {wheelOpen && <PrizeWheel onClose={closeWheel} />}
 
       {open && (
         <div

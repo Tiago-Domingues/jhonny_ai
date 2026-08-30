@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLanguage } from "@/components/LanguageProvider";
-import { WHEEL_LAYOUT, WHEEL_SEGMENT_COUNT } from "@/lib/ecommerce/prizeWheel";
+import { displayWheelCode, WHEEL_LAYOUT, WHEEL_SEGMENT_COUNT } from "@/lib/ecommerce/prizeWheel";
 import { storefrontGetJson } from "@/lib/storefrontFetch";
 
 const SEGMENT_ANGLE = 360 / WHEEL_SEGMENT_COUNT;
@@ -264,14 +264,8 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
   }
 
   async function spin() {
-    if (phase === "spinning" || phase === "loading") return;
+    if (phase === "spinning" || phase === "loading" || !eligible) return;
     setError(null);
-
-    // Already spent this month: the wheel still turns, but purely for show.
-    if (!eligible) {
-      runSpin(Math.floor(Math.random() * WHEEL_SEGMENT_COUNT), false);
-      return;
-    }
 
     setPhase("spinning");
     try {
@@ -294,7 +288,7 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
   async function copyCode() {
     if (!prize) return;
     try {
-      await navigator.clipboard.writeText(prize.code);
+      await navigator.clipboard.writeText(displayWheelCode(prize.code));
       setCopied(true);
       copyTimerRef.current = setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -512,10 +506,10 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
                     </p>
                     <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                       <p
-                        className="font-display text-xl font-extrabold tracking-[0.1em] text-ink"
+                        className="font-display text-base font-extrabold tracking-wide break-all text-ink sm:text-lg"
                         data-testid="prize-wheel-code"
                       >
-                        {prize.code}
+                        {displayWheelCode(prize.code)}
                       </p>
                       <button
                         type="button"
@@ -537,27 +531,30 @@ export function PrizeWheel({ onClose }: { onClose: () => void }) {
                 </div>
               )}
 
-              <button
-                ref={spinButtonRef}
-                type="button"
-                onClick={spin}
-                disabled={phase === "spinning" || phase === "loading"}
-                data-testid="prize-wheel-spin"
-                data-awards={eligible ? "true" : "false"}
-                className={`jss-rise-in jss-stagger-2 mt-4 inline-flex w-full items-center justify-center rounded-full px-5 py-3.5 text-xs font-bold uppercase tracking-[0.16em] transition disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-                  showingResult
-                    ? "border border-line bg-white text-ink hover:bg-cream"
-                    : "bg-ink text-white hover:bg-ink-soft"
-                }`}
-              >
-                {phase === "loading"
-                  ? t.loading
-                  : phase === "spinning"
-                    ? t.spinning
-                    : showingResult
-                      ? t.spinAgain
-                      : t.spin}
-              </button>
+              {phase === "loading" && (
+                <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                  {t.loading}
+                </p>
+              )}
+
+              {phase === "ready" && (
+                <button
+                  ref={spinButtonRef}
+                  type="button"
+                  onClick={spin}
+                  data-testid="prize-wheel-spin"
+                  data-awards="true"
+                  className="jss-rise-in jss-stagger-2 mt-4 inline-flex w-full items-center justify-center rounded-full bg-ink px-5 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white transition hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                >
+                  {t.spin}
+                </button>
+              )}
+
+              {phase === "spinning" && (
+                <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-muted">
+                  {t.spinning}
+                </p>
+              )}
 
               <p className="mt-4 text-[0.7rem] leading-relaxed text-muted/90">{t.fineprint}</p>
             </>

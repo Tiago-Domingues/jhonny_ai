@@ -1,9 +1,9 @@
 /**
  * GUI smoke for the members-only monthly prize wheel.
  *
- * Covers the three states that matter: a guest cannot reach it, a member's
- * first spin of the month awards a unique coupon, and every later spin that
- * month turns for show without minting anything.
+ * Covers the states that matter: guests can open the wheel but cannot spin,
+ * a member's first spin of the month awards a unique coupon, and later
+ * attempts that month do not mint another prize.
  *
  * Requires playwright on the machine (not a repo dependency, same as
  * smoke-firewire-header.mjs) plus the local test accounts:
@@ -22,7 +22,7 @@ const OUT = "/tmp/wheel-smoke";
 fs.mkdirSync(OUT, { recursive: true });
 
 const PASSWORD = "TestPass123!";
-const CODE_PATTERN = /^RODA(5|10|20)-[A-Z0-9]{6}$/;
+const CODE_PATTERN = /^roda-(5|10|20)%-[a-z]+-\d{4}-[a-z0-9_.-]+$/i;
 /** Keep in sync with WHEEL_LAYOUT in src/lib/ecommerce/prizeWheel.ts. */
 const WHEEL_LAYOUT = [10, 5, 10, 5, 20, 5, 10, 5, 10, 10];
 
@@ -159,18 +159,27 @@ async function main() {
 
   const browser = await chromium.launch({ headless: true });
 
-  // ── Guest: the wheel must be unreachable ─────────────────────────────
-  step("guest: wheel is members-only");
+  // ── Guest: the wheel is visible, but they cannot spin ────────────────
+  step("guest: triangle opens the wheel without a spin control");
   {
     const { context, page } = await newSession(browser);
     await page.reload({ waitUntil: "domcontentloaded" });
     await hideDevOverlays(page);
     await page.locator('[data-testid="free-shipping-widget"]').waitFor({ timeout: 15000 });
     await page.locator(".jss-free-shipping-ribbon").click();
-    await page.locator('[aria-labelledby="welcome-offer-title"]').waitFor({ timeout: 6000 });
+    await page.locator('[data-testid="prize-wheel"]').waitFor({ timeout: 8000 });
+    await page.waitForFunction(
+      () => document.querySelector("[data-testid='prize-wheel']")?.dataset.phase === "signedOut",
+      undefined,
+      { timeout: 8000 }
+    );
     assert(
-      (await page.locator('[data-testid="prize-wheel"]').count()) === 0,
-      "guest: the ribbon must not open the members-only wheel"
+      (await page.locator('[data-testid="prize-wheel-spin"]').count()) === 0,
+      "guest: the wheel must not offer a spin control"
+    );
+    assert(
+      (await page.locator('[data-testid="prize-wheel-signin"]').count()) === 1,
+      "guest: the wheel should offer a register / sign-in CTA"
     );
 
     const spinStatus = await page.evaluate(async () => {
@@ -223,8 +232,12 @@ async function main() {
   const heading = await member.locator("#prize-wheel-title").innerText();
   const wonPercent = heading.match(/(\d+)%/)?.[1];
   assert(
-    wonCode.startsWith(`RODA${wonPercent}-`),
+    wonCode.toLowerCase().startsWith(`roda-${wonPercent}%-`),
     `member: headline says ${wonPercent}% but the code is ${wonCode}`
+  );
+  assert(
+    wonCode.toLowerCase().includes("-wheel1"),
+    `member: code should include the username, got "${wonCode}"`
   );
 
   const landedPercent = await assertOutlineMatchesPointer(member, "member first spin");
@@ -237,19 +250,24 @@ async function main() {
     path: path.join(OUT, "wheel_prize.png"),
   });
 
-  // ── Member: the rest of the month spins for show only ────────────────
-  step("member: replay does not award");
+  // ── Member: the rest of the month has no spin control ────────────────
+  step("member: used month hides spin");
+  assert(
+    (await member.locator('[data-testid="prize-wheel-spin"]').count()) === 0,
+    "member: after a real spin the wheel must not offer Spin / Spin again"
+  );
+
   await member.locator('[data-testid="prize-wheel-close"]').click();
   await member.locator('[data-testid="prize-wheel"]').waitFor({ state: "detached" });
   await openWheelFromRibbon(member);
 
   assert(
-    (await member.locator('[data-testid="prize-wheel-spin"]').getAttribute("data-awards")) ===
-      "false",
-    "member: a used month must not offer another awarding spin"
+    (await member.locator('[data-testid="prize-wheel-spin"]').count()) === 0,
+    "member: a used month must not offer another spin"
   );
   assert(
-    (await member.locator('[data-testid="prize-wheel-code"]').innerText()).trim() === wonCode,
+    (await member.locator('[data-testid="prize-wheel-code"]').innerText()).trim().toLowerCase() ===
+      wonCode.toLowerCase(),
     "member: reopening should repeat the coupon already won"
   );
   const usedHeading = await member.locator("#prize-wheel-title").innerText();
@@ -261,15 +279,6 @@ async function main() {
     path: path.join(OUT, "wheel_already_spun.png"),
   });
 
-  await member.locator('[data-testid="prize-wheel-spin"]').click();
-  await member.locator('[data-testid="prize-wheel-code"]').waitFor({ timeout: 15000 });
-  await member.waitForTimeout(1000);
-  assert(
-    (await member.locator('[data-testid="prize-wheel-code"]').innerText()).trim() === wonCode,
-    "member: an illustrative spin must not mint a new coupon"
-  );
-  await assertOutlineMatchesPointer(member, "member replay spin");
-
   const afterReplay = await member.evaluate(async () => {
     const response = await fetch("/api/wheel/status");
     return response.json();
@@ -279,8 +288,18 @@ async function main() {
     "member: status should still report the single monthly prize"
   );
   assert(
-    afterReplay.prize.code === wonCode,
-    `member: the stored prize changed after a replay spin (${afterReplay.prize.code})`
+    String(afterReplay.prize.code).toLowerCase() === wonCode.toLowerCase(),
+    `member: the stored prize changed after reopen (${afterReplay.prize.code})`
+  );
+
+  const secondSpin = await member.evaluate(async () => {
+    const response = await fetch("/api/wheel/spin", { method: "POST" });
+    return { status: response.status, body: await response.json() };
+  });
+  assert(secondSpin.status === 200, `member: second spin POST should still 200, got ${secondSpin.status}`);
+  assert(
+    String(secondSpin.body.prize?.code || "").toLowerCase() === wonCode.toLowerCase(),
+    `member: a second POST must not mint a new code (${secondSpin.body.prize?.code})`
   );
 
   // ── The coupon must actually work, and only for its winner ───────────
@@ -348,54 +367,27 @@ async function main() {
   );
   await otherCtx.close();
 
-  // ── The homepage pop-up: members get the wheel, guests the invite ────
+  // ── Homepage pop-up: members never auto-open; guests get one campaign ─
   step("homepage pop-up routing");
 
-  // A member with an unused spin gets the wheel on the homepage.
   {
     const { context, page } = await newSession(browser);
     await login(page, "wheel2@example.com");
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
     await hideDevOverlays(page);
-    await page.locator('[data-testid="prize-wheel"]').waitFor({ timeout: 15000 });
+    await page.waitForTimeout(6500);
+    assert(
+      (await page.locator('[data-testid="prize-wheel"]').count()) === 0,
+      "member: must not get an automatic wheel popup"
+    );
     assert(
       (await page.locator('[aria-labelledby="welcome-offer-title"]').count()) === 0,
       "member: the register invite must not appear for someone already registered"
     );
-    await page.waitForTimeout(600);
     await page.screenshot({ path: path.join(OUT, "homepage_popup_member.png") });
     await context.close();
   }
 
-  // The same member elsewhere on the site is left alone.
-  {
-    const { context, page } = await newSession(browser);
-    await login(page, "wheel2@example.com");
-    await page.goto(`${BASE}/loja`, { waitUntil: "domcontentloaded" });
-    await hideDevOverlays(page);
-    await page.waitForTimeout(10000);
-    assert(
-      (await page.locator('[data-testid="prize-wheel"]').count()) === 0,
-      "member: the wheel should only pop up on the homepage"
-    );
-    await context.close();
-  }
-
-  // A member who already spent this month is not nagged again.
-  {
-    const { context, page } = await newSession(browser);
-    await login(page, "wheel1@example.com");
-    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    await hideDevOverlays(page);
-    await page.waitForTimeout(10000);
-    assert(
-      (await page.locator('[data-testid="prize-wheel"]').count()) === 0,
-      "member: an already-used month must not reopen the wheel automatically"
-    );
-    await context.close();
-  }
-
-  // A guest still gets the register invite, unchanged.
   {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     context.setDefaultTimeout(20000);
@@ -404,11 +396,40 @@ async function main() {
     ]);
     const page = await context.newPage();
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => sessionStorage.clear());
+    await page.reload({ waitUntil: "domcontentloaded" });
     await hideDevOverlays(page);
-    await page.locator('[aria-labelledby="welcome-offer-title"]').waitFor({ timeout: 15000 });
+    await page.waitForFunction(
+      () =>
+        Boolean(document.querySelector('[aria-labelledby="welcome-offer-title"]')) ||
+        Boolean(document.querySelector("[data-testid='prize-wheel']")),
+      undefined,
+      { timeout: 12000 }
+    );
+    const welcome = await page.locator('[aria-labelledby="welcome-offer-title"]').count();
+    const wheel = await page.locator('[data-testid="prize-wheel"]').count();
+    assert(welcome + wheel === 1, `guest: expected exactly one auto modal, got welcome=${welcome} wheel=${wheel}`);
+    const firstCampaign = welcome ? "welcome" : "wheel";
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await hideDevOverlays(page);
+    await page.waitForFunction(
+      () =>
+        Boolean(document.querySelector('[aria-labelledby="welcome-offer-title"]')) ||
+        Boolean(document.querySelector("[data-testid='prize-wheel']")),
+      undefined,
+      { timeout: 12000 }
+    );
+    const welcomeAfter = await page.locator('[aria-labelledby="welcome-offer-title"]').count();
+    const wheelAfter = await page.locator('[data-testid="prize-wheel"]').count();
     assert(
-      (await page.locator('[data-testid="prize-wheel"]').count()) === 0,
-      "guest: the homepage pop-up must be the register invite, not the wheel"
+      welcomeAfter + wheelAfter === 1,
+      `guest refresh: expected exactly one auto modal, got welcome=${welcomeAfter} wheel=${wheelAfter}`
+    );
+    const secondCampaign = welcomeAfter ? "welcome" : "wheel";
+    assert(
+      firstCampaign === secondCampaign,
+      `guest refresh flipped the campaign from ${firstCampaign} to ${secondCampaign}`
     );
     await page.screenshot({ path: path.join(OUT, "homepage_popup_guest.png") });
     await context.close();
