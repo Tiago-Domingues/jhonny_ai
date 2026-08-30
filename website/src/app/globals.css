@@ -114,6 +114,26 @@ html.jss-a11y-motion *::after {
   color: #0d0d0d !important;
 }
 
+/* Same layer issue as the services chips: bg-ink wins over hover:bg-cream. */
+a[data-testid="volume-calculator-menu"] {
+  background-color: var(--color-ink);
+  color: #ffffff;
+  border-color: var(--color-ink);
+}
+
+a[data-testid="volume-calculator-menu"]:hover,
+a[data-testid="volume-calculator-menu"]:active,
+a[data-testid="volume-calculator-menu"]:focus-visible {
+  background-color: #ffffff !important;
+  color: #0d0d0d !important;
+  border-color: #0d0d0d;
+}
+
+a[data-testid="volume-calculator-menu"]:hover [data-volume-hint],
+a[data-testid="volume-calculator-menu"]:active [data-volume-hint] {
+  color: rgb(13 13 13 / 0.6) !important;
+}
+
 a[data-google-reviews-chip]:hover {
   background-color: #0d0d0d !important;
   color: #ffffff !important;
