@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { STORE, whatsappHref } from "@/lib/i18n";
 import { InstagramIcon, WhatsappIcon } from "@/components/icons";
 import { PreviewUnlockForm } from "@/components/PreviewUnlockForm";
+import { shouldEnforceComingSoon } from "@/lib/ecommerce/siteAccess";
 
 export const metadata: Metadata = {
   title: "Em construção · Under construction",
@@ -12,6 +14,10 @@ export const metadata: Metadata = {
 };
 
 export default function ComingSoon() {
+  if (!shouldEnforceComingSoon()) {
+    redirect("/");
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-cream px-6 py-16 text-center text-ink">
       <div className="flex w-full max-w-md flex-col items-center">

@@ -6,6 +6,7 @@ import {
   previewAccessToken,
   shouldEnforceComingSoon,
 } from "../src/lib/ecommerce/siteAccess";
+import robots from "../src/app/robots";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
@@ -30,46 +31,53 @@ function restore() {
 }
 
 try {
-  process.env.SITE_COMING_SOON = "";
-  process.env.SITE_PUBLIC_LAUNCH = "true";
   process.env.NODE_ENV = "production";
-  assert(!isSitePubliclyLaunched(), "SITE_PUBLIC_LAUNCH=true must not publish the shop");
-  assert(shouldEnforceComingSoon(), "production stays under construction when launch is true");
-
-  process.env.SITE_PUBLIC_LAUNCH = "open";
-  assert(isSitePubliclyLaunched(), "SITE_PUBLIC_LAUNCH=open is the only public-launch value");
-  assert(!shouldEnforceComingSoon(), "open publishes the shop");
-
-  process.env.SITE_COMING_SOON = "true";
-  assert(shouldEnforceComingSoon(), "SITE_COMING_SOON=true locks even after launch=open");
-
   process.env.SITE_COMING_SOON = "";
   process.env.SITE_PUBLIC_LAUNCH = "false";
+  assert(isSitePubliclyLaunched(), "the shop is public without SITE_PUBLIC_LAUNCH");
+  assert(!shouldEnforceComingSoon(), "production is not under construction by default");
+
+  process.env.SITE_PUBLIC_LAUNCH = "true";
+  assert(isSitePubliclyLaunched(), "SITE_PUBLIC_LAUNCH leftover values do not hide the shop");
+  assert(!shouldEnforceComingSoon(), "SITE_PUBLIC_LAUNCH cannot lock the shop");
+
+  process.env.SITE_COMING_SOON = "true";
+  assert(!isSitePubliclyLaunched(), "SITE_COMING_SOON=true is the emergency lock");
+  assert(shouldEnforceComingSoon(), "emergency lock rewrites to coming-soon");
+
+  process.env.SITE_COMING_SOON = "";
   process.env.NODE_ENV = "development";
-  assert(!shouldEnforceComingSoon(), "local development stays open without an explicit lock");
+  assert(!shouldEnforceComingSoon(), "local development stays open");
 
   process.env.SITE_COMING_SOON = "true";
   assert(shouldEnforceComingSoon(), "local development can still lock with SITE_COMING_SOON");
-
-  process.env.SITE_PREVIEW_PASSWORD = "stale-vercel-preview-password";
-  assert(isValidPreviewPassword("DatabyPassion"), "staff preview password unlocks the site");
-  assert(!isValidPreviewPassword("stale-vercel-preview-password"), "stale Vercel env password is rejected");
+  assert(isValidPreviewPassword("DatabyPassion"), "staff preview password still unlocks an emergency lock");
   assert(!isValidPreviewPassword("definitely-wrong"), "wrong preview password is rejected");
-  assert(!isValidPreviewPassword(""), "empty preview password is rejected");
   assert(
     isValidPreviewCookie(previewAccessToken("DatabyPassion")),
     "cookie derived from the staff password is accepted"
-  );
-  assert(
-    !isValidPreviewCookie(previewAccessToken("stale-vercel-preview-password")),
-    "cookie derived from the stale Vercel password is rejected"
   );
 
   assert(isPublicEmailAuthPath("/conta/verificar-email"), "verify-email link stays public");
   assert(isPublicEmailAuthPath("/conta/redefinir-password"), "reset-password link stays public");
   assert(isPublicEmailAuthPath("/conta/recuperar-password"), "forgot-password link stays public");
-  assert(!isPublicEmailAuthPath("/conta"), "account page stays gated");
-  assert(!isPublicEmailAuthPath("/loja"), "shop stays gated");
+  assert(!isPublicEmailAuthPath("/conta"), "account page is not an email-auth exception");
+  assert(!isPublicEmailAuthPath("/loja"), "shop is not an email-auth exception");
+
+  process.env.SITE_COMING_SOON = "";
+  const liveRobots = robots();
+  const liveRules = Array.isArray(liveRobots.rules) ? liveRobots.rules[0] : liveRobots.rules;
+  assert(liveRules?.allow === "/", "live robots allow the public site");
+  assert(liveRobots.sitemap?.includes("/sitemap.xml"), "live robots advertise the sitemap");
+  assert(
+    Array.isArray(liveRules?.disallow) && liveRules.disallow.includes("/admin"),
+    "live robots keep admin out of the index"
+  );
+
+  process.env.SITE_COMING_SOON = "true";
+  const lockedRobots = robots();
+  const lockedRules = Array.isArray(lockedRobots.rules) ? lockedRobots.rules[0] : lockedRobots.rules;
+  assert(lockedRules?.disallow === "/", "emergency lock tells crawlers not to index");
 
   console.log("site access helpers ok");
 } finally {

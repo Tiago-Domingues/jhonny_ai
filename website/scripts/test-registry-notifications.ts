@@ -62,7 +62,8 @@ const vercel = readFileSync(resolve(__dirname, "../vercel.json"), "utf8");
 assert(vercel.includes("/api/cron/wheel-reminders"), "monthly wheel reminder cron is scheduled");
 
 const proxy = readFileSync(resolve(__dirname, "../src/proxy.ts"), "utf8");
-assert(proxy.includes("isPublicEmailAuthPath"), "coming-soon proxy lets email auth links through");
+assert(proxy.includes("isPublicEmailAuthPath"), "coming-soon proxy still lets email auth links through during an emergency lock");
+assert(proxy.includes("shouldEnforceComingSoon"), "proxy only rewrites when coming-soon is enforced");
 
 const payments = readFileSync(resolve(__dirname, "../src/lib/ecommerce/payments.ts"), "utf8");
 assert(payments.includes("sendPaymentConfirmedEmails"), "purchase flow sends confirmation emails");
