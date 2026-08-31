@@ -8,6 +8,7 @@ import { ShopHero } from "@/components/ShopHero";
 import { listProducts } from "@/lib/ecommerce/catalog";
 import { listMenuCategories } from "@/lib/ecommerce/menuCategories";
 import { getProductRatingSummaries } from "@/lib/ecommerce/ratings";
+import { SHOP_PAGE_SIZE } from "@/lib/ecommerce/shopPaging";
 
 export const metadata: Metadata = {
   title: "Shop",
@@ -41,7 +42,7 @@ async function ShopCatalog({
   brand?: string;
 }) {
   // Server-render a lean first page so the shop never boots empty if the client fetch is slow.
-  // Cap SSR props; ShopClient then fetches at most 300 lean products, not the whole catalog.
+  // Cap SSR props; ShopClient then fetches a capped lean catalog, not the whole store.
   const [products, menuCategories] = await Promise.all([
     listProducts({
       categoryGroup: categoryGroup || null,
@@ -49,7 +50,7 @@ async function ShopCatalog({
       query: q || null,
       brand: brand || null,
     })
-      .then((items) => items.slice(0, 60))
+      .then((items) => items.slice(0, SHOP_PAGE_SIZE))
       .catch(() => []),
     listMenuCategories().catch(() => []),
   ]);

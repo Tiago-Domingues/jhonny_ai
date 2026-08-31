@@ -44,7 +44,8 @@ assert(shouldExcludeFromWebsiteCatalog({ sku: "PUK-1", name: "Pukas", category: 
 
 assert(parseCatalogLimit(null) === 400, "default list cap is 400");
 assert(parseCatalogLimit("8") === 8, "search can request 8");
-assert(parseCatalogLimit("300") === 300, "shop can request 300");
+assert(parseCatalogLimit("240") === 240, "shop can request 240");
+assert(parseCatalogLimit("300") === 300, "legacy shop fetch of 300 still parses");
 assert(parseCatalogLimit("9999") === 500, "hard cap is 500");
 assert(parseCatalogLimit("0") === 1, "limit floors at 1");
 assert(parseCatalogLimit("nope") === 400, "junk falls back");

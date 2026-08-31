@@ -39,6 +39,7 @@
     "test:account-admin-http": "npx tsx scripts/test-account-admin-http.ts",
     "test:product-variants": "npx tsx scripts/test-product-variants.mjs",
     "test:catalog-hygiene": "npx tsx scripts/test-catalog-hygiene.ts",
+    "test:shop-paging": "npx tsx scripts/test-shop-paging.ts",
     "clean:product-names": "npx tsx scripts/clean-product-names.ts",
     "purge:customers": "npx tsx scripts/purge-customers.ts",
     "live:odoo-pos": "python3 scripts/live-odoo-pos.py",
