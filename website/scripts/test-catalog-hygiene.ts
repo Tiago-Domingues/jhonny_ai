@@ -24,6 +24,7 @@ assert(isFoodBeverageCatalogRow({ name: "Dudes espresso", category: "Cafe", bran
 assert(isFoodBeverageCatalogRow({ name: "CAPUCCINO", category: "Bar", brand: "Jhonny Surf Store" }), "typo cappuccino is excluded");
 assert(isFoodBeverageCatalogRow({ name: "Down Payment", category: "Services", brand: "JSS" }), "down payment is excluded");
 assert(isFoodBeverageCatalogRow({ name: "EXPRESSO", category: "All", brand: "JSS" }), "standalone expresso drink is excluded");
+assert(isFoodBeverageCatalogRow({ name: "FLAT WHITE", category: "All", brand: "JSS" }), "standalone flat white is excluded");
 assert(
   !isFoodBeverageCatalogRow({
     name: "BACKPACK DB HUGGER - 25L (EXPRESSO)",

@@ -55,7 +55,8 @@ export function isFoodBeverageCatalogRow(product: {
     standaloneName === "capuccino" ||
     standaloneName === "chá" ||
     standaloneName === "cha" ||
-    standaloneName === "banana bread"
+    standaloneName === "banana bread" ||
+    standaloneName === "flat white"
   );
 }
 
