@@ -8,9 +8,11 @@ import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { fetchOdooInvoicePdf } from "@/lib/ecommerce/odooInvoice";
 import { PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX } from "@/lib/ecommerce/emailSubjects";
 import { emailAddressOnly, resolveTransactionalFrom, smtpDeliveryStatus } from "@/lib/ecommerce/emailFrom";
+import { preferredEmailProvider } from "@/lib/ecommerce/emailConfig";
 
 export { isPaidCustomerFaturaEmailSubject, PAID_CUSTOMER_EMAIL_SUBJECT_PREFIX } from "@/lib/ecommerce/emailSubjects";
 export { resolveTransactionalFrom } from "@/lib/ecommerce/emailFrom";
+export { isTransactionalEmailConfigured } from "@/lib/ecommerce/emailConfig";
 
 function emailFrom() {
   return resolveTransactionalFrom({
@@ -24,7 +26,7 @@ function jhonnyEmail() {
 }
 
 function emailProvider() {
-  return (process.env.EMAIL_PROVIDER || "smtp").toLowerCase();
+  return preferredEmailProvider();
 }
 
 /** Absolute site origin for email assets (Gmail blocks relative image URLs). */
@@ -143,10 +145,15 @@ async function sendResendEmail(to: string, subject: string, html: string, option
 }
 
 async function sendEmail(to: string, subject: string, html: string, options?: SendEmailOptions): Promise<SendResult> {
-  if (emailProvider() === "smtp") {
-    return sendSmtpEmail(to, subject, html, options);
-  }
-  return sendResendEmail(to, subject, html, options);
+  const preferred = emailProvider();
+  const first = preferred === "smtp" ? await sendSmtpEmail(to, subject, html, options) : await sendResendEmail(to, subject, html, options);
+  if (first.status === "SENT") return first;
+
+  const second = preferred === "smtp" ? await sendResendEmail(to, subject, html, options) : await sendSmtpEmail(to, subject, html, options);
+  if (second.status === "SENT") return second;
+  if (first.status === "FAILED") return first;
+  if (second.status === "FAILED") return second;
+  return first;
 }
 
 function escapeHtml(value: string) {

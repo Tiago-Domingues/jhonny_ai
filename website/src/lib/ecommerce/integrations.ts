@@ -1,11 +1,17 @@
 import "server-only";
 
+import {
+  isTransactionalEmailConfigured,
+  preferredEmailProvider,
+  smtpCredentialsConfigured,
+} from "@/lib/ecommerce/emailConfig";
+
 function hasValue(value: string | undefined) {
   return Boolean(value && value.trim());
 }
 
 export function integrationStatus() {
-  const emailProvider = (process.env.EMAIL_PROVIDER || "resend").toLowerCase();
+  const emailProvider = preferredEmailProvider();
 
   return {
     database: {
@@ -29,17 +35,8 @@ export function integrationStatus() {
     },
     email: {
       provider: emailProvider,
-      configured:
-        emailProvider === "smtp"
-          ? hasValue(process.env.SMTP_HOST) &&
-            hasValue(process.env.SMTP_USER) &&
-            hasValue(process.env.SMTP_PASSWORD)
-          : hasValue(process.env.RESEND_API_KEY),
-      gmailReady:
-        emailProvider === "smtp" &&
-        process.env.SMTP_HOST === "smtp.gmail.com" &&
-        hasValue(process.env.SMTP_USER) &&
-        hasValue(process.env.SMTP_PASSWORD),
+      configured: isTransactionalEmailConfigured(),
+      gmailReady: smtpCredentialsConfigured() && process.env.SMTP_HOST === "smtp.gmail.com",
     },
     ifthenpay: {
       mbwayConfigured: hasValue(process.env.IFTHENPAY_MBWAY_KEY),
