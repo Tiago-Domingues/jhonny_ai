@@ -22,6 +22,7 @@ type CheckoutPayment = {
 };
 
 type CheckoutResult = {
+  orderId: string;
   orderNumber: string;
   payment: CheckoutPayment | null;
 };
@@ -92,6 +93,27 @@ export function CheckoutClient() {
       })
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    const orderId = checkoutResult?.orderId;
+    if (!orderId) return;
+    let cancelled = false;
+    async function checkPaid(id: string) {
+      const response = await fetch(`/api/checkout/thanks?orderId=${encodeURIComponent(id)}`);
+      const data = await response.json().catch(() => null);
+      if (!cancelled && response.ok && data?.paid) {
+        window.location.assign(`/checkout/obrigado?orderId=${encodeURIComponent(id)}`);
+      }
+    }
+    void checkPaid(orderId);
+    const timer = window.setInterval(() => {
+      void checkPaid(orderId);
+    }, 4000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [checkoutResult?.orderId]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -165,6 +187,7 @@ export function CheckoutClient() {
         return;
       }
       setCheckoutResult({
+        orderId: data.order.id,
         orderNumber: data.order.orderNumber,
         payment: data.payment || null,
       });

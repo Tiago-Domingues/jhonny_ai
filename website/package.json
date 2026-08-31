@@ -18,6 +18,7 @@
     "test:sms": "npx tsx scripts/test-sms.ts",
     "test:odoo-stock": "npx tsx scripts/test-odoo-stock.ts",
     "test:checkout": "npx tsx scripts/test-checkout-schema.ts",
+    "test:checkout-thanks": "npx tsx scripts/test-checkout-thanks.ts",
     "test:nif": "npx tsx scripts/test-nif-invoice.ts",
     "test:odoo-pos": "npx tsx scripts/test-odoo-pos.ts",
     "test:site-access": "npx tsx scripts/test-site-access.ts",

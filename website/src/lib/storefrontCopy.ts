@@ -69,6 +69,13 @@ type StorefrontCopy = {
     canceled: string;
     freeShipping: string;
     total: string;
+    thanksTitle: string;
+    thanksBody: string;
+    thanksHome: string;
+    thanksConfirming: string;
+    thanksAwaiting: string;
+    thanksEmail: string;
+    thanksOrder: string;
   };
   product: {
     add: string;
@@ -283,6 +290,13 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       canceled: "Pagamento cancelado. Podes escolher outro método e tentar outra vez.",
       freeShipping: "Portes grátis em encomendas acima de €{threshold}. Levantamento em loja é gratuito.",
       total: "Total",
+      thanksTitle: "Obrigado por comprares connosco",
+      thanksBody: "A tua encomenda está confirmada. Podes voltar à página inicial quando quiseres.",
+      thanksHome: "Voltar à página inicial",
+      thanksConfirming: "A confirmar o pagamento…",
+      thanksAwaiting: "A aguardar o pagamento. Esta página atualiza assim que for confirmado.",
+      thanksEmail: "Enviámos a confirmação por email. Se escolheste levantamento, espera pelo email antes de ires à loja.",
+      thanksOrder: "Encomenda",
     },
     product: {
       add: "Adicionar ao carrinho",
@@ -498,6 +512,13 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       canceled: "Payment canceled. You can choose another method and try again.",
       freeShipping: "Free shipping on orders over €{threshold}. In-store pickup is free.",
       total: "Total",
+      thanksTitle: "Thanks for shopping with us",
+      thanksBody: "Your order is confirmed. You can go back to the homepage whenever you like.",
+      thanksHome: "Back to homepage",
+      thanksConfirming: "Confirming your payment…",
+      thanksAwaiting: "Waiting for payment. This page updates as soon as it is confirmed.",
+      thanksEmail: "We sent a confirmation email. If you chose pickup, wait for that email before coming to the store.",
+      thanksOrder: "Order",
     },
     product: {
       add: "Add to cart",
@@ -713,6 +734,13 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       canceled: "支付已取消。你可以选择其他方式再试一次。",
       freeShipping: "订单满 €{threshold} 免运费。到店自取免费。",
       total: "总计",
+      thanksTitle: "感谢你的购买",
+      thanksBody: "订单已确认。你可以随时返回首页。",
+      thanksHome: "返回首页",
+      thanksConfirming: "正在确认付款…",
+      thanksAwaiting: "等待付款。确认后此页会自动更新。",
+      thanksEmail: "我们已发送确认邮件。如选择到店自取，请先查看邮件再前往店铺。",
+      thanksOrder: "订单",
     },
     product: {
       add: "加入购物车",
