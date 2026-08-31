@@ -17,8 +17,17 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/api", "/preview-access", "/conta/"],
+      disallow: [
+        "/admin",
+        "/api",
+        "/preview-access",
+        "/coming-soon",
+        "/conta/",
+        "/checkout",
+        "/carrinho",
+      ],
     },
     sitemap: `${SITE}/sitemap.xml`,
+    host: SITE,
   };
 }

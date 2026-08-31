@@ -40,15 +40,8 @@ export VERCEL_TOKEN=...   # from vercel.com/account/tokens
 
 Or add `VERCEL_TOKEN` as a **Cursor Cloud environment secret** so agents can run the same script without pasting tokens in chat.
 
-## Pre-launch public gate
+## Public launch
 
-Until the shop is ready for purchases:
+The shop is public after deploy. Visitors on **www.jhonnysurfstore.com** / **.pt** see the full storefront. `/robots.txt` allows indexing and advertises `/sitemap.xml`.
 
-1. Keep **`SITE_PUBLIC_LAUNCH`** unset or `false` on Vercel (default after this feature ships). `true` is ignored and does not publish the shop.
-2. Preview unlock uses the staff password checked in `website/src/lib/ecommerce/siteAccess.ts` (Vercel `SITE_PREVIEW_PASSWORD` is ignored so a stale dashboard value cannot lock you out).
-3. Public visitors on **www.jhonnysurfstore.com** / **.pt** only see `/coming-soon`.
-4. You review the full site at **https://www.jhonnysurfstore.com/preview-access** (enter the password once; cookie lasts 30 days).
-
-When go-live is approved, set `SITE_PUBLIC_LAUNCH=open` and redeploy (or wait for next `main` deploy).
-
-Optional: also enable Vercel **Deployment Protection** as a second lock, but the in-app gate is enough for hiding the unfinished shop.
+Emergency hide only: set Vercel `SITE_COMING_SOON=true` and redeploy. Preview-password unlock is retired; `/preview-access` redirects home.

@@ -16,9 +16,9 @@ This document states whether the website is ready for **public online purchases*
 
 ## 2. Executive verdict
 
-**Ready for staff / preview testing. Not ready to open .com and .pt to the public yet.**
+**The shop is public.** Coming-soon and preview-password unlock are retired. Crawlers get `Allow: /` plus a sitemap unless `SITE_COMING_SOON=true` (emergency lock only).
 
-Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, FAQ, email verification, and the security baseline are on `main`. Homepage + category photos shipped (#154). The public still sees coming-soon until `SITE_PUBLIC_LAUNCH=open`. What is left before opening is **Odoo weights** (P1.10), then the launch flag.
+Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, FAQ, and the security baseline are on `main`. Remaining ops work (Odoo weights, P1.10) does not keep the storefront hidden.
 
 | Area | Status |
 |------|--------|
@@ -29,12 +29,12 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, F
 | Payments (MB WAY, Multibanco, Stripe card / PayPal / Klarna) | **Code live** — P1.7 payment smoke done (ops) |
 | Security / abuse protection | **Baseline done** (P0.4, P0.14–P0.17) |
 | Order email + ops admin | Emails + fatura PDF send; admin orders/analytics exist |
-| Public go-live (.com + .pt) | **Locked** — preview via `/preview-access` |
+| Public go-live (.com + .pt) | **Live** — no preview password |
 
 ### What to tackle next
 
 1. **Ops in Odoo:** fill **Weight** (and L/W/H on boards). Most SKUs are still `0`, so portes use category guesses (0.8 kg default) — **P1.10**.
-2. **Last:** `SITE_PUBLIC_LAUNCH=open` (**P0.12**). Do not set `true` — that value is ignored on purpose. Flipping `open` also enables `robots.txt` / sitemap indexing (P3.2 is wired to this flag).
+2. Emergency hide only: `SITE_COMING_SOON=true` (also sets `Disallow: /`).
 
 ---
 
@@ -50,7 +50,7 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, F
 - Official Odoo POS fatura-recibo (coupon % + Portes line) emailed to customer and Jhonny.
 - Admin: orders, customers, analytics (pageviews, coupon uses, GPS vs IP).
 - Legal pages PT/EN; free shipping **€100** on banner, checkout, and payments page.
-- Public **coming-soon** on .com and .pt; staff unlock at `/preview-access`.
+- Public shop on .com and .pt. `/preview-access` and `/coming-soon` redirect home.
 - Security baseline: fail-closed payments, callback secret + amount checks, rate limits, locked sync APIs, security headers, no default `SESSION_SECRET`.
 
 ---
@@ -59,7 +59,7 @@ Checkout, payments, fatura-recibo, shipping totals, coupons, email, My orders, F
 
 | Decision | Choice |
 |----------|--------|
-| Domains | Open **.com and .pt together** with `SITE_PUBLIC_LAUNCH=open` |
+| Domains | **.com and .pt** serve the full shop |
 | Day-1 payments | **MB WAY + Multibanco + PayPal + Klarna** (PayPal/Klarna via Stripe) |
 | Free shipping | **€100** after coupon on merchandise; pickup always €0 |
 | Languages at launch | PT / EN / ZH for most UX; legal ZH can follow |

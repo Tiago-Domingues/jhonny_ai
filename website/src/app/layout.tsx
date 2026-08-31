@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   robots: isSitePubliclyLaunched()
-    ? { index: true, follow: true }
+    ? { index: true, follow: true, googleBot: { index: true, follow: true } }
     : { index: false, follow: false },
 };
 
