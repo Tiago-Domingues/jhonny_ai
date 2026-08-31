@@ -24,6 +24,18 @@ import {
   type ShopSortOption,
 } from "@/lib/ecommerce/shopFilters";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
+import {
+  SHOP_CATALOG_FETCH_LIMIT,
+  SHOP_EAGER_IMAGE_COUNT,
+  SHOP_PAGE_SIZE,
+  clampShopPage,
+  isOdooProductImageUrl,
+  parseShopPage,
+  shopListingImageSrc,
+  shopPageCount,
+  shopPageSlice,
+  shopPageWindow,
+} from "@/lib/ecommerce/shopPaging";
 import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
 import { storefrontGetJson } from "@/lib/storefrontFetch";
 
@@ -100,6 +112,10 @@ const copy = {
     searching: "A procurar produtos...",
     empty: "Nenhum produto encontrado com estes filtros.",
     loadMore: "Ver mais produtos",
+    previous: "Anterior",
+    next: "Seguinte",
+    page: "Página",
+    of: "de",
     selected: "selecionados",
     variants: "variantes",
     chooseOptions: "Escolher opções",
@@ -151,6 +167,10 @@ const copy = {
     searching: "Searching products...",
     empty: "No products found with these filters.",
     loadMore: "Show more products",
+    previous: "Previous",
+    next: "Next",
+    page: "Page",
+    of: "of",
     selected: "selected",
     variants: "variants",
     chooseOptions: "Choose options",
@@ -202,6 +222,10 @@ const copy = {
     searching: "正在搜索商品...",
     empty: "没有符合这些筛选条件的商品。",
     loadMore: "查看更多商品",
+    previous: "上一页",
+    next: "下一页",
+    page: "页",
+    of: "/",
     selected: "已选",
     variants: "款可选",
     chooseOptions: "选择规格",
@@ -259,7 +283,7 @@ function ShopCardStars({
 function ProductSkeletonGrid() {
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {Array.from({ length: 10 }).map((_, index) => (
+        {Array.from({ length: 8 }).map((_, index) => (
         <article
           key={index}
           className="overflow-hidden rounded-3xl border border-line bg-white shadow-sm"
@@ -421,6 +445,70 @@ function countActiveFilters(filters: ShopFacetFilters) {
   );
 }
 
+function ShopPager({
+  currentPage,
+  totalPages,
+  onPage,
+  previousLabel,
+  nextLabel,
+  pageLabel,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPage: (page: number) => void;
+  previousLabel: string;
+  nextLabel: string;
+  pageLabel: string;
+}) {
+  if (totalPages <= 1) return null;
+  const pages = shopPageWindow(currentPage, totalPages);
+  return (
+    <nav
+      aria-label={pageLabel}
+      className="mt-8 flex flex-wrap items-center justify-center gap-2"
+    >
+      <button
+        type="button"
+        disabled={currentPage <= 1}
+        onClick={() => onPage(currentPage - 1)}
+        className="rounded-full border border-line px-4 py-2 text-xs font-bold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink"
+      >
+        {previousLabel}
+      </button>
+      {pages.map((item, index) =>
+        item === "ellipsis" ? (
+          <span key={`ellipsis-${index}`} className="px-1 text-sm text-muted" aria-hidden>
+            …
+          </span>
+        ) : (
+          <button
+            key={item}
+            type="button"
+            aria-current={item === currentPage ? "page" : undefined}
+            aria-label={`${pageLabel} ${item}`}
+            onClick={() => onPage(item)}
+            className={`min-w-10 rounded-full px-3 py-2 text-xs font-bold uppercase tracking-wide transition ${
+              item === currentPage
+                ? "bg-ink text-white"
+                : "border border-line text-ink hover:bg-ink hover:text-white"
+            }`}
+          >
+            {item}
+          </button>
+        )
+      )}
+      <button
+        type="button"
+        disabled={currentPage >= totalPages}
+        onClick={() => onPage(currentPage + 1)}
+        className="rounded-full border border-line px-4 py-2 text-xs font-bold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink"
+      >
+        {nextLabel}
+      </button>
+    </nav>
+  );
+}
+
 export function ShopClient({
   products: initialProducts = [],
   ratings: initialRatings = {},
@@ -467,10 +555,13 @@ export function ShopClient({
       cancelled = true;
     };
   }, [initialMenuCategories]);
-  const [loadingProducts, setLoadingProducts] = useState(initialProducts.length === 0);
+  const requestedPage = parseShopPage(searchParams.get("page"));
+  const [loadingProducts, setLoadingProducts] = useState(
+    initialProducts.length === 0 ||
+      (requestedPage > 1 && initialProducts.length >= SHOP_PAGE_SIZE)
+  );
   const [adding, setAdding] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(60);
   const [filtersOpen, setFiltersOpen] = useState(false);
   // Draft fields for typing; applied filters come from the URL (Pukas-style shareable state).
   const [draftQuery, setDraftQuery] = useState(searchParams.get("q") || "");
@@ -496,7 +587,9 @@ export function ShopClient({
     const filtered = applyShopFacetFilters(products, filters);
     return sortShopProducts(filtered, filters.sort, filters.query);
   }, [filters, products]);
-  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const totalPages = shopPageCount(filteredProducts.length);
+  const currentPage = clampShopPage(requestedPage, filteredProducts.length);
+  const visibleProducts = shopPageSlice(filteredProducts, currentPage);
   const activeFilterCount = countActiveFilters(filters);
 
   useEffect(() => {
@@ -521,11 +614,11 @@ export function ShopClient({
 
     async function loadProducts() {
       // Keep SSR products visible while a capped lean catalog downloads.
-      // When SSR already returned the entire filtered page (< 60), skip a second catalog hit.
+      // When SSR already returned the entire filtered page, skip a second catalog hit.
       if (
         initialProducts.length > 0 &&
         catalogKey === initialCatalogKey &&
-        initialProducts.length < 60
+        initialProducts.length < SHOP_PAGE_SIZE
       ) {
         setLoadingProducts(false);
         return;
@@ -540,7 +633,7 @@ export function ShopClient({
         if (sub) requestParams.set("subcategory", sub);
         if (q) requestParams.set("q", q);
         if (brand) requestParams.set("brand", brand.split(",")[0] || "");
-        requestParams.set("limit", "300");
+        requestParams.set("limit", String(SHOP_CATALOG_FETCH_LIMIT));
 
         const data = await storefrontGetJson<{
           products?: StoreProduct[];
@@ -554,7 +647,6 @@ export function ShopClient({
               ? data.ratings
               : {}
           );
-          setVisibleCount(60);
           setMessage(null);
         }
       } catch {
@@ -585,8 +677,14 @@ export function ShopClient({
     nextSub = activeSubcategory
   ) {
     const params = writeFiltersToParams(searchParams, next, nextGroup, nextSub);
-    setVisibleCount(60);
     router.push(`/loja${params.toString() ? `?${params.toString()}` : ""}`, { scroll: false });
+  }
+
+  function goToPage(page: number) {
+    const params = writeFiltersToParams(searchParams, filters, activeCategoryGroup, activeSubcategory);
+    const nextPage = clampShopPage(page, filteredProducts.length);
+    if (nextPage > 1) params.set("page", String(nextPage));
+    router.push(`/loja${params.toString() ? `?${params.toString()}` : ""}`, { scroll: true });
   }
 
   function navigateCategory(nextCategoryGroup: string, nextSubcategory = "") {
@@ -946,7 +1044,9 @@ export function ShopClient({
                   {t.searching}
                 </span>
               ) : (
-                `${filteredProducts.length} ${t.productsFound}`
+                `${filteredProducts.length} ${t.productsFound}${
+                  totalPages > 1 ? ` · ${t.page} ${currentPage} ${t.of} ${totalPages}` : ""
+                }`
               )}
             </p>
           </div>
@@ -1036,7 +1136,7 @@ export function ShopClient({
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                  {visibleProducts.map((product) => {
+                  {visibleProducts.map((product, index) => {
                     const hasVariants = Boolean(product.hasVariants && (product.variantCount ?? 0) > 1);
                     const priceLabel =
                       hasVariants &&
@@ -1045,6 +1145,8 @@ export function ShopClient({
                       product.minPriceCents !== product.maxPriceCents
                         ? "from"
                         : null;
+                    const imageSrc = shopListingImageSrc(product.imageUrl);
+                    const eagerImage = index < SHOP_EAGER_IMAGE_COUNT;
 
                     return (
                     <article
@@ -1053,11 +1155,13 @@ export function ShopClient({
                     >
                       <Link href={`/loja/${product.slug}`} className="relative block h-44 bg-white p-3 sm:h-52">
                         <Image
-                          src={product.imageUrl}
+                          src={imageSrc}
                           alt={product.name}
                           fill
                           sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                           className="object-contain p-3"
+                          unoptimized={isOdooProductImageUrl(product.imageUrl)}
+                          priority={eagerImage}
                         />
                       </Link>
                       <div className="p-4">
@@ -1165,16 +1269,15 @@ export function ShopClient({
               </div>
             )}
 
-            {!loadingProducts && visibleProducts.length < filteredProducts.length && (
-              <div className="mt-8 text-center">
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount((count) => count + 60)}
-                  className="rounded-full border border-ink px-6 py-3 text-sm font-bold uppercase tracking-wide text-ink transition hover:bg-ink hover:text-white"
-                >
-                  {t.loadMore}
-                </button>
-              </div>
+            {!loadingProducts && (
+              <ShopPager
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPage={goToPage}
+                previousLabel={t.previous}
+                nextLabel={t.next}
+                pageLabel={t.page}
+              />
             )}
           </div>
         </div>

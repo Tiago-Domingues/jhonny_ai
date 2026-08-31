@@ -82,6 +82,34 @@ async function imagesFromOdoo(odooProductId: number) {
   return slots.slice(0, MAX_PRODUCT_IMAGES);
 }
 
+/** Shop grid only needs the primary 128px slot — skip extra product.image RPCs. */
+async function primaryThumbFromOdoo(odooProductId: number) {
+  if (!hasOdooConfig()) return null;
+  const client = new OdooClient();
+  const [product] = await client.searchRead(
+    "product.product",
+    [["id", "=", odooProductId]],
+    ["image_variant_128", "image_128", "image_variant_512", "image_512"],
+    { limit: 1 }
+  );
+  if (!product) return null;
+  return (
+    decodeOdooBinary(product.image_variant_128) ||
+    decodeOdooBinary(product.image_128) ||
+    decodeOdooBinary(product.image_variant_512) ||
+    decodeOdooBinary(product.image_512)
+  );
+}
+
+function imageResponse(body: Buffer, contentType = "image/jpeg") {
+  return new Response(responseBody(body), {
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+    },
+  });
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ odooProductId: string }> }
@@ -117,6 +145,12 @@ export async function GET(
     );
   }
   const index = parseImageIndex(url.searchParams.get("i"));
+  const wantsThumb = url.searchParams.get("t") === "1";
+
+  if (wantsThumb) {
+    const thumb = await primaryThumbFromOdoo(id);
+    if (thumb) return imageResponse(thumb);
+  }
 
   if (index === 0 && hasDatabaseUrl()) {
     const product = await prisma.product.findFirst({
@@ -134,12 +168,10 @@ export async function GET(
     if (first?.startsWith("data:image/")) {
       const [meta, encoded] = first.split(",", 2);
       if (encoded) {
-        return new Response(responseBody(Buffer.from(encoded, "base64")), {
-          headers: {
-            "Content-Type": meta.includes("png") ? "image/png" : "image/jpeg",
-            "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
-          },
-        });
+        return imageResponse(
+          Buffer.from(encoded, "base64"),
+          meta.includes("png") ? "image/png" : "image/jpeg"
+        );
       }
     }
   }
@@ -148,10 +180,5 @@ export async function GET(
   const odooImage = odooImages[index] || odooImages[0];
   if (!odooImage) return new Response(null, { status: 404 });
 
-  return new Response(responseBody(odooImage), {
-    headers: {
-      "Content-Type": "image/jpeg",
-      "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
-    },
-  });
+  return imageResponse(odooImage);
 }
