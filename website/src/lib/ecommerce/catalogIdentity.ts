@@ -42,15 +42,21 @@ export function isFoodBeverageCatalogRow(product: {
     "juice",
     "wine",
     "vinho",
-    "espresso",
-    "expresso",
-    "cappuccino",
-    "capuccino",
-    "banana bread",
     "down payment",
-    "chá",
   ];
-  return blockedTerms.some((term) => haystack.includes(term));
+  if (blockedTerms.some((term) => haystack.includes(term))) return true;
+  const standaloneName = String(product.name || "")
+    .trim()
+    .toLowerCase();
+  return (
+    standaloneName === "expresso" ||
+    standaloneName === "espresso" ||
+    standaloneName === "cappuccino" ||
+    standaloneName === "capuccino" ||
+    standaloneName === "chá" ||
+    standaloneName === "cha" ||
+    standaloneName === "banana bread"
+  );
 }
 
 export function shouldExcludeFromWebsiteCatalog(product: {
