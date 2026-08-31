@@ -1,4 +1,3 @@
-import { createHash, randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import dotenv from "dotenv";
@@ -8,10 +7,6 @@ dotenv.config();
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
-}
-
-function hashToken(token: string) {
-  return createHash("sha256").update(token).digest("hex");
 }
 
 function cookieHeader(setCookie: string | null) {
@@ -30,23 +25,13 @@ async function registerAndVerify(
     headers: { "Content-Type": "application/json", Origin: base },
     body: JSON.stringify({ email, username, password }),
   });
-  assert(register.ok, `register failed ${register.status} ${await register.text()}`);
-  const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
-  assert(pending, "pending row");
-  const token = randomBytes(32).toString("base64url");
-  await prisma.pendingRegistration.update({
-    where: { id: pending.id },
-    data: { tokenHash: hashToken(token) },
-  });
-  const verify = await fetch(`${base}/api/auth/verify-email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token }),
-  });
-  assert(verify.ok, `verify failed ${verify.status} ${await verify.text()}`);
+  const registerBody = await register.json().catch(() => ({}));
+  assert(register.ok, `register failed ${register.status} ${JSON.stringify(registerBody)}`);
   const user = await prisma.user.findUnique({ where: { email } });
-  assert(user, "user exists");
-  return { user, cookie: cookieHeader(verify.headers.get("set-cookie")) };
+  assert(user, "user exists after register");
+  const cookie = cookieHeader(register.headers.get("set-cookie"));
+  assert(cookie.includes("jss_session"), "register sets a session");
+  return { user, cookie };
 }
 
 async function main() {

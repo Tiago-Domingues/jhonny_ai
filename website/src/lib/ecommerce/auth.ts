@@ -3,10 +3,78 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/ecommerce/db";
 import type { GoogleUserInfo } from "@/lib/ecommerce/googleOAuth";
-import { registerSchema, loginSchema, profileSchema } from "@/lib/ecommerce/schemas";
+import { registerSchema, loginSchema, pendingRegisterSchema, profileSchema } from "@/lib/ecommerce/schemas";
 import { normalizeNif } from "@/lib/ecommerce/nif";
 import { hashPassword, normalizeEmail, randomToken, verifyPassword } from "@/lib/ecommerce/security";
 import { isAdminEmail } from "@/lib/ecommerce/admin";
+
+export function toPublicAuthUser<
+  T extends {
+    id: string;
+    email: string;
+    username: string;
+    emailVerifiedAt: Date | null;
+    profile?: { fullName?: string | null } | null;
+  },
+>(user: T) {
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    fullName: user.profile?.fullName,
+    emailVerifiedAt: user.emailVerifiedAt,
+  };
+}
+
+export async function registerCredentialsCustomer(input: unknown) {
+  const data = pendingRegisterSchema.parse(input);
+  const email = normalizeEmail(data.email);
+  const username = data.username.trim();
+
+  const existingUser = await prisma.user.findFirst({
+    where: { OR: [{ email }, { username }] },
+    select: { id: true },
+  });
+  if (existingUser) {
+    throw new Error("Email or username is already registered.");
+  }
+
+  const usernameHeld = await prisma.pendingRegistration.findFirst({
+    where: { username, NOT: { email } },
+    select: { id: true },
+  });
+  if (usernameHeld) {
+    throw new Error("Email or username is already registered.");
+  }
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          email,
+          username,
+          passwordHash: await hashPassword(data.password),
+          emailVerifiedAt: new Date(),
+          role: isAdminEmail(email) ? "ADMIN" : "CUSTOMER",
+          profile: {
+            create: {
+              fullName: username,
+              marketingOptIn: data.marketingOptIn,
+            },
+          },
+        },
+        include: { profile: true },
+      });
+      await tx.pendingRegistration.deleteMany({ where: { email } });
+      return created;
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new Error("Email or username is already registered.");
+    }
+    throw error;
+  }
+}
 
 export async function registerCustomer(input: unknown) {
   const data = registerSchema.parse(input);

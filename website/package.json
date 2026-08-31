@@ -32,6 +32,7 @@
     "test:user-initials": "npx tsx scripts/test-user-initials.ts",
     "test:registry-notifications": "npx tsx scripts/test-registry-notifications.ts",
     "test:registry-flow-http": "npx tsx scripts/test-registry-flow-http.ts",
+    "test:google-signup": "npx tsx scripts/test-google-signup.ts",
     "test:admin-customers": "npx tsx scripts/test-admin-customers.ts",
     "test:account-admin": "npx tsx scripts/test-account-admin.ts",
     "test:account-admin-http": "npx tsx scripts/test-account-admin-http.ts",

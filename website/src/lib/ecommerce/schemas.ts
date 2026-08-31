@@ -38,7 +38,7 @@ export const registerSchema = z.object({
   birthDate: birthDateSchema,
 });
 
-/** First step of signup: credentials only. Profile is filled after the email link. */
+/** First step of signup: credentials only. Profile is filled after the account exists. */
 export const pendingRegisterSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3).max(40).regex(/^[a-zA-Z0-9_.-]+$/),
