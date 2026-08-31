@@ -1,4 +1,4 @@
-export const MAX_PRODUCT_IMAGES = 12;
+export const MAX_PRODUCT_IMAGES = 6;
 
 export function productImageApiUrl(odooProductId: number, index = 0) {
   const safeIndex = Math.max(0, Math.min(MAX_PRODUCT_IMAGES - 1, Math.floor(index)));

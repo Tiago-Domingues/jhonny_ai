@@ -70,7 +70,7 @@ export function HeaderSearchOverlay({
     const timer = window.setTimeout(async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/products?q=${encodeURIComponent(q)}`, {
+        const response = await fetch(`/api/products?q=${encodeURIComponent(q)}&limit=8`, {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error("search failed");

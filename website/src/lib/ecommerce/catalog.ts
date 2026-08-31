@@ -11,8 +11,13 @@ import { applySurfboardReviewVideo } from "@/lib/ecommerce/surfboardEnrichment";
 import { cleanProductDisplayName, groupStoreProductsForListing, type StoreProductListing } from "@/lib/ecommerce/productVariants";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 import { unstable_cache } from "next/cache";
+import { isMockProductIdentity } from "@/lib/ecommerce/catalogIdentity";
+
+export { isMockProductIdentity } from "@/lib/ecommerce/catalogIdentity";
 
 type OdooProduct = Awaited<ReturnType<typeof fetchOdooProducts>>["products"][number];
+
+export const CATALOG_CACHE_TAG = "ecommerce-catalog";
 
 /** Demo catalog is for local/dev only unless explicitly re-enabled. */
 export function allowMockCatalog() {
@@ -20,20 +25,17 @@ export function allowMockCatalog() {
   return !isProductionRuntime();
 }
 
-export function isMockProductIdentity(product: {
-  id?: string | null;
-  slug?: string | null;
-  sku?: string | null;
-  refId?: string | null;
-}) {
-  const id = String(product.id || "");
-  const slug = String(product.slug || "");
-  const sku = String(product.sku || product.refId || "");
-  return (
-    id.startsWith("mock-") ||
-    slug.includes("-demo") ||
-    sku.startsWith("DEMO-")
-  );
+/** Prisma `where` for public shop listings (hides DEMO SKUs in production). */
+export function publicCatalogWhere() {
+  return {
+    active: true,
+    excludedFromCatalog: false,
+    ...(allowMockCatalog()
+      ? {}
+      : {
+          NOT: [{ sku: { startsWith: "DEMO-" } }, { slug: { contains: "-demo" } }],
+        }),
+  };
 }
 
 function mockCatalogOrEmpty() {
@@ -94,6 +96,7 @@ export type ProductFilters = {
   inStockOnly?: boolean;
   minPriceCents?: number | null;
   maxPriceCents?: number | null;
+  limit?: number | null;
 };
 
 export const mockProducts: StoreProduct[] = [
@@ -505,55 +508,75 @@ function finalizeCatalogList(products: StoreProduct[]) {
   return groupStoreProductsForListing(dedupeStoreProducts(products));
 }
 
-export async function listProducts(filters: ProductFilters = {}): Promise<StoreProduct[]> {
+function hasActiveFilters(filters: ProductFilters = {}) {
+  return Boolean(
+    filters.query?.trim() ||
+      filters.category ||
+      filters.categoryGroup ||
+      filters.subcategory ||
+      filters.brand ||
+      filters.size ||
+      filters.color ||
+      filters.inStockOnly ||
+      filters.minPriceCents != null ||
+      filters.maxPriceCents != null
+  );
+}
+
+async function listAllCatalogProductsUncached(): Promise<StoreProduct[]> {
   if (!hasDatabaseUrl()) {
     try {
-      const liveProducts = await listLiveOdooProducts(filters);
+      const liveProducts = await listLiveOdooProducts();
       if (liveProducts?.length) return liveProducts.map(toLeanStoreProduct);
     } catch {
       // Fall through to mock products if Odoo is temporarily unavailable.
     }
-    return finalizeCatalogList(
-      mockCatalogOrEmpty().filter((product) => matchesFilters(product, filters))
-    ).map(toLeanStoreProduct);
+    return finalizeCatalogList(mockCatalogOrEmpty()).map(toLeanStoreProduct);
   }
 
   try {
     await maybeKickCatalogSync();
 
     const products = await prisma.product.findMany({
-      where: {
-        active: true,
-        excludedFromCatalog: false,
-        ...(allowMockCatalog()
-          ? {}
-          : {
-              NOT: [
-                { sku: { startsWith: "DEMO-" } },
-                { slug: { contains: "-demo" } },
-              ],
-            }),
-      },
+      where: publicCatalogWhere(),
       orderBy: [{ category: "asc" }, { name: "asc" }],
       select: productListSelect,
     });
     const mapped = products.length
       ? products.map((product) => toStoreProduct(product, { lean: true }))
       : mockCatalogOrEmpty();
-    return finalizeCatalogList(mapped.filter((product) => matchesFilters(product, filters))).map(
-      toLeanStoreProduct
-    );
+    return finalizeCatalogList(mapped).map(toLeanStoreProduct);
   } catch {
     try {
-      const liveProducts = await listLiveOdooProducts(filters);
+      const liveProducts = await listLiveOdooProducts();
       if (liveProducts?.length) return liveProducts.map(toLeanStoreProduct);
     } catch {
       // Fall through to mock products if both DB and Odoo fail.
     }
-    return finalizeCatalogList(
-      mockCatalogOrEmpty().filter((product) => matchesFilters(product, filters))
-    ).map(toLeanStoreProduct);
+    return finalizeCatalogList(mockCatalogOrEmpty()).map(toLeanStoreProduct);
   }
+}
+
+/** Grouped lean catalog. Cached 30s so shop / search / SSR share one Prisma pass. */
+export async function listAllCatalogProducts(): Promise<StoreProduct[]> {
+  return unstable_cache(
+    listAllCatalogProductsUncached,
+    ["ecommerce-list-all-products-v2", allowMockCatalog() ? "mock-on" : "mock-off"],
+    {
+      revalidate: 30,
+      tags: [CATALOG_CACHE_TAG],
+    }
+  )();
+}
+
+export async function listProducts(filters: ProductFilters = {}): Promise<StoreProduct[]> {
+  const products = await listAllCatalogProducts();
+  const filtered = hasActiveFilters(filters)
+    ? products.filter((product) => matchesFilters(product, filters))
+    : products;
+  const limit = filters.limit;
+  if (limit && limit > 0) return filtered.slice(0, limit);
+  return filtered;
 }
 
 function collectBrandNames(products: Array<{ brand?: string | null }>) {
@@ -564,11 +587,6 @@ function collectBrandNames(products: Array<{ brand?: string | null }>) {
   }
   return [...names].sort((a, b) => a.localeCompare(b));
 }
-
-const catalogListingWhere = {
-  active: true,
-  excludedFromCatalog: false,
-} as const;
 
 async function listCatalogBrandNamesUncached(): Promise<string[]> {
   if (!hasDatabaseUrl()) {
@@ -583,14 +601,7 @@ async function listCatalogBrandNamesUncached(): Promise<string[]> {
 
   try {
     const rows = await prisma.product.findMany({
-      where: {
-        ...catalogListingWhere,
-        ...(allowMockCatalog()
-          ? {}
-          : {
-              NOT: [{ sku: { startsWith: "DEMO-" } }, { slug: { contains: "-demo" } }],
-            }),
-      },
+      where: publicCatalogWhere(),
       distinct: ["brand"],
       select: { brand: true },
     });
@@ -630,8 +641,7 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
   try {
     const products = await prisma.product.findMany({
       where: {
-        active: true,
-        excludedFromCatalog: false,
+        ...publicCatalogWhere(),
         isOpportunity: true,
       },
       orderBy: [{ opportunityDiscountPercent: "desc" }, { name: "asc" }],
@@ -684,8 +694,7 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
 
     const tagged = await prisma.product.findMany({
       where: {
-        active: true,
-        excludedFromCatalog: false,
+        ...publicCatalogWhere(),
         isNewIn: true,
       },
       orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
@@ -698,10 +707,7 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
     if (fromAttribute.length) return fromAttribute;
 
     const products = await prisma.product.findMany({
-      where: {
-        active: true,
-        excludedFromCatalog: false,
-      },
+      where: publicCatalogWhere(),
       orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
       take: 400,
       select: productListSelect,

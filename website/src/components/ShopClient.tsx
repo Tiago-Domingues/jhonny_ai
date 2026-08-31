@@ -518,11 +518,9 @@ export function ShopClient({
   useEffect(() => {
     let cancelled = false;
     const [group, sub, q, brand] = catalogKey.split("|");
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 25000);
 
     async function loadProducts() {
-      // Keep SSR products visible while the full lean catalog downloads.
+      // Keep SSR products visible while a capped lean catalog downloads.
       // When SSR already returned the entire filtered page (< 60), skip a second catalog hit.
       if (
         initialProducts.length > 0 &&
@@ -542,13 +540,13 @@ export function ShopClient({
         if (sub) requestParams.set("subcategory", sub);
         if (q) requestParams.set("q", q);
         if (brand) requestParams.set("brand", brand.split(",")[0] || "");
+        requestParams.set("limit", "300");
 
-        const response = await fetch(
-          `/api/products${requestParams.toString() ? `?${requestParams.toString()}` : ""}`,
-          { signal: controller.signal }
-        );
-        if (!response.ok) throw new Error("Product request failed.");
-        const data = await response.json();
+        const data = await storefrontGetJson<{
+          products?: StoreProduct[];
+          ratings?: Record<string, ShopCardRating>;
+        }>(`/api/products?${requestParams.toString()}`);
+        if (!data) throw new Error("Product request failed.");
         if (!cancelled) {
           setProducts(Array.isArray(data.products) ? data.products : []);
           setRatings(
@@ -578,8 +576,6 @@ export function ShopClient({
     void loadProducts();
     return () => {
       cancelled = true;
-      controller.abort();
-      window.clearTimeout(timeout);
     };
   }, [catalogKey, initialCatalogKey, initialProducts.length, locale]);
 

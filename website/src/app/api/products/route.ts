@@ -1,4 +1,5 @@
 import { listProducts, toLeanStoreProduct, type StoreProduct } from "@/lib/ecommerce/catalog";
+import { parseCatalogLimit } from "@/lib/ecommerce/catalogIdentity";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { getProductRatingSummaries } from "@/lib/ecommerce/ratings";
 
@@ -51,6 +52,7 @@ function toCompactListProduct(product: StoreProduct) {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const limit = parseCatalogLimit(url.searchParams.get("limit"));
   const products = await listProducts({
     query: url.searchParams.get("q"),
     category: url.searchParams.get("category"),
@@ -62,6 +64,7 @@ export async function GET(request: Request) {
     inStockOnly: url.searchParams.get("stock") === "in" || url.searchParams.get("availability") === "in",
     minPriceCents: centsFromParam(url.searchParams.get("minPrice")),
     maxPriceCents: centsFromParam(url.searchParams.get("maxPrice")),
+    limit,
   });
 
   // Belt-and-suspenders: never ship enrichment blobs on the list endpoint.

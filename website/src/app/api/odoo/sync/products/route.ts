@@ -1,4 +1,5 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CATALOG_CACHE_TAG } from "@/lib/ecommerce/catalog";
 import { syncOdooProducts } from "@/lib/ecommerce/odooCatalog";
 import { hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { hasValidOpsBearer, isProductionRuntime, readOpsSecret } from "@/lib/ecommerce/securityRuntime";
@@ -43,6 +44,7 @@ async function runSync(request: Request) {
   try {
     const started = Date.now();
     const result = await syncOdooProducts({ mode });
+    revalidateTag(CATALOG_CACHE_TAG, { expire: 0 });
     revalidatePath("/");
     revalidatePath("/loja");
     revalidatePath("/api/products");
