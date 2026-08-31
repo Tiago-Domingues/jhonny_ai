@@ -154,6 +154,7 @@ type StorefrontCopy = {
     password: string;
     username: string;
     ready: string;
+    registerHint: string;
     registerCheckEmail: string;
     submitFailed: string;
     preferNot: string;
@@ -351,7 +352,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       saveFailed: "Não foi possível guardar o perfil.",
       joinKicker: "Conta Jhonny",
       joinTitle: "Join the family",
-      joinIntro: "Primeiro confirma o email. Só depois podes preencher o perfil e as moradas. Podes continuar a comprar como convidado no checkout.",
+      joinIntro: "Cria a conta com email, username e password. Se o email estiver a funcionar, enviamos um link de confirmação. Depois podes preencher o perfil e as moradas, ou continuar a comprar como convidado.",
       signIn: "Entrar",
       register: "Criar conta",
       continueGoogle: "Continuar com Google",
@@ -370,6 +371,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       password: "Palavra-passe",
       username: "Username",
       ready: "Conta pronta.",
+      registerHint: "Usa o mesmo email e password para entrares. Se o envio de email estiver ativo, pedimos-te para confirmares o endereço.",
       registerCheckEmail: "Enviámos um link para o teu email. Clica nele para terminares o registo e preencheres o perfil.",
       submitFailed: "Não foi possível concluir o pedido.",
       preferNot: "Prefiro não dizer",
@@ -566,7 +568,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       saveFailed: "Could not save your profile.",
       joinKicker: "Jhonny account",
       joinTitle: "Join the family",
-      joinIntro: "Confirm your email first. Only then can you fill in your profile and addresses. You can still shop as a guest at checkout.",
+      joinIntro: "Create your account with email, username and password. If email is working, we send a confirmation link. You can then fill in your profile, or keep shopping as a guest.",
       signIn: "Sign in",
       register: "Create account",
       continueGoogle: "Continue with Google",
@@ -585,6 +587,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       password: "Password",
       username: "Username",
       ready: "Account ready.",
+      registerHint: "Use this email and password to sign in. If email sending is on, we ask you to confirm the address first.",
       registerCheckEmail: "We sent a link to your email. Click it to finish registration and fill in your profile.",
       submitFailed: "Could not complete the request.",
       preferNot: "Prefer not to say",
@@ -781,7 +784,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       saveFailed: "无法保存资料。",
       joinKicker: "Jhonny 账户",
       joinTitle: "Join the family",
-      joinIntro: "请先确认邮箱，然后才能填写资料和地址。结账时仍可以游客身份购物。",
+      joinIntro: "用邮箱、用户名和密码创建账户。如果邮件可用，我们会发送确认链接。之后可以填写资料，也可以继续以游客身份购物。",
       signIn: "登录",
       register: "创建账户",
       continueGoogle: "使用 Google 继续",
@@ -799,6 +802,7 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       password: "密码",
       username: "用户名",
       ready: "账户已就绪。",
+      registerHint: "使用此邮箱和密码登录。如果邮件发送可用，我们会先请你确认邮箱。",
       registerCheckEmail: "我们已发送确认链接。点击后即可完成注册并填写资料。",
       submitFailed: "无法完成请求。",
       preferNot: "不愿透露",

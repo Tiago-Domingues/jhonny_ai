@@ -120,7 +120,7 @@ async function main() {
   await prisma.customerProfile.deleteMany({ where: { userId: user.id } }).catch(() => null);
   await prisma.user.delete({ where: { id: user.id } });
   await prisma.$disconnect();
-  console.log("verify-before-register: pending is not a user until the email link is used");
+  console.log("verify-before-register: a stored pending row becomes a user when the email link is used");
 }
 
 main().catch((error) => {

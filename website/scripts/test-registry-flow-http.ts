@@ -51,22 +51,38 @@ async function main() {
     });
     const registerBody = await register.json().catch(() => ({}));
     assert(register.ok, `register failed ${register.status} ${JSON.stringify(registerBody)}`);
-    assert(registerBody.pending === true, "register waits for the email link");
-
-    const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
-    assert(pending, "pending registration exists");
-    assert(pending.marketingOptIn === true, "register defaults marketing opt-in");
     const verifyEvent = await prisma.emailEvent.findFirst({
       where: { recipientEmail: email, type: "EMAIL_VERIFICATION" },
       orderBy: { createdAt: "desc" },
     });
     assert(verifyEvent, "verification email event is recorded");
-    assert(["SENT", "SKIPPED"].includes(verifyEvent.status), "verification email is sent or skipped when SMTP is blank");
+    assert(["SENT", "SKIPPED", "FAILED"].includes(verifyEvent.status), "verification email attempt is recorded");
 
-    await prisma.pendingRegistration.update({
-      where: { id: pending.id },
-      data: { tokenHash: hashToken(token) },
-    });
+    let cookie = register.headers.get("set-cookie") || "";
+    if (verifyEvent.status === "SENT") {
+      assert(registerBody.pending === true, "register waits for the email link when mail is sent");
+      const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
+      assert(pending, "pending registration exists when mail is sent");
+      assert(pending.marketingOptIn === true, "register defaults marketing opt-in");
+      await prisma.pendingRegistration.update({
+        where: { id: pending.id },
+        data: { tokenHash: hashToken(token) },
+      });
+      const first = await fetch(`${base}/api/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const firstBody = await first.json().catch(() => ({}));
+      assert(first.ok, `first verify failed ${first.status} ${JSON.stringify(firstBody)}`);
+      cookie = first.headers.get("set-cookie") || "";
+    } else {
+      assert(registerBody.pending === false, "register creates the account when email is not sent");
+      assert(registerBody.emailSent === false, "API does not claim an email was sent");
+      assert(registerBody.user?.email === email, "register returns the new user");
+      assert(cookie.includes("jss_session"), "register sets a session when email is skipped");
+      assert(!(await prisma.pendingRegistration.findUnique({ where: { email } })), "pending row is consumed");
+    }
 
     const verifyPage = await fetch(`${base}/conta/verificar-email?token=${encodeURIComponent(token)}`);
     const verifyHtml = await verifyPage.text();
@@ -76,22 +92,17 @@ async function main() {
       "verify page renders the clickable confirmation flow"
     );
 
-    const first = await fetch(`${base}/api/auth/verify-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-    const firstBody = await first.json().catch(() => ({}));
-    assert(first.ok, `first verify failed ${first.status} ${JSON.stringify(firstBody)}`);
-    const cookie = first.headers.get("set-cookie") || "";
-    assert(cookie.includes("jss_session"), "verify sets a session");
+    assert(cookie.includes("jss_session"), "signup ends with a session");
 
-    const second = await fetch(`${base}/api/auth/verify-email`, {
+    const login = await fetch(`${base}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ emailOrUsername: email, password: "surflegend1" }),
     });
-    assert(second.ok, "the same verify link still works the second time");
+    const loginBody = await login.json().catch(() => ({}));
+    assert(login.ok, `login after register failed ${login.status} ${JSON.stringify(loginBody)}`);
+    cookie = login.headers.get("set-cookie") || cookie;
+    assert(cookie.includes("jss_session"), "login sets a session");
 
     const user = await prisma.user.findUnique({ where: { email }, include: { profile: true } });
     assert(user?.emailVerifiedAt, "account is verified");
@@ -178,27 +189,80 @@ async function main() {
     });
     assert(optOutRegister.ok, "register with marketing unselected works");
     const optOutPending = await prisma.pendingRegistration.findUnique({ where: { email: optOutEmail } });
-    assert(optOutPending?.marketingOptIn === false, "unselected marketing is stored on pending signup");
-    await prisma.pendingRegistration.update({
-      where: { id: optOutPending.id },
-      data: { tokenHash: hashToken(optOutToken) },
-    });
-    const optOutVerify = await fetch(`${base}/api/auth/verify-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: optOutToken }),
-    });
-    assert(optOutVerify.ok, "opt-out verify works");
+    if (optOutPending) {
+      assert(optOutPending.marketingOptIn === false, "unselected marketing is stored on pending signup");
+      await prisma.pendingRegistration.update({
+        where: { id: optOutPending.id },
+        data: { tokenHash: hashToken(optOutToken) },
+      });
+      const optOutVerify = await fetch(`${base}/api/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: optOutToken }),
+      });
+      assert(optOutVerify.ok, "opt-out verify works");
+    }
     const optOutUser = await prisma.user.findUnique({
       where: { email: optOutEmail },
       include: { profile: true },
     });
-    assert(optOutUser?.profile?.marketingOptIn === false, "unselected marketing is kept after verify");
+    assert(optOutUser?.profile?.marketingOptIn === false, "unselected marketing is kept after register");
     await prisma.emailEvent.deleteMany({ where: { userId: optOutUser.id } });
     await prisma.emailVerificationToken.deleteMany({ where: { userId: optOutUser.id } });
     await prisma.customerProfile.deleteMany({ where: { userId: optOutUser.id } });
     await prisma.user.delete({ where: { id: optOutUser.id } });
     await prisma.pendingRegistration.deleteMany({ where: { email: optOutEmail } });
+
+    const linkEmail = `flow-link-${stamp}@example.com`;
+    const linkUsername = `flowlink${stamp}`.slice(0, 32);
+    const linkToken = randomToken(32);
+    await prisma.pendingRegistration.create({
+      data: {
+        email: linkEmail,
+        username: linkUsername,
+        passwordHash: user.passwordHash || "",
+        tokenHash: hashToken(linkToken),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        marketingOptIn: true,
+      },
+    });
+    const linkVerify = await fetch(`${base}/api/auth/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: linkToken }),
+    });
+    assert(linkVerify.ok, `email-link verify failed ${linkVerify.status} ${await linkVerify.text()}`);
+    assert((await prisma.user.findUnique({ where: { email: linkEmail } }))?.emailVerifiedAt, "email link still creates the user");
+
+    const leftoverPendingEmail = `flow-pend-${stamp}@example.com`;
+    await prisma.pendingRegistration.create({
+      data: {
+        email: leftoverPendingEmail,
+        username: `flowpend${stamp}`.slice(0, 32),
+        passwordHash: user.passwordHash || "",
+        tokenHash: hashToken(randomToken(32)),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+    const pendingLogin = await fetch(`${base}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ emailOrUsername: leftoverPendingEmail, password: "surflegend1" }),
+    });
+    const pendingLoginBody = await pendingLogin.json().catch(() => ({}));
+    assert(pendingLogin.ok, `pending login failed ${pendingLogin.status} ${JSON.stringify(pendingLoginBody)}`);
+    assert(await prisma.user.findUnique({ where: { email: leftoverPendingEmail } }), "login completes leftover pending signup");
+
+    for (const extraEmail of [linkEmail, leftoverPendingEmail]) {
+      const extra = await prisma.user.findUnique({ where: { email: extraEmail } });
+      if (extra) {
+        await prisma.emailEvent.deleteMany({ where: { userId: extra.id } });
+        await prisma.emailVerificationToken.deleteMany({ where: { userId: extra.id } });
+        await prisma.customerProfile.deleteMany({ where: { userId: extra.id } });
+        await prisma.user.delete({ where: { id: extra.id } });
+      }
+      await prisma.pendingRegistration.deleteMany({ where: { email: extraEmail } });
+    }
 
     const spin = await fetch(`${base}/api/wheel/spin`, {
       method: "POST",
@@ -216,7 +280,10 @@ async function main() {
       data: { profile: { update: { marketingOptIn: true } } },
     });
     await prisma.wheelSpin.deleteMany({ where: { userId: user.id } });
-    const reminder = await fetch(`${base}/api/cron/wheel-reminders`, { method: "POST" });
+    const reminder = await fetch(`${base}/api/cron/wheel-reminders`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+    });
     const reminderBody = await reminder.json().catch(() => ({}));
     assert(reminder.ok, `wheel reminder cron failed ${reminder.status} ${JSON.stringify(reminderBody)}`);
     assert(

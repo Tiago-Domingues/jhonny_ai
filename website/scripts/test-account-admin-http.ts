@@ -30,7 +30,15 @@ async function registerAndVerify(
     headers: { "Content-Type": "application/json", Origin: base },
     body: JSON.stringify({ email, username, password }),
   });
-  assert(register.ok, `register failed ${register.status} ${await register.text()}`);
+  const registerBody = await register.json().catch(() => ({}));
+  assert(register.ok, `register failed ${register.status} ${JSON.stringify(registerBody)}`);
+  if (!registerBody.pending) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    assert(user, "user exists after register when email is not sent");
+    const cookie = cookieHeader(register.headers.get("set-cookie"));
+    assert(cookie.includes("jss_session"), "register sets a session when email is skipped");
+    return { user, cookie };
+  }
   const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
   assert(pending, "pending row");
   const token = randomBytes(32).toString("base64url");

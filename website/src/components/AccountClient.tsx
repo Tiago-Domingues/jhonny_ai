@@ -641,7 +641,7 @@ export function AccountClient() {
               />
               <span>{copy.marketing}</span>
             </label>
-            <p className="text-sm text-muted">{copy.registerCheckEmail}</p>
+            <p className="text-sm text-muted">{copy.registerHint}</p>
             <button className="rounded-2xl bg-ink px-5 py-4 font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-ink/90 hover:shadow-md active:scale-[0.98]">
               {copy.register}
             </button>

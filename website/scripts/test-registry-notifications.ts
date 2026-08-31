@@ -33,7 +33,13 @@ const verifyEmail = readFileSync(resolve(__dirname, "../src/lib/ecommerce/email.
 assert(verifyEmail.includes("word-break:break-all"), "verification email includes a pasteable URL");
 assert(verifyEmail.includes("WHEEL_PRIZE"), "wheel prize email exists");
 assert(verifyEmail.includes("WHEEL_REMINDER"), "monthly wheel reminder email exists");
+assert(verifyEmail.includes("sendResendEmail"), "SMTP can fall back to Resend");
 assert(!verifyEmail.includes("missing_odoo_fatura_pdf"), "paid emails still send without an Odoo PDF");
+
+const verifyFlow = readFileSync(resolve(__dirname, "../src/lib/ecommerce/emailVerification.ts"), "utf8");
+assert(verifyFlow.includes('event.status === "SENT"'), "signup waits for the link only when email is SENT");
+assert(verifyFlow.includes("createUserFromPending"), "signup creates the account when email is not sent");
+assert(verifyFlow.includes("completePendingRegistrationWithPassword"), "login completes a pending signup when email is not sent");
 
 const profileRoute = readFileSync(resolve(__dirname, "../src/app/api/profile/route.ts"), "utf8");
 assert(profileRoute.includes("sendWelcomeNotificationsIfProfileReady"), "welcome email/SMS fire after the profile is saved");
