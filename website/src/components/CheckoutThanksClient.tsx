@@ -53,17 +53,18 @@ export function CheckoutThanksClient() {
   }, [copy.failed]);
 
   const paid = state.status === "ready" && state.paid;
+  const awaiting = state.status === "ready" && !state.paid;
 
   return (
     <div className="rounded-3xl border border-line bg-white p-8 shadow-sm sm:p-10">
       {state.status === "loading" && <p className="text-muted">{copy.thanksConfirming}</p>}
-      {state.status === "error" && (
-        <p className="rounded-xl bg-cream p-3 text-sm text-muted">{state.message}</p>
-      )}
       {state.status !== "loading" && (
         <div className="space-y-5 text-ink">
+          {state.status === "error" && (
+            <p className="rounded-xl bg-cream p-3 text-sm text-muted">{state.message}</p>
+          )}
           <p className="font-display text-4xl font-extrabold uppercase tracking-tight sm:text-5xl">
-            {paid ? copy.thanksTitle : copy.thanksAwaiting}
+            {awaiting ? copy.thanksAwaiting : copy.thanksTitle}
           </p>
           {paid ? <p className="text-base text-muted">{copy.thanksBody}</p> : null}
           {state.status === "ready" && state.orderNumber ? (
