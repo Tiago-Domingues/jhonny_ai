@@ -3,8 +3,8 @@ import "server-only";
 import { Prisma, type PendingRegistration } from "@prisma/client";
 import { prisma } from "@/lib/ecommerce/db";
 import { isAdminEmail } from "@/lib/ecommerce/admin";
-import { loginSchema, pendingRegisterSchema } from "@/lib/ecommerce/schemas";
-import { hashPassword, hashToken, normalizeEmail, randomToken, verifyPassword } from "@/lib/ecommerce/security";
+import { loginSchema } from "@/lib/ecommerce/schemas";
+import { hashToken, randomToken, verifyPassword } from "@/lib/ecommerce/security";
 import { sendEmailVerificationEmail } from "@/lib/ecommerce/email";
 import { buildVerifyEmailUrl } from "@/lib/ecommerce/stripeCheckout";
 
@@ -12,18 +12,6 @@ const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function isVerifyTokenFormat(token: string) {
   return typeof token === "string" && token.length >= 20 && token.length <= 200;
-}
-
-function publicAuthUser<T extends { id: string; email: string; username: string; emailVerifiedAt: Date | null; profile?: { fullName?: string | null } | null }>(
-  user: T
-) {
-  return {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    fullName: user.profile?.fullName,
-    emailVerifiedAt: user.emailVerifiedAt,
-  };
 }
 
 async function sendVerificationLink(input: {
@@ -82,90 +70,7 @@ async function createUserFromPending(pending: PendingRegistration) {
   }
 }
 
-export async function startPendingRegistration(input: unknown, origin?: string | null) {
-  const data = pendingRegisterSchema.parse(input);
-  const email = normalizeEmail(data.email);
-  const username = data.username.trim();
-
-  const existingUser = await prisma.user.findFirst({
-    where: { OR: [{ email }, { username }] },
-    select: { id: true },
-  });
-  if (existingUser) {
-    throw new Error("Email or username is already registered.");
-  }
-
-  const usernameHeld = await prisma.pendingRegistration.findFirst({
-    where: { username, NOT: { email } },
-    select: { id: true },
-  });
-  if (usernameHeld) {
-    throw new Error("Email or username is already registered.");
-  }
-
-  const token = randomToken(32);
-  const passwordHash = await hashPassword(data.password);
-  const expiresAt = new Date(Date.now() + VERIFY_TTL_MS);
-
-  const pending = await prisma.pendingRegistration.upsert({
-    where: { email },
-    create: {
-      email,
-      username,
-      passwordHash,
-      tokenHash: hashToken(token),
-      expiresAt,
-      marketingOptIn: data.marketingOptIn,
-    },
-    update: {
-      username,
-      passwordHash,
-      tokenHash: hashToken(token),
-      expiresAt,
-      marketingOptIn: data.marketingOptIn,
-    },
-  });
-
-  const event = await sendVerificationLink({
-    email,
-    fullName: username,
-    verifyUrl: buildVerifyEmailUrl(token, origin),
-  });
-
-  if (event.status === "SENT") {
-    return { pending: true as const, emailSent: true as const };
-  }
-
-  const completed = await createUserFromPending(pending);
-  return {
-    pending: false as const,
-    emailSent: false as const,
-    created: completed.created,
-    user: publicAuthUser(completed.user),
-  };
-}
-
-export async function remindPendingRegistration(email: string, origin?: string | null) {
-  const pending = await prisma.pendingRegistration.findUnique({
-    where: { email: normalizeEmail(email) },
-  });
-  if (!pending) return null;
-  const token = randomToken(32);
-  await prisma.pendingRegistration.update({
-    where: { id: pending.id },
-    data: {
-      tokenHash: hashToken(token),
-      expiresAt: new Date(Date.now() + VERIFY_TTL_MS),
-    },
-  });
-  return sendVerificationLink({
-    email: pending.email,
-    fullName: pending.username,
-    verifyUrl: buildVerifyEmailUrl(token, origin),
-  });
-}
-
-export async function completePendingRegistrationWithPassword(input: unknown, origin?: string | null) {
+export async function completePendingRegistrationWithPassword(input: unknown) {
   const data = loginSchema.parse(input);
   const emailOrUsername = data.emailOrUsername.trim().toLowerCase();
   const pending = await prisma.pendingRegistration.findFirst({
@@ -176,16 +81,7 @@ export async function completePendingRegistrationWithPassword(input: unknown, or
   if (!pending || !(await verifyPassword(data.password, pending.passwordHash))) {
     return null;
   }
-
-  const event = await remindPendingRegistration(pending.email, origin);
-  if (event?.status === "SENT") {
-    return { needsEmail: true as const };
-  }
-
-  const refreshed = await prisma.pendingRegistration.findUnique({ where: { id: pending.id } });
-  if (!refreshed) return null;
-  const completed = await createUserFromPending(refreshed);
-  return { needsEmail: false as const, ...completed };
+  return createUserFromPending(pending);
 }
 
 export async function requestEmailVerification(userId: string, origin?: string | null) {
@@ -211,28 +107,6 @@ export async function requestEmailVerification(userId: string, origin?: string |
     verifyUrl: buildVerifyEmailUrl(token, origin),
   });
   return { accepted: true as const, status: event.status };
-}
-
-export async function allowUnverifiedLogin(user: {
-  id: string;
-  emailVerifiedAt: Date | null;
-  profile?: { fullName?: string | null } | null;
-  email: string;
-  username: string;
-}, origin?: string | null) {
-  if (user.emailVerifiedAt) {
-    return { allow: true as const, user };
-  }
-  const result = await requestEmailVerification(user.id, origin);
-  if (result.status === "SENT") {
-    return { allow: false as const, user };
-  }
-  const verified = await prisma.user.update({
-    where: { id: user.id },
-    data: { emailVerifiedAt: new Date() },
-    include: { profile: true },
-  });
-  return { allow: true as const, user: verified };
 }
 
 export async function verifyEmailWithToken(token: string) {
@@ -321,5 +195,3 @@ export async function completeRegistrationWithToken(token: string) {
 
   return { ...(await verifyEmailWithToken(token)), created: false as const };
 }
-
-export { publicAuthUser };

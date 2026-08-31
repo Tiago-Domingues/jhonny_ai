@@ -78,8 +78,6 @@ export function AccountClient() {
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
-  const [verifyBusy, setVerifyBusy] = useState(false);
-  const [verifyStatus, setVerifyStatus] = useState<string | null>(null);
   const [googleConsentOpen, setGoogleConsentOpen] = useState(false);
   const [editing, setEditing] = useState(false);
 
@@ -137,11 +135,6 @@ export function AccountClient() {
     if (!response.ok) {
       setMessageTone("error");
       setMessage(data.message || copy.submitFailed);
-      return;
-    }
-    if (data.pending) {
-      setMessageTone("success");
-      setMessage(copy.registerCheckEmail);
       return;
     }
     setUser(data.user);
@@ -208,30 +201,6 @@ export function AccountClient() {
             {copy.hello}, {profile?.fullName || user.fullName || user.username}
           </h2>
           <p className="mt-2 break-all text-muted">{user.email}</p>
-          {!user.emailVerifiedAt && (
-            <div className="mt-4 rounded-2xl bg-cream px-4 py-3 text-sm text-ink">
-              <p>{copy.verifyBanner}</p>
-              <button
-                type="button"
-                disabled={verifyBusy}
-                onClick={async () => {
-                  setVerifyBusy(true);
-                  setVerifyStatus(null);
-                  const response = await fetch("/api/auth/verify-email", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ resend: true }),
-                  });
-                  setVerifyBusy(false);
-                  setVerifyStatus(response.ok ? copy.verifySent : copy.submitFailed);
-                }}
-                className="mt-2 text-sm font-semibold underline underline-offset-4 disabled:opacity-60"
-              >
-                {copy.verifySend}
-              </button>
-              {verifyStatus && <p className="mt-2 text-sm font-semibold">{verifyStatus}</p>}
-            </div>
-          )}
           <div className="mt-6 grid gap-3">
             <a
               href="#dados"
