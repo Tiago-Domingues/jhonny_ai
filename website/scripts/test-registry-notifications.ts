@@ -36,10 +36,18 @@ assert(verifyEmail.includes("WHEEL_REMINDER"), "monthly wheel reminder email exi
 assert(verifyEmail.includes("sendResendEmail"), "SMTP can fall back to Resend");
 assert(!verifyEmail.includes("missing_odoo_fatura_pdf"), "paid emails still send without an Odoo PDF");
 
+const registerRoute = readFileSync(resolve(__dirname, "../src/app/api/auth/register/route.ts"), "utf8");
+assert(registerRoute.includes("registerCredentialsCustomer"), "email register creates the user immediately");
+assert(!registerRoute.includes("startPendingRegistration"), "email register does not wait on a confirmation email");
+
 const verifyFlow = readFileSync(resolve(__dirname, "../src/lib/ecommerce/emailVerification.ts"), "utf8");
-assert(verifyFlow.includes('event.status === "SENT"'), "signup waits for the link only when email is SENT");
-assert(verifyFlow.includes("createUserFromPending"), "signup creates the account when email is not sent");
-assert(verifyFlow.includes("completePendingRegistrationWithPassword"), "login completes a pending signup when email is not sent");
+assert(verifyFlow.includes("completePendingRegistrationWithPassword"), "login still completes leftover pending signups");
+assert(!verifyFlow.includes("startPendingRegistration"), "new signups no longer create a pending row");
+
+const googleCallback = readFileSync(resolve(__dirname, "../src/app/api/auth/google/callback/route.ts"), "utf8");
+assert(googleCallback.includes("upsertGoogleCustomer"), "Google callback creates or links the account");
+assert(!googleCallback.includes("sendEmailVerificationEmail"), "Google sign-in does not send a validation email");
+assert(googleCallback.includes("sendWelcomeNotificationsIfProfileReady"), "Google still uses the welcome-after-profile path");
 
 const profileRoute = readFileSync(resolve(__dirname, "../src/app/api/profile/route.ts"), "utf8");
 assert(profileRoute.includes("sendWelcomeNotificationsIfProfileReady"), "welcome email/SMS fire after the profile is saved");

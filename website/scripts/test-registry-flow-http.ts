@@ -51,48 +51,24 @@ async function main() {
     });
     const registerBody = await register.json().catch(() => ({}));
     assert(register.ok, `register failed ${register.status} ${JSON.stringify(registerBody)}`);
-    const verifyEvent = await prisma.emailEvent.findFirst({
-      where: { recipientEmail: email, type: "EMAIL_VERIFICATION" },
-      orderBy: { createdAt: "desc" },
-    });
-    assert(verifyEvent, "verification email event is recorded");
-    assert(["SENT", "SKIPPED", "FAILED"].includes(verifyEvent.status), "verification email attempt is recorded");
+    assert(!registerBody.pending, "register does not wait for a confirmation email");
+    assert(registerBody.user?.email === email, "register returns the new user");
+    assert(!(await prisma.pendingRegistration.findUnique({ where: { email } })), "no pending row after register");
+    assert(
+      !(await prisma.emailEvent.findFirst({ where: { recipientEmail: email, type: "EMAIL_VERIFICATION" } })),
+      "register does not send a verification email"
+    );
 
     let cookie = register.headers.get("set-cookie") || "";
-    if (verifyEvent.status === "SENT") {
-      assert(registerBody.pending === true, "register waits for the email link when mail is sent");
-      const pending = await prisma.pendingRegistration.findUnique({ where: { email } });
-      assert(pending, "pending registration exists when mail is sent");
-      assert(pending.marketingOptIn === true, "register defaults marketing opt-in");
-      await prisma.pendingRegistration.update({
-        where: { id: pending.id },
-        data: { tokenHash: hashToken(token) },
-      });
-      const first = await fetch(`${base}/api/auth/verify-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const firstBody = await first.json().catch(() => ({}));
-      assert(first.ok, `first verify failed ${first.status} ${JSON.stringify(firstBody)}`);
-      cookie = first.headers.get("set-cookie") || "";
-    } else {
-      assert(registerBody.pending === false, "register creates the account when email is not sent");
-      assert(registerBody.emailSent === false, "API does not claim an email was sent");
-      assert(registerBody.user?.email === email, "register returns the new user");
-      assert(cookie.includes("jss_session"), "register sets a session when email is skipped");
-      assert(!(await prisma.pendingRegistration.findUnique({ where: { email } })), "pending row is consumed");
-    }
+    assert(cookie.includes("jss_session"), "register sets a session");
 
     const verifyPage = await fetch(`${base}/conta/verificar-email?token=${encodeURIComponent(token)}`);
     const verifyHtml = await verifyPage.text();
-    assert(verifyPage.ok, `verify page is reachable ${verifyPage.status}`);
+    assert(verifyPage.ok, `legacy verify page is still reachable ${verifyPage.status}`);
     assert(
       verifyHtml.includes(token) || verifyHtml.includes("verificar-email") || verifyHtml.includes("VerifyEmail"),
-      "verify page renders the clickable confirmation flow"
+      "legacy verify page still renders"
     );
-
-    assert(cookie.includes("jss_session"), "signup ends with a session");
 
     const login = await fetch(`${base}/api/auth/login`, {
       method: "POST",
@@ -176,7 +152,6 @@ async function main() {
 
     const optOutEmail = `flow-out-${stamp}@example.com`;
     const optOutUsername = `flowout${stamp}`.slice(0, 32);
-    const optOutToken = randomToken(32);
     const optOutRegister = await fetch(`${base}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Origin: base },
@@ -188,20 +163,6 @@ async function main() {
       }),
     });
     assert(optOutRegister.ok, "register with marketing unselected works");
-    const optOutPending = await prisma.pendingRegistration.findUnique({ where: { email: optOutEmail } });
-    if (optOutPending) {
-      assert(optOutPending.marketingOptIn === false, "unselected marketing is stored on pending signup");
-      await prisma.pendingRegistration.update({
-        where: { id: optOutPending.id },
-        data: { tokenHash: hashToken(optOutToken) },
-      });
-      const optOutVerify = await fetch(`${base}/api/auth/verify-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: optOutToken }),
-      });
-      assert(optOutVerify.ok, "opt-out verify works");
-    }
     const optOutUser = await prisma.user.findUnique({
       where: { email: optOutEmail },
       include: { profile: true },
