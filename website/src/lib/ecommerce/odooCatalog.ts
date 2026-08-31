@@ -797,6 +797,17 @@ export async function syncOdooProducts(options: SyncOdooProductsOptions = {}) {
     });
   }
 
+  const demoHidden = await prisma.product.updateMany({
+    where: {
+      excludedFromCatalog: false,
+      OR: [{ sku: { startsWith: "DEMO-" } }, { slug: { contains: "-demo" } }],
+    },
+    data: {
+      excludedFromCatalog: true,
+      exclusionReason: "Demo SKU excluded from website catalog.",
+    },
+  });
+
   // Keep freshness watermark moving even when nothing changed, so on-read
   // kicks and cron overlap stay coherent.
   if (mode === "incremental" && upserted === 0) {
@@ -820,5 +831,6 @@ export async function syncOdooProducts(options: SyncOdooProductsOptions = {}) {
     fetched: result.products.length,
     since: result.since,
     newIn,
+    demoHidden: demoHidden.count,
   };
 }

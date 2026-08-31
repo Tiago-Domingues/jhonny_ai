@@ -21,6 +21,8 @@ assert(!isMockProductIdentity({ sku: "JSS-TEE-01", slug: "jss-tee" }), "real SKU
 assert(isMockProductIdentity({ sku: "demo-rated-1" }), "DEMO- match is case-insensitive");
 
 assert(isFoodBeverageCatalogRow({ name: "Dudes espresso", category: "Cafe", brand: "Dudes" }), "cafe is excluded");
+assert(isFoodBeverageCatalogRow({ name: "CAPUCCINO", category: "Bar", brand: "Jhonny Surf Store" }), "typo cappuccino is excluded");
+assert(isFoodBeverageCatalogRow({ name: "Down Payment", category: "Services", brand: "JSS" }), "down payment is excluded");
 assert(!isFoodBeverageCatalogRow({ name: "Pukas Dark", category: "SURFBOARDS", brand: "Pukas" }), "boards stay public");
 
 assert(shouldExcludeFromWebsiteCatalog({ sku: "DEMO-SURF-001", name: "Board" }) === "demo", "demo reason");

@@ -42,6 +42,13 @@ export function isFoodBeverageCatalogRow(product: {
     "juice",
     "wine",
     "vinho",
+    "espresso",
+    "expresso",
+    "cappuccino",
+    "capuccino",
+    "banana bread",
+    "down payment",
+    "chá",
   ];
   return blockedTerms.some((term) => haystack.includes(term));
 }
