@@ -5,6 +5,7 @@ import { OdooClient, hasOdooConfig } from "@/lib/ecommerce/odooClient";
 import { buildSurfboardEnrichment } from "@/lib/ecommerce/surfboardEnrichment";
 import { productImageUrls } from "@/lib/ecommerce/odooProductImages";
 import { cleanProductDisplayName } from "@/lib/ecommerce/productVariants";
+import { shouldExcludeFromWebsiteCatalog } from "@/lib/ecommerce/catalogIdentity";
 
 const brandFieldCandidates = [
   "x_studio_marcas",
@@ -157,33 +158,17 @@ function stockState(quantity: number, saleable: boolean) {
   return "in_stock";
 }
 
-function foodBeverageExclusion(product: { name: string; category: string; brand: string }) {
-  const haystack = `${product.name} ${product.category} ${product.brand}`.toLowerCase();
-  const blockedTerms = [
-    "dudes",
-    "cafe",
-    "café",
-    "coffee",
-    "cerveja",
-    "beer",
-    "food",
-    "bebida",
-    "beverage",
-    "snack",
-    "pastel",
-    "bolo",
-    "cake",
-    "menu",
-    "croissant",
-    "tosta",
-    "sandwich",
-    "sandes",
-    "sumo",
-    "juice",
-    "wine",
-    "vinho",
-  ];
-  return blockedTerms.some((term) => haystack.includes(term));
+function catalogExclusionReason(product: {
+  name: string;
+  category: string;
+  brand: string;
+  sku: string | null;
+  slug: string;
+}) {
+  const reason = shouldExcludeFromWebsiteCatalog(product);
+  if (reason === "demo") return "Demo SKU excluded from website catalog.";
+  if (reason === "food_beverage") return "Food/beverage product excluded from website catalog.";
+  return null;
 }
 
 async function availableField(client: OdooClient, model: string, candidates: string[]) {
@@ -538,7 +523,15 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
       : "/brand/logo-stacked.svg";
     const name = resolveOdooArtigoName(product, artigoField);
     const brandLabel = brand || "Jhonny Surf Store";
-    const excludedFromCatalog = foodBeverageExclusion({ name, category, brand: brandLabel });
+    const slug = slugify(`odoo-${product.id}-${sku || product.name}`);
+    const exclusionReason = catalogExclusionReason({
+      name,
+      category,
+      brand: brandLabel,
+      sku,
+      slug,
+    });
+    const excludedFromCatalog = Boolean(exclusionReason);
     const enrichment = buildSurfboardEnrichment({
       id: String(product.id),
       name,
@@ -575,7 +568,7 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
     return {
       odooProductId: Number(product.id),
       odooProductTemplateId: templateId,
-      slug: slugify(`odoo-${product.id}-${sku || product.name}`),
+      slug,
       sku,
       barcode: product.barcode ? String(product.barcode) : null,
       refId: sku || String(product.id),
@@ -604,7 +597,7 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
       availableForSale: saleable && qty > 0,
       active: true,
       excludedFromCatalog,
-      exclusionReason: excludedFromCatalog ? "Food/beverage product excluded from website catalog." : null,
+      exclusionReason,
       isOpportunity: opportunity,
       isNewIn: newIn,
       opportunityOriginalPriceCents: displayOriginalPriceCents,
@@ -626,10 +619,11 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
 
   // Count extra Odoo media so the PDP can scroll through more than one photo.
   try {
-    const variantIds = mappedProducts.map((product) => product.odooProductId);
+    const storefrontProducts = mappedProducts.filter((product) => !product.excludedFromCatalog);
+    const variantIds = storefrontProducts.map((product) => product.odooProductId);
     const templateIds = Array.from(
       new Set(
-        mappedProducts
+        storefrontProducts
           .map((product) => product.odooProductTemplateId)
           .filter((id): id is number => Number.isFinite(id) && Number(id) > 0)
       )
@@ -674,7 +668,7 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
         }
       }
     }
-    for (const product of mappedProducts) {
+    for (const product of storefrontProducts) {
       const hasDirect = product.imageUrl !== "/brand/logo-stacked.svg";
       const extraCount =
         (extraCountByVariant.get(product.odooProductId) || 0) +
@@ -803,6 +797,17 @@ export async function syncOdooProducts(options: SyncOdooProductsOptions = {}) {
     });
   }
 
+  const demoHidden = await prisma.product.updateMany({
+    where: {
+      excludedFromCatalog: false,
+      OR: [{ sku: { startsWith: "DEMO-" } }, { slug: { contains: "-demo" } }],
+    },
+    data: {
+      excludedFromCatalog: true,
+      exclusionReason: "Demo SKU excluded from website catalog.",
+    },
+  });
+
   // Keep freshness watermark moving even when nothing changed, so on-read
   // kicks and cron overlap stay coherent.
   if (mode === "incremental" && upserted === 0) {
@@ -826,5 +831,6 @@ export async function syncOdooProducts(options: SyncOdooProductsOptions = {}) {
     fetched: result.products.length,
     since: result.since,
     newIn,
+    demoHidden: demoHidden.count,
   };
 }

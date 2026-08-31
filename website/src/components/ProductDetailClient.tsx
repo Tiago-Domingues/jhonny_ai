@@ -35,7 +35,6 @@ export function ProductDetailClient({
   const copy = storefrontText(locale).product;
   const ui = useUiText();
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [liveGallery, setLiveGallery] = useState<string[] | null>(null);
   const hasMultipleVariants = variants.length > 1;
   const templateName = hasMultipleVariants ? deriveTemplateDisplayName(variants) : initialProduct.name;
   const axes = useMemo(() => (hasMultipleVariants ? buildVariantAxes(variants) : []), [hasMultipleVariants, variants]);
@@ -57,27 +56,13 @@ export function ProductDetailClient({
     const synced = (selectedVariant.imageUrls || []).filter(
       (url) => url && !url.includes("logo-stacked")
     );
-    if (liveGallery?.length) return liveGallery;
     if (synced.length) return synced;
     return selectedVariant.imageUrl ? [selectedVariant.imageUrl] : [];
-  }, [liveGallery, selectedVariant.imageUrl, selectedVariant.imageUrls]);
+  }, [selectedVariant.imageUrl, selectedVariant.imageUrls]);
 
   useEffect(() => {
     setPhotoIndex(0);
-    setLiveGallery(null);
-    const odooId = selectedVariant.odooProductId;
-    if (!odooId) return;
-    const controller = new AbortController();
-    fetch(`/api/products/images/${odooId}?list=1`, { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (Array.isArray(data?.urls) && data.urls.length > 1) {
-          setLiveGallery(data.urls.filter((url: unknown) => typeof url === "string"));
-        }
-      })
-      .catch(() => undefined);
-    return () => controller.abort();
-  }, [selectedVariant.id, selectedVariant.odooProductId]);
+  }, [selectedVariant.id]);
 
   const activePhoto = gallery[Math.min(photoIndex, Math.max(gallery.length - 1, 0))] || selectedVariant.imageUrl;
 

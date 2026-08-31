@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { bustStorefrontCache, storefrontGetJson } from "@/lib/storefrontFetch";
 
 export type CartLine = {
   id: string;
@@ -44,25 +45,26 @@ export function useCartSummary() {
   const [cart, setCart] = useState<CartSummary>({ items: [], itemCount: 0, subtotalCents: 0 });
 
   useEffect(() => {
-    function refresh() {
-      fetch("/api/cart")
-        .then((response) => (response.ok ? response.json() : null))
-        .then((data) => {
-          const next = data?.cart;
-          setCart({
-            id: next?.id || null,
-            items: Array.isArray(next?.items) ? next.items : [],
-            itemCount: next?.itemCount || 0,
-            subtotalCents: next?.subtotalCents || 0,
-            currency: next?.currency,
-          });
-        })
-        .catch(() => undefined);
+    function applyCart(data: { cart?: Partial<CartSummary> } | null) {
+      const next = data?.cart;
+      setCart({
+        id: next?.id || null,
+        items: Array.isArray(next?.items) ? next.items : [],
+        itemCount: next?.itemCount || 0,
+        subtotalCents: next?.subtotalCents || 0,
+        currency: next?.currency,
+      });
     }
 
-    refresh();
-    window.addEventListener("jss-cart-updated", refresh);
-    return () => window.removeEventListener("jss-cart-updated", refresh);
+    function refresh(bust = false) {
+      if (bust) bustStorefrontCache("/api/cart");
+      storefrontGetJson<{ cart?: Partial<CartSummary> }>("/api/cart", { bust }).then(applyCart);
+    }
+
+    refresh(false);
+    const onUpdated = () => refresh(true);
+    window.addEventListener("jss-cart-updated", onUpdated);
+    return () => window.removeEventListener("jss-cart-updated", onUpdated);
   }, []);
 
   return cart;

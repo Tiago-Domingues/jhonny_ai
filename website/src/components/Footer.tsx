@@ -131,7 +131,7 @@ export function Footer() {
             © {year} {STORE.name}. {t.footer.rights}
           </p>
           <a
-            href="https://www.databypaixao.com"
+            href="https://databy-passion-website.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Website developed and maintained by DatabyPassion AI solutions"

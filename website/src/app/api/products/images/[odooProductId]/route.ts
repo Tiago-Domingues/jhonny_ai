@@ -42,14 +42,11 @@ async function imagesFromOdoo(odooProductId: number) {
     const extras = await client.searchRead(
       "product.image",
       [["product_variant_id", "=", odooProductId]],
-      ["image_512", "image_128", "image_1920"],
+      ["image_512", "image_128"],
       { limit: MAX_PRODUCT_IMAGES, order: "id asc" }
     );
     for (const extra of extras) {
-      const decoded =
-        decodeOdooBinary(extra?.image_512) ||
-        decodeOdooBinary(extra?.image_128) ||
-        decodeOdooBinary(extra?.image_1920);
+      const decoded = decodeOdooBinary(extra?.image_512) || decodeOdooBinary(extra?.image_128);
       if (decoded) slots.push(decoded);
     }
   } catch {
@@ -65,14 +62,11 @@ async function imagesFromOdoo(odooProductId: number) {
           ["product_tmpl_id", "=", templateId],
           ["product_variant_id", "=", false],
         ],
-        ["image_512", "image_128", "image_1920"],
+        ["image_512", "image_128"],
         { limit: MAX_PRODUCT_IMAGES, order: "id asc" }
       );
       for (const extra of extras) {
-        const decoded =
-          decodeOdooBinary(extra?.image_512) ||
-          decodeOdooBinary(extra?.image_128) ||
-          decodeOdooBinary(extra?.image_1920);
+        const decoded = decodeOdooBinary(extra?.image_512) || decodeOdooBinary(extra?.image_128);
         if (decoded) slots.push(decoded);
       }
     } catch {
@@ -97,13 +91,30 @@ export async function GET(
   if (!Number.isFinite(id)) return new Response(null, { status: 404 });
   const url = new URL(request.url);
   if (url.searchParams.get("list") === "1") {
-    const odooImages = await imagesFromOdoo(id);
-    return Response.json({
-      count: odooImages.length,
-      urls: odooImages.map((_, index) =>
-        index === 0 ? `/api/products/images/${id}` : `/api/products/images/${id}?i=${index}`
-      ),
-    });
+    if (hasDatabaseUrl()) {
+      const product = await prisma.product.findFirst({
+        where: { odooProductId: id },
+        select: { imageUrlsJson: true },
+      });
+      try {
+        const parsed = product?.imageUrlsJson ? JSON.parse(product.imageUrlsJson) : null;
+        const urls = Array.isArray(parsed)
+          ? parsed.filter((value: unknown): value is string => typeof value === "string" && Boolean(value))
+          : [];
+        if (urls.length) {
+          return Response.json(
+            { count: urls.length, urls },
+            { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } }
+          );
+        }
+      } catch {
+        // Fall through to the single primary slot.
+      }
+    }
+    return Response.json(
+      { count: 1, urls: [`/api/products/images/${id}`] },
+      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } }
+    );
   }
   const index = parseImageIndex(url.searchParams.get("i"));
 

@@ -204,7 +204,7 @@ async function createStripeCheckoutPayment(
       description: request.description.slice(0, 1000),
     },
     line_items: lineItems,
-    success_url: `${origin}/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${origin}/checkout/obrigado?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/checkout?canceled=1`,
     locale: "auto",
     billing_address_collection: "required",

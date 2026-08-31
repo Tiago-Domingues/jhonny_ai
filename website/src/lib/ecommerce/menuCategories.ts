@@ -2,6 +2,7 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { MENU_CATEGORIES, type NavKey } from "@/lib/i18n";
+import { publicCatalogWhere } from "@/lib/ecommerce/catalog";
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 import { ODOO_CATEGORY_GROUPS, type CategoryGroupKey } from "@/lib/ecommerce/categoryGroups";
 import { hasOdooConfig, OdooClient } from "@/lib/ecommerce/odooClient";
@@ -254,7 +255,7 @@ async function listProductCategoryPaths(): Promise<string[]> {
   if (!hasDatabaseUrl()) return [];
   try {
     const rows = await prisma.product.findMany({
-      where: { active: true, excludedFromCatalog: false },
+      where: publicCatalogWhere(),
       select: { category: true },
       distinct: ["category"],
     });

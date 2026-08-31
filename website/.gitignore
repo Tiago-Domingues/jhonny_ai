@@ -49,3 +49,11 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Local source dumps — not used by the storefront.
+/resources_jhonny/
+/assets/
+
+# Local source dumps — not used by the storefront.
+/resources_jhonny/
+/assets/

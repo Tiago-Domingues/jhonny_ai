@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { publicCatalogWhere } from "@/lib/ecommerce/catalog";
 import { isSitePubliclyLaunched } from "@/lib/ecommerce/siteAccess";
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
 
@@ -34,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const products = await prisma.product.findMany({
-    where: { active: true, excludedFromCatalog: false },
+    where: publicCatalogWhere(),
     select: { slug: true, updatedAt: true },
     take: 8000,
   });

@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "Jhonny Surf Store online shop — catalog, stock, filters, and checkout.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 type ShopPageProps = {
   searchParams?: Promise<{
@@ -41,7 +41,7 @@ async function ShopCatalog({
   brand?: string;
 }) {
   // Server-render a lean first page so the shop never boots empty if the client fetch is slow.
-  // Cap SSR props to keep the HTML/RSC payload small; ShopClient still fetches the full lean catalog.
+  // Cap SSR props; ShopClient then fetches at most 300 lean products, not the whole catalog.
   const [products, menuCategories] = await Promise.all([
     listProducts({
       categoryGroup: categoryGroup || null,

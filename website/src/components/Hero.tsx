@@ -109,7 +109,7 @@ export function Hero() {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             poster="/brand/surf-hero-poster.jpg?v=wa-2026-08-23"
           >
             <source src="/brand/surf-hero.mp4?v=wa-2026-08-23" type="video/mp4" />
