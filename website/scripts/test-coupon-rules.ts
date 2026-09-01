@@ -124,7 +124,7 @@ async function main() {
           active: true,
           maxUses: 1,
           maxUsesPerCustomer: 1,
-          expiresAt: new Date("2026-08-31T22:59:59.999Z"),
+          expiresAt: new Date("2026-12-31T22:59:59.999Z"),
           wheelSpin: {
             create: {
               userId: winner.id,
@@ -179,6 +179,9 @@ async function main() {
 
     const welcome = await validateCoupon("JHONNY10", 10_000, { userId: firstOrderUser.id });
     assert(welcome?.percentOff === 10, "JHONNY10 should apply on a first paid order");
+    assert(welcome.discountCents === 1_000, "10% of €100 is €10");
+    const welcomeSmallerCart = await validateCoupon("JHONNY10", 5_000, { userId: firstOrderUser.id });
+    assert(welcomeSmallerCart?.discountCents === 500, "10% of a halved €50 cart is €5, not the previous €10");
 
     const paidWelcome = await prisma.order.create({
       data: {

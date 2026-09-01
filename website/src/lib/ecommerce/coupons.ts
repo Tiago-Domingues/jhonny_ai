@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/ecommerce/db";
+import { percentOffDiscountCents } from "@/lib/ecommerce/orderPricing";
 
 type CouponIdentity = {
   userId?: string | null;
@@ -98,7 +99,7 @@ export async function validateCoupon(code: string | undefined | null, subtotalCe
     }
   }
 
-  const discountCents = Math.max(0, Math.min(subtotalCents, Math.floor((subtotalCents * coupon.percentOff) / 100)));
+  const discountCents = percentOffDiscountCents(subtotalCents, coupon.percentOff);
   return {
     id: coupon.id,
     code: coupon.code,

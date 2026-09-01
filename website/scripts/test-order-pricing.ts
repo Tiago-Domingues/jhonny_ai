@@ -1,4 +1,4 @@
-import { allocateDiscountCents, checkoutTotalCents, couponFaturaNote, lineDiscountPercent } from "../src/lib/ecommerce/orderPricing";
+import { allocateDiscountCents, checkoutTotalCents, couponFaturaNote, lineDiscountPercent, percentOffDiscountCents } from "../src/lib/ecommerce/orderPricing";
 import { aggregateCouponUsages } from "../src/lib/ecommerce/couponAnalytics";
 import { isValidIsoDate, daysInMonth } from "../src/lib/ecommerce/birthDate";
 import { createHash } from "node:crypto";
@@ -19,6 +19,26 @@ assert(lines[0].netCents + lines[1].netCents === 12000 + 1600 - 1360, "allocated
 assert(checkoutTotalCents({ subtotalCents: 13600, shippingCents: 690, discountCents: 1360 }) === 12930, "checkout total includes shipping after coupon");
 assert(lineDiscountPercent(10000, 9000) === 10, "10% line discount is 10.00");
 assert(couponFaturaNote({ couponCode: "JHONNY10", couponPercentOff: 10, couponLabel: "Welcome" }) === "Cupão JHONNY10 (-10%): Welcome", "fatura note names the coupon");
+
+const fullCart = 100_000;
+const halfCart = 50_000;
+const staleTenPercent = percentOffDiscountCents(fullCart, 10);
+assert(staleTenPercent === 10_000, "10% of €1000 is €100");
+assert(percentOffDiscountCents(halfCart, 10) === 5_000, "10% of €500 is €50 after items are removed");
+assert(
+  checkoutTotalCents({ subtotalCents: halfCart, shippingCents: 0, discountCents: staleTenPercent }) === 40_000,
+  "stale snapshot would still subtract €100 from a €500 cart"
+);
+assert(
+  checkoutTotalCents({
+    subtotalCents: halfCart,
+    shippingCents: 0,
+    discountCents: percentOffDiscountCents(halfCart, 10),
+  }) === 45_000,
+  "live percent-off follows the smaller cart"
+);
+assert(percentOffDiscountCents(0, 10) === 0, "empty cart has no coupon discount");
+assert(percentOffDiscountCents(1_234, 10) === 123, "discount never exceeds a percent of the live subtotal");
 
 const coupons = aggregateCouponUsages([
   { code: "JHONNY10", discountCents: 1000, createdAt: new Date("2026-08-01"), label: "Welcome", percentOff: 10 },

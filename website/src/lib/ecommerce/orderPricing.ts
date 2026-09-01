@@ -57,3 +57,11 @@ export function checkoutTotalCents(input: {
 }) {
   return Math.max(0, input.subtotalCents + input.shippingCents - input.discountCents);
 }
+
+/** Percent-off coupons must follow the live cart, never a snapshot from when the code was applied. */
+export function percentOffDiscountCents(subtotalCents: number, percentOff: number) {
+  const subtotal = Math.max(0, Math.round(Number(subtotalCents) || 0));
+  const percent = Math.max(0, Number(percentOff) || 0);
+  if (subtotal <= 0 || percent <= 0) return 0;
+  return Math.min(subtotal, Math.floor((subtotal * percent) / 100));
+}
