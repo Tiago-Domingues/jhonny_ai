@@ -9,6 +9,7 @@ import { CHECKOUT_PAYMENT_METHODS, getCheckoutPaymentMethod, isLiveCheckoutPayme
 import { PaymentMethodMark } from "@/components/PaymentIcons";
 import { isValidOptionalNif } from "@/lib/ecommerce/nif";
 import { useCartSummary } from "@/lib/ecommerce/cartClient";
+import { percentOffDiscountCents } from "@/lib/ecommerce/orderPricing";
 import { shopperStockError, storefrontText } from "@/lib/storefrontCopy";
 
 type CheckoutPayment = {
@@ -52,7 +53,6 @@ export function CheckoutClient() {
   const [fulfillmentMethod, setFulfillmentMethod] = useState("PICKUP_IN_STORE");
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [couponCode, setCouponCode] = useState("");
-  const [couponDiscountCents, setCouponDiscountCents] = useState(0);
   const [couponPercentOff, setCouponPercentOff] = useState(0);
   const [shipCountry, setShipCountry] = useState("PT");
   const [couponMessage, setCouponMessage] = useState<string | null>(null);
@@ -201,7 +201,6 @@ export function CheckoutClient() {
 
   async function applyCoupon() {
     setCouponMessage(null);
-    setCouponDiscountCents(0);
     setCouponPercentOff(0);
     const response = await fetch("/api/coupons/validate", {
       method: "POST",
@@ -213,12 +212,12 @@ export function CheckoutClient() {
       setCouponMessage(data.message || copy.couponInvalid);
       return;
     }
-    setCouponDiscountCents(data.discountCents || 0);
     setCouponPercentOff(Number(data.coupon?.percentOff || 0));
     setCouponCode(data.coupon?.code || couponCode);
     setCouponMessage(`${data.coupon?.code} ${copy.couponApplied}: ${data.coupon?.percentOff}% off.`);
   }
 
+  const couponDiscountCents = percentOffDiscountCents(cart.subtotalCents, couponPercentOff);
   const discountedSubtotalCents = Math.max(0, cart.subtotalCents - couponDiscountCents);
   const shippingQuote = shippingQuoteFor({
     fulfillmentMethod: fulfillmentMethod === "SHIP_TO_ADDRESS" ? "SHIP_TO_ADDRESS" : "PICKUP_IN_STORE",
@@ -369,7 +368,7 @@ export function CheckoutClient() {
               value={couponCode}
               onChange={(event) => {
                 setCouponCode(event.currentTarget.value);
-                setCouponDiscountCents(0);
+                setCouponPercentOff(0);
                 setCouponMessage(null);
               }}
               placeholder={copy.coupon}

@@ -27,6 +27,7 @@
     "test:pricing": "npx tsx scripts/test-order-pricing.ts",
     "test:wheel-odds": "npx tsx scripts/test-wheel-odds.ts",
     "test:coupon-rules": "npx tsx scripts/test-coupon-rules.ts",
+    "test:coupon-cart-recalc": "npx tsx scripts/test-coupon-cart-recalc.ts",
     "test:password-reset": "npx tsx scripts/test-password-reset.ts",
     "test:launch-remaining": "npx tsx scripts/test-launch-remaining.ts",
     "test:verify-before-register": "npx tsx scripts/test-verify-before-register.ts",
