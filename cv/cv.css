@@ -1,0 +1,155 @@
+@page {
+  size: A4;
+  margin: 14mm 16mm 14mm 16mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Liberation Serif", "Times New Roman", Times, serif;
+  font-size: 9.5pt;
+  line-height: 1.28;
+  color: #111;
+  background: #fff;
+}
+
+h1 {
+  margin: 0 0 2pt 0;
+  font-size: 14.5pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.contact {
+  text-align: center;
+  font-size: 8.8pt;
+  margin: 0 0 8pt 0;
+  line-height: 1.35;
+}
+
+.contact a {
+  color: #111;
+  text-decoration: none;
+}
+
+h2 {
+  margin: 9pt 0 4pt 0;
+  font-size: 10.3pt;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-bottom: 1pt solid #222;
+  padding-bottom: 1.5pt;
+}
+
+h3 {
+  margin: 0;
+  font-size: 9.7pt;
+  font-weight: 700;
+}
+
+.job {
+  margin: 0 0 7pt 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10pt;
+  margin-bottom: 1pt;
+}
+
+.job-dates {
+  white-space: nowrap;
+  font-size: 8.8pt;
+  font-weight: 400;
+}
+
+.job-org {
+  font-style: italic;
+  margin: 0 0 2pt 0;
+  font-size: 9.1pt;
+}
+
+.job-blurb {
+  text-align: justify;
+  margin: 0 0 2.5pt 0;
+}
+
+ul {
+  margin: 0;
+  padding-left: 12pt;
+}
+
+li {
+  margin: 0 0 1.2pt 0;
+  text-align: justify;
+}
+
+p {
+  margin: 0 0 2.5pt 0;
+}
+
+.summary p {
+  text-align: justify;
+}
+
+.highlights {
+  margin: 3pt 0 0 0;
+}
+
+.skills-grid p {
+  margin: 0 0 1.8pt 0;
+}
+
+.skills-grid strong {
+  font-weight: 700;
+}
+
+.edu-item, .cert-item {
+  margin: 0 0 4pt 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pub-item, .act-item {
+  margin: 0 0 5.5pt 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.edu-header, .cert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10pt;
+}
+
+.edu-meta, .cert-meta {
+  font-size: 8.8pt;
+  white-space: nowrap;
+}
+
+.pub-title {
+  font-weight: 700;
+  font-style: italic;
+}
+
+.pub-item p {
+  text-align: justify;
+  margin-top: 1.5pt;
+}
+
+.act-item p {
+  text-align: justify;
+  margin: 1.5pt 0 0 0;
+}
