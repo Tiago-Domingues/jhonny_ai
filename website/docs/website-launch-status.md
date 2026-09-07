@@ -248,7 +248,7 @@ Client homepage no longer fires `/api/auth/me`, `/api/cart`, `/api/menu-categori
 | Analytics | `website/src/lib/ecommerce/analytics.ts` |
 | Odoo catalog + weight sync | `website/src/lib/ecommerce/odooCatalog.ts` |
 | Admin orders | `website/src/app/admin/encomendas/page.tsx` |
-| Vercel auto-deploy | `docs/website-vercel-deploy.md` |
+| Vercel auto-deploy | `website/docs/website-vercel-deploy.md` |
 
 ---
 

@@ -18,10 +18,10 @@ When hosting is needed, deploy two services:
 
 | Service | Artifact | Runtime Notes |
 |---|---|---|
-| Backend API | Root `Dockerfile` | FastAPI, Odoo XML-RPC, LLM calls, WhatsApp webhook |
-| Web app | `frontend/Dockerfile` | Next.js app, public backend URL, demo token UI |
+| Backend API | `app/Dockerfile` | FastAPI, Odoo XML-RPC, LLM calls, WhatsApp webhook |
+| Web app | `app/frontend/Dockerfile` | Next.js app, public backend URL, demo token UI |
 
-`render.yaml` is included as a two-service Render blueprint. The same split also works on Railway, Fly.io, Azure Container Apps, AWS App Runner, or ECS Fargate.
+Repo-root `render.yaml` is included as a two-service Render blueprint. The same split also works on Railway, Fly.io, Azure Container Apps, AWS App Runner, or ECS Fargate.
 
 Preferred target once cloud access exists:
 
@@ -36,9 +36,9 @@ Preferred target once cloud access exists:
 Set these as managed secrets in the hosting provider:
 
 ```env
-ODOO_URL=https://jhonny-surf.odoo.com
-ODOO_DB=jhonny-surf-master-26611951
-ODOO_USERNAME=loja@jhonnysurfstore.pt
+ODOO_URL=https://your-odoo.example.com
+ODOO_DB=your-odoo-db
+ODOO_USERNAME=your-odoo-user
 ODOO_API_KEY=<rotated-odoo-api-key>
 APP_AUTH_TOKEN=<demo-access-token>
 APP_CORS_ORIGINS=https://<frontend-app-url>

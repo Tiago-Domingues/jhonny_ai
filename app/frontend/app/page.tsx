@@ -248,7 +248,7 @@ const SALES_TREND_SERIES: Array<{ key: SalesTrendSeriesKey; label: string; color
 
 const demoUser: AppUser = {
   displayName: "Jhonny Surf Store",
-  email: "jhonnysurfstore@gmail.com",
+  email: "owner@example.com",
   role: "Owner",
   jobTitle: "Surf, surfskate and style",
   officeLocation: "Parede, Cascais",

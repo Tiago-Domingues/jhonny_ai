@@ -35,7 +35,7 @@ Native Git auto-deploy has been unreliable for this monorepo; prefer the Actions
 
 ```bash
 export VERCEL_TOKEN=...   # from vercel.com/account/tokens
-./scripts/deploy-website.sh
+./website/scripts/deploy-website.sh
 ```
 
 Or add `VERCEL_TOKEN` as a **Cursor Cloud environment secret** so agents can run the same script without pasting tokens in chat.

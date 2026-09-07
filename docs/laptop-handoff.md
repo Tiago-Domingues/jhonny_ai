@@ -2,21 +2,19 @@
 
 Owner: Tiago
 
-Last updated: 2026-07-15
+Last updated: 2026-09-07
 
-This document captures project context for restoring and continuing work on a new laptop. It complements the other handoff docs in `docs/`.
+This document captures project context for restoring and continuing work on a new laptop. It complements the product docs in `app/docs/` and `website/docs/`.
 
 ## Project Overview
 
-One Git repo, three deliverables:
+One Git repo, two product folders. WhatsApp is an endpoint on the agent API, not a third app.
 
 | Deliverable | Code folders | Purpose | Live hosting |
 |---|---|---|---|
-| Retail agent app | `src/` + `frontend/` | Dashboards, analytics, assisted agent chat | Azure App Service |
-| WhatsApp feature | `src/` (`POST /webhooks/whatsapp`) | Owner asks business questions via WhatsApp | Same Azure backend API |
-| Jhonny website | `website/` | Public storefront, shop, partners, Instagram | Vercel (planned/current) or Azure |
-
-WhatsApp is not a separate app. It is an endpoint on the same FastAPI backend used by the agent app.
+| Retail agent app | `app/src/` + `app/frontend/` | Dashboards, analytics, assisted agent chat | Azure App Service |
+| WhatsApp feature | `app/src/` (`POST /webhooks/whatsapp`) | Owner asks business questions via WhatsApp | Same Azure backend API |
+| Jhonny website | `website/` | Public storefront, shop, partners, Instagram | Vercel |
 
 ## GitHub Repo
 
@@ -48,10 +46,11 @@ If a newer release exists, download that instead of `backup-2026-07-15`.
 Then install dependencies:
 
 ```powershell
+cd app
 py -m pip install -r requirements.txt
 cd frontend
 npm install
-cd ../website
+cd ..\..\website
 npm install
 cd ..
 ```
@@ -59,7 +58,7 @@ cd ..
 Create env files from templates:
 
 ```powershell
-copy .env.example .env
+copy app\.env.example app\.env
 copy website\.env.example website\.env.local
 ```
 
@@ -88,7 +87,7 @@ After that, a normal `git clone` of `main` will also work.
 
 ### Not in git (must recreate or copy separately)
 
-- `.env` (agent secrets)
+- `app/.env` (agent secrets)
 - `website/.env.local` (website secrets)
 - `website/prisma/dev.db` (local SQLite database)
 - `node_modules/`, `.next/` (reinstall/regenerate)
@@ -101,13 +100,14 @@ After that, a normal `git clone` of `main` will also work.
 Backend:
 
 ```powershell
+cd app
 py scripts/run_app.py
 ```
 
 Frontend:
 
 ```powershell
-cd frontend
+cd app\frontend
 npm run dev
 ```
 
@@ -146,7 +146,7 @@ Resource group used by deploy script: `rg-jhonny-retail-poc`
 Deploy script:
 
 ```powershell
-.\scripts\deploy_azure_app_service.ps1
+.\app\scripts\deploy_azure_app_service.ps1
 ```
 
 Requires Azure CLI login:
@@ -163,14 +163,14 @@ The public website in `website/` is intended for Vercel.
 
 - `.vercelignore` excludes local DB, env files, and build caches from deploys
 - `.vercel/` is gitignored and must be recreated with `vercel link` on a new machine if using the CLI
-- **Auto-deploy:** GitHub Actions workflow `.github/workflows/deploy-website.yml` (needs repo secret `VERCEL_TOKEN`). See `docs/website-vercel-deploy.md`.
-- Manual/cloud-agent deploy: `VERCEL_TOKEN=... ./scripts/deploy-website.sh`
+- **Auto-deploy:** GitHub Actions workflow `.github/workflows/deploy-website.yml` (needs repo secret `VERCEL_TOKEN`). See `website/docs/website-vercel-deploy.md`.
+- Manual/cloud-agent deploy: `VERCEL_TOKEN=... ./website/scripts/deploy-website.sh`
 
 ### Twilio / WhatsApp
 
 Twilio sends inbound WhatsApp messages to the Azure webhook URL above.
 
-See `docs/whatsapp_handoff.md` for setup details, allowed numbers, and signature env vars.
+See `app/docs/whatsapp_handoff.md` for setup details, allowed numbers, and signature env vars.
 
 ## Hosting Recommendation
 
@@ -185,11 +185,12 @@ Do not move the Python backend to Vercel-only hosting without refactoring.
 
 ## Useful Docs In Repo
 
-- `docs/app_handoff.md` — agent app scope and demo flow
-- `docs/whatsapp_handoff.md` — WhatsApp/Twilio setup
-- `docs/deployment.md` — hosting notes and env vars
-- `docs/jhonny-retail-agent-poc-plan.md` — POC plan
+- `app/docs/app_handoff.md` — agent app scope and demo flow
+- `app/docs/whatsapp_handoff.md` — WhatsApp/Twilio setup
+- `app/docs/deployment.md` — hosting notes and env vars
+- `app/docs/jhonny-retail-agent-poc-plan.md` — POC plan
 - `website/AGENTS.md` — website agent notes
+- `website/docs/website-vercel-deploy.md` — Vercel deploy
 
 ## Cursor On New Laptop
 
@@ -199,17 +200,17 @@ After restore:
 
 1. Open the `jhonny` folder in Cursor
 2. Sign in to the same Cursor account
-3. Point the AI at this file and the other docs in `docs/`
-4. Recreate `.env` files before running or deploying
+3. Point the AI at this file, `app/AGENTS.md`, and `website/AGENTS.md`
+4. Recreate `app/.env` and `website/.env` before running or deploying
 
 ## Quick Verification Checklist
 
 After restore, confirm:
 
 - [ ] `git log -1` shows the expected latest commit
-- [ ] `src/`, `frontend/`, and `website/` folders exist
-- [ ] `py scripts/run_app.py` starts the API
-- [ ] `cd frontend && npm run dev` starts the agent app
+- [ ] `app/src/`, `app/frontend/`, and `website/` folders exist
+- [ ] `cd app && py scripts/run_app.py` starts the API
+- [ ] `cd app/frontend && npm run dev` starts the agent app
 - [ ] `cd website && npm run dev` starts the website
 - [ ] Azure URLs above still respond
 - [ ] `.env` and `website/.env.local` are recreated with real secrets

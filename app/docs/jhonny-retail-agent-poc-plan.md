@@ -55,7 +55,7 @@ The current build is a working local POC:
 | Agent | `RetailAgent` orchestrates curated tools, LLM selection, answer writing, evidence summaries, and fallback routing |
 | Frontend shell | EY/EW-style branded app shell with theme support, profile menu, branded header, and client footer |
 | Demo access | `APP_AUTH_TOKEN` protects app endpoints; frontend stores the demo token in local storage |
-| Deployment assets | Root backend Dockerfile, `frontend/Dockerfile`, and `render.yaml` blueprint |
+| Deployment assets | `app/Dockerfile`, `app/frontend/Dockerfile`, and repo-root `render.yaml` blueprint |
 
 Local development URLs:
 

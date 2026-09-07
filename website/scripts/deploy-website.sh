@@ -3,8 +3,8 @@
 # Used by cloud agents and local ops when GitHub→Vercel git auto-deploy is offline.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-WEB="$ROOT/website"
+WEB="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$WEB/.." && pwd)"
 
 if [[ -z "${VERCEL_TOKEN:-}" ]]; then
   echo "Missing VERCEL_TOKEN."
