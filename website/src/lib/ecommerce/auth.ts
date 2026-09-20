@@ -6,7 +6,7 @@ import type { GoogleUserInfo } from "@/lib/ecommerce/googleOAuth";
 import { registerSchema, loginSchema, pendingRegisterSchema, profileSchema } from "@/lib/ecommerce/schemas";
 import { normalizeNif } from "@/lib/ecommerce/nif";
 import { hashPassword, normalizeEmail, randomToken, verifyPassword } from "@/lib/ecommerce/security";
-import { isAdminEmail } from "@/lib/ecommerce/admin";
+import { ensureAdminRoleForEmail, isAdminEmail } from "@/lib/ecommerce/admin";
 
 export function toPublicAuthUser<
   T extends {
@@ -172,6 +172,7 @@ export async function upsertGoogleCustomer(info: GoogleUserInfo): Promise<{
         data: { emailVerifiedAt: new Date() },
       });
     }
+    await ensureAdminRoleForEmail(bySub.id, bySub.email);
     const refreshed = await getProfile(bySub.id);
     if (!refreshed) throw new Error("Could not load Google account.");
     return { user: refreshed, created: false };
@@ -190,6 +191,7 @@ export async function upsertGoogleCustomer(info: GoogleUserInfo): Promise<{
       data: {
         googleSub: info.sub,
         emailVerifiedAt: byEmail.emailVerifiedAt ?? new Date(),
+        role: isAdminEmail(email) ? "ADMIN" : byEmail.role,
       },
       include: { profile: true },
     });
@@ -207,6 +209,7 @@ export async function upsertGoogleCustomer(info: GoogleUserInfo): Promise<{
         passwordHash: null,
         googleSub: info.sub,
         emailVerifiedAt: new Date(),
+        role: isAdminEmail(email) ? "ADMIN" : "CUSTOMER",
         profile: {
           create: {
             fullName,

@@ -21,7 +21,7 @@ const securityHeaders = [
       "frame-src 'self' https://www.google.com https://maps.google.com https://www.google.com/maps https://my.matterport.com https://*.matterport.com https://www.youtube.com https://www.youtube-nocookie.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      "form-action 'self' https://accounts.google.com",
     ].join("; "),
   },
 ];
