@@ -7,6 +7,7 @@ import { CookieConsent } from "@/components/CookieConsent";
 import { FirstPurchaseOffer } from "@/components/FirstPurchaseOffer";
 import { JhonnyAssistant } from "@/components/JhonnyAssistant";
 import { VisitBeacon } from "@/components/VisitBeacon";
+import { ServerVisitCollector, shouldSkipInitialVisitBeacon } from "@/components/ServerVisitCollector";
 import {
   SITE_PREVIEW_COOKIE,
   isSitePubliclyLaunched,
@@ -86,6 +87,7 @@ export default async function RootLayout({
   const publicComingSoon = shouldEnforceComingSoon() && !previewUnlocked;
   const showCookieBanner =
     !publicComingSoon && !cookieStore.get("jss_consent")?.value;
+  const skipInitialBeacon = !publicComingSoon && (await shouldSkipInitialVisitBeacon());
 
   return (
     <html
@@ -101,7 +103,8 @@ export default async function RootLayout({
           {children}
           {!publicComingSoon && (
             <>
-              <VisitBeacon />
+              <ServerVisitCollector />
+              <VisitBeacon skipInitial={skipInitialBeacon} />
               <CookieConsent initialVisible={showCookieBanner} />
               <FirstPurchaseOffer />
               <JhonnyAssistant />

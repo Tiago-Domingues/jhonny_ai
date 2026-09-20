@@ -16,7 +16,7 @@ const HEIGHT = 220;
 const COL_WIDTH = 36;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 28;
-const FUTURE_DAYS = 3;
+const FUTURE_DAYS = 0;
 
 export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
   const [bucket, setBucket] = useState<ChartBucket>("day");
@@ -47,7 +47,8 @@ export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
     const id = window.requestAnimationFrame(() => {
       if (!node) return;
       const focusX = focusIndex * COL_WIDTH;
-      node.scrollLeft = Math.max(0, focusX - node.clientWidth * 0.55);
+      // Keep the last day with figures near the right edge so recent days stay in view.
+      node.scrollLeft = Math.max(0, focusX - node.clientWidth + COL_WIDTH * 4);
     });
     return () => window.cancelAnimationFrame(id);
   }, [bucket, focusIndex, rows.length]);
@@ -75,7 +76,7 @@ export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted">Por dia</p>
           <p className="mt-2 text-sm text-muted">
-            Hoje ao centro-direita. Esquerda = passado (desde 1 Jul 2026). Direita = futuro.
+            O gráfico abre no último dia com visitas, clientes ou vendas. Esquerda = passado (desde 1 Jul 2026).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -149,7 +150,6 @@ export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
                 key={`${row.key}-${index}`}
                 className="cursor-pointer"
                 onClick={() => setSelected(index)}
-                onMouseEnter={() => setSelected(index)}
                 opacity={isFuture ? 0.35 : 1}
               >
                 <rect
