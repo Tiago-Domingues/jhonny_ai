@@ -21,6 +21,7 @@ Both `app/frontend/` and `website/` default to **port 3000**. Only one can own 3
 
 ### E-commerce website (`website/`)
 - Requires `website/.env` with at least `DATABASE_URL` and `SESSION_SECRET`. Create it from `website/.env.example` and set a real `SESSION_SECRET` (e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
+- **Prisma ORM is free. Prisma Postgres (`db.prisma.io`) is not included in Vercel.** An unpaid Prisma invoice (`unpaidPlanInvoice`) blocks login, analytics, and checkout. Prefer Neon / Vercel Postgres for `DATABASE_URL` so the shop does not depend on a Prisma hosting bill.
 - Create the local SQLite DB before first run: `cd website && npx prisma db push` (creates `prisma/dev.db`, git-ignored). `prisma generate` already runs on `npm install` (postinstall).
 - Run: `cd website && npm run dev` (port 3000).
 - The shop is public. Set `SITE_COMING_SOON=true` only as an emergency lock (coming-soon + `Disallow: /`). Preview-password unlock is retired.

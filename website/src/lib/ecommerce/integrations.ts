@@ -5,6 +5,7 @@ import {
   preferredEmailProvider,
   smtpCredentialsConfigured,
 } from "@/lib/ecommerce/emailConfig";
+import { isPrismaHostedDatabaseUrl } from "@/lib/ecommerce/databaseHealth";
 
 function hasValue(value: string | undefined) {
   return Boolean(value && value.trim());
@@ -21,6 +22,7 @@ export function integrationStatus() {
         : process.env.DATABASE_URL?.startsWith("file:")
           ? "sqlite/libsql"
           : "external",
+      prismaHosted: isPrismaHostedDatabaseUrl(),
     },
     odoo: {
       configured:
