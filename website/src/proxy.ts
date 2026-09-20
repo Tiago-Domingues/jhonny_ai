@@ -9,14 +9,17 @@ import {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-jss-pathname", pathname);
+  const nextWithPath = () => NextResponse.next({ request: { headers: requestHeaders } });
 
   if (!shouldEnforceComingSoon()) {
-    return NextResponse.next();
+    return nextWithPath();
   }
 
   const previewCookie = request.cookies.get(SITE_PREVIEW_COOKIE)?.value;
   if (isValidPreviewCookie(previewCookie)) {
-    return NextResponse.next();
+    return nextWithPath();
   }
 
   // Always allow the public teaser + the private unlock page (and static/brand assets via matcher).
@@ -28,7 +31,7 @@ export function proxy(request: NextRequest) {
     pathname === "/sitemap.xml" ||
     isPublicEmailAuthPath(pathname)
   ) {
-    return NextResponse.next();
+    return nextWithPath();
   }
 
   return NextResponse.rewrite(new URL("/coming-soon", request.url));

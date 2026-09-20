@@ -11,7 +11,7 @@ import {
   periodLabel,
 } from "../src/lib/ecommerce/analyticsDaily";
 import { isPaidPlusStatus } from "../src/lib/ecommerce/orderKpis";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 function assert(condition: unknown, message: string) {
@@ -131,6 +131,10 @@ assert(beacon.includes("skipInitial"), "beacon can skip a document load already 
 
 const layout = readFileSync(resolve(__dirname, "../src/app/layout.tsx"), "utf8");
 assert(layout.includes("ServerVisitCollector"), "document loads record visits on the server");
+
+const proxy = readFileSync(resolve(__dirname, "../src/proxy.ts"), "utf8");
+assert(proxy.includes("x-jss-pathname"), "proxy forwards the document path for server visit collection");
+assert(!existsSync(resolve(__dirname, "../src/middleware.ts")), "no Next 16 middleware file beside proxy.ts");
 
 const analyticsClient = readFileSync(resolve(__dirname, "../src/components/AdminAnalyticsClient.tsx"), "utf8");
 assert(analyticsClient.includes("/api/admin/analytics/export.csv"), "analytics has CSV export");
