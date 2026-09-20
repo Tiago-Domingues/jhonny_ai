@@ -26,7 +26,8 @@ function readTranslateX(el: HTMLElement): number {
 
 /**
  * Pause-on-hover marquee with desktop-only arrow nudges.
- * Mobile keeps CSS auto-roll only (no arrows / no manual offset).
+ * Touch / narrow viewports use native overflow-x swipe (.jss-rail); this hook
+ * only takes over transform on fine-pointer desktops.
  */
 export function useMarqueeRail(nudgePx = DEFAULT_NUDGE_PX) {
   const trackRef = useRef<HTMLDivElement>(null);

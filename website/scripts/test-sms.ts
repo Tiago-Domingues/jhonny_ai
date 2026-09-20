@@ -3,6 +3,7 @@ import {
   customerPaidSmsBody,
   formatPaidAtLisbon,
   jhonnySmsPhone,
+  ownerFulfillmentSmsLine,
   ownerPaidSmsBody,
   truncateSms,
 } from "../src/lib/ecommerce/smsMessages";
@@ -34,6 +35,8 @@ assert(customer.includes("2x Wax"), "customer SMS must list the second item");
 assert(customer.includes("MB WAY"), "customer SMS must include the payment method");
 assert(!customer.includes("Nome:"), "customer SMS must not repeat the customer name");
 assert(!customer.includes("Nova venda"), "customer SMS must not use the owner sale heading");
+assert(!customer.includes("LEVANTAMENTO NA LOJA"), "customer SMS must not get the owner pickup banner");
+assert(!customer.includes("ENVIO PARA MORADA"), "customer SMS must not get the owner shipping banner");
 
 const lisbon = formatPaidAtLisbon(paidAt);
 assert(lisbon.includes("21"), "Lisbon date must include the day");
@@ -48,12 +51,16 @@ const owner = ownerPaidSmsBody({
   totalCents: 12990,
   paidAt,
   paymentMethod: "MBWAY",
+  fulfillmentMethod: "PICKUP_IN_STORE",
   items: [
     { name: "Wetsuit", quantity: 1, totalCents: 12000 },
     { name: "Wax", quantity: 2, totalCents: 990 },
   ],
 });
-assert(owner.includes("Nova venda"), "owner SMS must start with a sale alert");
+assert(owner.startsWith("LEVANTAMENTO NA LOJA"), "owner pickup SMS must open with the pickup banner");
+assert(owner.includes("Rua de Gaza 16, Carcavelos"), "owner pickup SMS must include the store address");
+assert(!owner.includes("ENVIO PARA MORADA"), "owner pickup SMS must not mention shipping");
+assert(owner.includes("Nova venda"), "owner SMS must include a sale alert");
 assert(owner.includes("Encomenda JSS-1042"), "owner SMS must include the order number");
 assert(owner.includes("Nome: Ana Silva"), "owner SMS must include the customer name");
 assert(owner.includes("Tel: +351912345678"), "owner SMS must include the customer phone");
@@ -62,6 +69,29 @@ assert(owner.includes("2x Wax"), "owner SMS must list the second item");
 assert(owner.includes("129,90"), "owner SMS must include the formatted total");
 assert(owner.includes("MB WAY"), "owner SMS must include the payment method label");
 assert(owner.length <= SMS_MAX_CHARS, "owner SMS must stay within Twilio-safe length");
+
+const ownerShip = ownerPaidSmsBody({
+  orderNumber: "JSS-1043",
+  customerName: "Ana Silva",
+  customerPhone: "+351912345678",
+  totalCents: 12990,
+  paidAt,
+  paymentMethod: "CARD",
+  fulfillmentMethod: "SHIP_TO_ADDRESS",
+  shippingCity: "Lisboa",
+  items: [{ name: "Wetsuit", quantity: 1, totalCents: 12990 }],
+});
+assert(ownerShip.startsWith("ENVIO PARA MORADA · Lisboa"), "owner ship SMS must open with city");
+assert(!ownerShip.includes("LEVANTAMENTO NA LOJA"), "owner ship SMS must not mention pickup");
+assert(
+  ownerFulfillmentSmsLine({ fulfillmentMethod: "PICKUP_IN_STORE" }).includes("LEVANTAMENTO NA LOJA"),
+  "pickup helper uses the store banner"
+);
+assert(
+  ownerFulfillmentSmsLine({ fulfillmentMethod: "SHIP_TO_ADDRESS", shippingCity: "Porto" }) ===
+    "ENVIO PARA MORADA · Porto",
+  "ship helper uses the destination city"
+);
 
 const truncated = truncateSms("a".repeat(SMS_MAX_CHARS + 50));
 assert(truncated.length === SMS_MAX_CHARS, "truncateSms must cap at SMS_MAX_CHARS");

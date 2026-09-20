@@ -18,6 +18,7 @@ const athletes = [
   { name: "Tomás Maio", code: "TOMASBETTENCOURT" },
   { name: "Gagau Pereira" },
   { name: "Andres Melendez" },
+  { name: "Diogo Mota", code: "DIOGOOMOTA" },
 ];
 
 function codeFromName(name) {

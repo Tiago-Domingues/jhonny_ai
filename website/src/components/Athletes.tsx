@@ -15,7 +15,7 @@ function AthleteCard({ a }: { a: Athlete }) {
       href={a.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative mx-3 block aspect-[3/4] w-60 shrink-0 overflow-hidden rounded-2xl border border-line-dark bg-ink-soft shadow-lg transition duration-300 hover:-translate-y-1.5 hover:border-white/30 hover:shadow-2xl sm:w-64"
+      className="group relative mx-3 block aspect-[3/4] w-60 shrink-0 snap-start overflow-hidden rounded-2xl border border-line-dark bg-ink-soft shadow-lg transition duration-300 hover:-translate-y-1.5 hover:border-white/30 hover:shadow-2xl sm:w-64"
     >
       <Image
         src={photoSrc}
@@ -80,7 +80,6 @@ function AthleteRailArrow({
 
 export function Athletes() {
   const { t } = useLanguage();
-  const loop = [...ATHLETES, ...ATHLETES];
   const rail = useMarqueeRail(280);
 
   return (
@@ -100,7 +99,7 @@ export function Athletes() {
       </div>
 
       <div
-        className="group relative mt-12 flex overflow-hidden"
+        className="group relative mt-12 flex jss-rail"
         data-athletes-rail
         onPointerEnter={rail.onPointerEnter}
         onPointerLeave={rail.onPointerLeave}
@@ -115,12 +114,17 @@ export function Athletes() {
         )}
         <div
           ref={rail.trackRef}
-          className="flex w-max animate-[marquee_50s_linear_infinite] items-stretch group-hover:[animation-play-state:paused]"
+          className="jss-rail-track flex w-max items-stretch"
           style={rail.trackStyle}
         >
-          {loop.map((a, i) => (
-            <AthleteCard key={`${a.handle}-${i}`} a={a} />
+          {ATHLETES.map((a) => (
+            <AthleteCard key={a.handle} a={a} />
           ))}
+          <div className="jss-rail-clone items-stretch" aria-hidden="true">
+            {ATHLETES.map((a) => (
+              <AthleteCard key={`${a.handle}-clone`} a={a} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

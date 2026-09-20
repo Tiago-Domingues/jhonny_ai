@@ -5,6 +5,7 @@ import {
   customerPaidSmsBody,
   jhonnySmsPhone,
   ownerPaidSmsBody,
+  shippingCityFromJson,
 } from "@/lib/ecommerce/smsMessages";
 
 type SendSmsResult = {
@@ -114,8 +115,8 @@ export async function sendWelcomeSms(input: {
   phone?: string | null;
 }) {
   const to = input.phoneCountryCode && input.phone ? toE164(input.phoneCountryCode, input.phone) : null;
-  const firstName = (input.fullName || "Legend").trim().split(/\s+/)[0] || "Legend";
-  const body = `Hi ${firstName}! Welcome to the Jhonny family. Your account is ready — see you in the water. Jhonny Surf Store`;
+  const firstName = (input.fullName || "Lenda").trim().split(/\s+/)[0] || "Lenda";
+  const body = `Olá ${firstName}! Bem-vindo à família Jhonny. A tua conta está pronta — vemos-nos na água. Jhonny Surf Store`;
 
   if (!to) {
     return prisma.smsEvent.create({
@@ -229,6 +230,8 @@ export async function sendPaymentConfirmedSms(orderId: string) {
     totalCents: order.totalCents,
     paidAt,
     paymentMethod: payment?.method ?? null,
+    fulfillmentMethod: order.fulfillmentMethod,
+    shippingCity: shippingCityFromJson(order.shippingAddressJson),
     items: order.items.map((item) => ({
       name: item.name,
       quantity: item.quantity,

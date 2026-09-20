@@ -36,7 +36,7 @@ export async function registerCredentialsCustomer(input: unknown) {
     select: { id: true },
   });
   if (existingUser) {
-    throw new Error("Email or username is already registered.");
+    throw new Error("Este email ou username já está registado.");
   }
 
   const usernameHeld = await prisma.pendingRegistration.findFirst({
@@ -44,7 +44,7 @@ export async function registerCredentialsCustomer(input: unknown) {
     select: { id: true },
   });
   if (usernameHeld) {
-    throw new Error("Email or username is already registered.");
+    throw new Error("Este email ou username já está registado.");
   }
 
   try {
@@ -70,7 +70,7 @@ export async function registerCredentialsCustomer(input: unknown) {
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      throw new Error("Email or username is already registered.");
+      throw new Error("Este email ou username já está registado.");
     }
     throw error;
   }
@@ -103,7 +103,7 @@ export async function registerCustomer(input: unknown) {
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      throw new Error("Email or username is already registered.");
+      throw new Error("Este email ou username já está registado.");
     }
     throw error;
   }
@@ -120,7 +120,7 @@ export async function loginCustomer(input: unknown) {
   });
 
   if (!user?.passwordHash || !(await verifyPassword(data.password, user.passwordHash))) {
-    throw new Error("Invalid login details.");
+    throw new Error("Email, username ou password inválidos.");
   }
 
   return user;

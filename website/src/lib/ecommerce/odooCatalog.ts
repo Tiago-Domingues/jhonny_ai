@@ -6,6 +6,13 @@ import { buildSurfboardEnrichment } from "@/lib/ecommerce/surfboardEnrichment";
 import { productImageUrls } from "@/lib/ecommerce/odooProductImages";
 import { cleanProductDisplayName } from "@/lib/ecommerce/productVariants";
 import { shouldExcludeFromWebsiteCatalog } from "@/lib/ecommerce/catalogIdentity";
+import {
+  isNegativeNewInValue,
+  isNewInAttributeName,
+  normalizeAttributeText,
+} from "@/lib/ecommerce/odooCatalogNewIn";
+
+export { isNegativeNewInValue, isNewInAttributeName } from "@/lib/ecommerce/odooCatalogNewIn";
 
 const brandFieldCandidates = [
   "x_studio_marcas",
@@ -294,13 +301,6 @@ function extractVariantAttributesJson(
   return Object.keys(attributes).length ? JSON.stringify(attributes) : null;
 }
 
-function normalizeAttributeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
 function hasOpportunityAttribute(
   ids: number[],
   attributeMap: Map<number, { attribute: string; value: string }>
@@ -313,17 +313,6 @@ function hasOpportunityAttribute(
   });
 }
 
-function isNewInAttributeName(value: string) {
-  const normalized = normalizeAttributeText(value);
-  return (
-    normalized.includes("new in") ||
-    normalized.includes("newin") ||
-    normalized.includes("new arrival") ||
-    normalized.includes("newarrival") ||
-    normalized.includes("novidade")
-  );
-}
-
 /** Match Odoo variant attribute/value tags like "New In", "Newin", "New Arrival", "Novidade(s)". */
 function hasNewInAttribute(
   ids: number[],
@@ -332,7 +321,8 @@ function hasNewInAttribute(
   return ids.some((id) => {
     const item = attributeMap.get(id);
     if (!item) return false;
-    return isNewInAttributeName(`${item.attribute} ${item.value}`);
+    if (isNegativeNewInValue(item.value)) return false;
+    return isNewInAttributeName(item.attribute) || isNewInAttributeName(`${item.attribute} ${item.value}`);
   });
 }
 
@@ -354,6 +344,19 @@ async function fetchNewInTemplateIds(client: OdooClient) {
 
   if (!attributeIds.length) return new Set<number>();
 
+  const valueRows = await client.searchRead(
+    "product.attribute.value",
+    [["attribute_id", "in", attributeIds]],
+    ["id", "name"],
+    { limit: 500, order: "name" }
+  );
+  const negativeValueIds = new Set(
+    valueRows
+      .filter((row) => isNegativeNewInValue(String(row.name || "")))
+      .map((row) => Number(row.id))
+      .filter((id) => Number.isFinite(id) && id > 0)
+  );
+
   const lines: Array<Record<string, unknown>> = [];
   let offset = 0;
   while (true) {
@@ -372,8 +375,9 @@ async function fetchNewInTemplateIds(client: OdooClient) {
   for (const line of lines) {
     const templateId = Array.isArray(line.product_tmpl_id) ? Number(line.product_tmpl_id[0]) : 0;
     const valueIds = Array.isArray(line.value_ids) ? line.value_ids.map(Number) : [];
-    // A template line with at least one value means the product is tagged New In (e.g. SIM).
-    if (templateId > 0 && valueIds.length > 0) {
+    const positiveValues = valueIds.filter((id) => Number.isFinite(id) && id > 0 && !negativeValueIds.has(id));
+    // Ignore "Não" / "No" values; a Sim / New In value tags the template.
+    if (templateId > 0 && positiveValues.length > 0) {
       templateIds.add(templateId);
     }
   }

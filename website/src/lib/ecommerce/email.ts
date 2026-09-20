@@ -242,10 +242,23 @@ function orderHtml(
         `<li>${item.quantity} x ${escapeHtml(item.name)} - ${formatEuro(item.totalCents)}</li>`
     )
     .join("");
-  const pickup =
-    order.fulfillmentMethod === "PICKUP_IN_STORE"
-      ? "<p><strong>Pickup:</strong> Jhonny Surf Store, Rua de Gaza 16 loja direita, 2775-597 Carcavelos. Wait for pickup confirmation before coming to collect.</p>"
-      : "<p><strong>Delivery:</strong> We will confirm shipping details after payment.</p>";
+  const isPickup = order.fulfillmentMethod === "PICKUP_IN_STORE";
+  const shippingCity =
+    order.shippingAddressJson && typeof order.shippingAddressJson === "object"
+      ? String((order.shippingAddressJson as { city?: unknown }).city || "").trim()
+      : "";
+  const pickupCustomer = isPickup
+    ? "<p><strong>Levantamento:</strong> Jhonny Surf Store, Rua de Gaza 16 loja direita, 2775-597 Carcavelos. Espera pela confirmação antes de ires buscar.</p>"
+    : "<p><strong>Envio:</strong> Confirmamos os detalhes de envio depois do pagamento.</p>";
+  const pickupJhonny = isPickup
+    ? `<div style="margin:0 0 20px;padding:16px 18px;background:#111;color:#fff;border-radius:8px">
+        <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">LEVANTAMENTO NA LOJA</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#f3f0e8">Jhonny Surf Store, Rua de Gaza 16 loja direita, 2775-597 Carcavelos</p>
+      </div>`
+    : `<div style="margin:0 0 20px;padding:16px 18px;background:#111;color:#fff;border-radius:8px">
+        <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">ENVIO PARA MORADA</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#f3f0e8">${escapeHtml(shippingCity || "Morada de entrega no checkout")}</p>
+      </div>`;
 
   const title =
     variant === "paid"
@@ -267,13 +280,14 @@ function orderHtml(
 
   return `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+      ${audience === "jhonny" ? pickupJhonny : ""}
       <h1>${title}</h1>
-      <p><strong>Order:</strong> ${escapeHtml(order.orderNumber)}</p>
-      <p><strong>Customer:</strong> ${escapeHtml(order.customerName)} (${escapeHtml(order.customerEmail)})</p>
+      <p><strong>Encomenda:</strong> ${escapeHtml(order.orderNumber)}</p>
+      <p><strong>Cliente:</strong> ${escapeHtml(order.customerName)} (${escapeHtml(order.customerEmail)})</p>
       <ul>${itemRows}</ul>
       <p><strong>Total:</strong> ${formatEuro(order.totalCents)}</p>
       ${paidNote}
-      ${pickup}
+      ${audience === "customer" ? pickupCustomer : ""}
       <p>Where surfers become legends.</p>
     </div>
   `;
@@ -427,13 +441,13 @@ export async function sendAbandonedCartEmail(input: {
 }
 
 export async function sendWelcomeEmail(input: { userId: string; email: string; fullName?: string | null }) {
-  const subject = "Welcome to Jhonny Surf Store";
+  const subject = "Bem-vindo à Jhonny Surf Store";
   const toyUrl = jhonnyToyImageUrl();
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
-      <h1>Welcome to Jhonny Surf Store</h1>
-      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
-      <p>Welcome to the Jhonny family. Your account is ready, and you can now save your profile, shop faster, and follow your surf gear orders.</p>
+      <h1>Bem-vindo à Jhonny Surf Store</h1>
+      <p>Olá ${escapeHtml(input.fullName || "Lenda")},</p>
+      <p>Bem-vindo à família Jhonny. A tua conta está pronta — podes guardar o perfil, comprar mais rápido e acompanhar as tuas encomendas.</p>
       <p>Where surfers become legends.</p>
       <p style="margin:28px 0 8px;text-align:left">
         <img
@@ -486,7 +500,7 @@ export async function sendEmailVerificationEmail(input: {
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Confirma o teu email</h1>
-      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Olá ${escapeHtml(input.fullName || "Lenda")},</p>
       <p>Clica no link para confirmares o email e terminares o registo. Depois podes preencher o perfil. Expira em 24 horas.</p>
       <p><a href="${escapeHtml(input.verifyUrl)}">Confirmar email e continuar</a></p>
       <p style="word-break:break-all;font-size:12px;color:#555">${escapeHtml(input.verifyUrl)}</p>
@@ -523,14 +537,14 @@ export async function sendPasswordResetEmail(input: {
     ? `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Esta conta usa Google</h1>
-      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Olá ${escapeHtml(input.fullName || "Lenda")},</p>
       <p>Esta conta entra com Google. Não precisas de password — usa “Continuar com Google” em <a href="${escapeHtml(input.resetUrl)}">jhonnysurfstore.com/conta</a>.</p>
     </div>
   `
     : `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Repor password</h1>
-      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Olá ${escapeHtml(input.fullName || "Lenda")},</p>
       <p>Clica no link para escolheres uma password nova. Expira em 1 hora.</p>
       <p><a href="${escapeHtml(input.resetUrl)}">Repor a password</a></p>
       <p>Se não pediste isto, ignora este email.</p>
@@ -726,12 +740,12 @@ export async function sendWheelPrizeEmail(input: {
   });
   if (already) return already;
 
-  const name = escapeHtml(input.fullName || "Legend");
+  const name = escapeHtml(input.fullName || "Lenda");
   const subject = `Jhonny Surf Store — ganhaste ${input.percent}% na roda`;
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>Ganhaste ${input.percent}% na roda</h1>
-      <p>Hi ${name},</p>
+      <p>Olá ${name},</p>
       <p>A tua volta deste mês está pronta. Usa o cupão <strong>${escapeHtml(input.code)}</strong> no checkout até ${escapeHtml(input.expiresAt.toLocaleDateString("pt-PT"))}.</p>
       <p><a href="${escapeHtml(input.shopUrl)}">Ir à loja</a></p>
     </div>
@@ -763,7 +777,7 @@ export async function sendWheelReminderEmail(input: {
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>A roda do mês</h1>
-      <p>Hi ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>Olá ${escapeHtml(input.fullName || "Lenda")},</p>
       <p>Ainda não giraste a roda este mês. Entra na conta e tira o teu desconto de 5%, 10% ou 20%.</p>
       <p><a href="${escapeHtml(input.shopUrl)}">Girar a roda</a></p>
     </div>

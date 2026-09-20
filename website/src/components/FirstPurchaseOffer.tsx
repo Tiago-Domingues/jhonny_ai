@@ -33,7 +33,7 @@ const copy = {
     cta: "Registar e poupar 10%",
     dismiss: "Agora não",
     fineprint: "Válido para a primeira compra com conta registada. Não acumulável com outras campanhas.",
-    ribbon: "Join the family",
+    ribbon: "Entra na família",
   },
   en: {
     eyebrow: "Welcome offer",
