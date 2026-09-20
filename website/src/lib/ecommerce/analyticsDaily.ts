@@ -33,6 +33,64 @@ export function todayLisbonDateKey(now = new Date()) {
   }).format(now);
 }
 
+/** Coerce Prisma/pg Date objects, ISO timestamps, or YYYY-MM-DD into a Lisbon day key. */
+export function normalizeDayKey(value: unknown): string | null {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return todayLisbonDateKey(value);
+  }
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) return todayLisbonDateKey(parsed);
+  const prefix = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  return prefix?.[1] ?? null;
+}
+
+function emptyDay(key: string): DailyMetrics {
+  return { key, views: 0, newClients: 0, salesCount: 0, salesCents: 0 };
+}
+
+function bumpDay(
+  map: Map<string, DailyMetrics>,
+  value: unknown,
+  field: "views" | "newClients" | "salesCount" | "salesCents",
+  amount: number
+) {
+  const key = normalizeDayKey(value);
+  if (!key || !amount) return;
+  const current = map.get(key) || emptyDay(key);
+  current[field] += amount;
+  map.set(key, current);
+}
+
+/**
+ * Bucket pageviews, signups, and paid orders onto Lisbon calendar days.
+ * Using createdAt in JS avoids Prisma/pg turning SQL `to_char` days into Date
+ * objects whose keys then miss `fillDailyRange("YYYY-MM-DD")`.
+ */
+export function accumulateDailyMetrics(input: {
+  views?: Array<{ createdAt: Date | string }>;
+  users?: Array<{ createdAt: Date | string }>;
+  sales?: Array<{ at: Date | string; totalCents?: number | null }>;
+  startKey?: string;
+  endKey?: string;
+}): DailyMetrics[] {
+  const map = new Map<string, DailyMetrics>();
+  for (const row of input.views || []) bumpDay(map, row.createdAt, "views", 1);
+  for (const row of input.users || []) bumpDay(map, row.createdAt, "newClients", 1);
+  for (const row of input.sales || []) {
+    bumpDay(map, row.at, "salesCount", 1);
+    bumpDay(map, row.at, "salesCents", Number(row.totalCents) || 0);
+  }
+  return fillDailyRange(
+    input.startKey || ANALYTICS_CHART_START,
+    input.endKey || todayLisbonDateKey(),
+    [...map.values()]
+  );
+}
+
 export function addDaysToKey(key: string, days: number) {
   return formatDay(parseDay(key).utc + days * 86_400_000);
 }

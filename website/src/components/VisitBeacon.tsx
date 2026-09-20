@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 function hasAnalyticsConsent() {
@@ -17,8 +17,9 @@ function hasAnalyticsConsent() {
 }
 
 /** Sends a first-party pageview when analytics cookies are accepted. */
-export function VisitBeacon() {
+export function VisitBeacon({ skipInitial = false }: { skipInitial?: boolean }) {
   const pathname = usePathname();
+  const skipFirstDocument = useRef(skipInitial);
 
   useEffect(() => {
     if (!pathname || pathname.startsWith("/admin")) return;
@@ -39,9 +40,13 @@ export function VisitBeacon() {
       }).catch(() => undefined);
     };
 
-    // Record the view immediately. Waiting on GPS used to drop visits when
-    // the prompt was slow or the database blipped.
-    send();
+    // Full document loads are recorded on the server so ad-blocked JS
+    // still counts. Skip that first paint to avoid a double pageview.
+    if (skipFirstDocument.current) {
+      skipFirstDocument.current = false;
+    } else {
+      send();
+    }
     const onConsent = () => send();
     window.addEventListener("jss-consent-saved", onConsent);
     return () => window.removeEventListener("jss-consent-saved", onConsent);
