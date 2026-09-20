@@ -47,6 +47,7 @@ function main() {
   const catalog = readFileSync(path.resolve(__dirname, "../src/lib/ecommerce/catalog.ts"), "utf8");
   const newInFn = catalog.slice(catalog.indexOf("export async function listNewArrivalProducts"));
   assert(newInFn.includes('orderBy: [{ createdAt: "desc" }'), "DB path queries newest products when tags are empty");
+  assert(newInFn.includes("listNewArrivalProductsFromOdoo"), "New In falls back to Odoo when Prisma is down");
   assert(!newInFn.includes("listAllCatalogProducts("), "New In listing avoids a full catalog scan");
 
   console.log("new arrivals selection ok");

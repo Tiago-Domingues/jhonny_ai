@@ -663,13 +663,19 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
  * Products tagged with the Odoo "New In" attribute (synced to `isNewIn`).
  * Falls back to matching category paths, then the newest public products.
  */
+async function listNewArrivalProductsFromOdoo(limit: number): Promise<StoreProduct[]> {
+  try {
+    return selectNewArrivalProducts((await listLiveOdooProducts()) || [], limit);
+  } catch {
+    return [];
+  }
+}
+
 export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]> {
   if (!hasDatabaseUrl()) {
-    try {
-      return selectNewArrivalProducts(await listLiveOdooProducts() || [], limit);
-    } catch {
-      return [];
-    }
+    const fromOdoo = await listNewArrivalProductsFromOdoo(limit);
+    if (fromOdoo.length) return fromOdoo;
+    return selectNewArrivalProducts(mockCatalogOrEmpty(), limit);
   }
 
   try {
@@ -720,8 +726,12 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
       newest.map((product) => toStoreProduct(product, { lean: true }))
     ).slice(0, limit);
     if (fromNewest.length) return fromNewest;
+    const fromOdoo = await listNewArrivalProductsFromOdoo(limit);
+    if (fromOdoo.length) return fromOdoo;
     return selectNewArrivalProducts(mockCatalogOrEmpty(), limit);
   } catch {
+    const fromOdoo = await listNewArrivalProductsFromOdoo(limit);
+    if (fromOdoo.length) return fromOdoo;
     return selectNewArrivalProducts(mockCatalogOrEmpty(), limit);
   }
 }
