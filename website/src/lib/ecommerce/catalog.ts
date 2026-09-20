@@ -716,9 +716,13 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
       take: limit * 3,
       select: productListSelect,
     });
-    return finalizeCatalogList(newest.map((product) => toStoreProduct(product, { lean: true }))).slice(0, limit);
+    const fromNewest = finalizeCatalogList(
+      newest.map((product) => toStoreProduct(product, { lean: true }))
+    ).slice(0, limit);
+    if (fromNewest.length) return fromNewest;
+    return selectNewArrivalProducts(mockCatalogOrEmpty(), limit);
   } catch {
-    return [];
+    return selectNewArrivalProducts(mockCatalogOrEmpty(), limit);
   }
 }
 
