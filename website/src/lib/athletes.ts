@@ -131,4 +131,12 @@ export const ATHLETES: Athlete[] = [
     photo: "/brand/athletes/_melendezzz.jpg",
     bio: "Rider da equipa JSS",
   }),
+  athlete({
+    handle: "diogoomota",
+    name: "Diogo Mota",
+    url: "https://www.instagram.com/diogoomota",
+    photo: "/brand/athletes/diogoomota.svg",
+    bio: "Surfista da equipa JSS",
+    couponCode: "DIOGOOMOTA",
+  }),
 ];

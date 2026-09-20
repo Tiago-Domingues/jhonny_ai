@@ -364,15 +364,15 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       saved: "Perfil guardado. Os teus dados estão prontos para o checkout.",
       saveFailed: "Não foi possível guardar o perfil.",
       joinKicker: "Conta Jhonny",
-      joinTitle: "Join the family",
+      joinTitle: "Entra na família",
       joinIntro: "Cria a conta com email, username e password, ou entra com Google. Depois preenche o perfil e as moradas, ou continua a comprar como convidado.",
       signIn: "Entrar",
       register: "Criar conta",
       continueGoogle: "Continuar com Google",
       createGoogle: "Criar conta com Google",
-      googleConsentTitle: "Inicie sessão em Jhonny Surf Store",
+      googleConsentTitle: "Entra na Jhonny Surf Store",
       googleConsentBody:
-        "A Google vai permitir que a Jhonny Surf Store aceda a estas informações sobre si:",
+        "A Google vai deixar a Jhonny Surf Store aceder a estas informações sobre ti:",
       googleConsentProfile: "Nome e imagem do perfil",
       googleConsentEmail: "Endereço de email",
       googleConsentLegal:

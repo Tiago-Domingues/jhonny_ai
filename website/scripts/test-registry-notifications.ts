@@ -48,6 +48,8 @@ const googleCallback = readFileSync(resolve(__dirname, "../src/app/api/auth/goog
 assert(googleCallback.includes("upsertGoogleCustomer"), "Google callback creates or links the account");
 assert(!googleCallback.includes("sendEmailVerificationEmail"), "Google sign-in does not send a validation email");
 assert(googleCallback.includes("sendWelcomeNotificationsIfProfileReady"), "Google still uses the welcome-after-profile path");
+assert(googleCallback.includes("parseSignedOAuthState"), "Google callback verifies signed OAuth state");
+assert(googleCallback.includes("ensureAdminRoleForEmail"), "Google sign-in promotes allowlisted admins");
 
 const profileRoute = readFileSync(resolve(__dirname, "../src/app/api/profile/route.ts"), "utf8");
 assert(profileRoute.includes("sendWelcomeNotificationsIfProfileReady"), "welcome email/SMS fire after the profile is saved");

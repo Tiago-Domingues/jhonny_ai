@@ -79,7 +79,33 @@ export function AccountClient() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [googleConsentOpen, setGoogleConsentOpen] = useState(false);
+  const [googleAuthorizeUrl, setGoogleAuthorizeUrl] = useState("/api/auth/google");
+  const [googlePreparing, setGooglePreparing] = useState(false);
   const [editing, setEditing] = useState(false);
+
+  async function openGoogleConsent() {
+    setGoogleConsentOpen(true);
+    setGooglePreparing(true);
+    setGoogleAuthorizeUrl("/api/auth/google");
+    try {
+      const response = await fetch("/api/auth/google/prepare", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = (await response.json()) as { authorizeUrl?: string };
+      if (
+        response.ok &&
+        typeof data.authorizeUrl === "string" &&
+        data.authorizeUrl.startsWith("https://accounts.google.com/")
+      ) {
+        setGoogleAuthorizeUrl(data.authorizeUrl);
+      }
+    } catch {
+      setGoogleAuthorizeUrl("/api/auth/google");
+    } finally {
+      setGooglePreparing(false);
+    }
+  }
 
   useEffect(() => {
     const load = () => {
@@ -561,7 +587,7 @@ export function AccountClient() {
           <div className="grid gap-4">
             <button
               type="button"
-              onClick={() => setGoogleConsentOpen(true)}
+              onClick={() => void openGoogleConsent()}
               className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream"
             >
               <GoogleMark />
@@ -587,7 +613,7 @@ export function AccountClient() {
           <div className="grid gap-4">
             <button
               type="button"
-              onClick={() => setGoogleConsentOpen(true)}
+              onClick={() => void openGoogleConsent()}
               className="flex items-center justify-center gap-3 rounded-2xl border border-line bg-white px-5 py-3 text-sm font-bold tracking-wide text-ink transition hover:bg-cream"
             >
               <GoogleMark />
@@ -677,12 +703,14 @@ export function AccountClient() {
               >
                 {copy.googleConsentCancel}
               </button>
-              <a
-                href="/api/auth/google"
-                className="flex flex-1 items-center justify-center rounded-2xl bg-ink px-4 py-3 text-sm font-bold text-white transition hover:bg-ink/90"
+              <button
+                type="button"
+                disabled={googlePreparing}
+                onClick={() => window.location.assign(googleAuthorizeUrl)}
+                className="flex flex-1 items-center justify-center rounded-2xl bg-ink px-4 py-3 text-sm font-bold text-white transition hover:bg-ink/90 disabled:cursor-wait disabled:opacity-70"
               >
                 {copy.googleConsentContinue}
-              </a>
+              </button>
             </div>
           </div>
         </div>

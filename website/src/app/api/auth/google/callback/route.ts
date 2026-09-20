@@ -1,22 +1,24 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { hasDatabaseUrl } from "@/lib/ecommerce/db";
 import { unavailableError } from "@/lib/ecommerce/api";
 import { upsertGoogleCustomer } from "@/lib/ecommerce/auth";
 import { CART_COOKIE, mergeGuestCartIntoUser } from "@/lib/ecommerce/cart";
 import { sendWelcomeNotificationsIfProfileReady } from "@/lib/ecommerce/welcomeNotifications";
+import { ensureAdminRoleForEmail } from "@/lib/ecommerce/admin";
 import {
   GOOGLE_OAUTH_STATE_COOKIE,
   exchangeGoogleCode,
   fetchGoogleUserInfo,
   getGoogleOAuthConfig,
-  googleCallbackUrl,
-  hashOAuthState,
-  isGoogleOAuthConfigured,
+  oauthStateCookieMatches,
+  parseSignedOAuthState,
   resolveRequestOrigin,
+  isGoogleOAuthConfigured,
 } from "@/lib/ecommerce/googleOAuth";
 import { createSessionToken, setSessionCookie } from "@/lib/ecommerce/session";
 import { enforceRateLimit } from "@/lib/ecommerce/securityRuntime";
+
+export const dynamic = "force-dynamic";
 
 function redirectToConta(request: Request, error?: string) {
   const origin = resolveRequestOrigin(request);
@@ -27,7 +29,7 @@ function redirectToConta(request: Request, error?: string) {
   return response;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   if (!hasDatabaseUrl()) return unavailableError();
   if (!isGoogleOAuthConfigured()) {
     return redirectToConta(request, "google_not_configured");
@@ -48,24 +50,27 @@ export async function GET(request: Request) {
     return redirectToConta(request, "google_auth_failed");
   }
 
-  const cookieStore = await cookies();
-  const expectedHash = cookieStore.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
-  if (!expectedHash || expectedHash !== hashOAuthState(state)) {
+  const parsed = parseSignedOAuthState(state);
+  const expectedHash = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
+  if (!parsed || !oauthStateCookieMatches(expectedHash, state)) {
+    console.error("google_oauth_state_invalid", {
+      hasCookie: Boolean(expectedHash),
+      hasSignedState: Boolean(parsed),
+    });
     return redirectToConta(request, "google_auth_failed");
   }
 
   try {
     const { clientId, clientSecret } = getGoogleOAuthConfig();
-    const origin = resolveRequestOrigin(request);
-    const redirectUri = googleCallbackUrl(origin);
     const accessToken = await exchangeGoogleCode({
       code,
-      redirectUri,
+      redirectUri: parsed.redirectUri,
       clientId,
       clientSecret,
     });
     const info = await fetchGoogleUserInfo(accessToken);
     const { user, created } = await upsertGoogleCustomer(info);
+    await ensureAdminRoleForEmail(user.id, user.email);
 
     if (created) {
       await sendWelcomeNotificationsIfProfileReady({
@@ -77,18 +82,23 @@ export async function GET(request: Request) {
         addressLine1: user.profile?.addressLine1,
         city: user.profile?.city,
         postalCode: user.profile?.postalCode,
-      }).catch(() => null);
+      }).catch((error) => {
+        console.error("google_oauth_welcome_failed", error instanceof Error ? error.message : error);
+      });
     }
 
-    const guestToken = cookieStore.get(CART_COOKIE)?.value;
-    await mergeGuestCartIntoUser(guestToken, user.id);
+    const guestToken = request.cookies.get(CART_COOKIE)?.value;
+    await mergeGuestCartIntoUser(guestToken, user.id).catch((error) => {
+      console.error("google_oauth_cart_merge_failed", error instanceof Error ? error.message : error);
+    });
 
     const token = await createSessionToken(user.id);
     const response = redirectToConta(request);
     setSessionCookie(response, token);
     response.cookies.delete(CART_COOKIE);
     return response;
-  } catch {
+  } catch (error) {
+    console.error("google_oauth_callback_failed", error instanceof Error ? error.message : error);
     return redirectToConta(request, "google_auth_failed");
   }
 }

@@ -59,6 +59,29 @@ export function customerPaidSmsBody(input: {
   return truncateSms(lines.join("\n"));
 }
 
+export const STORE_PICKUP_SHORT = "Rua de Gaza 16, Carcavelos";
+export const STORE_PICKUP_FULL = "Jhonny Surf Store, Rua de Gaza 16 loja direita, 2775-597 Carcavelos";
+
+export function shippingCityFromJson(value: unknown): string | null {
+  if (!value || typeof value !== "object") return null;
+  const city = (value as { city?: unknown }).city;
+  return typeof city === "string" && city.trim() ? city.trim() : null;
+}
+
+export function ownerFulfillmentHeadline(fulfillmentMethod?: string | null) {
+  return fulfillmentMethod === "SHIP_TO_ADDRESS" ? "ENVIO PARA MORADA" : "LEVANTAMENTO NA LOJA";
+}
+
+export function ownerFulfillmentSmsLine(input: {
+  fulfillmentMethod?: string | null;
+  shippingCity?: string | null;
+}) {
+  const headline = ownerFulfillmentHeadline(input.fulfillmentMethod);
+  if (headline === "LEVANTAMENTO NA LOJA") return `${headline} · ${STORE_PICKUP_SHORT}`;
+  const city = input.shippingCity?.trim();
+  return city ? `${headline} · ${city}` : headline;
+}
+
 export function ownerPaidSmsBody(input: {
   orderNumber: string;
   customerName: string;
@@ -66,11 +89,17 @@ export function ownerPaidSmsBody(input: {
   totalCents: number;
   paidAt: Date;
   paymentMethod?: string | null;
+  fulfillmentMethod?: string | null;
+  shippingCity?: string | null;
   items: Array<{ name: string; quantity: number; totalCents: number }>;
 }) {
   const when = formatPaidAtLisbon(input.paidAt);
   const method = paymentMethodLabel(input.paymentMethod);
   const lines = [
+    ownerFulfillmentSmsLine({
+      fulfillmentMethod: input.fulfillmentMethod,
+      shippingCity: input.shippingCity,
+    }),
     `Nova venda ${when}`,
     `Encomenda ${input.orderNumber}`,
     `Nome: ${input.customerName.trim() || "—"}`,

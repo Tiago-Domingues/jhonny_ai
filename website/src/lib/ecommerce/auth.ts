@@ -6,7 +6,7 @@ import type { GoogleUserInfo } from "@/lib/ecommerce/googleOAuth";
 import { registerSchema, loginSchema, pendingRegisterSchema, profileSchema } from "@/lib/ecommerce/schemas";
 import { normalizeNif } from "@/lib/ecommerce/nif";
 import { hashPassword, normalizeEmail, randomToken, verifyPassword } from "@/lib/ecommerce/security";
-import { isAdminEmail } from "@/lib/ecommerce/admin";
+import { ensureAdminRoleForEmail, isAdminEmail } from "@/lib/ecommerce/admin";
 
 export function toPublicAuthUser<
   T extends {
@@ -36,7 +36,7 @@ export async function registerCredentialsCustomer(input: unknown) {
     select: { id: true },
   });
   if (existingUser) {
-    throw new Error("Email or username is already registered.");
+    throw new Error("Este email ou username já está registado.");
   }
 
   const usernameHeld = await prisma.pendingRegistration.findFirst({
@@ -44,7 +44,7 @@ export async function registerCredentialsCustomer(input: unknown) {
     select: { id: true },
   });
   if (usernameHeld) {
-    throw new Error("Email or username is already registered.");
+    throw new Error("Este email ou username já está registado.");
   }
 
   try {
@@ -70,7 +70,7 @@ export async function registerCredentialsCustomer(input: unknown) {
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      throw new Error("Email or username is already registered.");
+      throw new Error("Este email ou username já está registado.");
     }
     throw error;
   }
@@ -103,7 +103,7 @@ export async function registerCustomer(input: unknown) {
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      throw new Error("Email or username is already registered.");
+      throw new Error("Este email ou username já está registado.");
     }
     throw error;
   }
@@ -120,7 +120,7 @@ export async function loginCustomer(input: unknown) {
   });
 
   if (!user?.passwordHash || !(await verifyPassword(data.password, user.passwordHash))) {
-    throw new Error("Invalid login details.");
+    throw new Error("Email, username ou password inválidos.");
   }
 
   return user;
@@ -172,6 +172,7 @@ export async function upsertGoogleCustomer(info: GoogleUserInfo): Promise<{
         data: { emailVerifiedAt: new Date() },
       });
     }
+    await ensureAdminRoleForEmail(bySub.id, bySub.email);
     const refreshed = await getProfile(bySub.id);
     if (!refreshed) throw new Error("Could not load Google account.");
     return { user: refreshed, created: false };
@@ -190,6 +191,7 @@ export async function upsertGoogleCustomer(info: GoogleUserInfo): Promise<{
       data: {
         googleSub: info.sub,
         emailVerifiedAt: byEmail.emailVerifiedAt ?? new Date(),
+        role: isAdminEmail(email) ? "ADMIN" : byEmail.role,
       },
       include: { profile: true },
     });
@@ -207,6 +209,7 @@ export async function upsertGoogleCustomer(info: GoogleUserInfo): Promise<{
         passwordHash: null,
         googleSub: info.sub,
         emailVerifiedAt: new Date(),
+        role: isAdminEmail(email) ? "ADMIN" : "CUSTOMER",
         profile: {
           create: {
             fullName,

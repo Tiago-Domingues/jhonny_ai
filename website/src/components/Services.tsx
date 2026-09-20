@@ -185,9 +185,8 @@ export function Services() {
     ],
     [
       {
-        label: "@underdogz",
-        href: "https://www.instagram.com/underdogz/",
-        logo: "/brand/partners/instagram/underdogz.jpg",
+        label: "@underdogzexplore",
+        href: "https://www.instagram.com/underdogzexplore",
       },
       {
         label: "@seasoulscommunity",

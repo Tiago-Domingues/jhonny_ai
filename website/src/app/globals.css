@@ -637,6 +637,42 @@ a[data-google-reviews-chip]:hover {
   }
 }
 
+/* Mobile / touch: native swipe. Desktop fine pointer: CSS marquee + hover pause. */
+.jss-rail {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+.jss-rail::-webkit-scrollbar {
+  display: none;
+}
+.jss-rail-track {
+  animation: none;
+}
+.jss-rail-clone {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 768px) {
+  .jss-rail {
+    overflow: hidden;
+    scroll-snap-type: none;
+    touch-action: auto;
+  }
+  .jss-rail-track {
+    animation: marquee 50s linear infinite;
+  }
+  .group:hover .jss-rail-track,
+  .jss-rail-track:hover {
+    animation-play-state: paused;
+  }
+  .jss-rail-clone {
+    display: flex;
+  }
+}
+
 /* Jhonny toy WhatsApp button: continuous bob + occasional wiggle */
 @keyframes toy-bob {
   0%,

@@ -12,6 +12,9 @@ import { cleanProductDisplayName, groupStoreProductsForListing, type StoreProduc
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 import { unstable_cache } from "next/cache";
 import { isMockProductIdentity } from "@/lib/ecommerce/catalogIdentity";
+import { isNewArrivalsCategory, selectNewArrivalProducts } from "@/lib/ecommerce/catalogNewIn";
+
+export { isNewArrivalsCategory, selectNewArrivalProducts } from "@/lib/ecommerce/catalogNewIn";
 
 export { isMockProductIdentity } from "@/lib/ecommerce/catalogIdentity";
 
@@ -656,34 +659,14 @@ export async function listOpportunityProducts(limit = 16): Promise<StoreProduct[
   }
 }
 
-/** Match Odoo category paths like "New Arrivals", "Novidades", etc. */
-export function isNewArrivalsCategory(category: string) {
-  const normalized = category
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase();
-  return (
-    normalized.includes("NEW ARRIVAL") ||
-    normalized.includes("NEWARRIVAL") ||
-    normalized.includes("NOVIDADE") ||
-    normalized.includes("NOVOS PRODUTOS") ||
-    normalized.includes("NEW IN")
-  );
-}
-
 /**
  * Products tagged with the Odoo "New In" attribute (synced to `isNewIn`).
- * Falls back to matching category paths if the attribute has no tagged products yet.
+ * Falls back to matching category paths, then the newest public products.
  */
 export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]> {
   if (!hasDatabaseUrl()) {
     try {
-      const liveProducts = await listLiveOdooProducts();
-      const tagged = (liveProducts || []).filter((product) => product.isNewIn);
-      if (tagged.length) return tagged.slice(0, limit);
-      return (liveProducts || [])
-        .filter((product) => isNewArrivalsCategory(product.category))
-        .slice(0, limit);
+      return selectNewArrivalProducts(await listLiveOdooProducts() || [], limit);
     } catch {
       return [];
     }
@@ -706,19 +689,40 @@ export async function listNewArrivalProducts(limit = 16): Promise<StoreProduct[]
     ).slice(0, limit);
     if (fromAttribute.length) return fromAttribute;
 
-    const products = await prisma.product.findMany({
-      where: publicCatalogWhere(),
+    const byCategory = await prisma.product.findMany({
+      where: {
+        ...publicCatalogWhere(),
+        OR: [
+          { category: { contains: "New In", mode: "insensitive" } },
+          { category: { contains: "New Arrival", mode: "insensitive" } },
+          { category: { contains: "Novidade", mode: "insensitive" } },
+          { category: { contains: "Novos produtos", mode: "insensitive" } },
+        ],
+      },
       orderBy: [{ lastOdooSyncAt: "desc" }, { name: "asc" }],
-      take: 400,
+      take: limit * 3,
       select: productListSelect,
     });
-    return finalizeCatalogList(
-      products
+    const fromCategory = finalizeCatalogList(
+      byCategory
         .map((product) => toStoreProduct(product, { lean: true }))
         .filter((product) => isNewArrivalsCategory(product.category))
     ).slice(0, limit);
+    if (fromCategory.length) return fromCategory;
+
+    const newest = await prisma.product.findMany({
+      where: publicCatalogWhere(),
+      orderBy: [{ createdAt: "desc" }, { lastOdooSyncAt: "desc" }],
+      take: limit * 3,
+      select: productListSelect,
+    });
+    const fromNewest = finalizeCatalogList(
+      newest.map((product) => toStoreProduct(product, { lean: true }))
+    ).slice(0, limit);
+    if (fromNewest.length) return fromNewest;
+    return selectNewArrivalProducts(mockCatalogOrEmpty(), limit);
   } catch {
-    return [];
+    return selectNewArrivalProducts(mockCatalogOrEmpty(), limit);
   }
 }
 

@@ -6,6 +6,14 @@ import { buildSurfboardEnrichment } from "@/lib/ecommerce/surfboardEnrichment";
 import { productImageUrls } from "@/lib/ecommerce/odooProductImages";
 import { cleanProductDisplayName } from "@/lib/ecommerce/productVariants";
 import { shouldExcludeFromWebsiteCatalog } from "@/lib/ecommerce/catalogIdentity";
+import {
+  isNegativeNewInValue,
+  isNewInAttributeName,
+  isNewInPhrase,
+  normalizeAttributeText,
+} from "@/lib/ecommerce/odooCatalogNewIn";
+
+export { isNegativeNewInValue, isNewInAttributeName } from "@/lib/ecommerce/odooCatalogNewIn";
 
 const brandFieldCandidates = [
   "x_studio_marcas",
@@ -294,13 +302,6 @@ function extractVariantAttributesJson(
   return Object.keys(attributes).length ? JSON.stringify(attributes) : null;
 }
 
-function normalizeAttributeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
 function hasOpportunityAttribute(
   ids: number[],
   attributeMap: Map<number, { attribute: string; value: string }>
@@ -313,17 +314,6 @@ function hasOpportunityAttribute(
   });
 }
 
-function isNewInAttributeName(value: string) {
-  const normalized = normalizeAttributeText(value);
-  return (
-    normalized.includes("new in") ||
-    normalized.includes("newin") ||
-    normalized.includes("new arrival") ||
-    normalized.includes("newarrival") ||
-    normalized.includes("novidade")
-  );
-}
-
 /** Match Odoo variant attribute/value tags like "New In", "Newin", "New Arrival", "Novidade(s)". */
 function hasNewInAttribute(
   ids: number[],
@@ -332,15 +322,15 @@ function hasNewInAttribute(
   return ids.some((id) => {
     const item = attributeMap.get(id);
     if (!item) return false;
-    return isNewInAttributeName(`${item.attribute} ${item.value}`);
+    if (isNegativeNewInValue(item.value)) return false;
+    return isNewInAttributeName(item.attribute) || isNewInPhrase(item.value);
   });
 }
 
-/**
- * Odoo "NEW IN" is configured as create_variant=no_variant, so it does not appear on
- * product.product.product_template_attribute_value_ids. Read template attribute lines instead.
- */
-async function fetchNewInTemplateIds(client: OdooClient) {
+export async function fetchNewInTemplateIds(client: OdooClient): Promise<{
+  templateIds: Set<number>;
+  attributeFound: boolean;
+}> {
   const attributes = await client.searchRead(
     "product.attribute",
     [],
@@ -352,7 +342,20 @@ async function fetchNewInTemplateIds(client: OdooClient) {
     .map((row) => Number(row.id))
     .filter((id) => Number.isFinite(id) && id > 0);
 
-  if (!attributeIds.length) return new Set<number>();
+  if (!attributeIds.length) return { templateIds: new Set<number>(), attributeFound: false };
+
+  const valueRows = await client.searchRead(
+    "product.attribute.value",
+    [["attribute_id", "in", attributeIds]],
+    ["id", "name"],
+    { limit: 500, order: "name" }
+  );
+  const negativeValueIds = new Set(
+    valueRows
+      .filter((row) => isNegativeNewInValue(String(row.name || "")))
+      .map((row) => Number(row.id))
+      .filter((id) => Number.isFinite(id) && id > 0)
+  );
 
   const lines: Array<Record<string, unknown>> = [];
   let offset = 0;
@@ -372,12 +375,13 @@ async function fetchNewInTemplateIds(client: OdooClient) {
   for (const line of lines) {
     const templateId = Array.isArray(line.product_tmpl_id) ? Number(line.product_tmpl_id[0]) : 0;
     const valueIds = Array.isArray(line.value_ids) ? line.value_ids.map(Number) : [];
-    // A template line with at least one value means the product is tagged New In (e.g. SIM).
-    if (templateId > 0 && valueIds.length > 0) {
+    const positiveValues = valueIds.filter((id) => Number.isFinite(id) && id > 0 && !negativeValueIds.has(id));
+    // Ignore "Não" / "No" values; a Sim / New In value tags the template.
+    if (templateId > 0 && positiveValues.length > 0) {
       templateIds.add(templateId);
     }
   }
-  return templateIds;
+  return { templateIds, attributeFound: true };
 }
 
 function opportunityAttributeValue(
@@ -497,10 +501,11 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
       )
     )
   );
-  const [attributes, newInTemplateIds] = await Promise.all([
+  const [attributes, newInDiscovery] = await Promise.all([
     variantAttributeMap(client, attributeIds),
     fetchNewInTemplateIds(client),
   ]);
+  const newInTemplateIds = newInDiscovery.templateIds;
 
   const mappedProducts: SyncedOdooProduct[] = products
     .filter((product) => Number.isFinite(Number(product.id)) && Number(product.id) > 0)
@@ -700,7 +705,8 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
 export async function syncNewInFlagsFromOdoo() {
   if (!hasOdooConfig()) return { configured: false as const, turnedOn: 0, turnedOff: 0, newInTemplates: 0 };
   const client = new OdooClient();
-  const newInTemplateIds = Array.from(await fetchNewInTemplateIds(client));
+  const { templateIds, attributeFound } = await fetchNewInTemplateIds(client);
+  const newInTemplateIds = Array.from(templateIds);
 
   const turnedOn = await prisma.product.updateMany({
     where: {
@@ -711,15 +717,18 @@ export async function syncNewInFlagsFromOdoo() {
     data: { isNewIn: true, lastOdooSyncAt: new Date() },
   });
 
-  const turnedOff = await prisma.product.updateMany({
-    where: {
-      isNewIn: true,
-      ...(newInTemplateIds.length
-        ? { OR: [{ odooProductTemplateId: { notIn: newInTemplateIds } }, { odooProductTemplateId: null }] }
-        : {}),
-    },
-    data: { isNewIn: false, lastOdooSyncAt: new Date() },
-  });
+  // If Odoo has no New In attribute at all, keep existing flags rather than wiping them.
+  const turnedOff = attributeFound
+    ? await prisma.product.updateMany({
+        where: {
+          isNewIn: true,
+          ...(newInTemplateIds.length
+            ? { OR: [{ odooProductTemplateId: { notIn: newInTemplateIds } }, { odooProductTemplateId: null }] }
+            : {}),
+        },
+        data: { isNewIn: false, lastOdooSyncAt: new Date() },
+      })
+    : { count: 0 };
 
   return {
     configured: true as const,

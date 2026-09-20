@@ -66,7 +66,7 @@ export function ProductCardsRail({
 
   return (
     <div
-      className={`group relative mt-10 overflow-hidden ${className}`}
+      className={`group relative mt-10 jss-rail ${className}`}
       aria-label={resolvedLabel}
       onPointerEnter={rail.onPointerEnter}
       onPointerLeave={rail.onPointerLeave}
@@ -85,11 +85,11 @@ export function ProductCardsRail({
       )}
       <div
         ref={rail.trackRef}
-        className="flex w-max animate-[marquee_50s_linear_infinite] items-stretch hover:[animation-play-state:paused] group-hover:[animation-play-state:paused]"
+        className="jss-rail-track flex w-max items-stretch"
         style={rail.trackStyle}
       >
         <div className="flex items-stretch">{children}</div>
-        <div className="flex items-stretch" aria-hidden="true">
+        <div className="jss-rail-clone items-stretch" aria-hidden="true">
           {children}
         </div>
       </div>

@@ -64,7 +64,7 @@ async function createUserFromPending(pending: PendingRegistration) {
         }
         return { user: existing, created: false as const };
       }
-      throw new Error("Email or username is already registered.");
+      throw new Error("Este email ou username já está registado.");
     }
     throw error;
   }
@@ -187,7 +187,7 @@ export async function completeRegistrationWithToken(token: string) {
         if (existing?.emailVerifiedAt) {
           return { user: existing, created: false as const };
         }
-        throw new Error("Email or username is already registered.");
+        throw new Error("Este email ou username já está registado.");
       }
       throw error;
     }

@@ -53,6 +53,7 @@ async function main() {
     assert(created, "Google signup creates a new user");
     assert(user.emailVerifiedAt, "Google account is marked verified without a validation email");
     assert(user.googleSub === sub, "Google sub is stored");
+    assert(user.role === "CUSTOMER", "normal Google signup stays a customer");
     assert(
       !(await prisma.emailEvent.findFirst({ where: { userId: user.id, type: "EMAIL_VERIFICATION" } })),
       "Google signup does not record a verification email"
@@ -75,12 +76,31 @@ async function main() {
       data: { phone: "912345678" },
     });
     await assertGoogleUserCanShop(user.id);
+
+    const previousAdminEmails = process.env.ADMIN_EMAILS;
+    const adminEmail = `admin-google-${stamp}@example.com`;
+    process.env.ADMIN_EMAILS = adminEmail;
+    try {
+      const { user: adminUser, created: adminCreated } = await upsertGoogleCustomer({
+        sub: `google-admin-${stamp}`,
+        email: adminEmail,
+        email_verified: true,
+        name: "Admin Google",
+      });
+      assert(adminCreated, "allowlisted Google signup creates a user");
+      assert(adminUser.role === "ADMIN", "allowlisted Google signup is ADMIN");
+    } finally {
+      if (previousAdminEmails == null) delete process.env.ADMIN_EMAILS;
+      else process.env.ADMIN_EMAILS = previousAdminEmails;
+    }
   } finally {
-    const leftover = await prisma.user.findUnique({ where: { email } });
-    if (leftover) {
-      await prisma.emailEvent.deleteMany({ where: { userId: leftover.id } });
-      await prisma.customerProfile.deleteMany({ where: { userId: leftover.id } });
-      await prisma.user.delete({ where: { id: leftover.id } });
+    const leftover = await prisma.user.findMany({
+      where: { email: { in: [email, `admin-google-${stamp}@example.com`] } },
+    });
+    for (const row of leftover) {
+      await prisma.emailEvent.deleteMany({ where: { userId: row.id } });
+      await prisma.customerProfile.deleteMany({ where: { userId: row.id } });
+      await prisma.user.delete({ where: { id: row.id } });
     }
     await prisma.$disconnect();
   }

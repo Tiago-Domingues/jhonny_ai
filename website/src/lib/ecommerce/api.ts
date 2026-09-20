@@ -13,7 +13,7 @@ export function apiError(error: unknown, status = 400) {
     return Response.json(
       {
         error: "validation_error",
-        message: "Please check the submitted fields.",
+        message: "Confirma os campos que enviaste.",
         fields: error.flatten().fieldErrors,
       },
       { status }

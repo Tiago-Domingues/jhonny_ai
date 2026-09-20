@@ -41,9 +41,9 @@ export const ODOO_CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     key: "essentials",
-    labelPt: "Surf Essencials",
-    labelEn: "Surf Essencials",
-    labelZh: "Surf Essencials",
+    labelPt: "Surf Essenciais",
+    labelEn: "Surf Essentials",
+    labelZh: "Surf Essentials",
     // Lifestyle is nested under Surf Essencials in Odoo.
     includes: ["SURF ESSENCIALS", "SURF ESSENTIALS"],
   },
