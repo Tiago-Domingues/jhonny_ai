@@ -22,6 +22,7 @@
     "test:nif": "npx tsx scripts/test-nif-invoice.ts",
     "test:odoo-pos": "npx tsx scripts/test-odoo-pos.ts",
     "test:site-access": "npx tsx scripts/test-site-access.ts",
+    "test:sitemap": "npx tsx scripts/test-sitemap.ts",
     "test:email": "npx tsx scripts/test-email-from.ts",
     "test:shipping": "npx tsx scripts/test-shipping.ts",
     "test:pricing": "npx tsx scripts/test-order-pricing.ts",
