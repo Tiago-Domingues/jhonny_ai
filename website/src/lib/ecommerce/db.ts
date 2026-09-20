@@ -1,5 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import {
+  DatabaseRestrictedError,
+  isDatabaseRestricted,
+  noteDatabaseError,
+} from "@/lib/ecommerce/databaseHealth";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -22,13 +27,32 @@ function createPrismaClient() {
     connectionString.includes("db.prisma.io") ||
     connectionString.includes("prisma.io");
 
-  return new PrismaClient({
+  const client = new PrismaClient({
     adapter: new PrismaPg({
       connectionString,
       ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
     }),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
+
+  // One unpaid Prisma invoice used to fail every query (login, analytics,
+  // sitemap). After the first restriction error, skip further Prisma calls
+  // on this isolate so the shop can keep using Odoo/static fallbacks.
+  return client.$extends({
+    query: {
+      async $allOperations({ args, query }) {
+        if (isDatabaseRestricted()) {
+          throw new DatabaseRestrictedError();
+        }
+        try {
+          return await query(args);
+        } catch (error) {
+          noteDatabaseError(error);
+          throw error;
+        }
+      },
+    },
+  }) as unknown as PrismaClient;
 }
 
 function getPrismaClient() {

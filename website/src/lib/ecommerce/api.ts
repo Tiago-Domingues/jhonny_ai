@@ -1,4 +1,9 @@
 import { ZodError } from "zod";
+import {
+  PUBLIC_DATABASE_UNAVAILABLE_MESSAGE,
+  isDatabaseRestrictionError,
+  noteDatabaseError,
+} from "@/lib/ecommerce/databaseHealth";
 
 export async function readJson(request: Request) {
   try {
@@ -9,6 +14,17 @@ export async function readJson(request: Request) {
 }
 
 export function apiError(error: unknown, status = 400) {
+  if (isDatabaseRestrictionError(error)) {
+    noteDatabaseError(error);
+    return Response.json(
+      {
+        error: "database_unavailable",
+        message: PUBLIC_DATABASE_UNAVAILABLE_MESSAGE,
+      },
+      { status: 503 }
+    );
+  }
+
   if (error instanceof ZodError) {
     return Response.json(
       {
