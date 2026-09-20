@@ -59,6 +59,31 @@ export function padFutureDays(rows: DailyMetrics[], extraDays = 14, todayKey = t
   return fillDailyRange(rows[0].key, endKey, rows);
 }
 
+function hasActivity(row: DailyMetrics) {
+  return row.views > 0 || row.newClients > 0 || row.salesCount > 0 || row.salesCents > 0;
+}
+
+/** Last day on or before today that has views, clients, or sales. */
+export function lastActiveIndex(rows: DailyMetrics[], todayKey = todayLisbonDateKey()) {
+  for (let index = rows.length - 1; index >= 0; index -= 1) {
+    const row = rows[index];
+    if (row.key > todayKey) continue;
+    if (hasActivity(row)) return index;
+  }
+  const todayIndex = rows.findIndex((row) => row.key === todayKey);
+  return todayIndex >= 0 ? todayIndex : Math.max(0, rows.length - 1);
+}
+
+/** True when older history exists but several of the most recent days have no pageviews. */
+export function hasRecentPageviewGap(rows: DailyMetrics[], todayKey = todayLisbonDateKey(), lookback = 7) {
+  const past = rows.filter((row) => row.key <= todayKey);
+  if (past.length < lookback) return false;
+  const recent = past.slice(-lookback);
+  const emptyViews = recent.filter((row) => row.views === 0).length;
+  const olderHasViews = past.slice(0, -lookback).some((row) => row.views > 0);
+  return olderHasViews && emptyViews >= 4;
+}
+
 function mondayOf(key: string) {
   const { utc } = parseDay(key);
   const weekday = new Date(utc).getUTCDay();

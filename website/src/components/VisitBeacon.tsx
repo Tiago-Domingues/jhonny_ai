@@ -39,26 +39,10 @@ export function VisitBeacon() {
       }).catch(() => undefined);
     };
 
-    const sendWithLocation = () => {
-      if (!hasAnalyticsConsent()) return;
-      if (!("geolocation" in navigator)) {
-        send();
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (position) =>
-          send({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-          }),
-        () => send(),
-        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
-      );
-    };
-
-    sendWithLocation();
-    const onConsent = () => sendWithLocation();
+    // Record the view immediately. Waiting on GPS used to drop visits when
+    // the prompt was slow or the database blipped.
+    send();
+    const onConsent = () => send();
     window.addEventListener("jss-consent-saved", onConsent);
     return () => window.removeEventListener("jss-consent-saved", onConsent);
   }, [pathname]);
