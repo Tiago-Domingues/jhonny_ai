@@ -2,51 +2,34 @@ import type { MetadataRoute } from "next";
 import { publicCatalogWhere } from "@/lib/ecommerce/catalog";
 import { isSitePubliclyLaunched } from "@/lib/ecommerce/siteAccess";
 import { hasDatabaseUrl, prisma } from "@/lib/ecommerce/db";
+import {
+  productSitemapEntries,
+  staticSitemapEntries,
+  withSitemapCatalogFallback,
+} from "@/lib/ecommerce/sitemapEntries";
 
-const SITE = "https://www.jhonnysurfstore.pt";
+export const revalidate = 3600;
 
-const STATIC_PATHS = [
-  "",
-  "/loja",
-  "/faq",
-  "/termos",
-  "/privacidade",
-  "/pagamentos-e-envios",
-  "/trocas-e-devolucoes",
-  "/garantia",
-  "/erasmus",
-  "/reportar-fraude",
-  "/calculadora-volume",
-];
+export async function listSitemapProductEntries(): Promise<MetadataRoute.Sitemap> {
+  if (!hasDatabaseUrl()) return [];
+
+  return withSitemapCatalogFallback(async () => {
+    const products = await prisma.product.findMany({
+      where: publicCatalogWhere(),
+      select: { slug: true, updatedAt: true },
+      take: 8000,
+    });
+    return productSitemapEntries(products);
+  }, (error) => {
+    console.error("[sitemap] catalog unavailable; publishing static URLs only", error);
+  });
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!isSitePubliclyLaunched()) {
     return [];
   }
 
-  const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({
-    url: `${SITE}${path || "/"}`,
-    changeFrequency: path === "/loja" ? "hourly" : "weekly",
-    priority: path === "" ? 1 : path === "/loja" ? 0.9 : 0.5,
-  }));
-
-  if (!hasDatabaseUrl()) {
-    return staticEntries;
-  }
-
-  const products = await prisma.product.findMany({
-    where: publicCatalogWhere(),
-    select: { slug: true, updatedAt: true },
-    take: 8000,
-  });
-
-  return [
-    ...staticEntries,
-    ...products.map((product) => ({
-      url: `${SITE}/loja/${product.slug}`,
-      lastModified: product.updatedAt,
-      changeFrequency: "daily" as const,
-      priority: 0.7,
-    })),
-  ];
+  const productEntries = await listSitemapProductEntries();
+  return [...staticSitemapEntries(), ...productEntries];
 }
