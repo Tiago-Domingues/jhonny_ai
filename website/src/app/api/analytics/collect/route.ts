@@ -25,18 +25,23 @@ export async function POST(request: Request) {
     if (wantsGps && !analyticsConsent) {
       return NextResponse.json({ error: "analytics_consent_required" }, { status: 403 });
     }
-    await recordPageView({
-      path: body.path,
-      referrer: body.referrer,
-      country: request.headers.get("x-vercel-ip-country"),
-      region: request.headers.get("x-vercel-ip-country-region"),
-      city: request.headers.get("x-vercel-ip-city"),
-      userAgent: request.headers.get("user-agent"),
-      latitude: analyticsConsent ? body.latitude : null,
-      longitude: analyticsConsent ? body.longitude : null,
-      locationAccuracyM: analyticsConsent ? body.locationAccuracyM : null,
-      locationSource: analyticsConsent && wantsGps ? "gps" : "ip",
-    });
+    try {
+      await recordPageView({
+        path: body.path,
+        referrer: body.referrer,
+        country: request.headers.get("x-vercel-ip-country"),
+        region: request.headers.get("x-vercel-ip-country-region"),
+        city: request.headers.get("x-vercel-ip-city"),
+        userAgent: request.headers.get("user-agent"),
+        latitude: analyticsConsent ? body.latitude : null,
+        longitude: analyticsConsent ? body.longitude : null,
+        locationAccuracyM: analyticsConsent ? body.locationAccuracyM : null,
+        locationSource: analyticsConsent && wantsGps ? "gps" : "ip",
+      });
+    } catch (error) {
+      console.error("analytics_collect_failed", error instanceof Error ? error.message : error);
+      return NextResponse.json({ ok: false }, { status: 200 });
+    }
     return NextResponse.json({
       ok: true,
       country: request.headers.get("x-vercel-ip-country"),

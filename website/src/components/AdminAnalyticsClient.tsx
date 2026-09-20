@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AdminDailyChart } from "@/components/AdminDailyChart";
 import { formatEuro } from "@/lib/ecommerce/money";
-import type { DailyMetrics } from "@/lib/ecommerce/analyticsDaily";
+import { hasRecentPageviewGap, todayLisbonDateKey, type DailyMetrics } from "@/lib/ecommerce/analyticsDaily";
 
 type Bucket = { key: string; count: number };
 type CouponRow = Bucket & {
@@ -177,6 +177,14 @@ export function AdminAnalyticsClient() {
         Cupões e a janela 7/30/90 aplicam-se às tabelas. Vendas totais e o gráfico são desde 1 Jul 2026 / day 0.
         O CSV guarda o gráfico diário, tabelas da janela e visitas recentes.
       </p>
+
+      {summary && hasRecentPageviewGap(summary.byDay, todayLisbonDateKey()) && (
+        <p className="rounded-2xl border border-line bg-white px-5 py-4 text-sm leading-relaxed text-ink">
+          As visitas dos últimos dias não foram gravadas enquanto a base Prisma esteve bloqueada
+          (fatura em atraso). Vendas e clientes novos desses dias continuam no gráfico se existirem.
+          Novas visitas voltam a entrar agora que a base está outra vez ligada.
+        </p>
+      )}
 
       <AdminDailyChart byDay={summary?.byDay || []} />
 

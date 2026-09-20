@@ -1,5 +1,13 @@
 import { profileSchema } from "../src/lib/ecommerce/schemas";
-import { addDaysToKey, bucketDailyMetrics, fillDailyRange, padFutureDays, periodLabel } from "../src/lib/ecommerce/analyticsDaily";
+import {
+  addDaysToKey,
+  bucketDailyMetrics,
+  fillDailyRange,
+  hasRecentPageviewGap,
+  lastActiveIndex,
+  padFutureDays,
+  periodLabel,
+} from "../src/lib/ecommerce/analyticsDaily";
 import { isPaidPlusStatus } from "../src/lib/ecommerce/orderKpis";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -38,6 +46,13 @@ assert(padded.length === 5, "pads two future days after today");
 assert(padded[3].key === "2026-07-04" && padded[3].views === 0, "future days are zero");
 assert(addDaysToKey("2026-07-01", 14) === "2026-07-15", "adds calendar days");
 
+const gapDays = fillDailyRange("2026-09-01", "2026-09-20", [
+  { key: "2026-09-10", views: 40, newClients: 1, salesCount: 1, salesCents: 2000 },
+]);
+assert(lastActiveIndex(gapDays, "2026-09-20") === gapDays.findIndex((row) => row.key === "2026-09-10"), "chart focuses last day with data");
+assert(hasRecentPageviewGap(gapDays, "2026-09-20"), "flags a Prisma-style pageview hole");
+assert(!hasRecentPageviewGap(filled, "2026-07-03"), "short ranges without a hole stay quiet");
+
 const account = readFileSync(resolve(__dirname, "../src/components/AccountClient.tsx"), "utf8");
 assert(account.includes('href="#dados"'), "account nav has My Data");
 assert(account.includes('id="dados"'), "My Data section id exists");
@@ -63,6 +78,7 @@ const chart = readFileSync(resolve(__dirname, "../src/components/AdminDailyChart
 assert(chart.includes("overflow-x-auto"), "chart scrolls inside its card");
 assert(chart.includes("overscroll-x-contain"), "chart scroll does not drag the page");
 assert(chart.includes("hoje"), "chart marks today");
+assert(chart.includes("lastActiveIndex"), "chart opens on the last day with figures");
 
 const analyticsClient = readFileSync(resolve(__dirname, "../src/components/AdminAnalyticsClient.tsx"), "utf8");
 assert(analyticsClient.includes("/api/admin/analytics/export.csv"), "analytics has CSV export");

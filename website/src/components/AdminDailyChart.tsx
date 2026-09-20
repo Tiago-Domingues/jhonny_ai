@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   bucketDailyMetrics,
+  lastActiveIndex,
   padFutureDays,
   periodLabel,
   todayLisbonDateKey,
@@ -15,7 +16,7 @@ const HEIGHT = 220;
 const COL_WIDTH = 36;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 28;
-const FUTURE_DAYS = 14;
+const FUTURE_DAYS = 3;
 
 export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
   const [bucket, setBucket] = useState<ChartBucket>("day");
@@ -35,17 +36,21 @@ export function AdminDailyChart({ byDay }: { byDay: DailyMetrics[] }) {
     });
     return index >= 0 ? index : Math.max(0, rows.length - 1);
   }, [bucket, rows, todayKey]);
+  const focusIndex = useMemo(
+    () => (bucket === "day" ? lastActiveIndex(rows, todayKey) : todayIndex),
+    [bucket, rows, todayIndex, todayKey]
+  );
 
   useEffect(() => {
-    setSelected(todayIndex);
+    setSelected(focusIndex);
     const node = scroller.current;
     const id = window.requestAnimationFrame(() => {
       if (!node) return;
-      const todayX = todayIndex * COL_WIDTH;
-      node.scrollLeft = Math.max(0, todayX - node.clientWidth * 0.65);
+      const focusX = focusIndex * COL_WIDTH;
+      node.scrollLeft = Math.max(0, focusX - node.clientWidth * 0.55);
     });
     return () => window.cancelAnimationFrame(id);
-  }, [bucket, todayIndex, rows.length]);
+  }, [bucket, focusIndex, rows.length]);
 
   const maxes = useMemo(
     () => ({

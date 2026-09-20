@@ -4,6 +4,8 @@ import { apiError, unavailableError } from "@/lib/ecommerce/api";
 import { requireAdminSession } from "@/lib/ecommerce/admin";
 import { getAnalyticsSummary } from "@/lib/ecommerce/analytics";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   if (!hasDatabaseUrl()) return unavailableError();
   const session = await requireAdminSession();

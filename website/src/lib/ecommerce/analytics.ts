@@ -89,9 +89,32 @@ export async function getAnalyticsSummary(days = 90) {
   const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
   const chartSince = new Date(`${ANALYTICS_CHART_START}T00:00:00+01:00`);
 
-  const [views, coupons, allTimeSales, viewDays, userDays, saleDays] = await Promise.all([
+  const viewWhere = { createdAt: { gte: since } };
+  const [totalViews, countryGroups, cityGroups, pathGroups, sourceGroups, recentViews, coupons, allTimeSales, viewDays, userDays, saleDays] =
+    await Promise.all([
+    prisma.pageView.count({ where: viewWhere }),
+    prisma.pageView.groupBy({
+      by: ["country"],
+      where: viewWhere,
+      _count: { _all: true },
+    }),
+    prisma.pageView.groupBy({
+      by: ["city", "country"],
+      where: viewWhere,
+      _count: { _all: true },
+    }),
+    prisma.pageView.groupBy({
+      by: ["path"],
+      where: viewWhere,
+      _count: { _all: true },
+    }),
+    prisma.pageView.groupBy({
+      by: ["locationSource"],
+      where: viewWhere,
+      _count: { _all: true },
+    }),
     prisma.pageView.findMany({
-      where: { createdAt: { gte: since } },
+      where: viewWhere,
       select: {
         path: true,
         country: true,
@@ -101,7 +124,7 @@ export async function getAnalyticsSummary(days = 90) {
         locationSource: true,
       },
       orderBy: { createdAt: "desc" },
-      take: 5000,
+      take: 25,
     }),
     getCouponUsageSummary(windowDays),
     prisma.order.aggregate({
@@ -128,15 +151,19 @@ export async function getAnalyticsSummary(days = 90) {
   const byCity = new Map<string, number>();
   const byLocationSource = new Map<string, number>();
 
-  for (const view of views) {
-    const country = view.country || "Unknown";
-    const path = view.path || "/";
-    const city = view.city && view.country ? `${view.city}, ${view.country}` : view.city || country;
-    byCountry.set(country, (byCountry.get(country) || 0) + 1);
-    byPath.set(path, (byPath.get(path) || 0) + 1);
-    byCity.set(city, (byCity.get(city) || 0) + 1);
-    const source = view.locationSource || "ip";
-    byLocationSource.set(source, (byLocationSource.get(source) || 0) + 1);
+  for (const row of countryGroups) {
+    byCountry.set(row.country || "Unknown", row._count._all);
+  }
+  for (const row of pathGroups) {
+    byPath.set(row.path || "/", row._count._all);
+  }
+  for (const row of cityGroups) {
+    const city =
+      row.city && row.country ? `${row.city}, ${row.country}` : row.city || row.country || "Unknown";
+    byCity.set(city, (byCity.get(city) || 0) + row._count._all);
+  }
+  for (const row of sourceGroups) {
+    byLocationSource.set(row.locationSource || "ip", row._count._all);
   }
 
   const sortCount = (map: Map<string, number>) =>
@@ -168,7 +195,7 @@ export async function getAnalyticsSummary(days = 90) {
 
   return {
     days: windowDays,
-    totalViews: views.length,
+    totalViews,
     uniqueCountries: byCountry.size,
     allTimeSalesCents: allTimeSales._sum.totalCents || 0,
     allTimeOrderCount: allTimeSales._count || 0,
@@ -186,7 +213,7 @@ export async function getAnalyticsSummary(days = 90) {
       discountCents: coupon.discountCents,
       lastUsed: coupon.lastUsed.toISOString(),
     })),
-    recent: views.slice(0, 25).map((view) => ({
+    recent: recentViews.map((view) => ({
       path: view.path,
       country: view.country,
       city: view.city,
