@@ -22,9 +22,11 @@ function NewArrivalCard({ product }: { product: StoreProduct }) {
           sizes="320px"
           className="media-vivid object-contain p-4 transition duration-500 group-hover:scale-105"
         />
-        <span className="absolute right-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-white shadow-sm">
-          <UiText k="newBadge" />
-        </span>
+        {product.isNewIn ? (
+          <span className="absolute right-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-white shadow-sm">
+            <UiText k="newBadge" />
+          </span>
+        ) : null}
       </div>
       <div className="flex flex-1 flex-col p-5">
         <p className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-muted">

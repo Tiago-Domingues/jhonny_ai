@@ -4,20 +4,36 @@ type NewInCandidate = {
   createdAt?: string | null;
 };
 
-/** Match Odoo category paths like "New Arrivals", "Novidades", etc. */
-export function isNewArrivalsCategory(category: string) {
-  const normalized = category
+function normalizeCategorySegment(value: string) {
+  return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .toUpperCase();
-  return (
-    normalized.includes("NEW ARRIVAL") ||
-    normalized.includes("NEWARRIVAL") ||
-    normalized.includes("NOVIDADE") ||
-    normalized.includes("NOVOS PRODUTOS") ||
-    normalized.includes("NEW IN") ||
-    normalized.includes("LANCAMENTO")
-  );
+    .toUpperCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Match whole category path segments like "New In" or "Novidades", not "New Inventory". */
+export function isNewArrivalsCategory(category: string) {
+  const segments = category.split(/[/|>]+/).map(normalizeCategorySegment).filter(Boolean);
+  return segments.some((segment) => {
+    if (
+      segment === "NEW IN" ||
+      segment === "NEW ARRIVAL" ||
+      segment === "NEW ARRIVALS" ||
+      segment === "NEWARRIVAL" ||
+      segment === "NEWARRIVALS" ||
+      segment === "NOVIDADE" ||
+      segment === "NOVIDADES"
+    ) {
+      return true;
+    }
+    return (
+      segment.includes("NOVIDADE") ||
+      segment.includes("NOVOS PRODUTOS") ||
+      segment.includes("LANCAMENTO")
+    );
+  });
 }
 
 function createdAtMs(product: { createdAt?: string | null }) {

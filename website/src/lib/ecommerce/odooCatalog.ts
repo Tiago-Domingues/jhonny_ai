@@ -9,6 +9,7 @@ import { shouldExcludeFromWebsiteCatalog } from "@/lib/ecommerce/catalogIdentity
 import {
   isNegativeNewInValue,
   isNewInAttributeName,
+  isNewInPhrase,
   normalizeAttributeText,
 } from "@/lib/ecommerce/odooCatalogNewIn";
 
@@ -322,15 +323,14 @@ function hasNewInAttribute(
     const item = attributeMap.get(id);
     if (!item) return false;
     if (isNegativeNewInValue(item.value)) return false;
-    return isNewInAttributeName(item.attribute) || isNewInAttributeName(`${item.attribute} ${item.value}`);
+    return isNewInAttributeName(item.attribute) || isNewInPhrase(item.value);
   });
 }
 
-/**
- * Odoo "NEW IN" is configured as create_variant=no_variant, so it does not appear on
- * product.product.product_template_attribute_value_ids. Read template attribute lines instead.
- */
-async function fetchNewInTemplateIds(client: OdooClient) {
+export async function fetchNewInTemplateIds(client: OdooClient): Promise<{
+  templateIds: Set<number>;
+  attributeFound: boolean;
+}> {
   const attributes = await client.searchRead(
     "product.attribute",
     [],
@@ -342,7 +342,7 @@ async function fetchNewInTemplateIds(client: OdooClient) {
     .map((row) => Number(row.id))
     .filter((id) => Number.isFinite(id) && id > 0);
 
-  if (!attributeIds.length) return new Set<number>();
+  if (!attributeIds.length) return { templateIds: new Set<number>(), attributeFound: false };
 
   const valueRows = await client.searchRead(
     "product.attribute.value",
@@ -381,7 +381,7 @@ async function fetchNewInTemplateIds(client: OdooClient) {
       templateIds.add(templateId);
     }
   }
-  return templateIds;
+  return { templateIds, attributeFound: true };
 }
 
 function opportunityAttributeValue(
@@ -501,10 +501,11 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
       )
     )
   );
-  const [attributes, newInTemplateIds] = await Promise.all([
+  const [attributes, newInDiscovery] = await Promise.all([
     variantAttributeMap(client, attributeIds),
     fetchNewInTemplateIds(client),
   ]);
+  const newInTemplateIds = newInDiscovery.templateIds;
 
   const mappedProducts: SyncedOdooProduct[] = products
     .filter((product) => Number.isFinite(Number(product.id)) && Number(product.id) > 0)
@@ -704,7 +705,8 @@ export async function fetchOdooProducts(options: FetchOdooProductsOptions | numb
 export async function syncNewInFlagsFromOdoo() {
   if (!hasOdooConfig()) return { configured: false as const, turnedOn: 0, turnedOff: 0, newInTemplates: 0 };
   const client = new OdooClient();
-  const newInTemplateIds = Array.from(await fetchNewInTemplateIds(client));
+  const { templateIds, attributeFound } = await fetchNewInTemplateIds(client);
+  const newInTemplateIds = Array.from(templateIds);
 
   const turnedOn = await prisma.product.updateMany({
     where: {
@@ -715,15 +717,18 @@ export async function syncNewInFlagsFromOdoo() {
     data: { isNewIn: true, lastOdooSyncAt: new Date() },
   });
 
-  const turnedOff = await prisma.product.updateMany({
-    where: {
-      isNewIn: true,
-      ...(newInTemplateIds.length
-        ? { OR: [{ odooProductTemplateId: { notIn: newInTemplateIds } }, { odooProductTemplateId: null }] }
-        : {}),
-    },
-    data: { isNewIn: false, lastOdooSyncAt: new Date() },
-  });
+  // If Odoo has no New In attribute at all, keep existing flags rather than wiping them.
+  const turnedOff = attributeFound
+    ? await prisma.product.updateMany({
+        where: {
+          isNewIn: true,
+          ...(newInTemplateIds.length
+            ? { OR: [{ odooProductTemplateId: { notIn: newInTemplateIds } }, { odooProductTemplateId: null }] }
+            : {}),
+        },
+        data: { isNewIn: false, lastOdooSyncAt: new Date() },
+      })
+    : { count: 0 };
 
   return {
     configured: true as const,

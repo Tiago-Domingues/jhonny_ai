@@ -242,7 +242,7 @@ function orderHtml(
         `<li>${item.quantity} x ${escapeHtml(item.name)} - ${formatEuro(item.totalCents)}</li>`
     )
     .join("");
-  const isPickup = order.fulfillmentMethod === "PICKUP_IN_STORE";
+  const isPickup = order.fulfillmentMethod !== "SHIP_TO_ADDRESS";
   const shippingCity =
     order.shippingAddressJson && typeof order.shippingAddressJson === "object"
       ? String((order.shippingAddressJson as { city?: unknown }).city || "").trim()
@@ -407,7 +407,7 @@ export async function sendAbandonedCartEmail(input: {
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
       <h1>${copy.heading}</h1>
-      <p>${copy.greeting} ${escapeHtml(input.fullName || "Legend")},</p>
+      <p>${copy.greeting} ${escapeHtml(input.fullName || (locale.startsWith("pt") ? "Lenda" : locale.startsWith("zh") ? "传奇" : "Legend"))},</p>
       <p>${copy.intro}</p>
       <ul>${itemRows}</ul>
       <p><strong>${copy.total}: ${escapeHtml(formatEuro(input.totalCents))}</strong></p>

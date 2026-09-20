@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { isNewArrivalsCategory, selectNewArrivalProducts } from "../src/lib/ecommerce/catalogNewIn";
-import { isNewInAttributeName, isNegativeNewInValue } from "../src/lib/ecommerce/odooCatalogNewIn";
+import { isNewInAttributeName, isNewInPhrase, isNegativeNewInValue } from "../src/lib/ecommerce/odooCatalogNewIn";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
@@ -27,6 +27,8 @@ function main() {
   assert(fromCategory[0]?.id === "cat", "New In category wins when no tags");
   assert(isNewArrivalsCategory("New In"), "New In category matches");
   assert(isNewArrivalsCategory("Novidades"), "Novidades category matches");
+  assert(isNewArrivalsCategory("SURFBOARDS / NEW IN"), "New In path segment matches");
+  assert(!isNewArrivalsCategory("SURFBOARDS / NEW INVENTORY"), "New Inventory is not New In");
 
   const fromNewest = selectNewArrivalProducts([older, newest], 8);
   assert(fromNewest[0]?.id === "newest", "empty tags and categories fall back to newest createdAt");
@@ -35,6 +37,9 @@ function main() {
   assert(isNewInAttributeName("NEW IN"), "NEW IN attribute name matches");
   assert(isNewInAttributeName("Novidades"), "Novidades attribute name matches");
   assert(isNewInAttributeName("New Arrival"), "New Arrival attribute name matches");
+  assert(isNewInAttributeName("Novo"), "dedicated Novo attribute still matches");
+  assert(!isNewInPhrase("New"), "a lone New value is not a New In phrase");
+  assert(!isNewInPhrase("Navy"), "Navy is not New In");
   assert(isNegativeNewInValue("Não"), "Não is not a New In tag");
   assert(isNegativeNewInValue("No"), "No is not a New In tag");
   assert(!isNegativeNewInValue("Sim"), "Sim stays a New In value");
