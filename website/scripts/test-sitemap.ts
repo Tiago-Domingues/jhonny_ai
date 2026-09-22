@@ -27,8 +27,8 @@ async function main() {
 
   const staticOnly = staticSitemapEntries();
   const urls = staticOnly.map((entry) => entry.url);
-  assert(urls.includes("https://www.jhonnysurfstore.pt/"), "live sitemap includes the homepage");
-  assert(urls.includes("https://www.jhonnysurfstore.pt/loja"), "live sitemap includes the shop");
+  assert(urls.includes("https://www.jhonnysurfstore.com/"), "live sitemap includes the homepage");
+  assert(urls.includes("https://www.jhonnysurfstore.com/loja"), "live sitemap includes the shop");
   assert(
     staticOnly.every((entry) => !String(entry.url).includes("/loja/")),
     "static sitemap entries stay on marketing pages"
@@ -37,7 +37,7 @@ async function main() {
   const products = productSitemapEntries([
     { slug: "jss-tee", updatedAt: new Date("2026-09-01T00:00:00.000Z") },
   ]);
-  assert(products[0]?.url === "https://www.jhonnysurfstore.pt/loja/jss-tee", "product URLs use the shop slug");
+  assert(products[0]?.url === "https://www.jhonnysurfstore.com/loja/jss-tee", "product URLs use the shop slug");
 
   const recovered = await withSitemapCatalogFallback(async () => {
     throw new Error("unpaidPlanInvoice");

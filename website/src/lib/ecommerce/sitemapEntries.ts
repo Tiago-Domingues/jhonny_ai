@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
-export const SITEMAP_SITE = "https://www.jhonnysurfstore.pt";
+/** Canonical public host. Prefer .com — .pt DNS is not always registered. */
+export const SITEMAP_SITE = "https://www.jhonnysurfstore.com";
 
 export const SITEMAP_STATIC_PATHS = [
   "",
