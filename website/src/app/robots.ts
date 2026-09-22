@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { isSitePubliclyLaunched } from "@/lib/ecommerce/siteAccess";
 
-const SITE = "https://www.jhonnysurfstore.pt";
+const SITE = "https://www.jhonnysurfstore.com";
 
 export default function robots(): MetadataRoute.Robots {
   if (!isSitePubliclyLaunched()) {
