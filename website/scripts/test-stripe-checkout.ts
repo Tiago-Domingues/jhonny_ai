@@ -2,6 +2,7 @@ import {
   buildVerifyEmailUrl,
   isAllowedCheckoutOrigin,
   originFromRequest,
+  publicSiteOrigin,
   resolveCheckoutOrigin,
   stripeLineItems,
   stripeLineItemsTotalCents,
@@ -32,6 +33,7 @@ assert(isAllowedCheckoutOrigin("https://www.jhonnysurfstore.com"), ".com origin 
 assert(isAllowedCheckoutOrigin("https://jhonnysurfstore.pt"), ".pt origin should be allowed");
 assert(isAllowedCheckoutOrigin("http://localhost:3000"), "localhost origin should be allowed");
 assert(!isAllowedCheckoutOrigin("https://evil.example"), "unknown origin should be rejected");
+assert(publicSiteOrigin() === "https://www.jhonnysurfstore.pt", "default public origin is .pt");
 assert(
   resolveCheckoutOrigin("https://evil.example", "https://www.jhonnysurfstore.com") ===
     "https://www.jhonnysurfstore.com",

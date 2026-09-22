@@ -14,7 +14,7 @@ const ALLOWED_HOSTS = [
 export function publicSiteOrigin() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim();
   if (configured) return configured.replace(/\/$/, "");
-  return "https://www.jhonnysurfstore.com";
+  return "https://www.jhonnysurfstore.pt";
 }
 
 export function isAllowedCheckoutOrigin(origin: string) {

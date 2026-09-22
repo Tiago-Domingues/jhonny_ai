@@ -72,6 +72,9 @@ jobs:
           echo "::error::vercel pull failed after retries."
           exit 1
 
+      - name: Ensure .com and .pt domains on the Vercel project
+        run: node scripts/ensure-vercel-domains.mjs
+
       - name: Apply database schema
         run: |
           set -a
