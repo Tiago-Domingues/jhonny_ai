@@ -35,7 +35,7 @@ const notoSansSC = Noto_Sans_SC({
 
 // deploy-bump: brand logos open /loja?brand= after PR #154
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.jhonnysurfstore.com"),
+  metadataBase: new URL("https://www.jhonnysurfstore.pt"),
   title: {
     default: "Jhonny Surf Store — Surf Shop in Carcavelos, Lisboa",
     template: "%s | Jhonny Surf Store",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     title: "Jhonny Surf Store — Surf Shop in Carcavelos, Lisboa",
     description:
       "Community surf shop in Parede / Carcavelos. Surfboards, wetsuits, surfskate, repairs, buy-back and expert advice.",
-    url: "https://www.jhonnysurfstore.com",
+    url: "https://www.jhonnysurfstore.pt",
     siteName: "Jhonny Surf Store",
     locale: "en_US",
     type: "website",

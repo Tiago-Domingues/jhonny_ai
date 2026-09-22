@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
-/** Canonical public host. Prefer .com — .pt DNS is not always registered. */
-export const SITEMAP_SITE = "https://www.jhonnysurfstore.com";
+/** Canonical public host (Portuguese shop). .com stays a full alias on Vercel. */
+export const SITEMAP_SITE = "https://www.jhonnysurfstore.pt";
 
 export const SITEMAP_STATIC_PATHS = [
   "",
