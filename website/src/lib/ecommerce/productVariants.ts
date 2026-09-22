@@ -85,6 +85,10 @@ export function pickRepresentativeVariant(variants: StoreProduct[]) {
   })[0]!;
 }
 
+/** Wrappers that only hold whitespace / list punctuation after a color/size strip. */
+const EMPTYISH_WRAPPER =
+  "[,;|/·•*\\s\\-–—]*";
+
 /**
  * Drop leftover empty wrappers and trailing punctuation after variant
  * attributes (color/size) are removed from an Odoo title.
@@ -96,11 +100,18 @@ export function cleanProductDisplayName(name: string) {
   while (title && title !== previous) {
     previous = title;
     title = title
-      .replace(/\(\s*\)/g, " ")
-      .replace(/\[\s*\]/g, " ")
-      .replace(/\{\s*\}/g, " ")
-      .replace(/（\s*）/g, " ")
-      .replace(/【\s*】/g, " ")
+      // `(,)` / `( , )` / `()` left when multi-value colors are stripped mid-paren
+      .replace(new RegExp(`\\(${EMPTYISH_WRAPPER}\\)`, "g"), " ")
+      .replace(new RegExp(`\\[${EMPTYISH_WRAPPER}\\]`, "g"), " ")
+      .replace(new RegExp(`\\{${EMPTYISH_WRAPPER}\\}`, "g"), " ")
+      .replace(new RegExp(`（${EMPTYISH_WRAPPER}）`, "g"), " ")
+      .replace(new RegExp(`【${EMPTYISH_WRAPPER}】`, "g"), " ")
+      // Odoo titles that end with an unmatched open wrapper after a strip
+      .replace(/\(\s*$/g, "")
+      .replace(/\[\s*$/g, "")
+      .replace(/\{\s*$/g, "")
+      .replace(/（\s*$/g, "")
+      .replace(/【\s*$/g, "")
       .replace(/[/|\\]+\s*$/g, "")
       .replace(/[-–—,;:·•*]+\s*$/g, "")
       .replace(/\.+$/g, "")

@@ -71,11 +71,33 @@ if (emptyParenName !== "TOTE PACK PATAGONIA TERRAVIA") {
   throw new Error(`Empty parens should be stripped, got: ${emptyParenName}`);
 }
 
+const commaParenName = cleanProductDisplayName("SANDALS M TEVA WINSTED (,)");
+if (commaParenName !== "SANDALS M TEVA WINSTED") {
+  throw new Error(`Punctuation-only parens should be stripped, got: ${commaParenName}`);
+}
+
+const trailingOpenName = cleanProductDisplayName("ONEILL THERMO-X VEST W/NEO HOOD BLK (");
+if (trailingOpenName !== "ONEILL THERMO-X VEST W/NEO HOOD BLK") {
+  throw new Error(`Trailing open paren should be stripped, got: ${trailingOpenName}`);
+}
+
+const tevaVariants = [
+  { ...variant("s1", 9003, "SANDALS M TEVA WINSTED (Black, White)", "Black", 6500, 1), refId: "TEVA-WIN" },
+  { ...variant("s2", 9003, "SANDALS M TEVA WINSTED (Black, White)", "White", 6500, 1), refId: "TEVA-WIN" },
+];
+const strippedMidParen = deriveTemplateDisplayName(tevaVariants);
+if (strippedMidParen !== "SANDALS M TEVA WINSTED") {
+  throw new Error(`Multi-color strip should not leave (,): got ${strippedMidParen}`);
+}
+
 if (cleanProductDisplayName("Board 8'2") !== "Board 8'2") {
   throw new Error("surfboard length must stay intact");
 }
 if (cleanProductDisplayName("Wax (Tropical)") !== "Wax (Tropical)") {
   throw new Error("meaningful parentheticals must stay");
+}
+if (cleanProductDisplayName("DECK OCEAN & EARTH COR X SHORTBOARD 3 PIECE (") !== "DECK OCEAN & EARTH COR X SHORTBOARD 3 PIECE") {
+  throw new Error("opportunity-style trailing open paren should be stripped");
 }
 if (cleanProductDisplayName("NAME -") !== "NAME") {
   throw new Error("trailing dash should be stripped");
