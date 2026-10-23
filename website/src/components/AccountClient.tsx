@@ -149,25 +149,37 @@ export function AccountClient() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
-    const response = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...payload,
-        marketingOptIn: form.get("marketingOptIn") === "on",
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) {
+    try {
+      const response = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          marketingOptIn: form.get("marketingOptIn") === "on",
+        }),
+      });
+      const data = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        user?: SessionUser;
+        fields?: Record<string, string[] | undefined>;
+      };
+      if (!response.ok) {
+        const fieldMessages = Object.values(data.fields || {})
+          .flat()
+          .filter((value): value is string => Boolean(value));
+        setMessageTone("error");
+        setMessage(fieldMessages.join(" ") || data.message || copy.submitFailed);
+        return;
+      }
+      setUser(data.user ?? null);
+      setMessageTone("success");
+      setMessage(copy.ready);
+      window.dispatchEvent(new Event("jss-auth-updated"));
+      window.dispatchEvent(new Event("jss-cart-updated"));
+    } catch {
       setMessageTone("error");
-      setMessage(data.message || copy.submitFailed);
-      return;
+      setMessage(copy.submitFailed);
     }
-    setUser(data.user);
-    setMessageTone("success");
-    setMessage(copy.ready);
-    window.dispatchEvent(new Event("jss-auth-updated"));
-    window.dispatchEvent(new Event("jss-cart-updated"));
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
@@ -624,9 +636,11 @@ export function AccountClient() {
               {copy.or}
               <span className="h-px flex-1 bg-line" />
             </div>
-            <input name="username" required placeholder={copy.username} className={fieldClass} />
+            <input name="username" required minLength={3} maxLength={120} placeholder={copy.username} className={fieldClass} />
+            <p className="-mt-2 text-xs leading-relaxed text-muted">{copy.usernameHint}</p>
             <input name="email" required type="email" placeholder="Email" className={fieldClass} />
             <input name="password" required type="password" placeholder={copy.password} minLength={8} className={fieldClass} />
+            <p className="-mt-2 text-xs leading-relaxed text-muted">{copy.passwordHint}</p>
             <label className="flex items-start gap-3 text-sm text-muted">
               <input
                 name="marketingOptIn"

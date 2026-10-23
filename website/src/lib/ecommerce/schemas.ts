@@ -25,10 +25,47 @@ export const genders = [
   "OTHER",
 ] as const;
 
+export const USERNAME_RULE = /^[a-zA-Z0-9_.-]{3,40}$/;
+
+export const USERNAME_RULE_MESSAGE =
+  "O username só pode ter letras, números, ponto, _ e -. Usa entre 3 e 40 caracteres.";
+
+export const PASSWORD_RULE_MESSAGE = "A password precisa de pelo menos 8 caracteres.";
+
+export const EMAIL_RULE_MESSAGE = "Este email não parece válido.";
+
+/** Turn an email typed into the username box into the part before @. */
+export function signupUsernameCandidate(raw: string) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed.includes("@")) return trimmed;
+  const local = trimmed.slice(0, trimmed.lastIndexOf("@"));
+  let cleaned = local.replace(/[^a-zA-Z0-9_.-]+/g, "").replace(/^[._-]+|[._-]+$/g, "").slice(0, 32);
+  if (cleaned.length < 3) {
+    cleaned = `${cleaned}surfer`.replace(/^[^a-zA-Z0-9]+/, "").slice(0, 32);
+  }
+  if (!USERNAME_RULE.test(cleaned)) return "surfer";
+  return cleaned;
+}
+
+export function isEmailShapedUsername(raw: string) {
+  return String(raw || "").trim().includes("@");
+}
+
+const signupUsernameSchema = z
+  .string()
+  .trim()
+  .min(3, USERNAME_RULE_MESSAGE)
+  .max(40, USERNAME_RULE_MESSAGE)
+  .regex(/^[a-zA-Z0-9_.-]+$/, USERNAME_RULE_MESSAGE);
+
+const signupPasswordSchema = z.string().min(8, PASSWORD_RULE_MESSAGE).max(128, PASSWORD_RULE_MESSAGE);
+
+const signupEmailSchema = z.string().email(EMAIL_RULE_MESSAGE);
+
 export const registerSchema = z.object({
-  email: z.string().email(),
-  username: z.string().min(3).max(40).regex(/^[a-zA-Z0-9_.-]+$/),
-  password: z.string().min(8).max(128),
+  email: signupEmailSchema,
+  username: signupUsernameSchema,
+  password: signupPasswordSchema,
   fullName: z.string().min(2).max(120),
   phoneCountryCode: z.string().min(2).max(8).default("+351"),
   phone: z.string().max(40).optional().or(z.literal("")),
@@ -40,9 +77,9 @@ export const registerSchema = z.object({
 
 /** First step of signup: credentials only. Profile is filled after the account exists. */
 export const pendingRegisterSchema = z.object({
-  email: z.string().email(),
-  username: z.string().min(3).max(40).regex(/^[a-zA-Z0-9_.-]+$/),
-  password: z.string().min(8).max(128),
+  email: signupEmailSchema,
+  username: signupUsernameSchema,
+  password: signupPasswordSchema,
   marketingOptIn: z.boolean().default(true),
 });
 

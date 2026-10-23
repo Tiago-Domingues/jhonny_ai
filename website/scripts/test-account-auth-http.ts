@@ -1,5 +1,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import {
+  EMAIL_RULE_MESSAGE,
+  PASSWORD_RULE_MESSAGE,
+  USERNAME_RULE_MESSAGE,
+  pendingRegisterSchema,
+  signupUsernameCandidate,
+} from "../src/lib/ecommerce/schemas";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
@@ -20,6 +27,49 @@ async function main() {
   const session = readFileSync(path.resolve(__dirname, "../src/lib/ecommerce/session.ts"), "utf8");
   assert(session.includes("sessionRoleForEmail"), "session treats the allowlist as admin");
   assert(session.includes("admin_promote_failed"), "a failed role write does not drop the session");
+  assert(register.includes("register_cart_merge_failed"), "register still signs in if the cart merge fails");
+  assert(login.includes("login_cart_merge_failed"), "login still signs in if the cart merge fails");
+  assert(auth.includes("signupUsernameCandidate"), "email typed as a username becomes the local part");
+  assert(signupUsernameCandidate("ana.silva@example.com") === "ana.silva", "email username uses the local part");
+  assert(signupUsernameCandidate("a@example.com") === "asurfer", "short local parts stay usable");
+  assert(signupUsernameCandidate("ana.silva") === "ana.silva", "plain usernames stay as typed");
+  assert(
+    pendingRegisterSchema.safeParse({
+      email: "ana@example.com",
+      username: signupUsernameCandidate("ana@example.com"),
+      password: "surflegend",
+    }).success,
+    "derived username passes signup validation"
+  );
+  const spaced = pendingRegisterSchema.safeParse({
+    email: "ana@example.com",
+    username: "ana silva",
+    password: "surflegend",
+  });
+  assert(!spaced.success, "spaces in a username are rejected");
+  const spacedMessage = spaced.success ? "" : spaced.error.issues.map((issue) => issue.message).join(" ");
+  assert(spacedMessage.includes(USERNAME_RULE_MESSAGE), "username error explains the rule");
+  const shortPassword = pendingRegisterSchema.safeParse({
+    email: "ana@example.com",
+    username: "ana.silva",
+    password: "short",
+  });
+  assert(!shortPassword.success, "short passwords are rejected");
+  const passwordMessage = shortPassword.success ? "" : shortPassword.error.issues.map((issue) => issue.message).join(" ");
+  assert(passwordMessage.includes(PASSWORD_RULE_MESSAGE), "password error explains the minimum");
+  const badEmail = pendingRegisterSchema.safeParse({
+    email: "not-an-email",
+    username: "ana.silva",
+    password: "surflegend",
+  });
+  assert(!badEmail.success, "bad emails are rejected");
+  const emailMessage = badEmail.success ? "" : badEmail.error.issues.map((issue) => issue.message).join(" ");
+  assert(emailMessage.includes(EMAIL_RULE_MESSAGE), "email error explains the address");
+
+  const account = readFileSync(path.resolve(__dirname, "../src/components/AccountClient.tsx"), "utf8");
+  assert(account.includes("data.fields"), "signup form shows field errors");
+  assert(account.includes("usernameHint"), "signup form explains the username rule");
+  assert(account.includes("copy.submitFailed"), "network failures show the request message");
 
   const base = (process.env.LAUNCH_TEST_BASE_URL || process.env.AUTH_TEST_BASE_URL || "").replace(/\/$/, "");
   if (!base) {
