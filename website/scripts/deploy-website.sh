@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Deploy website/ to Vercel production using VERCEL_TOKEN.
 # Used by cloud agents and local ops when GitHub→Vercel git auto-deploy is offline.
+# Pushes to main that change website/ also deploy through .github/workflows/deploy-website.yml.
 set -euo pipefail
 
 WEB="$(cd "$(dirname "$0")/.." && pwd)"
