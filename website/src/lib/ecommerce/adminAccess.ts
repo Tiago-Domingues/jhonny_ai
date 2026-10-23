@@ -5,6 +5,19 @@ export function defaultAdminEmails() {
   return [PRIMARY_ADMIN_EMAIL];
 }
 
+/** Allowlisted shop emails are admins even if the stored role is still CUSTOMER. */
+export function sessionRoleForEmail(
+  email: string,
+  storedRole: "CUSTOMER" | "ADMIN",
+  allowlist: Iterable<string> = defaultAdminEmails()
+): "CUSTOMER" | "ADMIN" {
+  const normalized = email.trim().toLowerCase();
+  for (const entry of allowlist) {
+    if (entry.trim().toLowerCase() === normalized) return "ADMIN";
+  }
+  return storedRole;
+}
+
 export function canAdminRemoveCustomer(input: {
   actorId: string;
   targetId: string;

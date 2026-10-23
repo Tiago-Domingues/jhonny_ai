@@ -14,6 +14,13 @@ async function main() {
   assert(login.includes("loginCustomer"), "login uses credentials");
   assert(login.includes("setSessionCookie"), "login lands in a session");
 
+  const auth = readFileSync(path.resolve(__dirname, "../src/lib/ecommerce/auth.ts"), "utf8");
+  assert(auth.includes("ensureAdminRoleForEmail"), "password login promotes allowlisted admins");
+  assert(auth.includes("Esta conta entra com Google"), "google-only accounts get a clear login error");
+  const session = readFileSync(path.resolve(__dirname, "../src/lib/ecommerce/session.ts"), "utf8");
+  assert(session.includes("sessionRoleForEmail"), "session treats the allowlist as admin");
+  assert(session.includes("admin_promote_failed"), "a failed role write does not drop the session");
+
   const base = (process.env.LAUNCH_TEST_BASE_URL || process.env.AUTH_TEST_BASE_URL || "").replace(/\/$/, "");
   if (!base) {
     console.log("account auth HTTP skipped (set LAUNCH_TEST_BASE_URL to exercise register/login live)");

@@ -36,8 +36,10 @@ function createPrismaClient() {
   });
 
   // One unpaid Prisma invoice used to fail every query (login, analytics,
-  // sitemap). After the first restriction error, skip further Prisma calls
-  // on this isolate so the shop can keep using Odoo/static fallbacks.
+  // sitemap). After a restriction error, skip Prisma for a short cooldown so
+  // the shop can use Odoo/static fallbacks, then probe again. A paid invoice
+  // recovers on the next request instead of staying broken for the life of
+  // this serverless isolate.
   return client.$extends({
     query: {
       async $allOperations({ args, query }) {

@@ -1,5 +1,6 @@
 import { apiError } from "../src/lib/ecommerce/api";
 import {
+  DATABASE_RESTRICTION_COOLDOWN_MS,
   PUBLIC_DATABASE_UNAVAILABLE_MESSAGE,
   isDatabaseRestricted,
   isDatabaseRestrictionError,
@@ -33,7 +34,11 @@ async function main() {
 
   assert(isDatabaseRestricted(), "first restriction trip sets the circuit breaker");
   markDatabaseRestricted();
-  assert(isDatabaseRestricted(), "breaker stays on for this isolate");
+  assert(isDatabaseRestricted(), "breaker stays on during the cooldown");
+  assert(
+    !isDatabaseRestricted(Date.now() + DATABASE_RESTRICTION_COOLDOWN_MS + 1),
+    "breaker opens again so a paid invoice can recover"
+  );
   resetDatabaseRestrictionFlag();
   assert(!isDatabaseRestricted(), "tests can reset the breaker");
 
