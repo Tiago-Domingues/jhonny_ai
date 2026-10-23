@@ -3,7 +3,14 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/ecommerce/db";
 import type { GoogleUserInfo } from "@/lib/ecommerce/googleOAuth";
-import { registerSchema, loginSchema, pendingRegisterSchema, profileSchema } from "@/lib/ecommerce/schemas";
+import {
+  isEmailShapedUsername,
+  loginSchema,
+  pendingRegisterSchema,
+  profileSchema,
+  registerSchema,
+  signupUsernameCandidate,
+} from "@/lib/ecommerce/schemas";
 import { normalizeNif } from "@/lib/ecommerce/nif";
 import { hashPassword, normalizeEmail, randomToken, verifyPassword } from "@/lib/ecommerce/security";
 import { ensureAdminRoleForEmail, isAdminEmail } from "@/lib/ecommerce/admin";
@@ -28,25 +35,63 @@ export function toPublicAuthUser<
   };
 }
 
-export async function registerCredentialsCustomer(input: unknown) {
-  const data = pendingRegisterSchema.parse(input);
-  const email = normalizeEmail(data.email);
-  const username = data.username.trim();
-
-  const existingUser = await prisma.user.findFirst({
-    where: { OR: [{ email }, { username }] },
-    select: { id: true },
-  });
-  if (existingUser) {
-    throw new Error("Este email ou username já está registado.");
+async function allocateUniqueSignupUsername(base: string) {
+  const root = base.slice(0, 32);
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const suffix = attempt === 0 ? "" : String(attempt + 1);
+    const candidate = `${root.slice(0, 40 - suffix.length)}${suffix}`;
+    const [user, pending] = await Promise.all([
+      prisma.user.findUnique({ where: { username: candidate }, select: { id: true } }),
+      prisma.pendingRegistration.findFirst({ where: { username: candidate }, select: { id: true } }),
+    ]);
+    if (!user && !pending) return candidate;
   }
+  const stamp = Date.now().toString(36);
+  return `${root.slice(0, Math.max(3, 40 - stamp.length))}${stamp}`.slice(0, 40);
+}
 
-  const usernameHeld = await prisma.pendingRegistration.findFirst({
-    where: { username, NOT: { email } },
-    select: { id: true },
-  });
-  if (usernameHeld) {
-    throw new Error("Este email ou username já está registado.");
+function prepareSignupInput(input: unknown) {
+  const source = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  const rawUsername = typeof source.username === "string" ? source.username : "";
+  return {
+    prepared: {
+      ...source,
+      username: isEmailShapedUsername(rawUsername) ? signupUsernameCandidate(rawUsername) : rawUsername.trim(),
+    },
+    fromEmail: isEmailShapedUsername(rawUsername),
+  };
+}
+
+export async function registerCredentialsCustomer(input: unknown) {
+  const { prepared, fromEmail } = prepareSignupInput(input);
+  const data = pendingRegisterSchema.parse(prepared);
+  const email = normalizeEmail(data.email);
+  const username = fromEmail ? await allocateUniqueSignupUsername(data.username.trim()) : data.username.trim();
+
+  if (!fromEmail) {
+    const existingUser = await prisma.user.findFirst({
+      where: { OR: [{ email }, { username }] },
+      select: { id: true },
+    });
+    if (existingUser) {
+      throw new Error("Este email ou username já está registado.");
+    }
+
+    const usernameHeld = await prisma.pendingRegistration.findFirst({
+      where: { username, NOT: { email } },
+      select: { id: true },
+    });
+    if (usernameHeld) {
+      throw new Error("Este email ou username já está registado.");
+    }
+  } else {
+    const existingEmail = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (existingEmail) {
+      throw new Error("Este email ou username já está registado.");
+    }
   }
 
   try {
@@ -79,7 +124,8 @@ export async function registerCredentialsCustomer(input: unknown) {
 }
 
 export async function registerCustomer(input: unknown) {
-  const data = registerSchema.parse(input);
+  const { prepared } = prepareSignupInput(input);
+  const data = registerSchema.parse(prepared);
   const email = normalizeEmail(data.email);
 
   try {

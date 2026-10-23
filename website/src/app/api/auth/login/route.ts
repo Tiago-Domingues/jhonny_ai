@@ -17,7 +17,9 @@ async function sessionResponse(user: {
 }) {
   const cookieStore = await cookies();
   const guestToken = cookieStore.get(CART_COOKIE)?.value;
-  await mergeGuestCartIntoUser(guestToken, user.id);
+  await mergeGuestCartIntoUser(guestToken, user.id).catch((error) => {
+    console.error("login_cart_merge_failed", error instanceof Error ? error.message : error);
+  });
 
   const token = await createSessionToken(user.id);
   const response = NextResponse.json({ user: toPublicAuthUser(user) });

@@ -160,6 +160,8 @@ type StorefrontCopy = {
     emailOrUsername: string;
     password: string;
     username: string;
+    usernameHint: string;
+    passwordHint: string;
     ready: string;
     registerHint: string;
     submitFailed: string;
@@ -383,6 +385,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       emailOrUsername: "Email ou username",
       password: "Palavra-passe",
       username: "Username",
+      usernameHint: "Letras, números, ponto, _ e -. Entre 3 e 40 caracteres. Se escreveres o email, usamos a parte antes do @.",
+      passwordHint: "Mínimo de 8 caracteres.",
       ready: "Conta pronta.",
       registerHint: "Usa este email e password para entrares. Depois preenche o perfil para receberes o email e SMS de boas-vindas.",
       submitFailed: "Não foi possível concluir o pedido.",
@@ -605,6 +609,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       emailOrUsername: "Email or username",
       password: "Password",
       username: "Username",
+      usernameHint: "Letters, numbers, dot, _ and -. 3 to 40 characters. An email address uses the part before @.",
+      passwordHint: "At least 8 characters.",
       ready: "Account ready.",
       registerHint: "Use this email and password to sign in. Fill in your profile to receive the welcome email and SMS.",
       submitFailed: "Could not complete the request.",
@@ -826,6 +832,8 @@ export const storefrontCopy: Record<Locale, StorefrontCopy> = {
       emailOrUsername: "邮箱或用户名",
       password: "密码",
       username: "用户名",
+      usernameHint: "仅限字母、数字、点、_ 和 -，3 到 40 个字符。如果填写邮箱，我们会使用 @ 前面的部分。",
+      passwordHint: "至少 8 个字符。",
       ready: "账户已就绪。",
       registerHint: "使用此邮箱和密码登录。填写资料后即可收到欢迎邮件和短信。",
       submitFailed: "无法完成请求。",
