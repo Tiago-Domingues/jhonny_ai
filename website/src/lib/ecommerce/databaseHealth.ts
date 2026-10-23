@@ -22,18 +22,21 @@ export function isDatabaseRestrictionError(error: unknown) {
   );
 }
 
-let restricted = false;
+/** How long a warm isolate skips Prisma after an unpaid-invoice error. */
+export const DATABASE_RESTRICTION_COOLDOWN_MS = 15_000;
 
-export function isDatabaseRestricted() {
-  return restricted;
+let restrictedUntil = 0;
+
+export function isDatabaseRestricted(now = Date.now()) {
+  return restrictedUntil > now;
 }
 
-export function markDatabaseRestricted() {
-  restricted = true;
+export function markDatabaseRestricted(now = Date.now()) {
+  restrictedUntil = now + DATABASE_RESTRICTION_COOLDOWN_MS;
 }
 
 export function resetDatabaseRestrictionFlag() {
-  restricted = false;
+  restrictedUntil = 0;
 }
 
 export function noteDatabaseError(error: unknown) {

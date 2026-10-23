@@ -4,7 +4,8 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 import { prisma } from "@/lib/ecommerce/db";
-import { ensureAdminRoleForEmail } from "@/lib/ecommerce/admin";
+import { adminEmailAllowlist, ensureAdminRoleForEmail } from "@/lib/ecommerce/admin";
+import { sessionRoleForEmail } from "@/lib/ecommerce/adminAccess";
 import { isProductionRuntime } from "@/lib/ecommerce/securityRuntime";
 
 const SESSION_COOKIE = "jss_session";
@@ -66,16 +67,14 @@ export async function readSessionUser(): Promise<SessionUser | null> {
     });
     if (!user) return null;
 
-    await ensureAdminRoleForEmail(user.id, user.email);
-    const effectiveRole =
-      user.role === "ADMIN"
-        ? "ADMIN"
-        : (
-            await prisma.user.findUnique({
-              where: { id: user.id },
-              select: { role: true },
-            })
-          )?.role || user.role;
+    const effectiveRole = sessionRoleForEmail(user.email, user.role, adminEmailAllowlist());
+    if (effectiveRole === "ADMIN" && user.role !== "ADMIN") {
+      // A failed promotion must not drop the session. The allowlist is enough
+      // to open /admin; the role column catches up on a later request.
+      await ensureAdminRoleForEmail(user.id, user.email).catch((error) => {
+        console.error("admin_promote_failed", error instanceof Error ? error.message : error);
+      });
+    }
 
     return {
       id: user.id,

@@ -1,4 +1,9 @@
-import { PRIMARY_ADMIN_EMAIL, canAdminRemoveCustomer, defaultAdminEmails } from "../src/lib/ecommerce/adminAccess";
+import {
+  PRIMARY_ADMIN_EMAIL,
+  canAdminRemoveCustomer,
+  defaultAdminEmails,
+  sessionRoleForEmail,
+} from "../src/lib/ecommerce/adminAccess";
 
 function assert(condition: unknown, message: string) {
   if (!condition) throw new Error(message);
@@ -6,6 +11,13 @@ function assert(condition: unknown, message: string) {
 
 assert(PRIMARY_ADMIN_EMAIL === "tiagopaixaodomingues@gmail.com", "primary admin email is fixed");
 assert(defaultAdminEmails().includes(PRIMARY_ADMIN_EMAIL), "default allowlist includes the store owner");
+assert(sessionRoleForEmail(PRIMARY_ADMIN_EMAIL, "CUSTOMER") === "ADMIN", "store owner is admin even if the row is still CUSTOMER");
+assert(
+  sessionRoleForEmail("TiagoPaixaoDomingues@gmail.com", "CUSTOMER") === "ADMIN",
+  "admin email match ignores case"
+);
+assert(sessionRoleForEmail("cliente@example.com", "CUSTOMER") === "CUSTOMER", "other customers stay customers");
+assert(sessionRoleForEmail("cliente@example.com", "ADMIN") === "ADMIN", "explicit admin role is kept");
 
 const protectedEmails = defaultAdminEmails();
 

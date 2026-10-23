@@ -14,6 +14,7 @@ export function toPublicAuthUser<
     email: string;
     username: string;
     emailVerifiedAt: Date | null;
+    role?: "CUSTOMER" | "ADMIN";
     profile?: { fullName?: string | null } | null;
   },
 >(user: T) {
@@ -23,6 +24,7 @@ export function toPublicAuthUser<
     username: user.username,
     fullName: user.profile?.fullName,
     emailVerifiedAt: user.emailVerifiedAt,
+    ...(user.role ? { role: user.role } : {}),
   };
 }
 
@@ -119,8 +121,21 @@ export async function loginCustomer(input: unknown) {
     include: { profile: true },
   });
 
-  if (!user?.passwordHash || !(await verifyPassword(data.password, user.passwordHash))) {
+  if (!user) {
     throw new Error("Email, username ou password inválidos.");
+  }
+  if (!user.passwordHash) {
+    throw new Error("Esta conta entra com Google. Usa Continuar com Google.");
+  }
+  if (!(await verifyPassword(data.password, user.passwordHash))) {
+    throw new Error("Email, username ou password inválidos.");
+  }
+
+  if (isAdminEmail(user.email)) {
+    await ensureAdminRoleForEmail(user.id, user.email).catch((error) => {
+      console.error("admin_promote_failed", error instanceof Error ? error.message : error);
+    });
+    user.role = "ADMIN";
   }
 
   return user;
